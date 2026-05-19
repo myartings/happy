@@ -10,6 +10,7 @@ const notifiedEventKeySet = new Set<string>();
 let actionListenerInitialized = false;
 
 type TauriNotificationModule = typeof import('@tauri-apps/plugin-notification');
+type NotificationOptions = Parameters<TauriNotificationModule['sendNotification']>[0];
 
 function rememberEventKey(key: string): boolean {
     if (notifiedEventKeySet.has(key)) {
@@ -49,6 +50,24 @@ function getSessionIdFromNotification(value: unknown): string | null {
     }
     const sessionId = (extra as { sessionId?: unknown }).sessionId;
     return typeof sessionId === 'string' && sessionId.trim() ? sessionId : null;
+}
+
+function getDesktopNotificationSound(): string | undefined {
+    if (typeof navigator === 'undefined') {
+        return undefined;
+    }
+
+    const platform = navigator.platform.toLowerCase();
+    const userAgent = navigator.userAgent.toLowerCase();
+
+    if (platform.includes('mac') || userAgent.includes('mac os x')) {
+        return 'Ping';
+    }
+    if (platform.includes('linux') || userAgent.includes('linux')) {
+        return 'message-new-instant';
+    }
+
+    return undefined;
 }
 
 async function ensureActionListener(notification: TauriNotificationModule) {
@@ -104,18 +123,25 @@ export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSes
             return;
         }
 
-        notification.sendNotification({
+        const sound = getDesktopNotificationSound();
+        const options: NotificationOptions = {
             id: buildNotificationId(event),
             title: event.title,
             body: event.body,
             group: event.sessionId,
             autoCancel: true,
+            silent: false,
             extra: {
                 sessionId: event.sessionId,
                 kind: event.kind,
                 url: `/session/${encodeURIComponent(event.sessionId)}`
             }
-        });
+        };
+        if (sound) {
+            options.sound = sound;
+        }
+
+        notification.sendNotification(options);
     } catch (error) {
         log.log(`Failed to show desktop session notification: ${error}`);
     }
