@@ -66,6 +66,9 @@ function getDesktopNotificationSound(): string | undefined {
     if (platform.includes('linux') || userAgent.includes('linux')) {
         return 'message-new-instant';
     }
+    if (platform.includes('win') || userAgent.includes('windows')) {
+        return 'Default';
+    }
 
     return undefined;
 }
@@ -130,7 +133,6 @@ export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSes
             body: event.body,
             group: event.sessionId,
             autoCancel: true,
-            silent: false,
             extra: {
                 sessionId: event.sessionId,
                 kind: event.kind,
