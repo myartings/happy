@@ -36,6 +36,7 @@ import { RevenueCat, LogLevel, PaywallResult } from './revenueCat';
 import { getServerUrl } from './serverConfig';
 import { config } from '@/config';
 import { log } from '@/log';
+import { maybeShowDesktopSessionNotification } from './desktopSessionNotifications';
 import { gitStatusSync } from './gitStatusSync';
 import { AsyncLock } from '@/utils/lock';
 import { voiceHooks } from '@/realtime/hooks/voiceHooks';
@@ -2606,6 +2607,9 @@ class Sync {
         // unread counter on these only, ignore the noisy per-message stream.
         if (updateData.type === 'session-event') {
             notifyUnreadMessage();
+            if (storage.getState().localSettings.desktopSessionNotificationsEnabled) {
+                void maybeShowDesktopSessionNotification(updateData);
+            }
         }
 
         // daemon-status ephemeral updates are deprecated, machine status is handled via machine-activity

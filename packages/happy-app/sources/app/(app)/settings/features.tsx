@@ -6,6 +6,7 @@ import { ItemList } from '@/components/ItemList';
 import { useSettingMutable, useLocalSettingMutable } from '@/sync/storage';
 import { Switch } from '@/components/Switch';
 import { t } from '@/text';
+import { isTauri } from '@/utils/isTauri';
 
 export default function FeaturesSettingsScreen() {
     const [experiments, setExperiments] = useSettingMutable('experiments');
@@ -13,6 +14,7 @@ export default function FeaturesSettingsScreen() {
     const [agentInputEnterToSend, setAgentInputEnterToSend] = useSettingMutable('agentInputEnterToSend');
     const [commandPaletteEnabled, setCommandPaletteEnabled] = useLocalSettingMutable('commandPaletteEnabled');
     const [markdownCopyV2, setMarkdownCopyV2] = useLocalSettingMutable('markdownCopyV2');
+    const [desktopSessionNotificationsEnabled, setDesktopSessionNotificationsEnabled] = useLocalSettingMutable('desktopSessionNotificationsEnabled');
     const [hideInactiveSessions, setHideInactiveSessions] = useSettingMutable('hideInactiveSessions');
     const [expResumeSession, setExpResumeSession] = useSettingMutable('expResumeSession');
     const [fileDiffsSidebar, setFileDiffsSidebar] = useSettingMutable('fileDiffsSidebar');
@@ -170,6 +172,22 @@ export default function FeaturesSettingsScreen() {
                         }
                         showChevron={false}
                     />
+                    {isTauri() && (
+                        <Item
+                            title="Desktop Session Notifications"
+                            subtitle={desktopSessionNotificationsEnabled
+                                ? "Show native desktop notifications when background sessions need attention"
+                                : "Desktop session notifications are disabled on this device"}
+                            icon={<Ionicons name="notifications-outline" size={29} color="#FF9500" />}
+                            rightElement={
+                                <Switch
+                                    value={desktopSessionNotificationsEnabled}
+                                    onValueChange={setDesktopSessionNotificationsEnabled}
+                                />
+                            }
+                            showChevron={false}
+                        />
+                    )}
                 </ItemGroup>
             )}
         </ItemList>

@@ -354,6 +354,25 @@ export default function RootLayout() {
         };
     }, [handleNotificationResponse, initState]);
 
+    React.useEffect(() => {
+        if (Platform.OS !== 'web' || typeof window === 'undefined') {
+            return;
+        }
+
+        const handleDesktopNotificationOpen = (event: Event) => {
+            const sessionId = (event as CustomEvent<{ sessionId?: unknown }>).detail?.sessionId;
+            if (typeof sessionId !== 'string' || !sessionId.trim()) {
+                return;
+            }
+            navigateToSession(router, sessionId);
+        };
+
+        window.addEventListener('happy-session-notification-open', handleDesktopNotificationOpen);
+        return () => {
+            window.removeEventListener('happy-session-notification-open', handleDesktopNotificationOpen);
+        };
+    }, [router]);
+
 
     // Track the screens
     useTrackScreens()
