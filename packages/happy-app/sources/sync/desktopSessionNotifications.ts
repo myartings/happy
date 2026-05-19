@@ -61,7 +61,7 @@ function getDesktopNotificationSound(): string | undefined {
     const userAgent = navigator.userAgent.toLowerCase();
 
     if (platform.includes('mac') || userAgent.includes('mac os x')) {
-        return 'Ping';
+        return 'Default';
     }
     if (platform.includes('linux') || userAgent.includes('linux')) {
         return 'message-new-instant';
