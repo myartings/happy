@@ -303,10 +303,10 @@ export async function runCodex(opts: {
         session.keepAlive(thinking, 'remote');
     }, 2000);
 
-    const sendReady = () => {
+    const sendReady = async () => {
         session.sendSessionEvent({ type: 'ready' });
         try {
-            api.push().sendSessionNotification({
+            await api.push().sendSessionNotification({
                 kind: 'done',
                 metadata: session.getMetadata(),
                 data: {
@@ -758,7 +758,7 @@ export async function runCodex(opts: {
                 diffProcessor.reset();
                 thinking = false;
                 session.keepAlive(thinking, 'remote');
-                emitReadyIfIdle({
+                await emitReadyIfIdle({
                     pending,
                     queueSize: () => messageQueue.size(),
                     shouldExit,

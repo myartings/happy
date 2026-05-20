@@ -300,10 +300,10 @@ export async function runGemini(opts: {
   // Track if this is the first message to include system prompt only once
   let isFirstMessage = true;
 
-  const sendReady = () => {
+  const sendReady = async () => {
     session.sendSessionEvent({ type: 'ready' });
     try {
-      api.push().sendSessionNotification({
+      await api.push().sendSessionNotification({
         kind: 'done',
         metadata: session.getMetadata(),
         data: {
@@ -321,7 +321,7 @@ export async function runGemini(opts: {
    * Check if we can emit ready event
    * * Returns true when ready event was emitted
    */
-  const emitReadyIfIdle = (): boolean => {
+  const emitReadyIfIdle = async (): Promise<boolean> => {
     if (shouldExit) {
       return false;
     }
@@ -335,7 +335,7 @@ export async function runGemini(opts: {
       return false;
     }
 
-    sendReady();
+    await sendReady();
     return true;
   };
 
@@ -1285,7 +1285,7 @@ export async function runGemini(opts: {
         session.keepAlive(thinking, 'remote');
         
         // Use same logic as Codex - emit ready if idle (no pending operations, no queue)
-        emitReadyIfIdle();
+        await emitReadyIfIdle();
 
         // Message processing complete - safe to apply any pending session swap
         isProcessingMessage = false;

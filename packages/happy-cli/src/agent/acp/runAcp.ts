@@ -76,6 +76,26 @@ function logAcp(kind: AcpLogKind, message: string): void {
   console.log(colorizeAcpLine(kind, line));
 }
 
+async function sendReadyNotification(
+  api: ApiClient,
+  session: ApiSessionClient,
+  provider: string,
+): Promise<void> {
+  try {
+    await api.push().sendSessionNotification({
+      kind: 'done',
+      metadata: session.getMetadata(),
+      data: {
+        sessionId: session.sessionId,
+        type: 'ready',
+        provider,
+      },
+    });
+  } catch (pushError) {
+    logger.debug(`[${provider}] Failed to send ready push`, pushError);
+  }
+}
+
 function toSingleLine(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -924,6 +944,7 @@ export async function runAcp(opts: {
         await turnEnded;
         sendEnvelopes(sessionManager.endTurn('completed'));
         session.sendSessionEvent({ type: 'ready' });
+        await sendReadyNotification(api, session, opts.agentName);
         if (verbose) {
           logAcp('muted', `Outgoing prompt completion from ${opts.agentName}`);
         }

@@ -786,7 +786,7 @@ export async function runClaude(credentials: Credentials, options: StartOptions 
     if (exitCode === 0) {
         session.sendSessionEvent({ type: 'ready' });
         try {
-            api.push().sendSessionNotification({
+            await api.push().sendSessionNotification({
                 kind: 'done',
                 metadata: session.getMetadata(),
                 data: {

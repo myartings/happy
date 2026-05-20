@@ -5,6 +5,12 @@ import { TokenStorage } from '@/auth/tokenStorage';
 import { Encryption } from './encryption/encryption';
 import { storage } from './storage';
 
+let desktopWindowFocused: boolean | null = null;
+
+export function setDesktopWindowFocused(focused: boolean | null) {
+    desktopWindowFocused = focused;
+}
+
 export function getHappyClientId(): string {
     let platform: string = Platform.OS; // 'ios' | 'android' | 'web'
     if (platform === 'web' && typeof window !== 'undefined' && '__TAURI__' in window) {
@@ -24,6 +30,10 @@ export function getCurrentAppState(): 'active' | 'background' {
     if (Platform.OS === 'web') {
         if (typeof document === 'undefined') {
             return 'active';
+        }
+        if (typeof window !== 'undefined' && '__TAURI__' in window && desktopWindowFocused !== null) {
+            const visible = document.visibilityState === 'visible';
+            return visible && desktopWindowFocused ? 'active' : 'background';
         }
         const visible = document.visibilityState === 'visible';
         const focused = typeof document.hasFocus === 'function' ? document.hasFocus() : true;

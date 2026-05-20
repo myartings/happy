@@ -12,14 +12,25 @@ let actionListenerInitialized = false;
 type TauriNotificationModule = typeof import('@tauri-apps/plugin-notification');
 type NotificationOptions = Parameters<TauriNotificationModule['sendNotification']>[0];
 
-function isWindowsDesktop(): boolean {
+function getDesktopPlatform(): 'macos' | 'windows' | 'linux' | 'unknown' {
     if (typeof navigator === 'undefined') {
-        return false;
+        return 'unknown';
     }
 
     const platform = navigator.platform.toLowerCase();
     const userAgent = navigator.userAgent.toLowerCase();
-    return platform.includes('win') || userAgent.includes('windows');
+
+    if (platform.includes('mac') || userAgent.includes('mac os x')) {
+        return 'macos';
+    }
+    if (platform.includes('win') || userAgent.includes('windows')) {
+        return 'windows';
+    }
+    if (platform.includes('linux') || userAgent.includes('linux')) {
+        return 'linux';
+    }
+
+    return 'unknown';
 }
 
 function rememberEventKey(key: string): boolean {
@@ -63,20 +74,14 @@ function getSessionIdFromNotification(value: unknown): string | null {
 }
 
 function getDesktopNotificationSound(): string | undefined {
-    if (typeof navigator === 'undefined') {
-        return undefined;
-    }
-
-    const platform = navigator.platform.toLowerCase();
-    const userAgent = navigator.userAgent.toLowerCase();
-
-    if (platform.includes('mac') || userAgent.includes('mac os x')) {
+    const platform = getDesktopPlatform();
+    if (platform === 'macos') {
         return 'Default';
     }
-    if (platform.includes('linux') || userAgent.includes('linux')) {
+    if (platform === 'linux') {
         return 'message-new-instant';
     }
-    if (platform.includes('win') || userAgent.includes('windows')) {
+    if (platform === 'windows') {
         return 'Default';
     }
 
@@ -116,7 +121,7 @@ async function ensurePermission(notification: TauriNotificationModule): Promise<
     }
 }
 
-async function showWindowsDesktopSessionNotification(
+async function showNativeDesktopSessionNotification(
     event: ApiEphemeralSessionEventUpdate,
     sound: string | undefined
 ) {
@@ -182,17 +187,18 @@ export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSes
             options.sound = sound;
         }
 
-        if (isWindowsDesktop()) {
-            await showWindowsDesktopSessionNotification(event, sound);
+        const desktopPlatform = getDesktopPlatform();
+        if (desktopPlatform === 'windows' || desktopPlatform === 'macos') {
+            await showNativeDesktopSessionNotification(event, sound);
             log.log(
-                `Desktop session notification sent via Windows toast: kind=${event.kind} session=${event.sessionId} sound=${sound ?? 'none'}`
+                `Desktop session notification sent via native ${desktopPlatform} notification: kind=${event.kind} session=${event.sessionId} sound=${sound ?? 'none'}`
             );
             return;
         }
 
         notification.sendNotification(options);
         log.log(
-            `Desktop session notification sent: kind=${event.kind} session=${event.sessionId} sound=${sound ?? 'none'}`
+            `Desktop session notification sent via plugin ${desktopPlatform} notification: kind=${event.kind} session=${event.sessionId} sound=${sound ?? 'none'}`
         );
     } catch (error) {
         log.log(

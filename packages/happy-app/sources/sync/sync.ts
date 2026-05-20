@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { apiSocket, getCurrentAppState, getHappyClientId } from '@/sync/apiSocket';
+import { apiSocket, getCurrentAppState, getHappyClientId, setDesktopWindowFocused } from '@/sync/apiSocket';
 import { notifyUnreadMessage } from '@/sync/webTabTitle';
 import { AuthCredentials } from '@/auth/tokenStorage';
 import { Encryption } from '@/sync/encryption/encryption';
@@ -37,6 +37,7 @@ import { getServerUrl } from './serverConfig';
 import { config } from '@/config';
 import { log } from '@/log';
 import { maybeShowDesktopSessionNotification } from './desktopSessionNotifications';
+import { isTauri } from '@/utils/isTauri';
 import { gitStatusSync } from './gitStatusSync';
 import { AsyncLock } from '@/utils/lock';
 import { voiceHooks } from '@/realtime/hooks/voiceHooks';
@@ -206,6 +207,30 @@ class Sync {
             document.addEventListener('visibilitychange', broadcast);
             window.addEventListener('focus', broadcast);
             window.addEventListener('blur', broadcast);
+
+            if (isTauri()) {
+                void import('@tauri-apps/api/window')
+                    .then(async ({ getCurrentWindow }) => {
+                        const currentWindow = getCurrentWindow();
+                        const broadcastDesktopFocus = (focused: boolean) => {
+                            setDesktopWindowFocused(focused);
+                            apiSocket.sendAppState(getCurrentAppState());
+                        };
+
+                        try {
+                            broadcastDesktopFocus(await currentWindow.isFocused());
+                        } catch (error) {
+                            log.log(`Failed to read desktop window focus state: ${error}`);
+                        }
+
+                        await currentWindow.onFocusChanged(({ payload }) => {
+                            broadcastDesktopFocus(payload);
+                        });
+                    })
+                    .catch((error) => {
+                        log.log(`Failed to attach desktop window focus listener: ${error}`);
+                    });
+            }
         }
     }
 
