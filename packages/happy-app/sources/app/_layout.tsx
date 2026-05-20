@@ -359,17 +359,42 @@ export default function RootLayout() {
             return;
         }
 
-        const handleDesktopNotificationOpen = (event: Event) => {
-            const sessionId = (event as CustomEvent<{ sessionId?: unknown }>).detail?.sessionId;
+        const openDesktopNotificationSession = (sessionId: unknown) => {
             if (typeof sessionId !== 'string' || !sessionId.trim()) {
                 return;
             }
             navigateToSession(router, sessionId);
         };
 
+        const handleDesktopNotificationOpen = (event: Event) => {
+            openDesktopNotificationSession((event as CustomEvent<{ sessionId?: unknown }>).detail?.sessionId);
+        };
+
+        let unlistenTauriEvent: (() => void) | undefined;
+        let disposed = false;
+
         window.addEventListener('happy-session-notification-open', handleDesktopNotificationOpen);
+        if ((window as any).__TAURI_INTERNALS__ !== undefined) {
+            void import('@tauri-apps/api/event')
+                .then(({ listen }) => listen<{ sessionId?: unknown }>('happy-session-notification-open', (event) => {
+                    openDesktopNotificationSession(event.payload?.sessionId);
+                }))
+                .then((unlisten) => {
+                    if (disposed) {
+                        unlisten();
+                    } else {
+                        unlistenTauriEvent = unlisten;
+                    }
+                })
+                .catch((error) => {
+                    console.log('Failed to attach desktop notification open listener:', error);
+                });
+        }
+
         return () => {
+            disposed = true;
             window.removeEventListener('happy-session-notification-open', handleDesktopNotificationOpen);
+            unlistenTauriEvent?.();
         };
     }, [router]);
 

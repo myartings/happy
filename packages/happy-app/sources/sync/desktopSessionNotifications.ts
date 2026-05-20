@@ -12,6 +12,16 @@ let actionListenerInitialized = false;
 type TauriNotificationModule = typeof import('@tauri-apps/plugin-notification');
 type NotificationOptions = Parameters<TauriNotificationModule['sendNotification']>[0];
 
+function isWindowsDesktop(): boolean {
+    if (typeof navigator === 'undefined') {
+        return false;
+    }
+
+    const platform = navigator.platform.toLowerCase();
+    const userAgent = navigator.userAgent.toLowerCase();
+    return platform.includes('win') || userAgent.includes('windows');
+}
+
 function rememberEventKey(key: string): boolean {
     if (notifiedEventKeySet.has(key)) {
         return false;
@@ -106,6 +116,21 @@ async function ensurePermission(notification: TauriNotificationModule): Promise<
     }
 }
 
+async function showWindowsDesktopSessionNotification(
+    event: ApiEphemeralSessionEventUpdate,
+    sound: string | undefined
+) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('show_desktop_session_notification', {
+        notification: {
+            title: event.title,
+            body: event.body,
+            sessionId: event.sessionId,
+            sound
+        }
+    });
+}
+
 export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSessionEventUpdate) {
     if (Platform.OS !== 'web' || !isTauri()) {
         return;
@@ -155,6 +180,14 @@ export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSes
         };
         if (sound) {
             options.sound = sound;
+        }
+
+        if (isWindowsDesktop()) {
+            await showWindowsDesktopSessionNotification(event, sound);
+            log.log(
+                `Desktop session notification sent via Windows toast: kind=${event.kind} session=${event.sessionId} sound=${sound ?? 'none'}`
+            );
+            return;
         }
 
         notification.sendNotification(options);
