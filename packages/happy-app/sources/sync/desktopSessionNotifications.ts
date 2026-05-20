@@ -110,12 +110,23 @@ export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSes
     if (Platform.OS !== 'web' || !isTauri()) {
         return;
     }
-    if (getCurrentAppState() === 'active') {
+
+    const appState = getCurrentAppState();
+    log.log(
+        `Desktop session notification event: kind=${event.kind} session=${event.sessionId} appState=${appState}`
+    );
+    if (appState === 'active') {
+        log.log(
+            `Desktop session notification skipped: active kind=${event.kind} session=${event.sessionId}`
+        );
         return;
     }
 
     const eventKey = `${event.sessionId}:${event.kind}:${event.timestamp}`;
     if (!rememberEventKey(eventKey)) {
+        log.log(
+            `Desktop session notification skipped: duplicate kind=${event.kind} session=${event.sessionId}`
+        );
         return;
     }
 
@@ -123,6 +134,9 @@ export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSes
         const notification = await import('@tauri-apps/plugin-notification');
         await ensureActionListener(notification);
         if (!(await ensurePermission(notification))) {
+            log.log(
+                `Desktop session notification skipped: permission denied kind=${event.kind} session=${event.sessionId}`
+            );
             return;
         }
 
@@ -144,7 +158,12 @@ export async function maybeShowDesktopSessionNotification(event: ApiEphemeralSes
         }
 
         notification.sendNotification(options);
+        log.log(
+            `Desktop session notification sent: kind=${event.kind} session=${event.sessionId} sound=${sound ?? 'none'}`
+        );
     } catch (error) {
-        log.log(`Failed to show desktop session notification: ${error}`);
+        log.log(
+            `Failed to show desktop session notification kind=${event.kind} session=${event.sessionId}: ${error}`
+        );
     }
 }

@@ -2609,6 +2609,10 @@ class Sync {
             notifyUnreadMessage();
             if (storage.getState().localSettings.desktopSessionNotificationsEnabled) {
                 void maybeShowDesktopSessionNotification(updateData);
+            } else {
+                log.log(
+                    `Desktop session notification skipped: disabled kind=${updateData.kind} session=${updateData.sessionId}`
+                );
             }
         }
 
