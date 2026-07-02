@@ -7,11 +7,13 @@ import { maybeCleanupWorktree } from '@/hooks/useWorktreeCleanup';
 import { storage, useLocalSetting, useMachine, useSetting } from '@/sync/storage';
 import { Machine, Session } from '@/sync/storageTypes';
 import { sync } from '@/sync/sync';
+import { resolveMessageModeMeta } from '@/sync/messageMeta';
 import { t } from '@/text';
 import { HappyError } from '@/utils/errors';
 import { copySessionMetadataToClipboard, copySessionMetadataAndLogsToClipboard } from '@/utils/copySessionMetadataToClipboard';
 import { useSessionStatus } from '@/utils/sessionUtils';
 import { isMachineOnline } from '@/utils/machineUtils';
+import { getSessionForkSource } from '@/utils/sessionFork';
 import { useRouter } from 'expo-router';
 import { useSession } from '@/sync/storage';
 import { DuplicateSheet } from '@/components/DuplicateSheet';
@@ -117,17 +119,20 @@ export function useSessionQuickActions(
     );
 
     // Fork eligibility — separate from resume because fork works on both
-    // active AND inactive Claude sessions (the on-disk JSONL exists either
-    // way; copyFile is atomic). The user-facing toggle is the same
+    // active AND inactive provider sessions. The user-facing toggle is the same
     // expResumeSession experiment so all three flows (resume / fork /
     // duplicate) ride a single switch on settings/features.
-    const claudeFlavor = !session.metadata?.flavor || session.metadata.flavor === 'claude';
-    const claudeSessionId = session.metadata?.claudeSessionId;
+    const forkSource = React.useMemo(() => getSessionForkSource(session), [
+        session.id,
+        session.metadata?.flavor,
+        session.metadata?.machineId,
+        session.metadata?.path,
+        session.metadata?.claudeSessionId,
+        session.metadata?.codexThreadId,
+    ]);
     const canFork = Boolean(
         expResumeSession
-        && claudeFlavor
-        && claudeSessionId
-        && machineId
+        && forkSource
         && machine
         && isMachineOnline(machine),
     );
@@ -163,11 +168,12 @@ export function useSessionQuickActions(
             throw new HappyError(t('sessionInfo.resumeSessionMissingMachine'), false);
         }
 
+        const modeMeta = resolveMessageModeMeta(session, storage.getState().settings);
         const result = await machineResumeSession({
             machineId,
             sessionId: session.id,
-            model: session.modelMode ?? undefined,
-            permissionMode: session.permissionMode ?? undefined,
+            model: modeMeta.model ?? undefined,
+            permissionMode: modeMeta.permissionMode,
         });
 
         switch (result.type) {
@@ -219,12 +225,10 @@ export function useSessionQuickActions(
         if (!canFork) {
             throw new HappyError(t('session.forkErrorMissingMetadata'), false);
         }
-        const directory = session.metadata?.path;
-        if (!machineId || !directory || !claudeSessionId) {
+        if (!forkSource) {
             throw new HappyError(t('session.forkErrorMissingMetadata'), false);
         }
-        const source: ForkSource = { sessionId: session.id, machineId, directory, claudeSessionId };
-        const result = await forkAndSpawn(source);
+        const result = await forkAndSpawn(forkSource as ForkSource);
         if (result.type !== 'success') {
             throw new HappyError(result.type === 'error' ? result.errorMessage : t('session.forkErrorGeneric'), false);
         }
@@ -273,6 +277,7 @@ export function useSessionQuickActions(
         canFork,
         copySessionMetadata,
         copySessionMetadataAndLogs,
+        forkSource,
         forkSession,
         openDetails,
         openDuplicateSheet,

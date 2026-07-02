@@ -120,7 +120,7 @@ async function serve() {
 
     const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3005;
     const host = process.env.HOST || "0.0.0.0";
-    const staticDir = process.env.HAPPY_STATIC_DIR || undefined;
+    const staticDir = findStaticDir();
     let injectHtmlConfig: Record<string, unknown> | undefined;
     if (process.env.HAPPY_INJECT_HTML_CONFIG) {
         try {
@@ -143,16 +143,45 @@ async function serve() {
     // Block until shutdown so the process stays alive.
     const { awaitShutdown } = await import("./utils/shutdown");
     await awaitShutdown();
+    process.exit(0);
+}
+
+function findStaticDir(): string | undefined {
+    const candidates = [
+        process.env.HAPPY_STATIC_DIR,
+        path.join(process.cwd(), "webapp"),
+        path.join(path.dirname(process.execPath), "webapp"),
+    ].filter(Boolean) as string[];
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(path.join(candidate, "index.html"))) {
+            return candidate;
+        }
+    }
+
+    return undefined;
 }
 
 // CLI — only when this file is invoked directly, not when imported as a library.
-const invokedFile = process.argv[1] ? path.resolve(process.argv[1]) : "";
-const isDirectInvocation =
-    invokedFile.endsWith("/standalone.ts") ||
-    invokedFile.endsWith("/standalone.js") ||
-    invokedFile.endsWith("/standalone.mjs") ||
-    invokedFile.endsWith("/standalone.cjs") ||
-    invokedFile.endsWith("/happy-server");
+const standaloneEntrypoints = new Set([
+    "standalone.ts",
+    "standalone.js",
+    "standalone.mjs",
+    "standalone.cjs",
+    "happy-server",
+    "happy-server.exe",
+]);
+
+export function isStandaloneEntrypoint(invokedFile: string): boolean {
+    // win32.basename splits on both "/" and "\", so a Windows-style argv[1] is
+    // parsed correctly even on a POSIX host (and vice-versa). The POSIX basename
+    // would leave backslashes intact and miss Windows entrypoints like
+    // happy-server.exe when tests or tooling run cross-platform.
+    return standaloneEntrypoints.has(path.win32.basename(invokedFile).toLowerCase());
+}
+
+const invokedFile = process.argv[1] || "";
+const isDirectInvocation = isStandaloneEntrypoint(invokedFile);
 
 if (isDirectInvocation) {
     const command = process.argv[2];

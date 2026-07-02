@@ -16,7 +16,7 @@ import { syncCurrentPushToken } from './pushRegistration';
 import { Platform, AppState, type AppStateStatus } from 'react-native';
 import { isRunningOnMac } from '@/utils/platform';
 import { NormalizedMessage, normalizeRawMessage, RawRecord } from './typesRaw';
-import { applySettings, Settings, settingsDefaults, settingsParse, SUPPORTED_SCHEMA_VERSION } from './settings';
+import { applySettings, Settings, settingsDefaults, settingsParse, settingsToSyncPayload, SUPPORTED_SCHEMA_VERSION } from './settings';
 import { Profile, profileParse } from './profile';
 import { loadPendingSettings, savePendingSettings } from './persistence';
 import {
@@ -596,7 +596,7 @@ class Sync {
             }
         }
 
-        const { permissionMode, model, effort } = resolveMessageModeMeta(session);
+        const modeMeta = resolveMessageModeMeta(session, storage.getState().settings);
         const { displayText, source = 'chat', attachments } = options ?? {};
 
         // Image attachments are wired into the Claude pipeline only; Codex /
@@ -698,8 +698,6 @@ class Sync {
             sentFrom = 'web'; // fallback
         }
 
-        const fallbackModel: string | null = null;
-
         // Create user message content with metadata
         const content: RawRecord = {
             role: 'user',
@@ -709,11 +707,10 @@ class Sync {
             },
             meta: {
                 sentFrom,
-                permissionMode,
-                model,
-                fallbackModel,
                 appendSystemPrompt: systemPrompt,
-                ...(effort && { effort }), // Forward effort (low/medium/high/max for Claude, low/medium/high/xhigh for Codex)
+                ...(modeMeta.permissionMode !== undefined ? { permissionMode: modeMeta.permissionMode } : {}),
+                ...(modeMeta.model !== undefined ? { model: modeMeta.model } : {}),
+                ...(modeMeta.effort !== undefined ? { effort: modeMeta.effort } : {}),
                 ...(displayText && { displayText }) // Add displayText if provided
             }
         };
@@ -1327,44 +1324,62 @@ class Sync {
             updatedAt: number;
         }>;
 
-        // First, collect and decrypt encryption keys for all machines
+        // First, collect and decrypt encryption keys for all machines.
+        //
+        // Resilience: a single machine whose data key cannot be decrypted
+        // (legacy/foreign key format, contentKeyPair mismatch, malformed
+        // base64) must NOT abort the whole sync. Previously a throw here
+        // rejected fetchMachines entirely — backoff() only console.warn's and
+        // retries forever, so applyMachines was never reached and EVERY
+        // machine silently vanished from the store (empty /new, no
+        // console.error). On failure we fall back to a null key: the machine
+        // still gets a (legacy) encryptor and stays visible/selectable, just
+        // with undecryptable metadata.
         const machineKeysMap = new Map<string, Uint8Array | null>();
         for (const machine of machines) {
             if (machine.dataEncryptionKey) {
-                const decryptedKey = await this.encryption.decryptEncryptionKey(machine.dataEncryptionKey);
-                if (!decryptedKey) {
-                    console.error(`Failed to decrypt data encryption key for machine ${machine.id}`);
-                    continue;
+                let decryptedKey: Uint8Array | null = null;
+                try {
+                    decryptedKey = await this.encryption.decryptEncryptionKey(machine.dataEncryptionKey);
+                } catch (error) {
+                    console.error(`Failed to decrypt data encryption key for machine ${machine.id}:`, error);
                 }
-                machineKeysMap.set(machine.id, decryptedKey);
-                this.machineDataKeys.set(machine.id, decryptedKey);
+                if (decryptedKey) {
+                    machineKeysMap.set(machine.id, decryptedKey);
+                    this.machineDataKeys.set(machine.id, decryptedKey);
+                } else {
+                    console.error(`Failed to decrypt data encryption key for machine ${machine.id} - keeping machine with undecryptable metadata`);
+                    machineKeysMap.set(machine.id, null);
+                }
             } else {
                 machineKeysMap.set(machine.id, null);
             }
         }
 
-        // Initialize machine encryptions
-        await this.encryption.initializeMachines(machineKeysMap);
+        // Initialize machine encryptions. Guard so an init failure cannot
+        // reject the whole sync and wipe the machine list.
+        try {
+            await this.encryption.initializeMachines(machineKeysMap);
+        } catch (error) {
+            console.error('Failed to initialize machine encryptions:', error);
+        }
 
-        // Process all machines first, then update state once
+        // Process all machines first, then update state once. Every machine is
+        // pushed exactly once — decryption failures degrade to null metadata
+        // instead of dropping the machine, so a machine never disappears from
+        // the picker just because its metadata could not be read.
         const decryptedMachines: Machine[] = [];
 
         for (const machine of machines) {
-            // Get machine-specific encryption (might exist from previous initialization)
-            const machineEncryption = this.encryption.getMachineEncryption(machine.id);
-            if (!machineEncryption) {
-                console.error(`Machine encryption not found for ${machine.id} - this should never happen`);
-                continue;
-            }
-
             try {
+                const machineEncryption = this.encryption.getMachineEncryption(machine.id);
 
                 // Use machine-specific encryption (which handles fallback internally)
-                const metadata = machine.metadata
+                const metadata = machineEncryption && machine.metadata
                     ? await machineEncryption.decryptMetadata(machine.metadataVersion, machine.metadata)
                     : null;
 
-                const daemonState = machine.daemonState
+                const daemonState = machineEncryption && machine.daemonState
                     ? await machineEncryption.decryptDaemonState(machine.daemonStateVersion || 0, machine.daemonState)
                     : null;
 
@@ -1382,7 +1397,7 @@ class Sync {
                 });
             } catch (error) {
                 console.error(`Failed to decrypt machine ${machine.id}:`, error);
-                // Still add the machine with null metadata
+                // Still add the machine with null metadata so it stays visible.
                 decryptedMachines.push({
                     id: machine.id,
                     seq: machine.seq,
@@ -1398,7 +1413,15 @@ class Sync {
             }
         }
 
-        // Replace entire machine state with fetched machines
+        // Replace entire machine state with fetched machines — but never wipe
+        // a populated store with an empty result. An empty list here almost
+        // always means a transient fetch/decrypt problem, not "user has no
+        // machines"; destroying good state would blank /new until restart.
+        const existingMachineCount = Object.keys(storage.getState().machines).length;
+        if (decryptedMachines.length === 0 && existingMachineCount > 0) {
+            log.log(`🖥️ fetchMachines: empty result, keeping ${existingMachineCount} existing machine(s)`);
+            return;
+        }
         storage.getState().applyMachines(decryptedMachines, true);
         log.log(`🖥️ fetchMachines completed - processed ${decryptedMachines.length} machines`);
     }
@@ -1525,7 +1548,7 @@ class Sync {
                 const response = await fetch(`${API_ENDPOINT}/v1/account/settings`, {
                     method: 'POST',
                     body: JSON.stringify({
-                        settings: await this.encryption.encryptRaw(settings),
+                        settings: await this.encryption.encryptRaw(settingsToSyncPayload(settings)),
                         expectedVersion: version ?? 0
                     }),
                     headers: {
@@ -2345,6 +2368,67 @@ class Sync {
                     // Don't crash on settings sync errors, just log
                 }
             }
+        } else if (updateData.body.t === 'new-machine') {
+            const machineUpdate = updateData.body;
+            const machineId = machineUpdate.machineId;
+
+            // Brand-new machines (cold onboarding) are delivered via 'new-machine'
+            // before any fetchMachines has seen them, so their per-machine
+            // encryption isn't initialized yet. The update carries the data
+            // encryption key — register it here (mirroring fetchMachines) or every
+            // later decrypt for this machine fails and it never lands in storage,
+            // leaving the new-session screen unable to start a session until an app
+            // restart / socket reconnect triggers a full machine refetch.
+            const machineKeysMap = new Map<string, Uint8Array | null>();
+            if (machineUpdate.dataEncryptionKey) {
+                const decryptedKey = await this.encryption.decryptEncryptionKey(machineUpdate.dataEncryptionKey);
+                if (decryptedKey) {
+                    machineKeysMap.set(machineId, decryptedKey);
+                    this.machineDataKeys.set(machineId, decryptedKey);
+                } else {
+                    console.error(`Failed to decrypt data encryption key for new machine ${machineId}`);
+                    machineKeysMap.set(machineId, null);
+                }
+            } else {
+                machineKeysMap.set(machineId, null);
+            }
+            await this.encryption.initializeMachines(machineKeysMap);
+
+            const machineEncryption = this.encryption.getMachineEncryption(machineId);
+            if (!machineEncryption) {
+                console.error(`Machine encryption not found for ${machineId} after init - cannot apply new-machine`);
+                return;
+            }
+
+            // Preserve an existing createdAt if we somehow already know this machine.
+            const existing = storage.getState().machines[machineId];
+            const newMachine: Machine = {
+                id: machineId,
+                seq: machineUpdate.seq,
+                createdAt: existing?.createdAt ?? machineUpdate.createdAt,
+                updatedAt: machineUpdate.updatedAt,
+                active: machineUpdate.active,
+                activeAt: machineUpdate.activeAt,
+                metadata: null,
+                metadataVersion: machineUpdate.metadataVersion,
+                daemonState: null,
+                daemonStateVersion: machineUpdate.daemonStateVersion
+            };
+
+            // Decrypt best-effort; still apply the machine on failure so it stays
+            // visible/usable (matches fetchMachines' fallback behavior).
+            try {
+                newMachine.metadata = machineUpdate.metadata
+                    ? await machineEncryption.decryptMetadata(machineUpdate.metadataVersion, machineUpdate.metadata)
+                    : null;
+                newMachine.daemonState = machineUpdate.daemonState
+                    ? await machineEncryption.decryptDaemonState(machineUpdate.daemonStateVersion, machineUpdate.daemonState)
+                    : null;
+            } catch (error) {
+                console.error(`Failed to decrypt new machine ${machineId}:`, error);
+            }
+
+            storage.getState().applyMachines([newMachine]);
         } else if (updateData.body.t === 'update-machine') {
             const machineUpdate = updateData.body;
             const machineId = machineUpdate.machineId;  // Changed from .id to .machineId
