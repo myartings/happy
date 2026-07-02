@@ -108,4 +108,16 @@ describe('handleCodexCommand', () => {
       permissionMode: 'yolo',
     })
   })
+
+  it('passes explicit permission mode through to runCodex', async () => {
+    await handleCodexCommand(['--permission-mode', 'safe-yolo'])
+
+    expect(mocks.mockRunCodex).toHaveBeenCalledWith({
+      credentials: { token: 'token' },
+      startedBy: undefined,
+      noSandbox: false,
+      resumeThreadId: undefined,
+      permissionMode: 'safe-yolo',
+    })
+  })
 })
