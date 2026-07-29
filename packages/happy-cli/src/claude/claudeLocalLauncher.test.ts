@@ -33,6 +33,11 @@ vi.mock('@/ui/logger', () => ({
 import { claudeLocalLauncher } from './claudeLocalLauncher';
 
 type QueueHandler = (message: string, mode: { permissionMode: 'default' }) => void;
+type ScannerOptions = {
+    sessionId: string | null;
+    workingDirectory: string;
+    onMessage: (message: any) => void;
+};
 
 function createDeferred<T>() {
     let resolve!: (value: T | PromiseLike<T>) => void;
@@ -53,7 +58,7 @@ describe('claudeLocalLauncher', () => {
         });
     });
 
-    it('does not abort local Claude Code when an app message requests remote control', async () => {
+    it('aborts local Claude Code when an app message requests remote control', async () => {
         const localRun = createDeferred<void>();
         const observed: {
             queueHandler?: QueueHandler;
@@ -71,6 +76,7 @@ describe('claudeLocalLauncher', () => {
             path: '/tmp/project',
             client: {
                 sendClaudeSessionMessage: vi.fn(),
+                sendClaudeSessionMessageFromLocalTranscript: vi.fn(async () => {}),
                 closeClaudeSessionTurn: vi.fn(),
                 rpcHandlerManager: {
                     registerHandler: vi.fn(),
@@ -114,12 +120,140 @@ describe('claudeLocalLauncher', () => {
         }
         handler('from app', { permissionMode: 'default' });
 
-        expect(signal.aborted).toBe(false);
+        await vi.waitFor(() => {
+            expect(signal.aborted).toBe(true);
+        });
         expect(session.client.closeClaudeSessionTurn).not.toHaveBeenCalledWith('cancelled');
 
         localRun.resolve();
 
         await expect(launcher).resolves.toEqual({ type: 'switch' });
         expect(session.client.closeClaudeSessionTurn).toHaveBeenCalledWith('completed');
+    });
+
+    it('routes scanner messages through local transcript replay so attachments can be uploaded', async () => {
+        const localRun = createDeferred<void>();
+        let scannerOptions: ScannerOptions | undefined;
+
+        mockCreateSessionScanner.mockImplementation(async (opts: ScannerOptions) => {
+            scannerOptions = opts;
+            return {
+                onNewSession: vi.fn(),
+                cleanup: vi.fn(async () => {}),
+            };
+        });
+        mockClaudeLocal.mockImplementation(async () => {
+            await localRun.promise;
+        });
+
+        const session = {
+            sessionId: 'claude-session-1',
+            path: '/tmp/project',
+            client: {
+                sendClaudeSessionMessage: vi.fn(),
+                sendClaudeSessionMessageFromLocalTranscript: vi.fn(async () => {}),
+                closeClaudeSessionTurn: vi.fn(),
+                rpcHandlerManager: {
+                    registerHandler: vi.fn(),
+                },
+            },
+            queue: {
+                reset: vi.fn(),
+                setOnMessage: vi.fn(),
+                size: vi.fn(() => 0),
+            },
+            addSessionFoundCallback: vi.fn(),
+            removeSessionFoundCallback: vi.fn(),
+            onAbort: vi.fn(),
+            onSessionFound: vi.fn(),
+            onThinkingChange: vi.fn(),
+            consumeOneTimeFlags: vi.fn(),
+            claudeEnvVars: undefined,
+            claudeArgs: undefined,
+            mcpServers: {},
+            allowedTools: [],
+            hookSettingsPath: '/tmp/hook-settings.json',
+            sandboxConfig: undefined,
+        };
+
+        const launcher = claudeLocalLauncher(session as any);
+
+        await vi.waitFor(() => {
+            expect(scannerOptions).toBeDefined();
+        });
+
+        scannerOptions!.onMessage({
+            type: 'user',
+            uuid: 'u-image-1',
+            message: {
+                content: [
+                    { type: 'text', text: 'look' },
+                    {
+                        type: 'image',
+                        source: { type: 'base64', media_type: 'image/png', data: 'iVBORw0KGgo=' },
+                    },
+                ],
+            },
+        });
+
+        await vi.waitFor(() => {
+            expect(session.client.sendClaudeSessionMessageFromLocalTranscript).toHaveBeenCalledWith(
+                expect.objectContaining({ uuid: 'u-image-1' }),
+            );
+        });
+        expect(session.client.sendClaudeSessionMessage).not.toHaveBeenCalled();
+
+        localRun.resolve();
+        await launcher;
+    });
+
+    it('reports the underlying error when a launch throws, instead of a bare notice', async () => {
+        // The SDK surfaces an unresolvable native binary as a plain Error; the
+        // launcher used to drop it and report only "Process exited unexpectedly".
+        const sdkFailure = new Error(
+            'Native CLI binary for darwin-arm64 not found. Reinstall @anthropic-ai/claude-agent-sdk without --omit=optional, or set options.pathToClaudeCodeExecutable.'
+        );
+        mockClaudeLocal
+            .mockRejectedValueOnce(sdkFailure)
+            .mockResolvedValueOnce(undefined);
+
+        const session = {
+            sessionId: 'claude-session-3',
+            path: '/tmp/project',
+            client: {
+                sendClaudeSessionMessage: vi.fn(),
+                sendClaudeSessionMessageFromLocalTranscript: vi.fn(async () => {}),
+                closeClaudeSessionTurn: vi.fn(),
+                sendSessionEvent: vi.fn(),
+                rpcHandlerManager: {
+                    registerHandler: vi.fn(),
+                },
+            },
+            queue: {
+                reset: vi.fn(),
+                setOnMessage: vi.fn(),
+                size: vi.fn(() => 0),
+            },
+            addSessionFoundCallback: vi.fn(),
+            removeSessionFoundCallback: vi.fn(),
+            onAbort: vi.fn(),
+            onSessionFound: vi.fn(),
+            onThinkingChange: vi.fn(),
+            consumeOneTimeFlags: vi.fn(),
+            claudeEnvVars: undefined,
+            claudeArgs: undefined,
+            mcpServers: {},
+            allowedTools: [],
+            hookSettingsPath: '/tmp/hook-settings.json',
+            sandboxConfig: undefined,
+        };
+
+        // The failed launch retries, so the second attempt settles the launcher.
+        await expect(claudeLocalLauncher(session as any)).resolves.toEqual({ type: 'exit', code: 0 });
+
+        expect(session.client.sendSessionEvent).toHaveBeenCalledWith({
+            type: 'message',
+            message: `Process exited unexpectedly: ${sdkFailure.message}`,
+        });
     });
 });

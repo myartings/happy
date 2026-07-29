@@ -3,10 +3,13 @@ import { claudeLocal, ExitCodeError } from "./claudeLocal";
 import { Session } from "./session";
 import { Future } from "@/utils/future";
 import { createSessionScanner } from "./utils/sessionScanner";
+import { launchFailureMessage } from "./utils/launchFailureMessage";
 
 export type LauncherResult = { type: 'switch' } | { type: 'exit', code: number };
 
 export async function claudeLocalLauncher(session: Session): Promise<LauncherResult> {
+
+    let scannerMessageChain = Promise.resolve();
 
     // Create scanner
     const scanner = await createSessionScanner({
@@ -15,7 +18,13 @@ export async function claudeLocalLauncher(session: Session): Promise<LauncherRes
         onMessage: (message) => { 
             // Block SDK summary messages - we generate our own
             if (message.type !== 'summary') {
-                session.client.sendClaudeSessionMessage(message)
+                scannerMessageChain = scannerMessageChain.then(async () => {
+                    try {
+                        await session.client.sendClaudeSessionMessageFromLocalTranscript(message);
+                    } catch (error) {
+                        logger.debug('[local]: failed to send Claude transcript message', error);
+                    }
+                });
             }
         }
     });
@@ -66,15 +75,17 @@ export async function claudeLocalLauncher(session: Session): Promise<LauncherRes
         async function doSwitch() {
             logger.debug('[local]: doSwitch');
             switchRequested = true;
+            if (!processAbortController.signal.aborted) {
+                processAbortController.abort();
+            }
         }
 
         // When to abort
         session.client.rpcHandlerManager.registerHandler('abort', doAbort); // Abort current process, clean queue and switch to remote mode
         session.client.rpcHandlerManager.registerHandler('switch', doSwitch); // When user wants to switch to remote mode
         session.queue.setOnMessage((_message: string, _mode) => {
-            // Remote messages request control from the app, but must not kill
-            // the active local Claude Code process. The message remains queued
-            // and is picked up by remote mode after local exits naturally.
+            // Remote messages request control from the app. Stop local Claude
+            // so queued app messages can be picked up by remote mode now.
             void doSwitch();
         });
 
@@ -142,7 +153,7 @@ export async function claudeLocalLauncher(session: Session): Promise<LauncherRes
                     break;
                 }
                 if (!exitReason) {
-                    session.client.sendSessionEvent({ type: 'message', message: 'Process exited unexpectedly' });
+                    session.client.sendSessionEvent({ type: 'message', message: launchFailureMessage(e) });
                     continue;
                 } else {
                     break;
@@ -165,6 +176,7 @@ export async function claudeLocalLauncher(session: Session): Promise<LauncherRes
 
         // Cleanup
         await scanner.cleanup();
+        await scannerMessageChain;
     }
 
     // Return

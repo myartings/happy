@@ -5,6 +5,15 @@ import { AuthCredentials } from '@/auth/tokenStorage';
 import { Encryption } from '@/sync/encryption/encryption';
 import { decodeBase64, encodeBase64 } from '@/encryption/base64';
 import { storage } from './storage';
+// Circular at module level (ops.ts imports sync) but safe: both sides only
+// touch each other's exports at runtime, never during module initialization.
+import { sessionSetAgentModes } from './ops';
+import { getImageAttachmentSendPlan, isAttachmentAllowedByPolicy } from './attachmentSupport';
+import {
+    errorMessageFromUnknown,
+    formatAttachmentDiagnosticForLog,
+    getAttachmentDiagnostic,
+} from './attachmentDiagnostics';
 import { ApiEphemeralUpdateSchema, ApiMessage, ApiUpdateContainerSchema } from './apiTypes';
 import type { ApiEphemeralActivityUpdate } from './apiTypes';
 import { Session, Machine } from './storageTypes';
@@ -51,6 +60,7 @@ import { getFriendsList, getUserProfile } from './apiFriends';
 import { fetchFeed } from './apiFeed';
 import { FeedItem } from './feedTypes';
 import { UserProfile } from './friendTypes';
+import { resolveControlHandoffDirection } from './controlHandoff';
 import { resolveMessageModeMeta } from './messageMeta';
 import type { AttachmentPreview, UploadedAttachment } from './attachmentTypes';
 import { requestAttachmentUpload, uploadEncryptedBlob } from './apiAttachments';
@@ -58,6 +68,7 @@ import { encryptBlob } from '@/encryption/blob';
 import { readFileBytes } from '@/utils/readFileBytes';
 import { Modal } from '@/modal';
 import { t } from '@/text';
+import { isRigMetadataV1, rigCanUseAttachments, usesControlledSessionUi } from './rig';
 
 type V3GetSessionMessagesResponse = {
     messages: ApiMessage[];
@@ -562,7 +573,21 @@ class Sync {
                     thumbhash: attachment.thumbhash,
                 });
             } catch (err) {
-                console.error(`[attachments] Failed to upload ${attachment.name}:`, err);
+                const diagnostic = getAttachmentDiagnostic(err);
+                if (diagnostic) {
+                    console.error('[attachments] Failed to upload image attachment:', formatAttachmentDiagnosticForLog(diagnostic, {
+                        platform: Platform.OS,
+                        client: getHappyClientId(),
+                    }));
+                } else {
+                    const message = errorMessageFromUnknown(err);
+                    console.error('[attachments] Failed to upload image attachment:', {
+                        leg: 'blob-upload',
+                        message,
+                        platform: Platform.OS,
+                        client: getHappyClientId(),
+                    });
+                }
                 failed++;
                 // Skip this attachment; do not abort the whole message send.
             }
@@ -599,20 +624,35 @@ class Sync {
         const modeMeta = resolveMessageModeMeta(session, storage.getState().settings);
         const { displayText, source = 'chat', attachments } = options ?? {};
 
-        // Image attachments are wired into the Claude pipeline only; Codex /
-        // Gemini / OpenClaw runners read message.content.text and ignore
-        // file events, so dropping attachments silently would leave the user
-        // wondering why the image was skipped. Warn and send text only.
         const flavor = session.metadata?.flavor;
-        const supportsAttachments = !flavor || flavor === 'claude';
-        const effectiveAttachments = supportsAttachments ? attachments : undefined;
+        const rigAttachmentPolicy = isRigMetadataV1(session.metadata)
+            ? session.metadata?.capabilities?.attachments
+            : null;
+        const attachmentPlan = getImageAttachmentSendPlan({
+            flavor,
+            text,
+            attachmentCount: attachments?.length ?? 0,
+            supportsAttachments: isRigMetadataV1(session.metadata)
+                ? rigCanUseAttachments(session.metadata)
+                : undefined,
+        });
+        const effectiveAttachments = attachmentPlan.shouldUseAttachments
+            ? (rigAttachmentPolicy
+                ? attachments?.filter((attachment) => isAttachmentAllowedByPolicy(attachment, rigAttachmentPolicy))
+                : attachments)
+            : undefined;
+        const rejectedByRigPolicy = isRigMetadataV1(session.metadata)
+            && (attachments?.length ?? 0) > (effectiveAttachments?.length ?? 0);
 
-        if (attachments && attachments.length > 0 && !supportsAttachments) {
+        if (attachmentPlan.shouldShowUnsupportedAlert || rejectedByRigPolicy) {
             Modal.alert(
                 t('imageUpload.notSupportedTitle'),
                 t('imageUpload.notSupportedMessage'),
                 [{ text: t('common.ok'), style: 'cancel' }],
             );
+            if (!attachmentPlan.shouldSendText || (!text.trim() && (effectiveAttachments?.length ?? 0) === 0)) {
+                return;
+            }
         }
 
         // Upload attachments and queue file events before the text message.
@@ -710,6 +750,7 @@ class Sync {
                 appendSystemPrompt: systemPrompt,
                 ...(modeMeta.permissionMode !== undefined ? { permissionMode: modeMeta.permissionMode } : {}),
                 ...(modeMeta.model !== undefined ? { model: modeMeta.model } : {}),
+                ...(modeMeta.modelProviderId !== undefined ? { modelProviderId: modeMeta.modelProviderId } : {}),
                 ...(modeMeta.effort !== undefined ? { effort: modeMeta.effort } : {}),
                 ...(displayText && { displayText }) // Add displayText if provided
             }
@@ -733,6 +774,10 @@ class Sync {
             content: encryptedRawRecord
         });
         trackMessageSent(source, session.metadata);
+
+        // Stamp local activity time so the (opt-in) activity sort bubbles this session
+        // up on user action only — not on background agent output.
+        storage.getState().markSessionMessageSent(sessionId);
 
         this.getSendSync(sessionId).invalidate();
         this.maybeStartBackgroundSendWatchdog();
@@ -981,7 +1026,8 @@ class Sync {
             // Decrypt agent state using session-specific encryption
             let agentState = await sessionEncryption.decryptAgentState(session.agentStateVersion, session.agentState);
 
-            // Put it all together
+            // Put it all together. Thinking placeholders are overwritten just
+            // before applySessions below.
             const processedSession = {
                 ...session,
                 thinking: false,
@@ -992,8 +1038,24 @@ class Sync {
             decryptedSessions.push(processedSession);
         }
 
-        // Apply to storage
-        this.applySessions(decryptedSessions);
+        // Thinking state exists only in activity ephemerals — the server
+        // session record has no such field, so preserve whatever we already
+        // know. Hardcoding false wipes the live state of every running session
+        // on any full refetch (notably the one `new-session` triggers), which
+        // both freezes the pulsing dot and trips the "agent just finished"
+        // unread detector in applySessions. Two deliberate details:
+        // - Resolved here, synchronously with the apply, rather than inside
+        //   the decrypt loop above: the loop awaits per session, so a snapshot
+        //   taken there can be overtaken by an activity ephemeral clearing
+        //   thinking in the meantime.
+        // - Gated on `active`: a dead session can never send the clearing
+        //   ephemeral, so a preserved `true` would otherwise be immortal.
+        const current = storage.getState().sessions;
+        this.applySessions(decryptedSessions.map(s => ({
+            ...s,
+            thinking: s.active ? (current[s.id]?.thinking ?? false) : false,
+            thinkingAt: s.active ? (current[s.id]?.thinkingAt ?? 0) : 0,
+        })));
         log.log(`📥 fetchSessions completed - processed ${decryptedSessions.length} sessions`);
 
     }
@@ -2314,12 +2376,16 @@ class Sync {
                         voiceHooks.onPermissionRequested(updateData.body.id, requestIds[0], toolName, firstRequest?.arguments);
                     }
 
-                    // Re-fetch messages when control returns to mobile (local -> remote mode switch)
-                    // This catches up on any messages that were exchanged while desktop had control
+                    // Re-fetch messages on control handoff so the newly active
+                    // side catches up on messages exchanged while it was passive.
                     const wasControlledByUser = session.agentState?.controlledByUser;
                     const isNowControlledByUser = agentState?.controlledByUser;
-                    if (!wasControlledByUser && isNowControlledByUser) {
-                        log.log(`🔄 Control returned to mobile for session ${updateData.body.id}, re-fetching messages`);
+                    const handoffDirection = usesControlledSessionUi(metadata)
+                        ? resolveControlHandoffDirection(wasControlledByUser, isNowControlledByUser)
+                        : null;
+                    if (handoffDirection) {
+                        const target = handoffDirection === 'desktop-to-mobile' ? 'mobile' : 'desktop';
+                        log.log(`🔄 Control returned to ${target} for session ${updateData.body.id}, re-fetching messages`);
                         this.onSessionVisible(updateData.body.id);
                     }
                 }
@@ -2746,6 +2812,12 @@ class Sync {
         }
         if (result.hasReadyEvent) {
             voiceHooks.onReady(sessionId);
+        }
+        if (result.enteredPlanMode) {
+            // The EnterPlanMode auto-switch only wrote the local mirror; push
+            // it into synced metadata so other devices see plan mode and the
+            // next inbound metadata update doesn't revert it (#1492)
+            sessionSetAgentModes(sessionId, { permissionMode: 'plan' });
         }
     }
 
