@@ -2,6 +2,117 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, OnceLock};
 use tauri::{AppHandle, Emitter, Manager};
 
+#[cfg(target_os = "macos")]
+mod webview_recovery {
+    use objc2::runtime::{AnyObject, Imp, Sel};
+    use objc2::{msg_send, sel};
+    use objc2_web_kit::WKWebView;
+    use std::fs::{self, File, OpenOptions};
+    use std::io::Write;
+    use std::path::PathBuf;
+    use std::sync::OnceLock;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    use tauri::{Manager, WebviewWindow};
+
+    const MAX_RECOVERY_LOG_BYTES: u64 = 64 * 1024;
+
+    type WebContentProcessDidTerminate = unsafe extern "C-unwind" fn(&AnyObject, Sel, &WKWebView);
+
+    static ORIGINAL_TERMINATION_HANDLER: OnceLock<usize> = OnceLock::new();
+    static RECOVERY_LOG_PATH: OnceLock<PathBuf> = OnceLock::new();
+
+    fn append_recovery_log(message: &str) {
+        let Some(path) = RECOVERY_LOG_PATH.get() else {
+            return;
+        };
+
+        if path
+            .metadata()
+            .map(|metadata| metadata.len() >= MAX_RECOVERY_LOG_BYTES)
+            .unwrap_or(false)
+        {
+            let _ = File::create(path);
+        }
+
+        let timestamp_millis = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_millis())
+            .unwrap_or_default();
+
+        if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(file, "{timestamp_millis} {message}");
+        }
+    }
+
+    unsafe extern "C-unwind" fn recover_terminated_web_content(
+        delegate: &AnyObject,
+        selector: Sel,
+        webview: &WKWebView,
+    ) {
+        if let Some(original) = ORIGINAL_TERMINATION_HANDLER.get().copied() {
+            // SAFETY: The stored pointer is the implementation replaced for this exact
+            // Objective-C selector, so it has the same delegate/selector/webview ABI.
+            let original: WebContentProcessDidTerminate = unsafe { std::mem::transmute(original) };
+            unsafe { original(delegate, selector, webview) };
+        }
+
+        append_recovery_log("web-content-process-terminated; reloading");
+
+        // SAFETY: WebKit invokes this delegate on the main thread with the WKWebView
+        // whose content process terminated. Reloading creates a fresh content process.
+        let _: *mut AnyObject = unsafe { msg_send![webview, reload] };
+    }
+
+    fn prepare_recovery_log(app: &tauri::App) -> tauri::Result<()> {
+        let log_dir = app.path().app_log_dir()?;
+        fs::create_dir_all(&log_dir)?;
+        let _ = RECOVERY_LOG_PATH.set(log_dir.join("webview-recovery.log"));
+        Ok(())
+    }
+
+    fn install_on_webview(webview: &WebviewWindow) -> tauri::Result<()> {
+        webview.with_webview(|platform_webview| {
+            if ORIGINAL_TERMINATION_HANDLER.get().is_some() {
+                return;
+            }
+
+            // SAFETY: Tauri documents this cast for macOS PlatformWebview handles.
+            let webview: &WKWebView = unsafe { &*platform_webview.inner().cast() };
+            // SAFETY: navigationDelegate is a weak Objective-C property exposed by
+            // WKWebView. Wry retains its delegate for the webview lifetime.
+            let Some(delegate) = (unsafe { webview.navigationDelegate() }) else {
+                append_recovery_log("recovery-install-failed; missing-navigation-delegate");
+                return;
+            };
+
+            let selector = sel!(webViewWebContentProcessDidTerminate:);
+            let delegate_object: &AnyObject = AsRef::<AnyObject>::as_ref(&*delegate);
+            let Some(method) = delegate_object.class().instance_method(selector) else {
+                append_recovery_log("recovery-install-failed; missing-termination-selector");
+                return;
+            };
+
+            let replacement: WebContentProcessDidTerminate = recover_terminated_web_content;
+            // SAFETY: Both implementations use the Objective-C method ABI for
+            // `webViewWebContentProcessDidTerminate:`.
+            let replacement: Imp = unsafe { std::mem::transmute(replacement) };
+            // SAFETY: The replacement preserves the original method contract and calls
+            // the previous implementation before adding reload recovery.
+            let original = unsafe { method.set_implementation(replacement) };
+            let _ = ORIGINAL_TERMINATION_HANDLER.set(original as *const () as usize);
+        })
+    }
+
+    pub fn install(app: &tauri::App) -> tauri::Result<()> {
+        prepare_recovery_log(app)?;
+        let Some(main_window) = app.get_webview_window("main") else {
+            append_recovery_log("recovery-install-failed; missing-main-window");
+            return Ok(());
+        };
+        install_on_webview(&main_window)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct DesktopSessionNotification {
@@ -225,6 +336,9 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            webview_recovery::install(app)?;
+
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()

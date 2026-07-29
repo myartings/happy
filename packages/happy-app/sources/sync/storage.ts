@@ -199,6 +199,7 @@ interface StorageState {
     applyMessagesLoaded: (sessionId: string) => void;
     applyOlderMessagesPagination: (sessionId: string, info: { hasMore: boolean }) => void;
     applyOlderMessagesLoading: (sessionId: string, isLoading: boolean) => void;
+    evictSessionMessages: (sessionId: string) => void;
     applySettings: (settings: Settings, version: number) => void;
     applySettingsLocal: (settings: Partial<Settings>) => void;
     applyLocalSettings: (settings: Partial<LocalSettings>) => void;
@@ -853,6 +854,16 @@ export const storage = create<StorageState>()((set, get) => {
                         isLoadingOlder: isLoading
                     } satisfies SessionMessages
                 }
+            };
+        }),
+        evictSessionMessages: (sessionId: string) => set((state) => {
+            if (!state.sessionMessages[sessionId]) {
+                return state;
+            }
+            const { [sessionId]: _evicted, ...remainingSessionMessages } = state.sessionMessages;
+            return {
+                ...state,
+                sessionMessages: remainingSessionMessages,
             };
         }),
         applySettingsLocal: (settings: Partial<Settings>) => set((state) => {

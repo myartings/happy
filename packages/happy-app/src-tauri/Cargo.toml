@@ -35,3 +35,4 @@ block2 = "0.6.1"
 objc2 = "0.6.2"
 objc2-foundation = "0.3.1"
 objc2-user-notifications = "0.3.2"
+objc2-web-kit = { version = "0.3.1", features = ["WKNavigationDelegate", "WKWebView"] }

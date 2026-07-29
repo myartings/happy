@@ -971,14 +971,15 @@ export function SessionViewLoaded({
         gitStatusSync.getSync(sessionId).invalidate();
 
         return () => {
-            if (embedded) {
-                return;
+            if (!embedded) {
+                // Clear viewing session on unmount before pruning so the session
+                // is no longer protected solely by the primary-view marker.
+                const current = storage.getState().currentViewingSessionId;
+                if (current === sessionId) {
+                    storage.getState().setCurrentViewingSession(null);
+                }
             }
-            // Clear viewing session on unmount
-            const current = storage.getState().currentViewingSessionId;
-            if (current === sessionId) {
-                storage.getState().setCurrentViewingSession(null);
-            }
+            sync.onSessionHidden(sessionId);
         };
     }, [sessionId, realtimeStatus, embedded]);
 

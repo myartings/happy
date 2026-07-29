@@ -62,6 +62,11 @@ import { FeedItem } from './feedTypes';
 import { UserProfile } from './friendTypes';
 import { resolveControlHandoffDirection } from './controlHandoff';
 import { resolveMessageModeMeta } from './messageMeta';
+import {
+    MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
+    MAX_RETAINED_SESSION_MESSAGE_CACHES,
+    selectSessionMessageCacheEvictions,
+} from './sessionMessageCachePolicy';
 import type { AttachmentPreview, UploadedAttachment } from './attachmentTypes';
 import { requestAttachmentUpload, uploadEncryptedBlob } from './apiAttachments';
 import { encryptBlob } from '@/encryption/blob';
@@ -125,6 +130,10 @@ class Sync {
     private sessionMessageQueue = new Map<string, NormalizedMessage[]>();
     private sessionQueueProcessing = new Set<string>();
     private sessionMessageLocks = new Map<string, AsyncLock>();
+    private sessionMessageCacheAccessOrder = new Map<string, number>();
+    private sessionMessageCacheAccessCounter = 0;
+    private sessionMessageCacheGeneration = new Map<string, number>();
+    private visibleSessionRefCounts = new Map<string, number>();
     private sessionDataKeys = new Map<string, Uint8Array>(); // Store session data encryption keys internally
     private machineDataKeys = new Map<string, Uint8Array>(); // Store machine data encryption keys internally
     private artifactDataKeys = new Map<string, Uint8Array>(); // Store artifact data encryption keys internally
@@ -203,6 +212,10 @@ class Sync {
                 this.feedSync.invalidate();
             } else {
                 log.log(`📱 App state changed to: ${nextAppState}`);
+                this.pruneSessionMessageCaches(
+                    MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
+                    'app-backgrounded'
+                );
                 this.maybeStartBackgroundSendWatchdog();
             }
         });
@@ -214,6 +227,12 @@ class Sync {
         if (Platform.OS === 'web' && typeof document !== 'undefined') {
             const broadcast = () => {
                 apiSocket.sendAppState(getCurrentAppState());
+                if (document.visibilityState === 'hidden') {
+                    this.pruneSessionMessageCaches(
+                        MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
+                        'document-hidden'
+                    );
+                }
             };
             document.addEventListener('visibilitychange', broadcast);
             window.addEventListener('focus', broadcast);
@@ -316,7 +335,11 @@ class Sync {
 
 
     onSessionVisible = (sessionId: string) => {
-        this.getMessagesSync(sessionId).invalidate();
+        this.visibleSessionRefCounts.set(
+            sessionId,
+            (this.visibleSessionRefCounts.get(sessionId) ?? 0) + 1
+        );
+        this.refreshSessionMessageCache(sessionId, 'session-visible');
 
         // Also invalidate git status sync for this session
         gitStatusSync.getSync(sessionId).invalidate();
@@ -326,6 +349,105 @@ class Sync {
         if (session) {
             voiceHooks.onSessionFocus(sessionId, session.metadata || undefined);
         }
+    }
+
+    private refreshSessionMessageCache(sessionId: string, reason: string) {
+        this.touchSessionMessageCache(sessionId);
+        this.pruneSessionMessageCaches(
+            MAX_RETAINED_SESSION_MESSAGE_CACHES,
+            reason,
+            [sessionId]
+        );
+        this.getMessagesSync(sessionId).invalidate();
+    }
+
+    onSessionHidden = (sessionId: string) => {
+        const nextCount = (this.visibleSessionRefCounts.get(sessionId) ?? 1) - 1;
+        if (nextCount > 0) {
+            this.visibleSessionRefCounts.set(sessionId, nextCount);
+        } else {
+            this.visibleSessionRefCounts.delete(sessionId);
+        }
+        this.pruneSessionMessageCaches(
+            MAX_RETAINED_SESSION_MESSAGE_CACHES,
+            'session-hidden'
+        );
+    }
+
+    private touchSessionMessageCache(sessionId: string) {
+        this.sessionMessageCacheAccessCounter += 1;
+        this.sessionMessageCacheAccessOrder.set(sessionId, this.sessionMessageCacheAccessCounter);
+    }
+
+    private pruneSessionMessageCaches(
+        maxRetained: number,
+        reason: string,
+        additionalProtectedSessionIds: Iterable<string> = []
+    ) {
+        const state = storage.getState();
+        const protectedSessionIds = new Set(additionalProtectedSessionIds);
+        if (state.currentViewingSessionId) {
+            protectedSessionIds.add(state.currentViewingSessionId);
+        }
+        for (const sessionId of this.visibleSessionRefCounts.keys()) {
+            protectedSessionIds.add(sessionId);
+        }
+        for (const sessionId of this.sessionQueueProcessing) {
+            protectedSessionIds.add(sessionId);
+        }
+        for (const sessionId of this.sendAbortControllers.keys()) {
+            protectedSessionIds.add(sessionId);
+        }
+        for (const [sessionId, messages] of this.pendingOutbox) {
+            if (messages.length > 0) {
+                protectedSessionIds.add(sessionId);
+            }
+        }
+
+        const evictions = selectSessionMessageCacheEvictions({
+            cachedSessionIds: Object.keys(state.sessionMessages),
+            accessOrder: this.sessionMessageCacheAccessOrder,
+            protectedSessionIds,
+            maxRetained,
+        });
+        if (evictions.length === 0) {
+            return;
+        }
+
+        let evictedMessageCount = 0;
+        for (const sessionId of evictions) {
+            evictedMessageCount += storage.getState().sessionMessages[sessionId]?.messages.length ?? 0;
+            this.evictSessionMessageCache(sessionId);
+        }
+        log.log(
+            `💾 Session message cache pruned: reason=${reason} evictedSessions=${evictions.length} ` +
+            `evictedMessages=${evictedMessageCount} retainedSessions=${Object.keys(storage.getState().sessionMessages).length}`
+        );
+    }
+
+    private evictSessionMessageCache(sessionId: string) {
+        this.sessionMessageCacheGeneration.set(
+            sessionId,
+            this.getSessionMessageCacheGeneration(sessionId) + 1
+        );
+        this.messagesSync.get(sessionId)?.stop();
+        this.messagesSync.delete(sessionId);
+        this.sessionLastSeq.delete(sessionId);
+        this.sessionOldestSeq.delete(sessionId);
+        this.sessionMessageCacheAccessOrder.delete(sessionId);
+        this.sessionMessageQueue.delete(sessionId);
+        if (!this.sessionQueueProcessing.has(sessionId)) {
+            this.sessionMessageLocks.delete(sessionId);
+        }
+        storage.getState().evictSessionMessages(sessionId);
+    }
+
+    private getSessionMessageCacheGeneration(sessionId: string) {
+        return this.sessionMessageCacheGeneration.get(sessionId) ?? 0;
+    }
+
+    private isSessionMessageCacheGenerationCurrent(sessionId: string, generation: number) {
+        return this.getSessionMessageCacheGeneration(sessionId) === generation;
     }
 
     private getMessagesSync(sessionId: string): InvalidateSync {
@@ -1925,9 +2047,13 @@ class Sync {
     }
 
     private fetchMessages = async (sessionId: string) => {
+        const cacheGeneration = this.getSessionMessageCacheGeneration(sessionId);
         log.log(`💬 fetchMessages starting for session ${sessionId} - acquiring lock`);
         const lock = this.getSessionMessageLock(sessionId);
         await lock.inLock(async () => {
+            if (!this.isSessionMessageCacheGenerationCurrent(sessionId, cacheGeneration)) {
+                return;
+            }
             const encryption = this.encryption.getSessionEncryption(sessionId);
             if (!encryption) {
                 log.log(`💬 fetchMessages: Session encryption not ready for ${sessionId}, will retry`);
@@ -1939,75 +2065,53 @@ class Sync {
             if (isInitialLoad) {
                 // Initial load. Pull only the most recent page so the user can
                 // start chatting immediately. Older history streams in lazily
-                // through loadOlderMessages() when the user scrolls up — and
-                // also through a background prefetch kicked off below, so the
-                // history fills in even when the user doesn't scroll.
+                // through loadOlderMessages() only when the user scrolls up.
                 //
                 // Previously this method walked forward from seq=0 until every
                 // page had been fetched and decrypted, which blocked the chat
                 // from displaying anything for sessions with thousands of
                 // messages. The user's reported pain point was "opening a long
                 // session feels frozen" — this is the fix.
-                await this.fetchInitialLatestPage(sessionId, encryption);
+                const applied = await this.fetchInitialLatestPage(
+                    sessionId,
+                    encryption,
+                    cacheGeneration
+                );
+                if (!applied) {
+                    return;
+                }
             } else {
                 // Forward incremental sync. Used after reconnect, invalidate,
                 // or any subsequent visit. Only pulls messages newer than what
                 // we already have, so it's bounded and fast in normal use.
-                await this.fetchForwardSince(sessionId, encryption, knownLastSeq);
+                const applied = await this.fetchForwardSince(
+                    sessionId,
+                    encryption,
+                    knownLastSeq,
+                    cacheGeneration
+                );
+                if (!applied) {
+                    return;
+                }
             }
 
+            if (!this.isSessionMessageCacheGenerationCurrent(sessionId, cacheGeneration)) {
+                return;
+            }
             storage.getState().applyMessagesLoaded(sessionId);
+            this.pruneSessionMessageCaches(
+                MAX_RETAINED_SESSION_MESSAGE_CACHES,
+                'messages-loaded',
+                [sessionId]
+            );
             log.log(`💬 fetchMessages completed for session ${sessionId}`);
-
-            if (isInitialLoad) {
-                // Fire-and-forget. The chat is interactive at this point;
-                // background pages stream in without blocking either the
-                // surrounding lock or the UI. loadOlderMessages takes the
-                // same lock internally, so the loop naturally serialises
-                // with on-scroll triggers and live socket updates.
-                void this.prefetchOlderMessagesInBackground(sessionId);
-            }
         });
-    }
-
-    private prefetchOlderMessagesInBackground = async (sessionId: string) => {
-        const SLEEP_BETWEEN_PAGES_MS = 250;
-        // While loadOlderMessages handles the actual work, this loop is what
-        // keeps it going without user input. We keep stepping until either:
-        //   - the server says there is no more older history, or
-        //   - the session is no longer present in the store (user navigated
-        //     away and the session was unloaded), or
-        //   - we hit seq = 1 (the very first message), or
-        //   - the encryption key is gone (logged out).
-        // The loop yields between pages to keep the UI thread responsive
-        // and to spread out server load.
-        while (true) {
-            const sessionMessages = storage.getState().sessionMessages[sessionId];
-            if (!sessionMessages || !sessionMessages.hasMoreOlder) {
-                return;
-            }
-            if (!this.encryption.getSessionEncryption(sessionId)) {
-                return;
-            }
-            const oldestSeq = this.sessionOldestSeq.get(sessionId);
-            if (oldestSeq === undefined || oldestSeq <= 1) {
-                return;
-            }
-
-            try {
-                await this.loadOlderMessages(sessionId);
-            } catch (error) {
-                log.log(`💬 prefetchOlderMessagesInBackground: error for ${sessionId}, stopping: ${String(error)}`);
-                return;
-            }
-
-            await new Promise((resolve) => setTimeout(resolve, SLEEP_BETWEEN_PAGES_MS));
-        }
     }
 
     private fetchInitialLatestPage = async (
         sessionId: string,
-        encryption: ReturnType<Encryption['getSessionEncryption']> & {}
+        encryption: ReturnType<Encryption['getSessionEncryption']> & {},
+        cacheGeneration: number
     ) => {
         const response = await apiSocket.request(
             `/v3/sessions/${sessionId}/messages?before_seq=${SEQ_BACKWARD_INITIAL_SENTINEL}&limit=100`
@@ -2018,7 +2122,15 @@ class Sync {
         const data = await response.json() as V3GetSessionMessagesResponse;
         const messages = Array.isArray(data.messages) ? data.messages : [];
 
-        await this.applyFetchedMessages(sessionId, encryption, messages);
+        const applied = await this.applyFetchedMessages(
+            sessionId,
+            encryption,
+            messages,
+            cacheGeneration
+        );
+        if (!applied) {
+            return false;
+        }
 
         // Anchor both ends so future incremental forward sync resumes from
         // maxSeq, and loadOlderMessages can page backward from minSeq.
@@ -2035,15 +2147,20 @@ class Sync {
         storage.getState().applyOlderMessagesPagination(sessionId, {
             hasMore: !!data.hasMore && messages.length > 0
         });
+        return true;
     }
 
     private fetchForwardSince = async (
         sessionId: string,
         encryption: ReturnType<Encryption['getSessionEncryption']> & {},
-        fromSeq: number
+        fromSeq: number,
+        cacheGeneration: number
     ) => {
         let afterSeq = fromSeq;
         while (true) {
+            if (!this.isSessionMessageCacheGenerationCurrent(sessionId, cacheGeneration)) {
+                return false;
+            }
             const response = await apiSocket.request(`/v3/sessions/${sessionId}/messages?after_seq=${afterSeq}&limit=100`);
             if (!response.ok) {
                 throw new Error(`Failed to forward-sync ${sessionId}: ${response.status}`);
@@ -2051,7 +2168,15 @@ class Sync {
             const data = await response.json() as V3GetSessionMessagesResponse;
             const messages = Array.isArray(data.messages) ? data.messages : [];
 
-            await this.applyFetchedMessages(sessionId, encryption, messages);
+            const applied = await this.applyFetchedMessages(
+                sessionId,
+                encryption,
+                messages,
+                cacheGeneration
+            );
+            if (!applied) {
+                return false;
+            }
 
             let maxSeq = afterSeq;
             for (const message of messages) {
@@ -2066,15 +2191,23 @@ class Sync {
             }
             afterSeq = maxSeq;
         }
+        return true;
     }
 
     private applyFetchedMessages = async (
         sessionId: string,
         encryption: ReturnType<Encryption['getSessionEncryption']> & {},
-        messages: ApiMessage[]
+        messages: ApiMessage[],
+        cacheGeneration: number
     ) => {
-        if (messages.length === 0) return;
+        if (!this.isSessionMessageCacheGenerationCurrent(sessionId, cacheGeneration)) {
+            return false;
+        }
+        if (messages.length === 0) return true;
         const decryptedMessages = await encryption.decryptMessages(messages);
+        if (!this.isSessionMessageCacheGenerationCurrent(sessionId, cacheGeneration)) {
+            return false;
+        }
         const normalizedMessages: NormalizedMessage[] = [];
         for (let i = 0; i < decryptedMessages.length; i++) {
             const decrypted = decryptedMessages[i];
@@ -2087,6 +2220,7 @@ class Sync {
         if (normalizedMessages.length > 0) {
             this.applyMessages(sessionId, normalizedMessages);
         }
+        return true;
     }
 
     /**
@@ -2097,6 +2231,7 @@ class Sync {
      * older-fetch is already in flight for this session.
      */
     loadOlderMessages = async (sessionId: string) => {
+        const cacheGeneration = this.getSessionMessageCacheGeneration(sessionId);
         const oldestSeq = this.sessionOldestSeq.get(sessionId);
         if (oldestSeq === undefined || oldestSeq <= 1) {
             return;
@@ -2110,6 +2245,9 @@ class Sync {
         const lock = this.getSessionMessageLock(sessionId);
         try {
             await lock.inLock(async () => {
+                if (!this.isSessionMessageCacheGenerationCurrent(sessionId, cacheGeneration)) {
+                    return;
+                }
                 const encryption = this.encryption.getSessionEncryption(sessionId);
                 if (!encryption) {
                     log.log(`💬 loadOlderMessages: encryption not ready for ${sessionId}`);
@@ -2130,7 +2268,15 @@ class Sync {
                 const data = await response.json() as V3GetSessionMessagesResponse;
                 const messages = Array.isArray(data.messages) ? data.messages : [];
 
-                await this.applyFetchedMessages(sessionId, encryption, messages);
+                const applied = await this.applyFetchedMessages(
+                    sessionId,
+                    encryption,
+                    messages,
+                    cacheGeneration
+                );
+                if (!applied) {
+                    return;
+                }
 
                 let minSeq = beforeSeq;
                 for (const message of messages) {
@@ -2277,9 +2423,16 @@ class Sync {
                     }
 
                     // Fast-path only on consecutive seq values, otherwise fetch from server.
+                    const hasRetainedMessageCache =
+                        storage.getState().sessionMessages[updateData.body.sid] !== undefined;
                     const currentLastSeq = this.sessionLastSeq.get(updateData.body.sid);
                     const incomingSeq = updateData.body.message.seq;
-                    if (lastMessage && currentLastSeq !== undefined && incomingSeq === currentLastSeq + 1) {
+                    if (
+                        hasRetainedMessageCache &&
+                        lastMessage &&
+                        currentLastSeq !== undefined &&
+                        incomingSeq === currentLastSeq + 1
+                    ) {
                         this.enqueueMessages(updateData.body.sid, [lastMessage]);
                         this.sessionLastSeq.set(updateData.body.sid, incomingSeq);
                         let hasMutableTool = false;
@@ -2289,14 +2442,11 @@ class Sync {
                         if (hasMutableTool) {
                             gitStatusSync.invalidate(updateData.body.sid);
                         }
-                    } else {
+                    } else if (hasRetainedMessageCache) {
                         this.getMessagesSync(updateData.body.sid).invalidate();
                     }
                 }
             }
-
-            // Ping session
-            this.onSessionVisible(updateData.body.sid);
 
         } else if (updateData.body.t === 'new-session') {
             log.log('🆕 New session update received');
@@ -2313,11 +2463,18 @@ class Sync {
 
             // Clear any cached git status
             gitStatusSync.clearForSession(sessionId);
+            this.sessionMessageCacheGeneration.set(
+                sessionId,
+                this.getSessionMessageCacheGeneration(sessionId) + 1
+            );
+            this.messagesSync.get(sessionId)?.stop();
             this.messagesSync.delete(sessionId);
             this.sendSync.delete(sessionId);
             this.pendingOutbox.delete(sessionId);
             this.sessionLastSeq.delete(sessionId);
             this.sessionOldestSeq.delete(sessionId);
+            this.sessionMessageCacheAccessOrder.delete(sessionId);
+            this.visibleSessionRefCounts.delete(sessionId);
             this.sessionMessageLocks.delete(sessionId);
             this.sessionMessageQueue.delete(sessionId);
             this.sessionQueueProcessing.delete(sessionId);
@@ -2386,7 +2543,7 @@ class Sync {
                     if (handoffDirection) {
                         const target = handoffDirection === 'desktop-to-mobile' ? 'mobile' : 'desktop';
                         log.log(`🔄 Control returned to ${target} for session ${updateData.body.id}, re-fetching messages`);
-                        this.onSessionVisible(updateData.body.id);
+                        this.refreshSessionMessageCache(updateData.body.id, 'control-handoff');
                     }
                 }
             }
@@ -2799,6 +2956,7 @@ class Sync {
     //
 
     private applyMessages = (sessionId: string, messages: NormalizedMessage[]) => {
+        this.touchSessionMessageCache(sessionId);
         const result = storage.getState().applyMessages(sessionId, messages);
         let m: Message[] = [];
         for (let messageId of result.changed) {
@@ -2819,6 +2977,11 @@ class Sync {
             // next inbound metadata update doesn't revert it (#1492)
             sessionSetAgentModes(sessionId, { permissionMode: 'plan' });
         }
+        this.pruneSessionMessageCaches(
+            MAX_RETAINED_SESSION_MESSAGE_CACHES,
+            'messages-applied',
+            [sessionId]
+        );
     }
 
     private applySessions = (sessions: (Omit<Session, "presence"> & {
