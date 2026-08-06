@@ -25,6 +25,8 @@ import { buildActiveSessionDisplayGroups } from '@/utils/sessionDisplayOrder';
 import { ProviderIcon } from './ProviderIcon';
 import { SessionRuntimeMetadata } from './SessionRuntimeMetadata';
 import { getSessionPlatformKind, resolveSessionProjectName } from '@/utils/sessionRuntimeDisplay';
+import { ProjectTodoButton } from './ProjectTodoButton';
+import { resolveProjectTodoKey } from '@/sync/projectTodos';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -73,6 +75,11 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
         : displayPath;
     const repoFolderName = repoPath.split(/[/\\]/).filter(Boolean).pop() || repoDisplayPath;
     const worktreeName = isWorktree ? getWorktreeName(sessionPath) : null;
+    const projectTodoKey = resolveProjectTodoKey({
+        projectName: repoFolderName,
+        machineId: session.machineId,
+        path: repoPath,
+    });
 
     const gitInfo = useSectionGitInfo(session.id);
     const branchName = worktreeName || gitInfo.branch;
@@ -132,6 +139,13 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
                     </View>
                 )}
             </View>
+
+            {projectTodoKey && (
+                <ProjectTodoButton
+                    projectKey={projectTodoKey}
+                    showLabel
+                />
+            )}
 
             {/* + button — vertically centered, large hit area; desktop: hover-only */}
             <Pressable

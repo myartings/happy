@@ -1084,6 +1084,27 @@ export const zhHant: TranslationStructure = {
         notSupportedMessage: '此代理不支援圖片附件。圖片未傳送。',
     },
 
+    projectTodos: {
+        title: '我的專案 Todo',
+        shortTitle: 'Todo',
+        addPlaceholder: '記錄想實作的功能、問題或後續事項',
+        add: '新增',
+        empty: '這個專案還沒有 Todo',
+        process: '處理',
+        edit: '編輯',
+        privacy: '僅你可見 · 跨裝置同步 · Agent 不會讀取',
+        all: '全部',
+        open: '未完成',
+        completed: '已完成',
+        projectUnavailable: '請先在目前裝置開啟此專案，再進行處理。',
+        noProjects: '請先啟動一個專案工作階段，再新增專案 Todo。',
+        chooseTarget: '選擇處理目標',
+        newSessionTarget: '新增工作階段',
+        newSessionDescription: '預填新工作階段，但不自動傳送',
+        existingSessions: '現有作用中工作階段',
+        hasDraft: '保留現有草稿',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} 向您傳送了好友請求`,

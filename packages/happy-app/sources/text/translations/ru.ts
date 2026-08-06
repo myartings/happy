@@ -1113,6 +1113,27 @@ export const ru: TranslationStructure = {
         notSupportedMessage: 'Этот агент не поддерживает вложения изображений. Изображения не были отправлены.',
     },
 
+    projectTodos: {
+        title: 'Задачи проекта',
+        shortTitle: 'Todo',
+        addPlaceholder: 'Добавьте функцию, вопрос или следующий шаг',
+        add: 'Добавить',
+        empty: 'Нет задач проекта',
+        process: 'Взяться за это',
+        edit: 'Изменить',
+        privacy: 'Видно только вам · Синхронизация между устройствами · Агенты не могут читать',
+        all: 'Все',
+        open: 'Открытые',
+        completed: 'Завершённые',
+        projectUnavailable: 'Откройте этот проект на текущем устройстве перед началом работы.',
+        noProjects: 'Запустите сессию проекта перед добавлением Todo.',
+        chooseTarget: 'Выберите, где работать',
+        newSessionTarget: 'Новая сессия',
+        newSessionDescription: 'Заполнить новую сессию без отправки',
+        existingSessions: 'Существующие активные сессии',
+        hasDraft: 'Сохраняет существующий черновик',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} отправил вам запрос в друзья`,

@@ -1085,6 +1085,27 @@ export const zhHans: TranslationStructure = {
         notSupportedMessage: '此代理不支持图片附件。图片未发送。',
     },
 
+    projectTodos: {
+        title: '我的项目 Todo',
+        shortTitle: 'Todo',
+        addPlaceholder: '记录想实现的特性、问题或后续事项',
+        add: '添加',
+        empty: '这个项目还没有 Todo',
+        process: '处理',
+        edit: '编辑',
+        privacy: '仅你可见 · 跨设备同步 · Agent 不会读取',
+        all: '全部',
+        open: '未完成',
+        completed: '已完成',
+        projectUnavailable: '请先在当前设备打开这个项目，再进行处理。',
+        noProjects: '请先启动一个项目会话，再添加项目 Todo。',
+        chooseTarget: '选择处理目标',
+        newSessionTarget: '新建会话',
+        newSessionDescription: '预填新会话，但不自动发送',
+        existingSessions: '已有活跃会话',
+        hasDraft: '保留已有草稿',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} 向您发送了好友请求`,

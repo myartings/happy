@@ -1083,6 +1083,27 @@ export const pt: TranslationStructure = {
         notSupportedMessage: 'Este agente não suporta anexos de imagem. As imagens não foram enviadas.',
     },
 
+    projectTodos: {
+        title: 'Todo do projeto',
+        shortTitle: 'Todo',
+        addPlaceholder: 'Adicione um recurso, pergunta ou acompanhamento',
+        add: 'Adicionar',
+        empty: 'Nenhum Todo do projeto',
+        process: 'Trabalhar nisso',
+        edit: 'Editar',
+        privacy: 'Visível apenas para você · Sincronizado entre dispositivos · Agentes não podem ler',
+        all: 'Todos',
+        open: 'Pendentes',
+        completed: 'Concluídos',
+        projectUnavailable: 'Abra este projeto no dispositivo atual antes de trabalhar nele.',
+        noProjects: 'Inicie uma sessão de projeto antes de adicionar Todos.',
+        chooseTarget: 'Escolha onde trabalhar',
+        newSessionTarget: 'Nova sessão',
+        newSessionDescription: 'Preencher uma nova sessão sem enviar',
+        existingSessions: 'Sessões ativas existentes',
+        hasDraft: 'Mantém o rascunho existente',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} enviou-lhe um pedido de amizade`,

@@ -1086,6 +1086,27 @@ export const en = {
         noData: 'No usage data available',
     },
 
+    projectTodos: {
+        title: 'My Project Todos',
+        shortTitle: 'Todo',
+        addPlaceholder: 'Add a feature, question, or follow-up',
+        add: 'Add',
+        empty: 'No project todos yet',
+        process: 'Work on this',
+        edit: 'Edit',
+        privacy: 'Only visible to you · Synced across devices · Agents cannot read it',
+        all: 'All',
+        open: 'Open',
+        completed: 'Completed',
+        projectUnavailable: 'Open this project on the current device before working on it.',
+        noProjects: 'Start a project session before adding project todos.',
+        chooseTarget: 'Choose where to work on this',
+        newSessionTarget: 'New session',
+        newSessionDescription: 'Prefill a new session without sending',
+        existingSessions: 'Existing active sessions',
+        hasDraft: 'Keeps existing draft',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} sent you a friend request`,

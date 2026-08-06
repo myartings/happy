@@ -6,6 +6,7 @@ import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
 import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable } from '@/sync/storage';
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
+import { ProjectTodoButton } from './ProjectTodoButton';
 
 interface ProjectGroupProps {
     project: ProjectGroupData;
@@ -56,6 +57,10 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                         </Text>
                     )}
                 </View>
+                <ProjectTodoButton
+                    projectKey={`project:${project.id}`}
+                    showLabel
+                />
                 <Text style={styles.count}>
                     {project.activeCount > 0 ? `${project.activeCount}/${project.sessionCount}` : project.sessionCount}
                 </Text>

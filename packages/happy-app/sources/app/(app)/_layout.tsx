@@ -324,6 +324,14 @@ export default function RootLayout() {
                 }}
             />
             <Stack.Screen
+                name="project-todos"
+                options={{
+                    headerShown: true,
+                    headerTitle: t('projectTodos.title'),
+                    headerBackTitle: t('common.back'),
+                }}
+            />
+            <Stack.Screen
                 name="settings/connect/claude"
                 options={{
                     headerShown: true,

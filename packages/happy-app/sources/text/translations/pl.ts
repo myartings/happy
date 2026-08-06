@@ -1114,6 +1114,27 @@ export const pl: TranslationStructure = {
         notSupportedMessage: 'Ten agent nie obsługuje załączników obrazów. Obrazy nie zostały wysłane.',
     },
 
+    projectTodos: {
+        title: 'Todo projektu',
+        shortTitle: 'Todo',
+        addPlaceholder: 'Dodaj funkcję, pytanie lub dalsze zadanie',
+        add: 'Dodaj',
+        empty: 'Brak Todo projektu',
+        process: 'Zajmij się tym',
+        edit: 'Edytuj',
+        privacy: 'Widoczne tylko dla Ciebie · Synchronizowane między urządzeniami · Agenci nie mogą odczytać',
+        all: 'Wszystkie',
+        open: 'Otwarte',
+        completed: 'Ukończone',
+        projectUnavailable: 'Otwórz ten projekt na bieżącym urządzeniu przed rozpoczęciem pracy.',
+        noProjects: 'Uruchom sesję projektu przed dodaniem Todo.',
+        chooseTarget: 'Wybierz miejsce pracy',
+        newSessionTarget: 'Nowa sesja',
+        newSessionDescription: 'Wypełnij nową sesję bez wysyłania',
+        existingSessions: 'Istniejące aktywne sesje',
+        hasDraft: 'Zachowuje istniejący szkic',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} wysłał Ci zaproszenie do znajomych`,

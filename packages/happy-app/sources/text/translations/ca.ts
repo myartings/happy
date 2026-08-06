@@ -1084,6 +1084,27 @@ export const ca: TranslationStructure = {
         notSupportedMessage: 'Aquest agent no admet fitxers adjunts d\'imatge. Les imatges no s\'han enviat.',
     },
 
+    projectTodos: {
+        title: 'Tasques del projecte',
+        shortTitle: 'Todo',
+        addPlaceholder: 'Afegeix una funció, pregunta o seguiment',
+        add: 'Afegeix',
+        empty: 'No hi ha tasques del projecte',
+        process: 'Treballa-hi',
+        edit: 'Edita',
+        privacy: 'Només visible per a tu · Sincronitzat entre dispositius · Els agents no ho poden llegir',
+        all: 'Totes',
+        open: 'Pendents',
+        completed: 'Completades',
+        projectUnavailable: 'Obre aquest projecte al dispositiu actual abans de treballar-hi.',
+        noProjects: 'Inicia una sessió de projecte abans d’afegir tasques.',
+        chooseTarget: 'Tria on treballar',
+        newSessionTarget: 'Sessió nova',
+        newSessionDescription: 'Emplena una sessió nova sense enviar',
+        existingSessions: 'Sessions actives existents',
+        hasDraft: 'Conserva l’esborrany existent',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} t'ha enviat una sol·licitud d'amistat`,

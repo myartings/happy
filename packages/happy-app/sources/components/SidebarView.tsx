@@ -11,6 +11,7 @@ import { t } from '@/text';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/constants/Typography';
 import { ShortcutHintBadge, useShortcutHints } from './ShortcutHints';
+import { ProjectTodoButton } from './ProjectTodoButton';
 
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
@@ -36,6 +37,12 @@ const stylesheet = StyleSheet.create((theme) => ({
     },
     newSessionButtonPressed: {
         backgroundColor: theme.colors.surfacePressed,
+    },
+    projectTodosButton: {
+        marginHorizontal: 16,
+        marginBottom: 4,
+        justifyContent: 'flex-start',
+        paddingHorizontal: 14,
     },
     shortcutTargetActive: {
         backgroundColor: theme.colors.surfacePressed,
@@ -117,6 +124,8 @@ export const SidebarView = React.memo(() => {
                 <Text style={styles.newSessionText}>{t('sidebar.newSession')}</Text>
                 <ShortcutHintBadge shortcutKey="N" style={styles.shortcutBadgeInline} />
             </Pressable>
+
+            <ProjectTodoButton showLabel style={styles.projectTodosButton} />
 
             <Pressable
                 onPress={() => router.push('/prompts' as never)}
