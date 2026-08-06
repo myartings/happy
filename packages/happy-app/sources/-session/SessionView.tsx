@@ -79,7 +79,7 @@ import {
 } from '@/sync/rig';
 import { RigActivityBar } from '@/components/RigActivityBar';
 
-export const SessionView = React.memo((props: { id: string }) => {
+export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
     const sessionId = props.id;
     const router = useRouter();
     const session = useSession(sessionId);
@@ -427,6 +427,9 @@ export const SessionView = React.memo((props: { id: string }) => {
                         key={sessionId}
                         sessionId={sessionId}
                         session={session}
+                        targetMessageId={props.targetMessageId}
+                        targetMessageLocalId={props.targetMessageLocalId}
+                        targetMessageCreatedAt={props.targetMessageCreatedAt}
                         onHeaderBackdropVisibilityChange={contentRunsUnderHeader
                             ? setHeaderBackdropVisible
                             : undefined}
@@ -623,11 +626,17 @@ export function SessionViewLoaded({
     sessionId,
     session,
     embedded = false,
+    targetMessageId,
+    targetMessageLocalId,
+    targetMessageCreatedAt,
     onHeaderBackdropVisibilityChange,
 }: {
     sessionId: string;
     session: Session;
     embedded?: boolean;
+    targetMessageId?: string;
+    targetMessageLocalId?: string;
+    targetMessageCreatedAt?: number;
     onHeaderBackdropVisibilityChange?: (visible: boolean) => void;
 }) {
     const { theme } = useUnistyles();
@@ -990,6 +999,9 @@ export function SessionViewLoaded({
                 {messages.length > 0 && (
                     <ChatList
                         session={session}
+                        targetMessageId={targetMessageId}
+                        targetMessageLocalId={targetMessageLocalId}
+                        targetMessageCreatedAt={targetMessageCreatedAt}
                         topContentInset={chatListTopContentInset}
                         bottomContentInset={usesFloatingMobileDock ? bottomDockInset : undefined}
                         headerOverlayHeight={safeArea.top + MOBILE_GLASS_HEADER_HEIGHT}

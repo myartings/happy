@@ -15,13 +15,37 @@ import { Octicons } from '@expo/vector-icons';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { resolveControlMode } from '@/sync/controlHandoff';
 import { usesControlledSessionUi } from '@/sync/rig';
+import { getMessageTargetNativeId, resolveMessageTargetAction } from '@/utils/messageTarget';
 
 const SCROLL_THRESHOLD = 300;
 const DOCK_DETAILS_SHOW_OFFSET = 16;
 const DOCK_DETAILS_HIDE_OFFSET = 48;
 
+function revealWebMessage(messageId: string): void {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+
+    let attempts = 0;
+    const reveal = () => {
+        const target = document.getElementById(getMessageTargetNativeId(messageId));
+        if (target) {
+            // FlatList's web implementation measures and repositions rows for
+            // several frames after a deep history page mounts. A single smooth
+            // scroll is therefore easily displaced by the subsequent layout.
+            // Keep pinning the target briefly with an instant scroll until the
+            // virtualized list has settled.
+            target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+        }
+        attempts += 1;
+        if (attempts < 30) setTimeout(reveal, 100);
+    };
+    reveal();
+}
+
 export const ChatList = React.memo((props: {
     session: Session;
+    targetMessageId?: string;
+    targetMessageLocalId?: string;
+    targetMessageCreatedAt?: number;
     topContentInset?: number;
     bottomContentInset?: number;
     headerOverlayHeight?: number;
@@ -34,6 +58,9 @@ export const ChatList = React.memo((props: {
             metadata={props.session.metadata}
             sessionId={props.session.id}
             messages={messages}
+            targetMessageId={props.targetMessageId}
+            targetMessageLocalId={props.targetMessageLocalId}
+            targetMessageCreatedAt={props.targetMessageCreatedAt}
             hasMoreOlder={hasMoreOlder}
             isLoadingOlder={isLoadingOlder}
             topContentInset={props.topContentInset}
@@ -81,6 +108,9 @@ const ChatListInternal = React.memo((props: {
     metadata: Metadata | null,
     sessionId: string,
     messages: Message[],
+    targetMessageId?: string,
+    targetMessageLocalId?: string,
+    targetMessageCreatedAt?: number,
     hasMoreOlder: boolean,
     isLoadingOlder: boolean,
     topContentInset?: number,
@@ -91,6 +121,10 @@ const ChatListInternal = React.memo((props: {
 }) => {
     const { theme } = useUnistyles();
     const flatListRef = React.useRef<FlatList>(null);
+    const handledTargetMessageRef = React.useRef<string | null>(null);
+    const targetIndexRef = React.useRef<number | null>(null);
+    const targetMessageIdRef = React.useRef<string | null>(null);
+    const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
     const [showScrollButton, setShowScrollButton] = React.useState(false);
     const [handoffListRevision, setHandoffListRevision] = React.useState(0);
     // Tracks whether the scroll-button is currently shown, so we only call
@@ -139,6 +173,23 @@ const ChatListInternal = React.memo((props: {
         [collapseCurrentTurn],
     );
     const displayItems = useGroupedMessages(props.messages, groupToolCalls, groupingOptions);
+    const targetAction = React.useMemo(
+        () => resolveMessageTargetAction(
+            displayItems.map((item) => ({
+                id: item.id,
+                localId: item.type === 'message' && 'localId' in item.message ? item.message.localId : null,
+                createdAt: item.type === 'message' ? item.message.createdAt : null,
+            })),
+            props.targetMessageId,
+            props.targetMessageLocalId,
+            props.targetMessageCreatedAt,
+            props.hasMoreOlder,
+            props.isLoadingOlder,
+        ),
+        [displayItems, props.hasMoreOlder, props.isLoadingOlder, props.targetMessageId, props.targetMessageLocalId, props.targetMessageCreatedAt],
+    );
+    targetIndexRef.current = targetAction.type === 'scroll' ? targetAction.index : null;
+    targetMessageIdRef.current = targetAction.type === 'scroll' ? targetAction.messageId : null;
 
     // Tracks which groups are explicitly collapsed. Groups start collapsed;
     // pending approval groups are the only ones we auto-expand.
@@ -287,6 +338,40 @@ const ChatListInternal = React.memo((props: {
         props.onBottomDockVisibilityChange(visible);
     }, [props.onBottomDockVisibilityChange]);
 
+    React.useEffect(() => {
+        const targetMessageId = props.targetMessageId;
+        if (!targetMessageId || handledTargetMessageRef.current === targetMessageId) return;
+
+        if (targetAction.type === 'load-older') {
+            void sync.loadOlderMessages(props.sessionId);
+            return;
+        }
+        if (targetAction.type !== 'scroll') {
+            return;
+        }
+
+        handledTargetMessageRef.current = targetMessageId;
+        setHighlightedMessageId(targetAction.messageId);
+        setBottomDockVisibility(false);
+        const scrollTimer = setTimeout(() => {
+            if (Platform.OS !== 'web') {
+                flatListRef.current?.scrollToIndex({
+                    index: targetAction.index,
+                    animated: true,
+                    viewPosition: 0.5,
+                });
+            }
+            revealWebMessage(targetAction.messageId);
+        }, 50);
+        const highlightTimer = setTimeout(() => {
+            setHighlightedMessageId((current) => current === targetAction.messageId ? null : current);
+        }, 3000);
+        return () => {
+            clearTimeout(scrollTimer);
+            clearTimeout(highlightTimer);
+        };
+    }, [props.sessionId, props.targetMessageId, setBottomDockVisibility, targetAction]);
+
     const updateBottomDockVisibility = useCallback((offsetY: number) => {
         // Treat this as a user-scroll state. Hysteresis avoids toggling while
         // the list is resting or bouncing very near the newest message.
@@ -336,9 +421,10 @@ const ChatListInternal = React.memo((props: {
                 message={item.message}
                 metadata={props.metadata}
                 sessionId={props.sessionId}
+                highlighted={item.message.id === highlightedMessageId}
             />
         );
-    }, [props.metadata, props.sessionId, collapsedGroups, handleToggleGroup]);
+    }, [props.metadata, props.sessionId, collapsedGroups, handleToggleGroup, highlightedMessageId]);
 
     // In inverted FlatList, offset 0 = latest messages (visual bottom).
     // Offset increases as user scrolls up to see older messages.
@@ -423,8 +509,13 @@ const ChatListInternal = React.memo((props: {
                 ref={flatListRef}
                 data={displayItems}
                 inverted={true}
+                initialNumToRender={props.targetMessageId ? 500 : 10}
+                maxToRenderPerBatch={props.targetMessageId ? 500 : 10}
+                updateCellsBatchingPeriod={props.targetMessageId ? 0 : 50}
+                windowSize={props.targetMessageId ? 101 : 21}
+                removeClippedSubviews={props.targetMessageId ? false : undefined}
                 keyExtractor={keyExtractor}
-                maintainVisibleContentPosition={{
+                maintainVisibleContentPosition={props.targetMessageId ? undefined : {
                     // Anchor on the second-newest message (index 1), not the
                     // newest. The newest slot (index 0) gets a brand-new item
                     // each agent token, which would otherwise destabilise the
@@ -467,6 +558,23 @@ const ChatListInternal = React.memo((props: {
                 )}
                 onEndReached={handleLoadOlder}
                 onEndReachedThreshold={0.5}
+                onScrollToIndexFailed={(info) => {
+                    const targetIndex = targetIndexRef.current;
+                    if (targetIndex === null) return;
+                    flatListRef.current?.scrollToOffset({
+                        offset: Math.max(0, info.averageItemLength * targetIndex),
+                        animated: false,
+                    });
+                    setTimeout(() => {
+                        flatListRef.current?.scrollToIndex({
+                            index: targetIndex,
+                            animated: true,
+                            viewPosition: 0.5,
+                        });
+                        const targetMessageId = targetMessageIdRef.current;
+                        if (targetMessageId) revealWebMessage(targetMessageId);
+                    }, 100);
+                }}
             />
             {showScrollButton && (
                 <View style={[

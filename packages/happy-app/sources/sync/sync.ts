@@ -25,6 +25,7 @@ import { syncCurrentPushToken } from './pushRegistration';
 import { Platform, AppState, type AppStateStatus } from 'react-native';
 import { isRunningOnMac } from '@/utils/platform';
 import { NormalizedMessage, normalizeRawMessage, RawRecord } from './typesRaw';
+import { extractPromptHistoryItems, PromptHistoryItem } from './promptHistory';
 import { applySettings, Settings, settingsDefaults, settingsParse, settingsToSyncPayload, SUPPORTED_SCHEMA_VERSION } from './settings';
 import { Profile, profileParse } from './profile';
 import { loadPendingSettings, savePendingSettings } from './persistence';
@@ -111,6 +112,7 @@ type SendMessageOptions = {
 
 class Sync {
     private static readonly BACKGROUND_SEND_TIMEOUT_MS = 30_000;
+    private static readonly PROMPT_HISTORY_PAGE_SIZE = 500;
     encryption!: Encryption;
     serverID!: string;
     anonID!: string;
@@ -2148,6 +2150,29 @@ class Sync {
             hasMore: !!data.hasMore && messages.length > 0
         });
         return true;
+    }
+
+    /**
+     * Load a bounded, read-only prompt-history page without adding the session
+     * to the normal chat-message LRU cache. Message bodies remain encrypted on
+     * the server and are filtered locally after session-key decryption.
+     */
+    loadRecentUserPrompts = async (sessionId: string): Promise<PromptHistoryItem[]> => {
+        await this.sessionsSync.awaitQueue();
+        const encryption = this.encryption.getSessionEncryption(sessionId);
+        if (!encryption) return [];
+
+        const response = await apiSocket.request(
+            `/v3/sessions/${sessionId}/messages?before_seq=${SEQ_BACKWARD_INITIAL_SENTINEL}&limit=${Sync.PROMPT_HISTORY_PAGE_SIZE}`
+        );
+        if (!response.ok) {
+            throw new Error(`Failed to fetch prompt history for ${sessionId}: ${response.status}`);
+        }
+
+        const data = await response.json() as V3GetSessionMessagesResponse;
+        const messages = Array.isArray(data.messages) ? data.messages : [];
+        const decrypted = await encryption.decryptMessages(messages);
+        return extractPromptHistoryItems(sessionId, decrypted);
     }
 
     private fetchForwardSince = async (

@@ -67,6 +67,16 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
                 }
             },
             {
+                id: 'prompt-history',
+                title: t('promptHistory.title'),
+                subtitle: t('promptHistory.searchPlaceholder'),
+                icon: 'document-text-outline',
+                category: 'Sessions',
+                action: () => {
+                    router.push('/prompts' as never);
+                }
+            },
+            {
                 id: 'settings',
                 title: 'Settings',
                 subtitle: 'Configure your preferences',
