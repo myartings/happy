@@ -224,6 +224,8 @@ export const ru: TranslationStructure = {
         groupToolCallsSubtitle: 'Сворачивать подряд идущие вызовы инструментов в один блок',
         showActiveSessionRuntime: 'Показывать среду активных сессий',
         showActiveSessionRuntimeSubtitle: 'Показывать проект, платформу устройства, ИИ-провайдера и модель в активных сессиях',
+        showSessionModel: 'Показывать модель сессии',
+        showSessionModelSubtitle: 'Показывать название и версию модели ИИ в сессиях',
         groupActiveSessionsByDate: 'Группировать активные сессии по дате',
         groupActiveSessionsByDateSubtitle: 'Разделять глобально отсортированные активные сессии на сегодняшние и более ранние',
         privacy: 'Конфиденциальность',

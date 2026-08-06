@@ -255,6 +255,8 @@ export const pl: TranslationStructure = {
         groupToolCallsSubtitle: 'Zwijaj kolejne wywołania narzędzi w jeden kontener',
         showActiveSessionRuntime: 'Pokaż środowisko aktywnych sesji',
         showActiveSessionRuntimeSubtitle: 'Pokazuj projekt, platformę urządzenia, dostawcę AI i model w aktywnych sesjach',
+        showSessionModel: 'Pokaż model sesji',
+        showSessionModelSubtitle: 'Pokazuj nazwę i wersję modelu AI w sesjach',
         groupActiveSessionsByDate: 'Grupuj aktywne sesje według daty',
         groupActiveSessionsByDateSubtitle: 'Podziel globalnie sortowane aktywne sesje na dzisiejsze i wcześniejsze',
         privacy: 'Prywatność',

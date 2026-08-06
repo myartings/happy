@@ -266,6 +266,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
         : baseStatus;
     const navigateToSession = useNavigateToSession();
     const showActiveSessionRuntime = useSetting('showActiveSessionRuntime');
+    const showSessionModel = useSetting('showSessionModel');
     const machine = useMachine(session.machineId ?? '');
     const runtimePlatformKind = session.platformKind === 'unknown'
         ? getSessionPlatformKind(machine?.metadata?.platform)
@@ -367,7 +368,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                         projectName={resolveSessionProjectName(session.projectName, session.path)}
                         providerKind={session.providerKind}
                         providerName={session.providerName}
-                        modelName={session.modelName}
+                        modelName={showSessionModel ? session.modelName : null}
                         identityLine={session.identityLine}
                         activitySummary={session.activitySummary}
                     />
@@ -375,7 +376,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                     <View style={styles.sessionIdentityRow}>
                         <ProviderIcon kind={session.providerKind} size={11} />
                         <Text style={styles.sessionIdentity} numberOfLines={1}>
-                            {session.identityLine}{session.modelName ? ` · ${session.modelName}` : ''}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
+                            {session.identityLine}{showSessionModel && session.modelName ? ` · ${session.modelName}` : ''}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
                         </Text>
                     </View>
                 ) : null}

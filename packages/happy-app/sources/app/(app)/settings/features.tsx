@@ -24,6 +24,7 @@ export default function FeaturesSettingsScreen() {
     const [sortActiveSessionsGlobally, setSortActiveSessionsGlobally] = useSettingMutable('sortActiveSessionsGlobally');
     const [groupActiveSessionsByDate, setGroupActiveSessionsByDate] = useSettingMutable('groupActiveSessionsByDate');
     const [showActiveSessionRuntime, setShowActiveSessionRuntime] = useSettingMutable('showActiveSessionRuntime');
+    const [showSessionModel, setShowSessionModel] = useSettingMutable('showSessionModel');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -100,6 +101,18 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={showActiveSessionRuntime}
                             onValueChange={setShowActiveSessionRuntime}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title={t('settingsFeatures.showSessionModel')}
+                    subtitle={t('settingsFeatures.showSessionModelSubtitle')}
+                    icon={<Ionicons name="hardware-chip-outline" size={29} color="#AF52DE" />}
+                    rightElement={
+                        <Switch
+                            value={showSessionModel}
+                            onValueChange={setShowSessionModel}
                         />
                     }
                     showChevron={false}
