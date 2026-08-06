@@ -146,11 +146,7 @@ export default function ProjectTodosScreen() {
 
                 {contexts.length > 0 ? (
                     <>
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.projectPicker}
-                        >
+                        <View style={styles.projectPicker}>
                             {contexts.map((context) => {
                                 const selected = context.key === selectedContext?.key;
                                 const count = (projectTodos[context.key] ?? []).filter((todo) => !todo.completed).length;
@@ -169,7 +165,7 @@ export default function ProjectTodosScreen() {
                                     </Pressable>
                                 );
                             })}
-                        </ScrollView>
+                        </View>
 
                         <View style={styles.projectSummary}>
                             <View style={styles.projectSummaryText}>
@@ -353,7 +349,7 @@ const stylesheet = StyleSheet.create((theme) => ({
     intro: { paddingHorizontal: 20, paddingBottom: 12 },
     privacyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     privacyText: { color: theme.colors.textSecondary, fontSize: 12, ...Typography.default() },
-    projectPicker: { paddingHorizontal: 16, gap: 8, paddingBottom: 14 },
+    projectPicker: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 8, paddingBottom: 14 },
     projectChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: theme.colors.surface },
     projectChipSelected: { backgroundColor: theme.colors.button.primary.background },
     projectChipText: { color: theme.colors.textSecondary, fontSize: 13, ...Typography.default('semiBold') },
