@@ -99,6 +99,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const isTablet = useIsTablet();
     const { width: windowWidth } = useWindowDimensions();
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
+    const showSessionModel = useSetting('showSessionModel');
     const zenMode = useLocalSetting('zenMode');
     const [headerBackdropVisible, setHeaderBackdropVisible] = React.useState(false);
 
@@ -356,10 +357,10 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
             folderName,
             isConnected,
             identityLine: rigIdentity
-                ? `${rigIdentity.clientName} · ${rigIdentity.providerName}${rigIdentity.modelName ? ` — ${rigIdentity.modelName}` : ''}`
+                ? `${rigIdentity.clientName} · ${rigIdentity.providerName}${showSessionModel && rigIdentity.modelName ? ` — ${rigIdentity.modelName}` : ''}`
                 : undefined,
         };
-    }, [session, isDataReady]);
+    }, [session, isDataReady, showSessionModel]);
     const headerRight = session && deviceType === 'phone' && Platform.OS !== 'web'
         ? (
             <Pressable
@@ -768,6 +769,7 @@ export function SessionViewLoaded({
     const gitStatus = useSessionGitStatus(sessionId);
     const alwaysShowContextSize = useSetting('alwaysShowContextSize');
     const sessionStatusBarDisplay = useSetting('sessionStatusBarDisplay');
+    const showSessionModel = useSetting('showSessionModel');
     const experiments = useSetting('experiments');
     const expResumeSession = useSetting('expResumeSession');
     const { canResume, resumeSession, resumingSession } = useSessionQuickActions(session);
@@ -885,7 +887,9 @@ export function SessionViewLoaded({
         return typeof gitBranch === 'string' && gitBranch.trim() ? gitBranch.trim() : null;
     }, [session.metadata]);
     const statusBarGitBranch = resolveStatusBarGitBranch(gitStatus?.branch, metadataGitBranch);
-    const statusBarModelLabel = modelMode?.name ?? session.metadata?.currentModelCode ?? session.modelMode ?? null;
+    const statusBarModelLabel = showSessionModel
+        ? modelMode?.name ?? session.metadata?.currentModelCode ?? session.modelMode ?? null
+        : null;
     const statusBarEffortLabel = effortLevel?.name
         ? effortLevel.name.charAt(0).toUpperCase() + effortLevel.name.slice(1)
         : null;

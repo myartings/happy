@@ -13,6 +13,11 @@ describe('settings', () => {
             expect(settingsParse({ showActiveSessionRuntime: true }).showActiveSessionRuntime).toBe(true);
         });
 
+        it('shows session models by default and accepts an explicit opt-out', () => {
+            expect(settingsParse({}).showSessionModel).toBe(true);
+            expect(settingsParse({ showSessionModel: false }).showSessionModel).toBe(false);
+        });
+
         it('defaults active-session date grouping off and accepts an explicit opt-in', () => {
             expect(settingsParse({}).groupActiveSessionsByDate).toBe(false);
             expect(settingsParse({ groupActiveSessionsByDate: true }).groupActiveSessionsByDate).toBe(true);
@@ -219,6 +224,7 @@ describe('settings', () => {
                 avatarStyle: 'brutalist',
                 showFlavorIcons: false,
                 showActiveSessionRuntime: false,
+                showSessionModel: true,
                 groupActiveSessionsByDate: false,
                 userMessageBubbleColor: 'gray',
                 sessionStatusBarDisplay: 'hidden',
