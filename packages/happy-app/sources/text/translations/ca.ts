@@ -239,7 +239,7 @@ export const ca: TranslationStructure = {
         showActiveSessionRuntime: 'Mostra l’entorn de les sessions actives',
         showActiveSessionRuntimeSubtitle: 'Mostra el projecte, la plataforma del dispositiu, el proveïdor d’IA i el model a les sessions actives',
         showSessionModel: 'Mostra el model de la sessió',
-        showSessionModelSubtitle: 'Mostra el nom i la versió del model d’IA a les sessions',
+        showSessionModelSubtitle: 'Mostra la icona i el nom del proveïdor d’IA, a més del nom i la versió del model',
         groupActiveSessionsByDate: 'Agrupa les sessions actives per data',
         groupActiveSessionsByDateSubtitle: 'Separa les sessions actives ordenades globalment entre l’activitat d’avui i l’anterior',
         privacy: 'Privadesa',

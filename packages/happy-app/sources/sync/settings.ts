@@ -45,7 +45,7 @@ export const SettingsSchema = z.object({
     sortActiveSessionsGlobally: z.boolean().describe('Show active sessions in one global list ordered by recent user activity'),
     groupActiveSessionsByDate: z.boolean().describe('Split globally sorted active sessions into today and earlier activity groups'),
     showActiveSessionRuntime: z.boolean().describe('Show project, device platform, AI provider, and model details on active session rows'),
-    showSessionModel: z.boolean().describe('Show the AI model name and version in session UI'),
+    showSessionModel: z.boolean().describe('Show the AI provider icon and name plus the model name and version in session UI'),
     expResumeSession: z.boolean().describe('Enable experimental session resume feature'),
     fileDiffsSidebar: z.boolean().describe('Show the file diffs sidebar next to the chat on desktop'),
     groupToolCalls: z.boolean().describe('Collapse consecutive tool calls into grouped containers in chat'),

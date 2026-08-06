@@ -240,7 +240,7 @@ export const ja: TranslationStructure = {
         showActiveSessionRuntime: 'アクティブセッションの実行環境を表示',
         showActiveSessionRuntimeSubtitle: 'アクティブセッションにプロジェクト、デバイス、AIプロバイダー、モデルを表示します',
         showSessionModel: 'セッションのモデルを表示',
-        showSessionModelSubtitle: 'セッションに AI モデル名とバージョンを表示します',
+        showSessionModelSubtitle: 'AI プロバイダーのアイコンと名前、およびモデル名とバージョンを表示します',
         groupActiveSessionsByDate: 'アクティブセッションを日付でグループ化',
         groupActiveSessionsByDateSubtitle: 'グローバルに並べたアクティブセッションを今日と過去のアクティビティに分けます',
         privacy: 'プライバシー',

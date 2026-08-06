@@ -240,7 +240,7 @@ export const zhHans: TranslationStructure = {
         showActiveSessionRuntime: '显示活跃会话运行环境',
         showActiveSessionRuntimeSubtitle: '在活跃会话中显示项目、设备平台、AI 平台和模型',
         showSessionModel: '显示会话模型',
-        showSessionModelSubtitle: '在会话中显示大模型名称和型号',
+        showSessionModelSubtitle: '显示模型供应商图标和名称，以及大模型名称和型号',
         groupActiveSessionsByDate: '按日期分隔活跃会话',
         groupActiveSessionsByDateSubtitle: '将全局排序的活跃会话分为今天活跃和更早活跃',
         privacy: '隐私',

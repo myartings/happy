@@ -225,7 +225,7 @@ export const ru: TranslationStructure = {
         showActiveSessionRuntime: 'Показывать среду активных сессий',
         showActiveSessionRuntimeSubtitle: 'Показывать проект, платформу устройства, ИИ-провайдера и модель в активных сессиях',
         showSessionModel: 'Показывать модель сессии',
-        showSessionModelSubtitle: 'Показывать название и версию модели ИИ в сессиях',
+        showSessionModelSubtitle: 'Показывать значок и название ИИ-провайдера, а также название и версию модели',
         groupActiveSessionsByDate: 'Группировать активные сессии по дате',
         groupActiveSessionsByDateSubtitle: 'Разделять глобально отсортированные активные сессии на сегодняшние и более ранние',
         privacy: 'Конфиденциальность',
