@@ -3,12 +3,19 @@
  */
 
 import { machineBash } from '@/sync/ops';
+import {
+    WORKTREE_DIR,
+    getRepoPath,
+    isWorktreePath,
+} from './worktreePath';
 
-/** Relative path prefix where worktrees are stored inside a repo */
-export const WORKTREE_DIR = '.dev/worktree';
-
-/** Absolute path marker used to detect worktree paths */
-export const WORKTREE_PATH_MARKER = `/${WORKTREE_DIR}/`;
+export {
+    WORKTREE_DIR,
+    WORKTREE_PATH_MARKER,
+    getRepoPath,
+    getWorktreeName,
+    isWorktreePath,
+} from './worktreePath';
 
 // --- Name generation ---
 
@@ -155,11 +162,10 @@ export async function removeWorktree(
     machineId: string,
     worktreePath: string
 ): Promise<{ success: boolean; error?: string }> {
-    const idx = worktreePath.indexOf(WORKTREE_PATH_MARKER);
-    if (idx === -1) {
+    if (!isWorktreePath(worktreePath)) {
         return { success: false, error: 'Not a worktree path' };
     }
-    const basePath = worktreePath.slice(0, idx);
+    const basePath = getRepoPath(worktreePath);
 
     const result = await machineBash(
         machineId,
@@ -170,23 +176,4 @@ export async function removeWorktree(
         success: result.success,
         error: result.success ? undefined : (result.stderr || 'Failed to remove worktree'),
     };
-}
-
-/** Check if a path is inside a worktree */
-export function isWorktreePath(path: string): boolean {
-    return path.includes(WORKTREE_PATH_MARKER);
-}
-
-/** Extract the main repository checkout path from a possibly-worktree path */
-export function getRepoPath(path: string): string {
-    const idx = path.indexOf(WORKTREE_PATH_MARKER);
-    if (idx === -1) return path;
-    return path.slice(0, idx);
-}
-
-/** Extract the worktree name from a worktree path, or null if not a worktree */
-export function getWorktreeName(path: string): string | null {
-    const idx = path.indexOf(WORKTREE_PATH_MARKER);
-    if (idx === -1) return null;
-    return path.slice(idx + WORKTREE_PATH_MARKER.length);
 }

@@ -11,6 +11,13 @@ describe('resolveSessionProjectName', () => {
         expect(resolveSessionProjectName(null, '/workspace/happy-manager/')).toBe('happy-manager');
     });
 
+    it('uses the repository name for a managed worktree session', () => {
+        expect(resolveSessionProjectName(null, '/workspace/happy/.dev/worktree/bright-river'))
+            .toBe('happy');
+        expect(resolveSessionProjectName(null, 'C:\\workspace\\happy\\.dev\\worktree\\bright-river'))
+            .toBe('happy');
+    });
+
     it('returns null when no project identity is available', () => {
         expect(resolveSessionProjectName('  ', '  ')).toBeNull();
     });

@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
-import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable } from '@/sync/storage';
+import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable, useSessionGitStatus } from '@/sync/storage';
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
 import { ProjectTodoButton } from './ProjectTodoButton';
 
@@ -14,8 +14,8 @@ interface ProjectGroupProps {
 }
 
 /**
- * One project and its sessions. Rig projects may contain named worktrees;
- * Happy CLI projects use a single workspace derived from their working path.
+ * One project and its sessions. Rig supplies native workspace identity; Happy
+ * CLI sessions derive primary/worktree workspaces from their managed paths.
  */
 export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectGroupProps) => {
     const styles = stylesheet;
@@ -34,8 +34,7 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
         return machine?.metadata?.displayName || machine?.metadata?.host || null;
     }, [machines, project.machineId]);
 
-    // Worktrees only need naming when the project actually has more than one
-    const showWorkspaceLabels = project.workspaces.length > 1;
+    const showPrimaryWorkspaceLabel = project.workspaces.length > 1;
 
     return (
         <View style={styles.container}>
@@ -69,7 +68,7 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                 <WorkspaceSection
                     key={workspace.id || 'primary'}
                     workspace={workspace}
-                    showLabel={showWorkspaceLabels}
+                    showPrimaryLabel={showPrimaryWorkspaceLabel}
                     selectedSessionId={selectedSessionId}
                 />
             ))}
@@ -77,26 +76,42 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
     );
 });
 
-const WorkspaceSection = React.memo(({ workspace, showLabel, selectedSessionId }: {
+const WorkspaceSection = React.memo(({ workspace, showPrimaryLabel, selectedSessionId }: {
     workspace: ProjectWorkspaceGroup;
-    showLabel: boolean;
+    showPrimaryLabel: boolean;
     selectedSessionId?: string;
 }) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
+    const firstSessionId = workspace.sessions[0]?.id ?? '';
+    const reportedBranchName = workspace.sessions[0]?.gitBranch?.trim() || null;
+    const gitStatus = useSessionGitStatus(firstSessionId);
+    const branchName = gitStatus && gitStatus.lastUpdatedAt > 0
+        ? gitStatus.branch?.trim() || null
+        : reportedBranchName;
+    const showHeader = !!workspace.name || !!branchName || showPrimaryLabel;
 
     return (
         <View style={styles.workspace}>
-            {showLabel && (
+            {showHeader && (
                 <View style={styles.workspaceHeader}>
-                    <Ionicons
-                        name={workspace.name ? 'git-branch-outline' : 'folder-outline'}
-                        size={13}
-                        color={theme.colors.textSecondary}
-                    />
-                    <Text style={styles.workspaceTitle} numberOfLines={1}>
-                        {workspace.name ?? 'main'}
-                    </Text>
+                    {workspace.name ? (
+                        <>
+                            <MaterialCommunityIcons name="tree" size={13} color={theme.colors.textSecondary} />
+                            <Text style={styles.workspaceTitle} numberOfLines={1}>{workspace.name}</Text>
+                        </>
+                    ) : showPrimaryLabel ? (
+                        <>
+                            <Ionicons name="folder-outline" size={13} color={theme.colors.textSecondary} />
+                            <Text style={styles.workspaceTitle} numberOfLines={1}>main</Text>
+                        </>
+                    ) : null}
+                    {branchName && (
+                        <View style={styles.branchLabel}>
+                            <Ionicons name="git-branch-outline" size={13} color={theme.colors.textSecondary} />
+                            <Text style={styles.branchTitle} numberOfLines={1}>{branchName}</Text>
+                        </View>
+                    )}
                 </View>
             )}
             {workspace.sessions.map((session, index) => (
@@ -161,9 +176,22 @@ const stylesheet = StyleSheet.create((theme) => ({
         paddingBottom: 4,
     },
     workspaceTitle: {
-        flex: 1,
+        flexShrink: 1,
         fontSize: 12,
         color: theme.colors.textSecondary,
         ...Typography.default('semiBold'),
+    },
+    branchLabel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 1,
+        gap: 3,
+        marginLeft: 4,
+    },
+    branchTitle: {
+        flexShrink: 1,
+        fontSize: 12,
+        color: theme.colors.textSecondary,
+        ...Typography.default(),
     },
 }));

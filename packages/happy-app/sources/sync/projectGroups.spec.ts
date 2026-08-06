@@ -172,6 +172,36 @@ describe('buildPathProjectGroups', () => {
 
         expect(groups[0].name).toBe('Home');
     });
+
+    it('groups Happy worktrees under their repository project', () => {
+        const groups = buildPathProjectGroups([
+            session({ id: 'worktree', path: '/projects/happy/.dev/worktree/bright-river' }),
+            session({ id: 'primary', path: '/projects/happy' }),
+            session({ id: 'second', path: '/projects/happy/.dev/worktree/calm-forest' }),
+        ], toRow, isActive, 'happy');
+
+        expect(groups).toHaveLength(1);
+        expect(groups[0]).toMatchObject({
+            name: 'happy',
+            sessionCount: 3,
+            workspaces: [
+                { id: '', name: null, sessions: [{ id: 'primary' }] },
+                { name: 'bright-river', sessions: [{ id: 'worktree' }] },
+                { name: 'calm-forest', sessions: [{ id: 'second' }] },
+            ],
+        });
+    });
+
+    it('shows a lone Happy worktree as a named workspace', () => {
+        const groups = buildPathProjectGroups([
+            session({ id: 'worktree', path: 'C:\\projects\\happy\\.dev\\worktree\\bright-river' }),
+        ], toRow, isActive, 'happy');
+
+        expect(groups[0]).toMatchObject({
+            name: 'happy',
+            workspaces: [{ name: 'bright-river', sessions: [{ id: 'worktree' }] }],
+        });
+    });
 });
 
 describe('filterProjectGroupSessions', () => {

@@ -1,3 +1,5 @@
+import { getRepoPath } from './worktreePath';
+
 export type SessionPlatformKind = 'windows' | 'macos' | 'linux' | 'unknown';
 
 export type SessionRuntimeDisplay = {
@@ -14,7 +16,7 @@ export function resolveSessionProjectName(
     const explicitName = projectName?.trim();
     if (explicitName) return explicitName;
 
-    const normalizedPath = path?.trim().replace(/[\\/]+$/, '');
+    const normalizedPath = getRepoPath(path?.trim().replace(/[\\/]+$/, '') ?? '');
     if (!normalizedPath) return null;
 
     return normalizedPath.split(/[\\/]/).filter(Boolean).pop() ?? null;

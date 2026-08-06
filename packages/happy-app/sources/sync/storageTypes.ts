@@ -126,6 +126,7 @@ export const MetadataSchema = z.object({
     skills: z.array(z.string()).optional(),
     homeDir: z.string().optional(), // User's home directory on the machine
     happyHomeDir: z.string().optional(), // Happy configuration directory 
+    gitBranch: z.string().optional(), // Git branch detected when the session starts
     startedFromDaemon: z.boolean().optional(),
     hostPid: z.number().optional(), // Process ID of the session
     startedBy: z.enum(['daemon', 'terminal']).optional(),
