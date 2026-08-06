@@ -6,23 +6,24 @@ export interface StatusDotProps {
     color: string;
     isPulsing?: boolean;
     size?: number;
+    pulseOpacity?: number;
     style?: ViewStyle;
 }
 
-export const StatusDot = React.memo(({ color, isPulsing, size = 6, style }: StatusDotProps) => {
+export const StatusDot = React.memo(({ color, isPulsing, size = 6, pulseOpacity = 0.3, style }: StatusDotProps) => {
     const opacity = useSharedValue(1);
 
     React.useEffect(() => {
         if (isPulsing) {
             opacity.value = withRepeat(
-                withTiming(0.3, { duration: 1000 }),
+                withTiming(pulseOpacity, { duration: 1000 }),
                 -1, // infinite
                 true // reverse
             );
         } else {
             opacity.value = withTiming(1, { duration: 200 });
         }
-    }, [isPulsing]);
+    }, [isPulsing, pulseOpacity]);
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
