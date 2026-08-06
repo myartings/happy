@@ -34,6 +34,22 @@ export interface ProjectTodoDraftTarget {
     worktreeKey: string | null;
 }
 
+export interface ProjectTodoSessionContext {
+    projectId?: string | null;
+    projectName?: string | null;
+    machineId: string | null;
+    path: string | null;
+    homeDir?: string | null;
+    updatedAt: number;
+}
+
+export interface ProjectTodoContext {
+    key: string;
+    name: string;
+    target: ProjectTodoDraftTarget | null;
+    updatedAt: number;
+}
+
 export function createProjectTodoDraft(target: ProjectTodoDraftTarget, todo: ProjectTodoItem) {
     return {
         input: todo.content,
@@ -62,6 +78,83 @@ export function resolveProjectTodoKey(identity: ProjectTodoIdentity): string | n
     }
 
     return `path:${machineId}:${path}`;
+}
+
+function fallbackProjectName(projectKey: string): string {
+    if (projectKey.startsWith('name:')) return projectKey.slice('name:'.length);
+    if (projectKey.startsWith('path:')) {
+        return projectKey.split('/').filter(Boolean).pop() ?? projectKey;
+    }
+    return projectKey.slice(projectKey.indexOf(':') + 1) || projectKey;
+}
+
+function projectPathContext(path: string, homeDir?: string | null) {
+    const marker = '/.dev/worktree/';
+    const markerIndex = path.indexOf(marker);
+    const worktree = markerIndex >= 0;
+    const repoPath = worktree ? path.slice(0, markerIndex) : path;
+    if (!homeDir) return { repoPath, draftPath: repoPath, worktree };
+    const normalizedHome = homeDir.replace(/[\\/]$/, '');
+    const draftPath = repoPath.startsWith(normalizedHome)
+        ? `~${repoPath.slice(normalizedHome.length).replace(/^\\/, '/')}`
+        : repoPath;
+    return { repoPath, draftPath, worktree };
+}
+
+export function collectProjectTodoContexts(
+    sessions: ProjectTodoSessionContext[],
+    projectTodos: ProjectTodos,
+): ProjectTodoContext[] {
+    const contexts = new Map<string, ProjectTodoContext>();
+
+    for (const session of sessions) {
+        if (!session.path) continue;
+        const { repoPath, draftPath, worktree } = projectPathContext(session.path, session.homeDir);
+        const name = session.projectName?.trim()
+            || repoPath.split(/[/\\]/).filter(Boolean).pop()
+            || repoPath;
+        const key = resolveProjectTodoKey({
+            projectId: session.projectId,
+            projectName: name,
+            machineId: session.machineId,
+            path: repoPath,
+        });
+        if (!key) continue;
+
+        const existing = contexts.get(key);
+        if (!existing || session.updatedAt > existing.updatedAt) {
+            contexts.set(key, {
+                key,
+                name,
+                target: {
+                    machineId: session.machineId,
+                    path: draftPath,
+                    sessionType: worktree ? 'worktree' : 'simple',
+                    worktreeKey: worktree ? session.path : null,
+                },
+                updatedAt: session.updatedAt,
+            });
+        }
+    }
+
+    for (const [key, todos] of Object.entries(projectTodos)) {
+        if (contexts.has(key)) continue;
+        contexts.set(key, {
+            key,
+            name: fallbackProjectName(key),
+            target: null,
+            updatedAt: todos.reduce((latest, todo) => Math.max(latest, todo.updatedAt), 0),
+        });
+    }
+
+    return [...contexts.values()].sort((a, b) => b.updatedAt - a.updatedAt || a.name.localeCompare(b.name));
+}
+
+export function selectProjectTodoContext(
+    contexts: ProjectTodoContext[],
+    requestedKey: string | null | undefined,
+): ProjectTodoContext | null {
+    return contexts.find((context) => context.key === requestedKey) ?? contexts[0] ?? null;
 }
 
 export function addProjectTodo(state: ProjectTodos, projectKey: string, content: string): ProjectTodos {

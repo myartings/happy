@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addProjectTodo, createProjectTodoDraft, deleteProjectTodo, resolveProjectTodoKey, setProjectTodoCompleted, updateProjectTodo } from './projectTodos';
+import { addProjectTodo, collectProjectTodoContexts, createProjectTodoDraft, deleteProjectTodo, resolveProjectTodoKey, selectProjectTodoContext, setProjectTodoCompleted, updateProjectTodo } from './projectTodos';
 
 describe('resolveProjectTodoKey', () => {
     it('uses a stable project id when one is available', () => {
@@ -89,5 +89,51 @@ describe('project todo commands', () => {
             worktreeKey: null,
         });
         expect(todo.completed).toBe(false);
+    });
+});
+
+describe('collectProjectTodoContexts', () => {
+    it('builds one cross-device project choice from multiple sessions', () => {
+        const contexts = collectProjectTodoContexts([
+            {
+                projectId: null,
+                projectName: null,
+                machineId: 'machine-a',
+                path: 'C:\\workspace\\happy',
+                homeDir: 'C:\\Users\\me',
+                updatedAt: 10,
+            },
+            {
+                projectId: null,
+                projectName: null,
+                machineId: 'machine-b',
+                path: '/home/me/happy',
+                homeDir: '/home/me',
+                updatedAt: 20,
+            },
+        ], {});
+
+        expect(contexts).toEqual([{
+            key: 'name:happy',
+            name: 'happy',
+            target: {
+                machineId: 'machine-b',
+                path: '~/happy',
+                sessionType: 'simple',
+                worktreeKey: null,
+            },
+            updatedAt: 20,
+        }]);
+    });
+
+    it('honors a requested project and otherwise selects the most recent project', () => {
+        const contexts = [
+            { key: 'name:happy', name: 'happy', target: null, updatedAt: 20 },
+            { key: 'name:manager', name: 'manager', target: null, updatedAt: 10 },
+        ];
+
+        expect(selectProjectTodoContext(contexts, 'name:manager')?.key).toBe('name:manager');
+        expect(selectProjectTodoContext(contexts, 'name:missing')?.key).toBe('name:happy');
+        expect(selectProjectTodoContext([], null)).toBeNull();
     });
 });

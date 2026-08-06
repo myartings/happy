@@ -80,12 +80,6 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
         machineId: session.machineId,
         path: repoPath,
     });
-    const projectTodoTarget = sessionPath && repoPath ? {
-        machineId: session.machineId,
-        path: formatPathRelativeToHome(repoPath, session.homeDir ?? undefined),
-        sessionType: isWorktree ? 'worktree' as const : 'simple' as const,
-        worktreeKey: isWorktree ? sessionPath : null,
-    } : null;
 
     const gitInfo = useSectionGitInfo(session.id);
     const branchName = worktreeName || gitInfo.branch;
@@ -149,9 +143,7 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
             {projectTodoKey && (
                 <ProjectTodoButton
                     projectKey={projectTodoKey}
-                    projectName={repoFolderName}
-                    target={projectTodoTarget}
-                    alwaysVisible={isHovered}
+                    showLabel
                 />
             )}
 

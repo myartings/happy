@@ -1066,11 +1066,18 @@ export const ca: TranslationStructure = {
 
     projectTodos: {
         title: 'Tasques del projecte',
+        shortTitle: 'Todo',
         addPlaceholder: 'Afegeix una funció, pregunta o seguiment',
         add: 'Afegeix',
         empty: 'No hi ha tasques del projecte',
         process: 'Treballa-hi',
         edit: 'Edita',
+        privacy: 'Només visible per a tu · Sincronitzat entre dispositius · Els agents no ho poden llegir',
+        all: 'Totes',
+        open: 'Pendents',
+        completed: 'Completades',
+        projectUnavailable: 'Obre aquest projecte al dispositiu actual abans de treballar-hi.',
+        noProjects: 'Inicia una sessió de projecte abans d’afegir tasques.',
     },
 
     feed: {

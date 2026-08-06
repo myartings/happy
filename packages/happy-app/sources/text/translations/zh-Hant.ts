@@ -1065,12 +1065,19 @@ export const zhHant: TranslationStructure = {
     },
 
     projectTodos: {
-        title: '專案 Todo',
+        title: '我的專案 Todo',
+        shortTitle: 'Todo',
         addPlaceholder: '記錄想實作的功能、問題或後續事項',
         add: '新增',
         empty: '這個專案還沒有 Todo',
         process: '處理',
         edit: '編輯',
+        privacy: '僅你可見 · 跨裝置同步 · Agent 不會讀取',
+        all: '全部',
+        open: '未完成',
+        completed: '已完成',
+        projectUnavailable: '請先在目前裝置開啟此專案，再進行處理。',
+        noProjects: '請先啟動一個專案工作階段，再新增專案 Todo。',
     },
 
     feed: {

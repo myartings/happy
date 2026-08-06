@@ -1096,11 +1096,18 @@ export const pl: TranslationStructure = {
 
     projectTodos: {
         title: 'Todo projektu',
+        shortTitle: 'Todo',
         addPlaceholder: 'Dodaj funkcję, pytanie lub dalsze zadanie',
         add: 'Dodaj',
         empty: 'Brak Todo projektu',
         process: 'Zajmij się tym',
         edit: 'Edytuj',
+        privacy: 'Widoczne tylko dla Ciebie · Synchronizowane między urządzeniami · Agenci nie mogą odczytać',
+        all: 'Wszystkie',
+        open: 'Otwarte',
+        completed: 'Ukończone',
+        projectUnavailable: 'Otwórz ten projekt na bieżącym urządzeniu przed rozpoczęciem pracy.',
+        noProjects: 'Uruchom sesję projektu przed dodaniem Todo.',
     },
 
     feed: {

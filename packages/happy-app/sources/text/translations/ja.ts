@@ -1068,11 +1068,18 @@ export const ja: TranslationStructure = {
 
     projectTodos: {
         title: 'プロジェクト Todo',
+        shortTitle: 'Todo',
         addPlaceholder: '機能、質問、フォローアップを追加',
         add: '追加',
         empty: 'プロジェクト Todo はありません',
         process: '対応する',
         edit: '編集',
+        privacy: '自分だけに表示 · デバイス間で同期 · Agent は読み取りません',
+        all: 'すべて',
+        open: '未完了',
+        completed: '完了',
+        projectUnavailable: '処理する前に、このデバイスでプロジェクトを開いてください。',
+        noProjects: 'プロジェクト Todo を追加する前にセッションを開始してください。',
     },
 
     feed: {

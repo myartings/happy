@@ -35,6 +35,7 @@ import { trackFriendsSearch } from '@/track';
 import { MOBILE_GLASS_HEADER_HEIGHT } from './navigation/headerMetrics';
 import { useNewSessionDraft } from '@/hooks/useNewSessionDraft';
 import { useStartSessionFromDraft } from '@/hooks/useStartSessionFromDraft';
+import { ProjectTodoButton } from './ProjectTodoButton';
 
 interface MainViewProps {
     variant: 'phone' | 'sidebar';
@@ -288,6 +289,7 @@ const HeaderRight = React.memo(({
         if (Platform.OS !== 'web') {
             return (
                 <View style={styles.headerActions}>
+                    <ProjectTodoButton tintColor={theme.colors.header.tint} />
                     <Pressable
                         onPress={onSearchPress}
                         style={styles.headerActionButton}
@@ -308,13 +310,16 @@ const HeaderRight = React.memo(({
             );
         }
         return (
-            <Pressable
-                onPress={() => router.navigate('/new')}
-                hitSlop={15}
-                style={styles.headerButton}
-            >
-                <Ionicons name="add-outline" size={28} color={theme.colors.header.tint} />
-            </Pressable>
+            <View style={styles.headerActions}>
+                <ProjectTodoButton tintColor={theme.colors.header.tint} />
+                <Pressable
+                    onPress={() => router.navigate('/new')}
+                    hitSlop={15}
+                    style={styles.headerButton}
+                >
+                    <Ionicons name="add-outline" size={28} color={theme.colors.header.tint} />
+                </Pressable>
+            </View>
         );
     }
 

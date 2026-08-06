@@ -1067,11 +1067,18 @@ export const es: TranslationStructure = {
 
     projectTodos: {
         title: 'Tareas del proyecto',
+        shortTitle: 'Todo',
         addPlaceholder: 'Añade una función, pregunta o seguimiento',
         add: 'Añadir',
         empty: 'No hay tareas del proyecto',
         process: 'Trabajar en esto',
         edit: 'Editar',
+        privacy: 'Solo visible para ti · Sincronizado entre dispositivos · Los agentes no pueden leerlo',
+        all: 'Todas',
+        open: 'Pendientes',
+        completed: 'Completadas',
+        projectUnavailable: 'Abre este proyecto en el dispositivo actual antes de trabajar en él.',
+        noProjects: 'Inicia una sesión de proyecto antes de añadir tareas.',
     },
 
     feed: {

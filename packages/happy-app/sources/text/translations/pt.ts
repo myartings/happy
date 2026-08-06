@@ -1065,11 +1065,18 @@ export const pt: TranslationStructure = {
 
     projectTodos: {
         title: 'Todo do projeto',
+        shortTitle: 'Todo',
         addPlaceholder: 'Adicione um recurso, pergunta ou acompanhamento',
         add: 'Adicionar',
         empty: 'Nenhum Todo do projeto',
         process: 'Trabalhar nisso',
         edit: 'Editar',
+        privacy: 'Visível apenas para você · Sincronizado entre dispositivos · Agentes não podem ler',
+        all: 'Todos',
+        open: 'Pendentes',
+        completed: 'Concluídos',
+        projectUnavailable: 'Abra este projeto no dispositivo atual antes de trabalhar nele.',
+        noProjects: 'Inicie uma sessão de projeto antes de adicionar Todos.',
     },
 
     feed: {

@@ -1065,11 +1065,18 @@ export const it: TranslationStructure = {
 
     projectTodos: {
         title: 'Todo del progetto',
+        shortTitle: 'Todo',
         addPlaceholder: 'Aggiungi una funzione, domanda o attività',
         add: 'Aggiungi',
         empty: 'Nessun Todo del progetto',
         process: 'Lavora su questo',
         edit: 'Modifica',
+        privacy: 'Visibile solo a te · Sincronizzato tra dispositivi · Gli agenti non possono leggerlo',
+        all: 'Tutti',
+        open: 'Aperti',
+        completed: 'Completati',
+        projectUnavailable: 'Apri questo progetto sul dispositivo corrente prima di lavorarci.',
+        noProjects: 'Avvia una sessione di progetto prima di aggiungere Todo.',
     },
 
     feed: {

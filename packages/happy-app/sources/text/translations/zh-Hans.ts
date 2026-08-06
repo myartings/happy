@@ -1066,12 +1066,19 @@ export const zhHans: TranslationStructure = {
     },
 
     projectTodos: {
-        title: '项目 Todo',
+        title: '我的项目 Todo',
+        shortTitle: 'Todo',
         addPlaceholder: '记录想实现的特性、问题或后续事项',
         add: '添加',
         empty: '这个项目还没有 Todo',
         process: '处理',
         edit: '编辑',
+        privacy: '仅你可见 · 跨设备同步 · Agent 不会读取',
+        all: '全部',
+        open: '未完成',
+        completed: '已完成',
+        projectUnavailable: '请先在当前设备打开这个项目，再进行处理。',
+        noProjects: '请先启动一个项目会话，再添加项目 Todo。',
     },
 
     feed: {

@@ -1067,12 +1067,19 @@ export const en = {
     },
 
     projectTodos: {
-        title: 'Project Todo',
+        title: 'My Project Todos',
+        shortTitle: 'Todo',
         addPlaceholder: 'Add a feature, question, or follow-up',
         add: 'Add',
         empty: 'No project todos yet',
         process: 'Work on this',
         edit: 'Edit',
+        privacy: 'Only visible to you · Synced across devices · Agents cannot read it',
+        all: 'All',
+        open: 'Open',
+        completed: 'Completed',
+        projectUnavailable: 'Open this project on the current device before working on it.',
+        noProjects: 'Start a project session before adding project todos.',
     },
 
     feed: {
