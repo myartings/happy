@@ -237,6 +237,10 @@ export const zhHans: TranslationStructure = {
         hideInactiveSessionsSubtitle: '仅在列表中显示活跃的聊天',
         groupToolCalls: '分组工具调用',
         groupToolCallsSubtitle: '将连续的工具调用折叠到一个容器中',
+        showActiveSessionRuntime: '显示活跃会话运行环境',
+        showActiveSessionRuntimeSubtitle: '在活跃会话中显示项目、设备平台、AI 平台和模型',
+        groupActiveSessionsByDate: '按日期分隔活跃会话',
+        groupActiveSessionsByDateSubtitle: '将全局排序的活跃会话分为今天活跃和更早活跃',
         privacy: '隐私',
         privacyDescription: '完全禁用所有分析和遥测。不会向 PostHog 或任何其他跟踪服务发送数据。',
         disableAnalytics: '禁用分析',
@@ -310,6 +314,26 @@ export const zhHans: TranslationStructure = {
         yesterday: '昨天',
         daysAgo: ({ count }: { count: number }) => `${count} 天前`,
         viewAll: '查看所有会话',
+    },
+
+    promptHistory: {
+        title: '我的输入',
+        searchPlaceholder: '搜索我的输入、会话或项目',
+        timeline: '活动时间线',
+        allInputs: '全部输入',
+        allProjects: '全部项目',
+        allAgents: '全部 Agent',
+        today: '今天',
+        yesterday: '昨天',
+        loadMore: '加载更早会话',
+        loading: '正在读取加密会话历史…',
+        empty: '没有找到匹配的输入',
+        openSession: '打开会话',
+        completed: '已完成',
+        inProgress: '进行中',
+        followUps: ({ count }: { count: number }) => `${count} 条后续输入`,
+        loadError: ({ count }: { count: number }) => `${count} 个会话加载失败`,
+        scannedProgress: ({ count, total }: { count: number; total: number }) => `已扫描 ${count}/${total} 个会话`,
     },
 
     session: {
@@ -550,6 +574,8 @@ export const zhHans: TranslationStructure = {
         hideArchived: '隐藏已归档',
         newSession: '新建会话',
         projects: "项目",
+        activeToday: '今天活跃',
+        activeEarlier: '更早活跃',
     },
 
     zen: {

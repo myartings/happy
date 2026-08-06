@@ -313,7 +313,7 @@ export function SessionsList({
     const keyExtractor = React.useCallback((item: SessionListViewItem, index: number) => {
         switch (item.type) {
             case 'header': return `header-${item.title}-${index}`;
-            case 'active-sessions': return 'active-sessions';
+            case 'active-sessions': return `active-sessions-${item.period ?? 'all'}`;
             case 'archive-toggle': return 'archive-toggle';
             case 'project-group': return `project-group-${item.machine.id}-${item.displayPath}-${index}`;
             case 'projects-header': return 'projects-header';
@@ -346,10 +346,21 @@ export function SessionsList({
 
             case 'active-sessions':
                 return (
-                    <ActiveSessionsGroupCompact
-                        sessions={item.sessions}
-                        selectedSessionId={selectedSessionId}
-                    />
+                    <View>
+                        {item.period ? (
+                            <View style={styles.headerSection}>
+                                <Text style={styles.headerText}>
+                                    {item.period === 'today'
+                                        ? t('sidebar.activeToday')
+                                        : t('sidebar.activeEarlier')}
+                                </Text>
+                            </View>
+                        ) : null}
+                        <ActiveSessionsGroupCompact
+                            sessions={item.sessions}
+                            selectedSessionId={selectedSessionId}
+                        />
+                    </View>
                 );
 
             case 'projects-header':

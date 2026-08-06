@@ -250,6 +250,10 @@ export const en: TranslationStructure = {
         hideInactiveSessionsSubtitle: 'Show only active chats in your list',
         groupToolCalls: 'Group Tool Calls',
         groupToolCallsSubtitle: 'Collapse consecutive tool calls into one container',
+        showActiveSessionRuntime: 'Show Active Session Runtime',
+        showActiveSessionRuntimeSubtitle: 'Show project, device platform, AI provider, and model on active sessions',
+        groupActiveSessionsByDate: 'Group Active Sessions by Date',
+        groupActiveSessionsByDateSubtitle: 'Split globally sorted active sessions into today and earlier activity',
         privacy: 'Privacy',
         privacyDescription: 'Completely disables all analytics and telemetry. No data will be sent to PostHog or any other tracking service.',
         disableAnalytics: 'Disable Analytics',
@@ -323,6 +327,26 @@ export const en: TranslationStructure = {
         yesterday: 'Yesterday',
         daysAgo: ({ count }: { count: number }) => `${count} ${count === 1 ? 'day' : 'days'} ago`,
         viewAll: 'View all sessions',
+    },
+
+    promptHistory: {
+        title: 'My Inputs',
+        searchPlaceholder: 'Search your inputs, sessions, or projects',
+        timeline: 'Activity timeline',
+        allInputs: 'All inputs',
+        allProjects: 'All projects',
+        allAgents: 'All agents',
+        today: 'Today',
+        yesterday: 'Yesterday',
+        loadMore: 'Load earlier sessions',
+        loading: 'Loading encrypted session history…',
+        empty: 'No matching inputs found',
+        openSession: 'Open session',
+        completed: 'Completed',
+        inProgress: 'In progress',
+        followUps: ({ count }: { count: number }) => `${count} follow-up ${count === 1 ? 'input' : 'inputs'}`,
+        loadError: ({ count }: { count: number }) => `${count} ${count === 1 ? 'session' : 'sessions'} failed`,
+        scannedProgress: ({ count, total }: { count: number; total: number }) => `${count} of ${total} sessions scanned`,
     },
 
     session: {
@@ -563,6 +587,8 @@ export const en: TranslationStructure = {
         hideArchived: 'Hide archived',
         newSession: 'New session',
         projects: "Projects",
+        activeToday: 'Active today',
+        activeEarlier: 'Active earlier',
     },
 
     zen: {

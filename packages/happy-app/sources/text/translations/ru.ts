@@ -222,6 +222,10 @@ export const ru: TranslationStructure = {
         hideInactiveSessionsSubtitle: 'Показывать в списке только активные чаты',
         groupToolCalls: 'Группировать вызовы инструментов',
         groupToolCallsSubtitle: 'Сворачивать подряд идущие вызовы инструментов в один блок',
+        showActiveSessionRuntime: 'Показывать среду активных сессий',
+        showActiveSessionRuntimeSubtitle: 'Показывать проект, платформу устройства, ИИ-провайдера и модель в активных сессиях',
+        groupActiveSessionsByDate: 'Группировать активные сессии по дате',
+        groupActiveSessionsByDateSubtitle: 'Разделять глобально отсортированные активные сессии на сегодняшние и более ранние',
         privacy: 'Конфиденциальность',
         privacyDescription: 'Полностью отключает всю аналитику и телеметрию. Никакие данные не будут отправляться в PostHog или другие сервисы отслеживания.',
         disableAnalytics: 'Отключить аналитику',
@@ -439,6 +443,26 @@ export const ru: TranslationStructure = {
         daysAgo: ({ count }: { count: number }) => `${count} ${plural({ count, one: 'день', few: 'дня', many: 'дней' })} назад`,
     },
 
+    promptHistory: {
+        title: 'My Inputs',
+        searchPlaceholder: 'Search your inputs, sessions, or projects',
+        timeline: 'Activity timeline',
+        allInputs: 'All inputs',
+        allProjects: 'All projects',
+        allAgents: 'All agents',
+        today: 'Today',
+        yesterday: 'Yesterday',
+        loadMore: 'Load earlier sessions',
+        loading: 'Loading encrypted session history…',
+        empty: 'No matching inputs found',
+        openSession: 'Open session',
+        completed: 'Completed',
+        inProgress: 'In progress',
+        followUps: ({ count }: { count: number }) => count + ' follow-up ' + (count === 1 ? 'input' : 'inputs'),
+        loadError: ({ count }: { count: number }) => count + ' ' + (count === 1 ? 'session' : 'sessions') + ' failed',
+        scannedProgress: ({ count, total }: { count: number; total: number }) => count + ' of ' + total + ' sessions scanned',
+    },
+
     session: {
         inputPlaceholder: 'Введите сообщение...',
         inactiveArchived: 'Эта сессия неактивна.',
@@ -565,6 +589,8 @@ export const ru: TranslationStructure = {
         hideArchived: 'Скрыть архив',
         newSession: 'Новая сессия',
         projects: "Проекты",
+        activeToday: 'Активные сегодня',
+        activeEarlier: 'Активные ранее',
     },
 
     zen: {

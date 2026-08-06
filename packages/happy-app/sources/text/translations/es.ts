@@ -236,6 +236,10 @@ export const es: TranslationStructure = {
         hideInactiveSessionsSubtitle: 'Muestra solo los chats activos en tu lista',
         groupToolCalls: 'Agrupar llamadas a herramientas',
         groupToolCallsSubtitle: 'Contrae las llamadas consecutivas a herramientas en un solo contenedor',
+        showActiveSessionRuntime: 'Mostrar entorno de sesiones activas',
+        showActiveSessionRuntimeSubtitle: 'Muestra el proyecto, la plataforma del dispositivo, el proveedor de IA y el modelo en las sesiones activas',
+        groupActiveSessionsByDate: 'Agrupar sesiones activas por fecha',
+        groupActiveSessionsByDateSubtitle: 'Divide las sesiones activas ordenadas globalmente entre actividad de hoy y anterior',
         privacy: 'Privacidad',
         privacyDescription: 'Desactiva completamente toda la analítica y telemetría. No se enviarán datos a PostHog ni a ningún otro servicio de seguimiento.',
         disableAnalytics: 'Desactivar analítica',
@@ -309,6 +313,26 @@ export const es: TranslationStructure = {
         yesterday: 'Ayer',
         daysAgo: ({ count }: { count: number }) => `hace ${count} ${count === 1 ? 'día' : 'días'}`,
         viewAll: 'Ver todas las sesiones',
+    },
+
+    promptHistory: {
+        title: 'My Inputs',
+        searchPlaceholder: 'Search your inputs, sessions, or projects',
+        timeline: 'Activity timeline',
+        allInputs: 'All inputs',
+        allProjects: 'All projects',
+        allAgents: 'All agents',
+        today: 'Today',
+        yesterday: 'Yesterday',
+        loadMore: 'Load earlier sessions',
+        loading: 'Loading encrypted session history…',
+        empty: 'No matching inputs found',
+        openSession: 'Open session',
+        completed: 'Completed',
+        inProgress: 'In progress',
+        followUps: ({ count }: { count: number }) => count + ' follow-up ' + (count === 1 ? 'input' : 'inputs'),
+        loadError: ({ count }: { count: number }) => count + ' ' + (count === 1 ? 'session' : 'sessions') + ' failed',
+        scannedProgress: ({ count, total }: { count: number; total: number }) => count + ' of ' + total + ' sessions scanned',
     },
 
     session: {
@@ -549,6 +573,8 @@ export const es: TranslationStructure = {
         hideArchived: 'Ocultar archivadas',
         newSession: 'Nueva sesión',
         projects: "Proyectos",
+        activeToday: 'Activas hoy',
+        activeEarlier: 'Activas anteriormente',
     },
 
     zen: {

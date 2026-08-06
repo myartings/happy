@@ -79,7 +79,7 @@ import {
 } from '@/sync/rig';
 import { RigActivityBar } from '@/components/RigActivityBar';
 
-export const SessionView = React.memo((props: { id: string }) => {
+export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
     const sessionId = props.id;
     const router = useRouter();
     const session = useSession(sessionId);
@@ -427,6 +427,9 @@ export const SessionView = React.memo((props: { id: string }) => {
                         key={sessionId}
                         sessionId={sessionId}
                         session={session}
+                        targetMessageId={props.targetMessageId}
+                        targetMessageLocalId={props.targetMessageLocalId}
+                        targetMessageCreatedAt={props.targetMessageCreatedAt}
                         onHeaderBackdropVisibilityChange={contentRunsUnderHeader
                             ? setHeaderBackdropVisible
                             : undefined}
@@ -623,11 +626,17 @@ export function SessionViewLoaded({
     sessionId,
     session,
     embedded = false,
+    targetMessageId,
+    targetMessageLocalId,
+    targetMessageCreatedAt,
     onHeaderBackdropVisibilityChange,
 }: {
     sessionId: string;
     session: Session;
     embedded?: boolean;
+    targetMessageId?: string;
+    targetMessageLocalId?: string;
+    targetMessageCreatedAt?: number;
     onHeaderBackdropVisibilityChange?: (visible: boolean) => void;
 }) {
     const { theme } = useUnistyles();
@@ -972,14 +981,15 @@ export function SessionViewLoaded({
         gitStatusSync.getSync(sessionId).invalidate();
 
         return () => {
-            if (embedded) {
-                return;
+            if (!embedded) {
+                // Clear viewing session on unmount before pruning so the session
+                // is no longer protected solely by the primary-view marker.
+                const current = storage.getState().currentViewingSessionId;
+                if (current === sessionId) {
+                    storage.getState().setCurrentViewingSession(null);
+                }
             }
-            // Clear viewing session on unmount
-            const current = storage.getState().currentViewingSessionId;
-            if (current === sessionId) {
-                storage.getState().setCurrentViewingSession(null);
-            }
+            sync.onSessionHidden(sessionId);
         };
     }, [sessionId, realtimeStatus, embedded]);
 
@@ -989,6 +999,9 @@ export function SessionViewLoaded({
                 {messages.length > 0 && (
                     <ChatList
                         session={session}
+                        targetMessageId={targetMessageId}
+                        targetMessageLocalId={targetMessageLocalId}
+                        targetMessageCreatedAt={targetMessageCreatedAt}
                         topContentInset={chatListTopContentInset}
                         bottomContentInset={usesFloatingMobileDock ? bottomDockInset : undefined}
                         headerOverlayHeight={safeArea.top + MOBILE_GLASS_HEADER_HEIGHT}

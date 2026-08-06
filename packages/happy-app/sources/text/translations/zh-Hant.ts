@@ -236,6 +236,10 @@ export const zhHant: TranslationStructure = {
         hideInactiveSessionsSubtitle: '僅在清單中顯示活躍的聊天',
         groupToolCalls: '分組工具呼叫',
         groupToolCallsSubtitle: '將連續的工具呼叫摺疊到單一容器中',
+        showActiveSessionRuntime: '顯示活躍工作階段執行環境',
+        showActiveSessionRuntimeSubtitle: '在活躍工作階段中顯示專案、裝置平台、AI 平台和模型',
+        groupActiveSessionsByDate: '依日期分隔活躍工作階段',
+        groupActiveSessionsByDateSubtitle: '將全域排序的活躍工作階段分為今天活躍和較早活躍',
         privacy: '隱私',
         privacyDescription: '完全停用所有分析和遙測。不會向 PostHog 或任何其他追蹤服務傳送資料。',
         disableAnalytics: '停用分析',
@@ -309,6 +313,26 @@ export const zhHant: TranslationStructure = {
         yesterday: '昨天',
         daysAgo: ({ count }: { count: number }) => `${count} 天前`,
         viewAll: '查看所有工作階段',
+    },
+
+    promptHistory: {
+        title: '我的輸入',
+        searchPlaceholder: '搜尋我的輸入、工作階段或專案',
+        timeline: '活動時間軸',
+        allInputs: '全部輸入',
+        allProjects: '全部專案',
+        allAgents: '全部 Agent',
+        today: '今天',
+        yesterday: '昨天',
+        loadMore: '載入更早工作階段',
+        loading: '正在讀取加密工作階段歷史…',
+        empty: '找不到符合的輸入',
+        openSession: '開啟工作階段',
+        completed: '已完成',
+        inProgress: '進行中',
+        followUps: ({ count }: { count: number }) => `${count} 條後續輸入`,
+        loadError: ({ count }: { count: number }) => `${count} 個工作階段載入失敗`,
+        scannedProgress: ({ count, total }: { count: number; total: number }) => `已掃描 ${count}/${total} 個工作階段`,
     },
 
     session: {
@@ -549,6 +573,8 @@ export const zhHant: TranslationStructure = {
         hideArchived: '隱藏已封存',
         newSession: '新建對話',
         projects: "專案",
+        activeToday: '今天活躍',
+        activeEarlier: '較早活躍',
     },
 
     zen: {

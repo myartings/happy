@@ -229,6 +229,22 @@ export async function runOpenClaw(opts: RunOpenClawOptions): Promise<void> {
     }
   };
 
+  const sendReadyNotification = async () => {
+    try {
+      await api.push().sendSessionNotification({
+        kind: 'done',
+        metadata: session.getMetadata(),
+        data: {
+          sessionId: session.sessionId,
+          type: 'ready',
+          provider: 'openclaw',
+        },
+      });
+    } catch (pushError) {
+      logger.debug('[OpenClaw] Failed to send ready push', pushError);
+    }
+  };
+
   const backend = new OpenClawBackend({
     homeDir: os.homedir(),
     gatewayConfig,
@@ -329,6 +345,7 @@ export async function runOpenClaw(opts: RunOpenClawOptions): Promise<void> {
         await backend.sendPrompt(started.sessionId, batch.message);
         await turnEnded;
         sendEnvelopes(sessionManager.endTurn('completed'));
+        await sendReadyNotification();
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         log(`Turn ended: ${msg}`);

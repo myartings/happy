@@ -6,6 +6,7 @@ import { ItemList } from '@/components/ItemList';
 import { useSettingMutable, useLocalSettingMutable } from '@/sync/storage';
 import { Switch } from '@/components/Switch';
 import { t } from '@/text';
+import { isTauri } from '@/utils/isTauri';
 
 export default function FeaturesSettingsScreen() {
     const [experiments, setExperiments] = useSettingMutable('experiments');
@@ -13,12 +14,16 @@ export default function FeaturesSettingsScreen() {
     const [agentInputEnterToSend, setAgentInputEnterToSend] = useSettingMutable('agentInputEnterToSend');
     const [commandPaletteEnabled, setCommandPaletteEnabled] = useLocalSettingMutable('commandPaletteEnabled');
     const [markdownCopyV2, setMarkdownCopyV2] = useLocalSettingMutable('markdownCopyV2');
+    const [desktopSessionNotificationsEnabled, setDesktopSessionNotificationsEnabled] = useLocalSettingMutable('desktopSessionNotificationsEnabled');
     const [hideInactiveSessions, setHideInactiveSessions] = useSettingMutable('hideInactiveSessions');
     const [expResumeSession, setExpResumeSession] = useSettingMutable('expResumeSession');
     const [fileDiffsSidebar, setFileDiffsSidebar] = useSettingMutable('fileDiffsSidebar');
     const [groupToolCalls, setGroupToolCalls] = useSettingMutable('groupToolCalls');
     const [expImageUpload, setExpImageUpload] = useSettingMutable('expImageUpload');
     const [sortSessionsByActivity, setSortSessionsByActivity] = useSettingMutable('sortSessionsByActivity');
+    const [sortActiveSessionsGlobally, setSortActiveSessionsGlobally] = useSettingMutable('sortActiveSessionsGlobally');
+    const [groupActiveSessionsByDate, setGroupActiveSessionsByDate] = useSettingMutable('groupActiveSessionsByDate');
+    const [showActiveSessionRuntime, setShowActiveSessionRuntime] = useSettingMutable('showActiveSessionRuntime');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -59,6 +64,42 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={sortSessionsByActivity}
                             onValueChange={setSortSessionsByActivity}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title="Sort Active Sessions Globally"
+                    subtitle="Show active sessions in one list ordered by recent activity"
+                    icon={<Ionicons name="list-outline" size={29} color="#34C759" />}
+                    rightElement={
+                        <Switch
+                            value={sortActiveSessionsGlobally}
+                            onValueChange={setSortActiveSessionsGlobally}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title={t('settingsFeatures.groupActiveSessionsByDate')}
+                    subtitle={t('settingsFeatures.groupActiveSessionsByDateSubtitle')}
+                    icon={<Ionicons name="calendar-outline" size={29} color="#007AFF" />}
+                    rightElement={
+                        <Switch
+                            value={groupActiveSessionsByDate}
+                            onValueChange={setGroupActiveSessionsByDate}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title={t('settingsFeatures.showActiveSessionRuntime')}
+                    subtitle={t('settingsFeatures.showActiveSessionRuntimeSubtitle')}
+                    icon={<Ionicons name="desktop-outline" size={29} color="#5856D6" />}
+                    rightElement={
+                        <Switch
+                            value={showActiveSessionRuntime}
+                            onValueChange={setShowActiveSessionRuntime}
                         />
                     }
                     showChevron={false}
@@ -181,6 +222,22 @@ export default function FeaturesSettingsScreen() {
                         }
                         showChevron={false}
                     />
+                    {isTauri() && (
+                        <Item
+                            title="Desktop Session Notifications"
+                            subtitle={desktopSessionNotificationsEnabled
+                                ? "Show native desktop notifications when background sessions need attention"
+                                : "Desktop session notifications are disabled on this device"}
+                            icon={<Ionicons name="notifications-outline" size={29} color="#FF9500" />}
+                            rightElement={
+                                <Switch
+                                    value={desktopSessionNotificationsEnabled}
+                                    onValueChange={setDesktopSessionNotificationsEnabled}
+                                />
+                            }
+                            showChevron={false}
+                        />
+                    )}
                 </ItemGroup>
             )}
         </ItemList>

@@ -965,6 +965,23 @@ export async function runClaude(credentials: Credentials, options: StartOptions 
     // Note: currentSession is set by onSessionReady callback during loop()
     (currentSession as Session | null)?.cleanup();
 
+    if (exitCode === 0) {
+        session.sendSessionEvent({ type: 'ready' });
+        try {
+            await api.push().sendSessionNotification({
+                kind: 'done',
+                metadata: session.getMetadata(),
+                data: {
+                    sessionId: session.sessionId,
+                    type: 'ready',
+                    provider: 'claude',
+                }
+            });
+        } catch (pushError) {
+            logger.debug('[Claude] Failed to send ready push', pushError);
+        }
+    }
+
     // Send session death message
     session.sendSessionDeath();
 

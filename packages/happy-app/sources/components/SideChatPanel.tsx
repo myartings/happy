@@ -58,6 +58,9 @@ export const SideChatPanel = React.memo(function SideChatPanel({
     React.useEffect(() => {
         if (activeId) {
             sync.onSessionVisible(activeId);
+            return () => {
+                sync.onSessionHidden(activeId);
+            };
         }
     }, [activeId]);
 

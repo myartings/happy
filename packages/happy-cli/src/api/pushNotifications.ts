@@ -255,7 +255,7 @@ export class PushNotificationClient {
         kind: SessionNotificationKind
         metadata: Metadata | null | undefined
         data?: Record<string, any>
-    }): void {
+    }): Promise<void> {
         const { title, body } = getSessionNotificationCopy(params.kind, params.metadata)
         const sessionTitle = getSessionNotificationBody(params.metadata)
         const url = getSessionNotificationUrl(params.data)
@@ -270,10 +270,10 @@ export class PushNotificationClient {
         if (!sessionId) {
             logger.debug('[PUSH] sendSessionNotification: missing sessionId, falling back to direct send')
             this.sendToAllDevices(title, body, payloadData)
-            return
+            return Promise.resolve()
         }
 
-        void (async () => {
+        return (async () => {
             try {
                 const response = await axios.post<{
                     result?: string

@@ -3,6 +3,21 @@ import { settingsParse, applySettings, settingsDefaults, settingsToSyncPayload, 
 
 describe('settings', () => {
     describe('settingsParse', () => {
+        it('defaults global active-session sorting off and accepts an explicit opt-in', () => {
+            expect(settingsParse({}).sortActiveSessionsGlobally).toBe(false);
+            expect(settingsParse({ sortActiveSessionsGlobally: true }).sortActiveSessionsGlobally).toBe(true);
+        });
+
+        it('defaults active-session runtime details off and accepts an explicit opt-in', () => {
+            expect(settingsParse({}).showActiveSessionRuntime).toBe(false);
+            expect(settingsParse({ showActiveSessionRuntime: true }).showActiveSessionRuntime).toBe(true);
+        });
+
+        it('defaults active-session date grouping off and accepts an explicit opt-in', () => {
+            expect(settingsParse({}).groupActiveSessionsByDate).toBe(false);
+            expect(settingsParse({ groupActiveSessionsByDate: true }).groupActiveSessionsByDate).toBe(true);
+        });
+
         it('should return defaults when given invalid input', () => {
             expect(settingsParse(null)).toEqual(settingsDefaults);
             expect(settingsParse(undefined)).toEqual(settingsDefaults);
@@ -188,11 +203,14 @@ describe('settings', () => {
                 agentInputEnterToSend: true,
                 avatarStyle: 'brutalist',
                 showFlavorIcons: false,
+                showActiveSessionRuntime: false,
+                groupActiveSessionsByDate: false,
                 userMessageBubbleColor: 'gray',
                 sessionStatusBarDisplay: 'hidden',
                 usageLimitShowRemaining: false,
                 hideInactiveSessions: false,
                 sortSessionsByActivity: false,
+                sortActiveSessionsGlobally: false,
                 expResumeSession: false,
                 fileDiffsSidebar: false,
                 groupToolCalls: false,

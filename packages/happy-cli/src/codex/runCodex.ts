@@ -80,7 +80,7 @@ function hasCodexSubagentReference(message: Record<string, unknown>): boolean {
     return false;
 }
 
-const DEFAULT_CODEX_MODEL = 'gpt-5.5';
+const DEFAULT_CODEX_MODEL = 'gpt-5.6-sol';
 const DEFAULT_CODEX_EFFORT: ReasoningEffort = 'medium';
 const DEFAULT_CODEX_PERMISSION_MODE: PermissionMode = 'yolo';
 
@@ -406,10 +406,10 @@ export async function runCodex(opts: {
         session.keepAlive(thinking, 'remote');
     }, 2000);
 
-    const sendReady = () => {
+    const sendReady = async () => {
         session.sendSessionEvent({ type: 'ready' });
         try {
-            api.push().sendSessionNotification({
+            await api.push().sendSessionNotification({
                 kind: 'done',
                 metadata: session.getMetadata(),
                 data: {
@@ -1069,7 +1069,7 @@ export async function runCodex(opts: {
                 activeTurnPermissionMode = undefined;
                 thinking = false;
                 session.keepAlive(thinking, 'remote');
-                emitReadyIfIdle({
+                await emitReadyIfIdle({
                     pending,
                     queueSize: () => messageQueue.size(),
                     shouldExit,

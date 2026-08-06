@@ -6,7 +6,7 @@
 import { query as sdkQuery, type Options, type Query } from '@anthropic-ai/claude-agent-sdk'
 import type { QueryOptions, QueryPrompt, SDKMessage } from './types'
 import type { SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
-import { ensureLocalProxyBypass } from '../utils/proxyBypass'
+import { ensureLocalProxyBypass, removeUnsupportedSocksProxyFallback } from '../utils/proxyBypass'
 import { resolveHappyEntrypoint } from './happyEntrypoint'
 
 /**
@@ -43,7 +43,7 @@ export function query(params: { prompt: QueryPrompt; options?: QueryOptions }): 
         settings: opts?.settingsPath,
         strictMcpConfig: opts?.strictMcpConfig,
         sessionId: undefined,
-        effort: opts?.effort,
+        effort: opts?.effort as Options['effort'],
     }
 
     // Map abort signal -> AbortController
@@ -64,6 +64,7 @@ export function query(params: { prompt: QueryPrompt; options?: QueryOptions }): 
         if (typeof value === 'string') env[key] = value
     }
     env.CLAUDE_CODE_ENTRYPOINT = resolveHappyEntrypoint(process.env.CLAUDE_CODE_ENTRYPOINT)
+    removeUnsupportedSocksProxyFallback(env)
     if (opts?.mcpServers && Object.keys(opts.mcpServers).length > 0) {
         ensureLocalProxyBypass(env)
     }
