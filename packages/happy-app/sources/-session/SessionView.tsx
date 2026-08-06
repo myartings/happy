@@ -356,8 +356,8 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
             title: sessionName,
             folderName,
             isConnected,
-            identityLine: rigIdentity
-                ? `${rigIdentity.clientName} · ${rigIdentity.providerName}${showSessionModel && rigIdentity.modelName ? ` — ${rigIdentity.modelName}` : ''}`
+            identityLine: showSessionModel && rigIdentity
+                ? `${rigIdentity.clientName} · ${rigIdentity.providerName}${rigIdentity.modelName ? ` — ${rigIdentity.modelName}` : ''}`
                 : undefined,
         };
     }, [session, isDataReady, showSessionModel]);

@@ -239,7 +239,7 @@ export const zhHant: TranslationStructure = {
         showActiveSessionRuntime: '顯示活躍工作階段執行環境',
         showActiveSessionRuntimeSubtitle: '在活躍工作階段中顯示專案、裝置平台、AI 平台和模型',
         showSessionModel: '顯示工作階段模型',
-        showSessionModelSubtitle: '在工作階段中顯示 AI 模型名稱和型號',
+        showSessionModelSubtitle: '顯示模型供應商圖示和名稱，以及 AI 模型名稱和型號',
         groupActiveSessionsByDate: '依日期分隔活躍工作階段',
         groupActiveSessionsByDateSubtitle: '將全域排序的活躍工作階段分為今天活躍和較早活躍',
         privacy: '隱私',

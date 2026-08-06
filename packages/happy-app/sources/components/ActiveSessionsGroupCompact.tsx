@@ -366,13 +366,13 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                     <SessionRuntimeMetadata
                         platformKind={runtimePlatformKind}
                         projectName={resolveSessionProjectName(session.projectName, session.path)}
-                        providerKind={session.providerKind}
-                        providerName={session.providerName}
+                        providerKind={showSessionModel ? session.providerKind : null}
+                        providerName={showSessionModel ? session.providerName : null}
                         modelName={showSessionModel ? session.modelName : null}
-                        identityLine={session.identityLine}
+                        identityLine={showSessionModel ? session.identityLine : null}
                         activitySummary={session.activitySummary}
                     />
-                ) : session.identityLine ? (
+                ) : showSessionModel && session.identityLine ? (
                     <View style={styles.sessionIdentityRow}>
                         <ProviderIcon kind={session.providerKind} size={11} />
                         <Text style={styles.sessionIdentity} numberOfLines={1}>

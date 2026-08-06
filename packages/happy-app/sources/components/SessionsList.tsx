@@ -528,7 +528,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
                     />
                 </View>
 
-                {session.identityLine ? (
+                {showSessionModel && session.identityLine ? (
                     <View style={styles.sessionSubtitleRow}>
                         <ProviderIcon kind={session.providerKind} size={13} />
                         <Text style={styles.sessionSubtitle} numberOfLines={1}>

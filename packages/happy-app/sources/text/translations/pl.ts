@@ -256,7 +256,7 @@ export const pl: TranslationStructure = {
         showActiveSessionRuntime: 'Pokaż środowisko aktywnych sesji',
         showActiveSessionRuntimeSubtitle: 'Pokazuj projekt, platformę urządzenia, dostawcę AI i model w aktywnych sesjach',
         showSessionModel: 'Pokaż model sesji',
-        showSessionModelSubtitle: 'Pokazuj nazwę i wersję modelu AI w sesjach',
+        showSessionModelSubtitle: 'Pokazuj ikonę i nazwę dostawcy AI oraz nazwę i wersję modelu',
         groupActiveSessionsByDate: 'Grupuj aktywne sesje według daty',
         groupActiveSessionsByDateSubtitle: 'Podziel globalnie sortowane aktywne sesje na dzisiejsze i wcześniejsze',
         privacy: 'Prywatność',
