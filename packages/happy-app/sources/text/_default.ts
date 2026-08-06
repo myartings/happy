@@ -235,7 +235,7 @@ export const en = {
         groupToolCalls: 'Group Tool Calls',
         groupToolCallsSubtitle: 'Collapse consecutive tool calls into one container',
         showActiveSessionRuntime: 'Show Active Session Runtime',
-        showActiveSessionRuntimeSubtitle: 'Show device platform, AI provider, and model on active sessions',
+        showActiveSessionRuntimeSubtitle: 'Show project, device platform, AI provider, and model on active sessions',
         groupActiveSessionsByDate: 'Group Active Sessions by Date',
         groupActiveSessionsByDateSubtitle: 'Split globally sorted active sessions into today and earlier activity',
         privacy: 'Privacy',

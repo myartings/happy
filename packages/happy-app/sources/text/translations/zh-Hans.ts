@@ -238,7 +238,7 @@ export const zhHans: TranslationStructure = {
         groupToolCalls: '分组工具调用',
         groupToolCallsSubtitle: '将连续的工具调用折叠到一个容器中',
         showActiveSessionRuntime: '显示活跃会话运行环境',
-        showActiveSessionRuntimeSubtitle: '在活跃会话中显示设备平台、AI 平台和模型',
+        showActiveSessionRuntimeSubtitle: '在活跃会话中显示项目、设备平台、AI 平台和模型',
         groupActiveSessionsByDate: '按日期分隔活跃会话',
         groupActiveSessionsByDateSubtitle: '将全局排序的活跃会话分为今天活跃和更早活跃',
         privacy: '隐私',
