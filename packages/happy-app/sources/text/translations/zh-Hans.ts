@@ -1079,6 +1079,11 @@ export const zhHans: TranslationStructure = {
         completed: '已完成',
         projectUnavailable: '请先在当前设备打开这个项目，再进行处理。',
         noProjects: '请先启动一个项目会话，再添加项目 Todo。',
+        chooseTarget: '选择处理目标',
+        newSessionTarget: '新建会话',
+        newSessionDescription: '预填新会话，但不自动发送',
+        existingSessions: '已有活跃会话',
+        hasDraft: '保留已有草稿',
     },
 
     feed: {

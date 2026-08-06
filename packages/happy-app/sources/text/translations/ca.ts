@@ -1078,6 +1078,11 @@ export const ca: TranslationStructure = {
         completed: 'Completades',
         projectUnavailable: 'Obre aquest projecte al dispositiu actual abans de treballar-hi.',
         noProjects: 'Inicia una sessió de projecte abans d’afegir tasques.',
+        chooseTarget: 'Tria on treballar',
+        newSessionTarget: 'Sessió nova',
+        newSessionDescription: 'Emplena una sessió nova sense enviar',
+        existingSessions: 'Sessions actives existents',
+        hasDraft: 'Conserva l’esborrany existent',
     },
 
     feed: {

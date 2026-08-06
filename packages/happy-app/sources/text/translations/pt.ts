@@ -1077,6 +1077,11 @@ export const pt: TranslationStructure = {
         completed: 'Concluídos',
         projectUnavailable: 'Abra este projeto no dispositivo atual antes de trabalhar nele.',
         noProjects: 'Inicie uma sessão de projeto antes de adicionar Todos.',
+        chooseTarget: 'Escolha onde trabalhar',
+        newSessionTarget: 'Nova sessão',
+        newSessionDescription: 'Preencher uma nova sessão sem enviar',
+        existingSessions: 'Sessões ativas existentes',
+        hasDraft: 'Mantém o rascunho existente',
     },
 
     feed: {

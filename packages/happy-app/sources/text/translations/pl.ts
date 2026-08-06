@@ -1108,6 +1108,11 @@ export const pl: TranslationStructure = {
         completed: 'Ukończone',
         projectUnavailable: 'Otwórz ten projekt na bieżącym urządzeniu przed rozpoczęciem pracy.',
         noProjects: 'Uruchom sesję projektu przed dodaniem Todo.',
+        chooseTarget: 'Wybierz miejsce pracy',
+        newSessionTarget: 'Nowa sesja',
+        newSessionDescription: 'Wypełnij nową sesję bez wysyłania',
+        existingSessions: 'Istniejące aktywne sesje',
+        hasDraft: 'Zachowuje istniejący szkic',
     },
 
     feed: {

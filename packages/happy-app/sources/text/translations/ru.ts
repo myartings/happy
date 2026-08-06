@@ -1107,6 +1107,11 @@ export const ru: TranslationStructure = {
         completed: 'Завершённые',
         projectUnavailable: 'Откройте этот проект на текущем устройстве перед началом работы.',
         noProjects: 'Запустите сессию проекта перед добавлением Todo.',
+        chooseTarget: 'Выберите, где работать',
+        newSessionTarget: 'Новая сессия',
+        newSessionDescription: 'Заполнить новую сессию без отправки',
+        existingSessions: 'Существующие активные сессии',
+        hasDraft: 'Сохраняет существующий черновик',
     },
 
     feed: {

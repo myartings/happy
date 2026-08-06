@@ -1080,6 +1080,11 @@ export const ja: TranslationStructure = {
         completed: '完了',
         projectUnavailable: '処理する前に、このデバイスでプロジェクトを開いてください。',
         noProjects: 'プロジェクト Todo を追加する前にセッションを開始してください。',
+        chooseTarget: '作業先を選択',
+        newSessionTarget: '新しいセッション',
+        newSessionDescription: '送信せずに新しいセッションへ入力',
+        existingSessions: '既存のアクティブセッション',
+        hasDraft: '既存の下書きを保持',
     },
 
     feed: {

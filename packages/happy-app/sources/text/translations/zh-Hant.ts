@@ -1078,6 +1078,11 @@ export const zhHant: TranslationStructure = {
         completed: '已完成',
         projectUnavailable: '請先在目前裝置開啟此專案，再進行處理。',
         noProjects: '請先啟動一個專案工作階段，再新增專案 Todo。',
+        chooseTarget: '選擇處理目標',
+        newSessionTarget: '新增工作階段',
+        newSessionDescription: '預填新工作階段，但不自動傳送',
+        existingSessions: '現有作用中工作階段',
+        hasDraft: '保留現有草稿',
     },
 
     feed: {

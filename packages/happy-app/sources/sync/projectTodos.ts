@@ -35,6 +35,11 @@ export interface ProjectTodoDraftTarget {
 }
 
 export interface ProjectTodoSessionContext {
+    sessionId?: string;
+    sessionTitle?: string;
+    sessionSubtitle?: string | null;
+    draft?: string | null;
+    active?: boolean;
     projectId?: string | null;
     projectName?: string | null;
     machineId: string | null;
@@ -43,10 +48,20 @@ export interface ProjectTodoSessionContext {
     updatedAt: number;
 }
 
+export interface ProjectTodoSessionChoice {
+    id: string;
+    title: string;
+    subtitle: string | null;
+    draft: string | null;
+    active: boolean;
+    updatedAt: number;
+}
+
 export interface ProjectTodoContext {
     key: string;
     name: string;
     target: ProjectTodoDraftTarget | null;
+    sessions: ProjectTodoSessionChoice[];
     updatedAt: number;
 }
 
@@ -58,6 +73,11 @@ export function createProjectTodoDraft(target: ProjectTodoDraftTarget, todo: Pro
         sessionType: target.sessionType,
         worktreeKey: target.worktreeKey,
     } as const;
+}
+
+export function prepareProjectTodoSessionDraft(existingDraft: string | null | undefined, content: string): string {
+    const existing = existingDraft?.trim();
+    return existing ? `${existing}\n\n${content}` : content;
 }
 
 export function resolveProjectTodoKey(identity: ProjectTodoIdentity): string | null {
@@ -122,6 +142,18 @@ export function collectProjectTodoContexts(
         if (!key) continue;
 
         const existing = contexts.get(key);
+        const sessionChoice = session.sessionId && session.sessionTitle ? {
+            id: session.sessionId,
+            title: session.sessionTitle,
+            subtitle: session.sessionSubtitle ?? null,
+            draft: session.draft ?? null,
+            active: session.active ?? false,
+            updatedAt: session.updatedAt,
+        } : null;
+        const sessions = sessionChoice
+            ? [...(existing?.sessions.filter((choice) => choice.id !== sessionChoice.id) ?? []), sessionChoice]
+                .sort((a, b) => b.updatedAt - a.updatedAt)
+            : existing?.sessions ?? [];
         if (!existing || session.updatedAt > existing.updatedAt) {
             contexts.set(key, {
                 key,
@@ -132,8 +164,11 @@ export function collectProjectTodoContexts(
                     sessionType: worktree ? 'worktree' : 'simple',
                     worktreeKey: worktree ? session.path : null,
                 },
+                sessions,
                 updatedAt: session.updatedAt,
             });
+        } else if (sessions !== existing.sessions) {
+            contexts.set(key, { ...existing, sessions });
         }
     }
 
@@ -143,6 +178,7 @@ export function collectProjectTodoContexts(
             key,
             name: fallbackProjectName(key),
             target: null,
+            sessions: [],
             updatedAt: todos.reduce((latest, todo) => Math.max(latest, todo.updatedAt), 0),
         });
     }

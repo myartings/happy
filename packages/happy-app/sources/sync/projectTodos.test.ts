@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addProjectTodo, collectProjectTodoContexts, createProjectTodoDraft, deleteProjectTodo, resolveProjectTodoKey, selectProjectTodoContext, setProjectTodoCompleted, updateProjectTodo } from './projectTodos';
+import { addProjectTodo, collectProjectTodoContexts, createProjectTodoDraft, deleteProjectTodo, prepareProjectTodoSessionDraft, resolveProjectTodoKey, selectProjectTodoContext, setProjectTodoCompleted, updateProjectTodo } from './projectTodos';
 
 describe('resolveProjectTodoKey', () => {
     it('uses a stable project id when one is available', () => {
@@ -90,6 +90,14 @@ describe('project todo commands', () => {
         });
         expect(todo.completed).toBe(false);
     });
+
+    it('preserves an existing session draft when preparing a todo', () => {
+        expect(prepareProjectTodoSessionDraft(null, 'Investigate notifications')).toBe('Investigate notifications');
+        expect(prepareProjectTodoSessionDraft(
+            'Keep my existing thought',
+            'Investigate notifications',
+        )).toBe('Keep my existing thought\n\nInvestigate notifications');
+    });
 });
 
 describe('collectProjectTodoContexts', () => {
@@ -122,18 +130,48 @@ describe('collectProjectTodoContexts', () => {
                 sessionType: 'simple',
                 worktreeKey: null,
             },
+            sessions: [],
             updatedAt: 20,
         }]);
     });
 
     it('honors a requested project and otherwise selects the most recent project', () => {
         const contexts = [
-            { key: 'name:happy', name: 'happy', target: null, updatedAt: 20 },
-            { key: 'name:manager', name: 'manager', target: null, updatedAt: 10 },
+            { key: 'name:happy', name: 'happy', target: null, sessions: [], updatedAt: 20 },
+            { key: 'name:manager', name: 'manager', target: null, sessions: [], updatedAt: 10 },
         ];
 
         expect(selectProjectTodoContext(contexts, 'name:manager')?.key).toBe('name:manager');
         expect(selectProjectTodoContext(contexts, 'name:missing')?.key).toBe('name:happy');
         expect(selectProjectTodoContext([], null)).toBeNull();
+    });
+
+    it('lists every existing project session as a selectable target', () => {
+        const contexts = collectProjectTodoContexts([
+            {
+                sessionId: 'older',
+                sessionTitle: 'Older session',
+                projectName: 'happy',
+                machineId: 'machine-a',
+                path: '/home/me/happy',
+                updatedAt: 10,
+                draft: 'Existing draft',
+            },
+            {
+                sessionId: 'newer',
+                sessionTitle: 'Newer session',
+                projectName: 'happy',
+                machineId: 'machine-a',
+                path: '/home/me/happy',
+                updatedAt: 20,
+                draft: null,
+            },
+        ], {});
+
+        expect(contexts[0].sessions.map((session) => session.id)).toEqual(['newer', 'older']);
+        expect(contexts[0].sessions[1]).toMatchObject({
+            title: 'Older session',
+            draft: 'Existing draft',
+        });
     });
 });

@@ -1093,6 +1093,11 @@ export const en: TranslationStructure = {
         completed: 'Completed',
         projectUnavailable: 'Open this project on the current device before working on it.',
         noProjects: 'Start a project session before adding project todos.',
+        chooseTarget: 'Choose where to work on this',
+        newSessionTarget: 'New session',
+        newSessionDescription: 'Prefill a new session without sending',
+        existingSessions: 'Existing active sessions',
+        hasDraft: 'Keeps existing draft',
     },
 
     feed: {
