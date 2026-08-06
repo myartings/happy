@@ -1066,6 +1066,15 @@ export const ja: TranslationStructure = {
         notSupportedMessage: 'このエージェントは画像の添付に対応していません。画像は送信されませんでした。',
     },
 
+    projectTodos: {
+        title: 'プロジェクト Todo',
+        addPlaceholder: '機能、質問、フォローアップを追加',
+        add: '追加',
+        empty: 'プロジェクト Todo はありません',
+        process: '対応する',
+        edit: '編集',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name}さんから友達リクエストが届きました`,

@@ -6,6 +6,9 @@ import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
 import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable } from '@/sync/storage';
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
+import { ProjectTodoButton } from './ProjectTodoButton';
+import { formatPathRelativeToHome } from '@/utils/sessionUtils';
+import { getRepoPath, isWorktreePath } from '@/utils/worktree';
 
 interface ProjectGroupProps {
     project: ProjectGroupData;
@@ -23,6 +26,20 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
     const machines = useAllMachines();
     const [collapsedProjects, setCollapsedProjects] = useLocalSettingMutable('collapsedProjects');
     const collapsed = !!collapsedProjects[project.id];
+
+    const todoTarget = React.useMemo(() => {
+        const primary = project.workspaces.find((workspace) => workspace.id === '')?.sessions[0];
+        const session = primary ?? project.workspaces[0]?.sessions[0];
+        if (!session?.path) return null;
+        const worktree = isWorktreePath(session.path);
+        const repoPath = worktree ? getRepoPath(session.path) : session.path;
+        return {
+            machineId: session.machineId,
+            path: formatPathRelativeToHome(repoPath, session.homeDir ?? undefined),
+            sessionType: worktree ? 'worktree' as const : 'simple' as const,
+            worktreeKey: worktree ? session.path : null,
+        };
+    }, [project.workspaces]);
 
     const toggleCollapsed = React.useCallback(() => {
         setCollapsedProjects({ ...collapsedProjects, [project.id]: !collapsed });
@@ -56,6 +73,12 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                         </Text>
                     )}
                 </View>
+                <ProjectTodoButton
+                    projectKey={`project:${project.id}`}
+                    projectName={project.name}
+                    target={todoTarget}
+                    alwaysVisible
+                />
                 <Text style={styles.count}>
                     {project.activeCount > 0 ? `${project.activeCount}/${project.sessionCount}` : project.sessionCount}
                 </Text>

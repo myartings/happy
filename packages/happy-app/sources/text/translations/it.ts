@@ -1063,6 +1063,15 @@ export const it: TranslationStructure = {
         notSupportedMessage: 'Questo agente non supporta gli allegati immagine. Le immagini non sono state inviate.',
     },
 
+    projectTodos: {
+        title: 'Todo del progetto',
+        addPlaceholder: 'Aggiungi una funzione, domanda o attività',
+        add: 'Aggiungi',
+        empty: 'Nessun Todo del progetto',
+        process: 'Lavora su questo',
+        edit: 'Modifica',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} ti ha inviato una richiesta di amicizia`,

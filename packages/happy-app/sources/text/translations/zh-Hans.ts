@@ -1065,6 +1065,15 @@ export const zhHans: TranslationStructure = {
         notSupportedMessage: '此代理不支持图片附件。图片未发送。',
     },
 
+    projectTodos: {
+        title: '项目 Todo',
+        addPlaceholder: '记录想实现的特性、问题或后续事项',
+        add: '添加',
+        empty: '这个项目还没有 Todo',
+        process: '处理',
+        edit: '编辑',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} 向您发送了好友请求`,

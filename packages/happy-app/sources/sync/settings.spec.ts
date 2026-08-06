@@ -18,6 +18,21 @@ describe('settings', () => {
             expect(settingsParse({ groupActiveSessionsByDate: true }).groupActiveSessionsByDate).toBe(true);
         });
 
+        it('defaults project todos empty and preserves valid synced items', () => {
+            expect(settingsParse({}).projectTodos).toEqual({});
+
+            const projectTodos = {
+                'project:happy': [{
+                    id: 'todo-1',
+                    content: 'Investigate notifications',
+                    completed: false,
+                    createdAt: 1,
+                    updatedAt: 1,
+                }],
+            };
+            expect(settingsParse({ projectTodos }).projectTodos).toEqual(projectTodos);
+        });
+
         it('should return defaults when given invalid input', () => {
             expect(settingsParse(null)).toEqual(settingsDefaults);
             expect(settingsParse(undefined)).toEqual(settingsDefaults);
@@ -227,6 +242,7 @@ describe('settings', () => {
                 lastUsedPermissionMode: null,
                 lastUsedModelMode: null,
                 agentDefaultOverrides: {},
+                projectTodos: {},
                 dismissedCLIWarnings: { perMachine: {}, global: {} },
             });
         });
@@ -238,6 +254,20 @@ describe('settings', () => {
     });
 
     describe('settingsToSyncPayload', () => {
+        it('includes project todos in the cross-device settings payload', () => {
+            const projectTodos = {
+                'project:happy': [{
+                    id: 'todo-1',
+                    content: 'Investigate notifications',
+                    completed: false,
+                    createdAt: 1,
+                    updatedAt: 1,
+                }],
+            };
+
+            expect(settingsToSyncPayload({ ...settingsDefaults, projectTodos })).toMatchObject({ projectTodos });
+        });
+
         it('omits empty agent default overrides', () => {
             expect(settingsToSyncPayload(settingsDefaults)).not.toHaveProperty('agentDefaultOverrides');
         });

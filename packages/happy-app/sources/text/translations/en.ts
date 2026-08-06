@@ -1079,6 +1079,15 @@ export const en: TranslationStructure = {
         notSupportedMessage: 'This agent does not support image attachments. Images were not sent.',
     },
 
+    projectTodos: {
+        title: 'Project Todo',
+        addPlaceholder: 'Add a feature, question, or follow-up',
+        add: 'Add',
+        empty: 'No project todos yet',
+        process: 'Work on this',
+        edit: 'Edit',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} sent you a friend request`,

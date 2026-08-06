@@ -1064,6 +1064,15 @@ export const zhHant: TranslationStructure = {
         notSupportedMessage: '此代理不支援圖片附件。圖片未傳送。',
     },
 
+    projectTodos: {
+        title: '專案 Todo',
+        addPlaceholder: '記錄想實作的功能、問題或後續事項',
+        add: '新增',
+        empty: '這個專案還沒有 Todo',
+        process: '處理',
+        edit: '編輯',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} 向您傳送了好友請求`,

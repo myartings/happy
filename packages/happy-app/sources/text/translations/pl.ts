@@ -1094,6 +1094,15 @@ export const pl: TranslationStructure = {
         notSupportedMessage: 'Ten agent nie obsługuje załączników obrazów. Obrazy nie zostały wysłane.',
     },
 
+    projectTodos: {
+        title: 'Todo projektu',
+        addPlaceholder: 'Dodaj funkcję, pytanie lub dalsze zadanie',
+        add: 'Dodaj',
+        empty: 'Brak Todo projektu',
+        process: 'Zajmij się tym',
+        edit: 'Edytuj',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} wysłał Ci zaproszenie do znajomych`,

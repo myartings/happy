@@ -1093,6 +1093,15 @@ export const ru: TranslationStructure = {
         notSupportedMessage: 'Этот агент не поддерживает вложения изображений. Изображения не были отправлены.',
     },
 
+    projectTodos: {
+        title: 'Задачи проекта',
+        addPlaceholder: 'Добавьте функцию, вопрос или следующий шаг',
+        add: 'Добавить',
+        empty: 'Нет задач проекта',
+        process: 'Взяться за это',
+        edit: 'Изменить',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} отправил вам запрос в друзья`,

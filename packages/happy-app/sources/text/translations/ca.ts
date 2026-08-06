@@ -1064,6 +1064,15 @@ export const ca: TranslationStructure = {
         notSupportedMessage: 'Aquest agent no admet fitxers adjunts d\'imatge. Les imatges no s\'han enviat.',
     },
 
+    projectTodos: {
+        title: 'Tasques del projecte',
+        addPlaceholder: 'Afegeix una funció, pregunta o seguiment',
+        add: 'Afegeix',
+        empty: 'No hi ha tasques del projecte',
+        process: 'Treballa-hi',
+        edit: 'Edita',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} t'ha enviat una sol·licitud d'amistat`,

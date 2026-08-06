@@ -1065,6 +1065,15 @@ export const es: TranslationStructure = {
         notSupportedMessage: 'Este agente no admite archivos adjuntos de imagen. Las imágenes no se enviaron.',
     },
 
+    projectTodos: {
+        title: 'Tareas del proyecto',
+        addPlaceholder: 'Añade una función, pregunta o seguimiento',
+        add: 'Añadir',
+        empty: 'No hay tareas del proyecto',
+        process: 'Trabajar en esto',
+        edit: 'Editar',
+    },
+
     feed: {
         // Feed notifications for friend requests and acceptances
         friendRequestFrom: ({ name }: { name: string }) => `${name} te envió una solicitud de amistad`,
