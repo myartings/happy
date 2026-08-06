@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { resolveSessionRuntimeDisplay } from './sessionRuntimeDisplay';
+import { resolveSessionProjectName, resolveSessionRuntimeDisplay } from './sessionRuntimeDisplay';
+
+describe('resolveSessionProjectName', () => {
+    it('prefers the structured project name', () => {
+        expect(resolveSessionProjectName('Happy Manager', 'C:\\workspace\\happy-manager')).toBe('Happy Manager');
+    });
+
+    it('falls back to the final Windows or POSIX path segment', () => {
+        expect(resolveSessionProjectName(null, 'C:\\workspace\\happy-manager\\')).toBe('happy-manager');
+        expect(resolveSessionProjectName(null, '/workspace/happy-manager/')).toBe('happy-manager');
+    });
+
+    it('returns null when no project identity is available', () => {
+        expect(resolveSessionProjectName('  ', '  ')).toBeNull();
+    });
+});
 
 describe('resolveSessionRuntimeDisplay', () => {
     it('describes a Windows Codex session with its explicitly selected model', () => {

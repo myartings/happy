@@ -237,7 +237,7 @@ export const ca: TranslationStructure = {
         groupToolCalls: 'Agrupa les crides a eines',
         groupToolCallsSubtitle: 'Replega les crides consecutives a eines en un sol contenidor',
         showActiveSessionRuntime: 'Mostra l’entorn de les sessions actives',
-        showActiveSessionRuntimeSubtitle: 'Mostra la plataforma del dispositiu, el proveïdor d’IA i el model a les sessions actives',
+        showActiveSessionRuntimeSubtitle: 'Mostra el projecte, la plataforma del dispositiu, el proveïdor d’IA i el model a les sessions actives',
         groupActiveSessionsByDate: 'Agrupa les sessions actives per data',
         groupActiveSessionsByDateSubtitle: 'Separa les sessions actives ordenades globalment entre l’activitat d’avui i l’anterior',
         privacy: 'Privadesa',

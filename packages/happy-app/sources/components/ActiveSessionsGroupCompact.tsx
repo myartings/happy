@@ -24,7 +24,7 @@ import { SessionShortcutHintBadge } from './ShortcutHints';
 import { buildActiveSessionDisplayGroups } from '@/utils/sessionDisplayOrder';
 import { ProviderIcon } from './ProviderIcon';
 import { SessionRuntimeMetadata } from './SessionRuntimeMetadata';
-import { getSessionPlatformKind } from '@/utils/sessionRuntimeDisplay';
+import { getSessionPlatformKind, resolveSessionProjectName } from '@/utils/sessionRuntimeDisplay';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -350,6 +350,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                 {showActiveSessionRuntime ? (
                     <SessionRuntimeMetadata
                         platformKind={runtimePlatformKind}
+                        projectName={resolveSessionProjectName(session.projectName, session.path)}
                         providerKind={session.providerKind}
                         providerName={session.providerName}
                         modelName={session.modelName}

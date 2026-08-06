@@ -7,6 +7,19 @@ export type SessionRuntimeDisplay = {
     modelLabel: string | null;
 };
 
+export function resolveSessionProjectName(
+    projectName: string | null | undefined,
+    path: string | null | undefined,
+): string | null {
+    const explicitName = projectName?.trim();
+    if (explicitName) return explicitName;
+
+    const normalizedPath = path?.trim().replace(/[\\/]+$/, '');
+    if (!normalizedPath) return null;
+
+    return normalizedPath.split(/[\\/]/).filter(Boolean).pop() ?? null;
+}
+
 type SessionRuntimeDisplayInput = {
     metadata: {
         os?: string;

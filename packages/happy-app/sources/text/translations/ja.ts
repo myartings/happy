@@ -238,7 +238,7 @@ export const ja: TranslationStructure = {
         groupToolCalls: 'ツール呼び出しをグループ化',
         groupToolCallsSubtitle: '連続するツール呼び出しを1つのコンテナにまとめる',
         showActiveSessionRuntime: 'アクティブセッションの実行環境を表示',
-        showActiveSessionRuntimeSubtitle: 'アクティブセッションにデバイス、AIプロバイダー、モデルを表示します',
+        showActiveSessionRuntimeSubtitle: 'アクティブセッションにプロジェクト、デバイス、AIプロバイダー、モデルを表示します',
         groupActiveSessionsByDate: 'アクティブセッションを日付でグループ化',
         groupActiveSessionsByDateSubtitle: 'グローバルに並べたアクティブセッションを今日と過去のアクティビティに分けます',
         privacy: 'プライバシー',

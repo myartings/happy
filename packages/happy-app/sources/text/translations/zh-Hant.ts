@@ -237,7 +237,7 @@ export const zhHant: TranslationStructure = {
         groupToolCalls: '分組工具呼叫',
         groupToolCallsSubtitle: '將連續的工具呼叫摺疊到單一容器中',
         showActiveSessionRuntime: '顯示活躍工作階段執行環境',
-        showActiveSessionRuntimeSubtitle: '在活躍工作階段中顯示裝置平台、AI 平台和模型',
+        showActiveSessionRuntimeSubtitle: '在活躍工作階段中顯示專案、裝置平台、AI 平台和模型',
         groupActiveSessionsByDate: '依日期分隔活躍工作階段',
         groupActiveSessionsByDateSubtitle: '將全域排序的活躍工作階段分為今天活躍和較早活躍',
         privacy: '隱私',

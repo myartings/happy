@@ -235,7 +235,7 @@ export const it: TranslationStructure = {
         groupToolCalls: 'Raggruppa chiamate agli strumenti',
         groupToolCallsSubtitle: 'Comprimi le chiamate consecutive agli strumenti in un unico contenitore',
         showActiveSessionRuntime: 'Mostra ambiente sessioni attive',
-        showActiveSessionRuntimeSubtitle: 'Mostra piattaforma del dispositivo, provider IA e modello nelle sessioni attive',
+        showActiveSessionRuntimeSubtitle: 'Mostra progetto, piattaforma del dispositivo, provider IA e modello nelle sessioni attive',
         groupActiveSessionsByDate: 'Raggruppa sessioni attive per data',
         groupActiveSessionsByDateSubtitle: 'Dividi le sessioni attive ordinate globalmente tra attività di oggi e precedenti',
         privacy: 'Privacy',

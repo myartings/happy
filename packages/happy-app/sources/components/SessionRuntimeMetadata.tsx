@@ -25,6 +25,7 @@ function PlatformIcon({ kind, size }: { kind: SessionPlatformKind; size: number 
 
 export function SessionRuntimeMetadata({
     platformKind,
+    projectName,
     providerKind,
     providerName,
     modelName,
@@ -32,13 +33,14 @@ export function SessionRuntimeMetadata({
     activitySummary,
 }: {
     platformKind: SessionPlatformKind;
+    projectName: string | null;
     providerKind: string | null;
     providerName: string | null;
     modelName: string | null;
     identityLine: string | null;
     activitySummary: string | null;
 }) {
-    const details = [identityLine ?? providerName, modelName, activitySummary].filter(Boolean) as string[];
+    const details = [identityLine ?? providerName, projectName, modelName, activitySummary].filter(Boolean) as string[];
     const accessibilityLabel = [platformLabels[platformKind], ...details].join(', ');
 
     return (
