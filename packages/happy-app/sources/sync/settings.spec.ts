@@ -13,6 +13,11 @@ describe('settings', () => {
             expect(settingsParse({ showActiveSessionRuntime: true }).showActiveSessionRuntime).toBe(true);
         });
 
+        it('defaults active-session date grouping off and accepts an explicit opt-in', () => {
+            expect(settingsParse({}).groupActiveSessionsByDate).toBe(false);
+            expect(settingsParse({ groupActiveSessionsByDate: true }).groupActiveSessionsByDate).toBe(true);
+        });
+
         it('should return defaults when given invalid input', () => {
             expect(settingsParse(null)).toEqual(settingsDefaults);
             expect(settingsParse(undefined)).toEqual(settingsDefaults);
@@ -199,6 +204,7 @@ describe('settings', () => {
                 avatarStyle: 'brutalist',
                 showFlavorIcons: false,
                 showActiveSessionRuntime: false,
+                groupActiveSessionsByDate: false,
                 userMessageBubbleColor: 'gray',
                 sessionStatusBarDisplay: 'hidden',
                 usageLimitShowRemaining: false,

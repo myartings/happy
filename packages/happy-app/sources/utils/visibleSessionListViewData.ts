@@ -3,6 +3,8 @@ import type { SessionListViewItem, SessionRowData } from '@/sync/storage';
 export interface VisibleSessionListOptions {
     hideInactiveSessions: boolean;
     sortActiveSessionsGlobally: boolean;
+    groupActiveSessionsByDate?: boolean;
+    now?: number;
 }
 
 function activityTime(session: SessionRowData): number {
@@ -63,22 +65,34 @@ export function buildVisibleSessionListViewData(
 
         activeSessions.sort((left, right) => activityTime(right) - activityTime(left));
         const hasRemainingProjects = remainingItems.some((item) => item.type === 'project');
+        const activeItems: SessionListViewItem[] = [];
+        if (options.groupActiveSessionsByDate && activeSessions.length > 0) {
+            const now = new Date(options.now ?? Date.now());
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const today = activeSessions.filter((session) => activityTime(session) >= startOfToday);
+            const earlier = activeSessions.filter((session) => activityTime(session) < startOfToday);
+            if (today.length > 0) activeItems.push({ type: 'active-sessions', period: 'today', sessions: today });
+            if (earlier.length > 0) activeItems.push({ type: 'active-sessions', period: 'earlier', sessions: earlier });
+        } else if (activeSessions.length > 0) {
+            activeItems.push({ type: 'active-sessions', sessions: activeSessions });
+        }
+
         sourceData = [
-            ...(activeSessions.length > 0 ? [{ type: 'active-sessions' as const, sessions: activeSessions }] : []),
+            ...activeItems,
             ...remainingItems.filter((item) => item.type !== 'projects-header' || hasRemainingProjects),
         ];
     }
 
     const result: SessionListViewItem[] = [];
     const projects = sourceData.filter((item) => item.type === 'projects-header' || item.type === 'project');
-    const active = sourceData.find((item) => item.type === 'active-sessions');
+    const active = sourceData.filter((item) => item.type === 'active-sessions');
 
-    if (options.sortActiveSessionsGlobally && active) {
-        result.push(active);
+    if (options.sortActiveSessionsGlobally) {
+        result.push(...active);
     }
     result.push(...projects);
-    if (!options.sortActiveSessionsGlobally && active) {
-        result.push(active);
+    if (!options.sortActiveSessionsGlobally) {
+        result.push(...active);
     }
 
     const hasInactive = sourceData.some((item) => item.type === 'session' && !item.session.active);

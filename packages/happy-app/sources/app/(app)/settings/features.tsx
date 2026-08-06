@@ -22,6 +22,7 @@ export default function FeaturesSettingsScreen() {
     const [expImageUpload, setExpImageUpload] = useSettingMutable('expImageUpload');
     const [sortSessionsByActivity, setSortSessionsByActivity] = useSettingMutable('sortSessionsByActivity');
     const [sortActiveSessionsGlobally, setSortActiveSessionsGlobally] = useSettingMutable('sortActiveSessionsGlobally');
+    const [groupActiveSessionsByDate, setGroupActiveSessionsByDate] = useSettingMutable('groupActiveSessionsByDate');
     const [showActiveSessionRuntime, setShowActiveSessionRuntime] = useSettingMutable('showActiveSessionRuntime');
 
     return (
@@ -75,6 +76,18 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={sortActiveSessionsGlobally}
                             onValueChange={setSortActiveSessionsGlobally}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title={t('settingsFeatures.groupActiveSessionsByDate')}
+                    subtitle={t('settingsFeatures.groupActiveSessionsByDateSubtitle')}
+                    icon={<Ionicons name="calendar-outline" size={29} color="#007AFF" />}
+                    rightElement={
+                        <Switch
+                            value={groupActiveSessionsByDate}
+                            onValueChange={setGroupActiveSessionsByDate}
                         />
                     }
                     showChevron={false}

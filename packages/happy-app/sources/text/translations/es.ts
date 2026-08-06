@@ -238,6 +238,8 @@ export const es: TranslationStructure = {
         groupToolCallsSubtitle: 'Contrae las llamadas consecutivas a herramientas en un solo contenedor',
         showActiveSessionRuntime: 'Mostrar entorno de sesiones activas',
         showActiveSessionRuntimeSubtitle: 'Muestra la plataforma del dispositivo, el proveedor de IA y el modelo en las sesiones activas',
+        groupActiveSessionsByDate: 'Agrupar sesiones activas por fecha',
+        groupActiveSessionsByDateSubtitle: 'Divide las sesiones activas ordenadas globalmente entre actividad de hoy y anterior',
         privacy: 'Privacidad',
         privacyDescription: 'Desactiva completamente toda la analítica y telemetría. No se enviarán datos a PostHog ni a ningún otro servicio de seguimiento.',
         disableAnalytics: 'Desactivar analítica',
@@ -551,6 +553,8 @@ export const es: TranslationStructure = {
         hideArchived: 'Ocultar archivadas',
         newSession: 'Nueva sesión',
         projects: "Proyectos",
+        activeToday: 'Activas hoy',
+        activeEarlier: 'Activas anteriormente',
     },
 
     zen: {

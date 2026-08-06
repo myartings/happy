@@ -238,6 +238,8 @@ export const ca: TranslationStructure = {
         groupToolCallsSubtitle: 'Replega les crides consecutives a eines en un sol contenidor',
         showActiveSessionRuntime: 'Mostra l’entorn de les sessions actives',
         showActiveSessionRuntimeSubtitle: 'Mostra la plataforma del dispositiu, el proveïdor d’IA i el model a les sessions actives',
+        groupActiveSessionsByDate: 'Agrupa les sessions actives per data',
+        groupActiveSessionsByDateSubtitle: 'Separa les sessions actives ordenades globalment entre l’activitat d’avui i l’anterior',
         privacy: 'Privadesa',
         privacyDescription: 'Desactiva completament tota l\'analítica i telemetria. No s\'enviaran dades a PostHog ni a cap altre servei de seguiment.',
         disableAnalytics: 'Desactivar analítica',
@@ -551,6 +553,8 @@ export const ca: TranslationStructure = {
         hideArchived: 'Amaga arxivades',
         newSession: 'Nova sessió',
         projects: "Projectes",
+        activeToday: 'Actives avui',
+        activeEarlier: 'Actives anteriorment',
     },
 
     zen: {

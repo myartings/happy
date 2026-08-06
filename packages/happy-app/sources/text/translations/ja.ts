@@ -239,6 +239,8 @@ export const ja: TranslationStructure = {
         groupToolCallsSubtitle: '連続するツール呼び出しを1つのコンテナにまとめる',
         showActiveSessionRuntime: 'アクティブセッションの実行環境を表示',
         showActiveSessionRuntimeSubtitle: 'アクティブセッションにデバイス、AIプロバイダー、モデルを表示します',
+        groupActiveSessionsByDate: 'アクティブセッションを日付でグループ化',
+        groupActiveSessionsByDateSubtitle: 'グローバルに並べたアクティブセッションを今日と過去のアクティビティに分けます',
         privacy: 'プライバシー',
         privacyDescription: 'すべての分析とテレメトリを完全に無効にします。PostHogやその他のトラッキングサービスにデータは送信されません。',
         disableAnalytics: '分析を無効化',
@@ -552,6 +554,8 @@ export const ja: TranslationStructure = {
         hideArchived: 'アーカイブを非表示',
         newSession: '新しいセッション',
         projects: "プロジェクト",
+        activeToday: '今日アクティブ',
+        activeEarlier: '以前にアクティブ',
     },
 
     zen: {

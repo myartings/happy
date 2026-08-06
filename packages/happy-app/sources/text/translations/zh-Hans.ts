@@ -239,6 +239,8 @@ export const zhHans: TranslationStructure = {
         groupToolCallsSubtitle: '将连续的工具调用折叠到一个容器中',
         showActiveSessionRuntime: '显示活跃会话运行环境',
         showActiveSessionRuntimeSubtitle: '在活跃会话中显示设备平台、AI 平台和模型',
+        groupActiveSessionsByDate: '按日期分隔活跃会话',
+        groupActiveSessionsByDateSubtitle: '将全局排序的活跃会话分为今天活跃和更早活跃',
         privacy: '隐私',
         privacyDescription: '完全禁用所有分析和遥测。不会向 PostHog 或任何其他跟踪服务发送数据。',
         disableAnalytics: '禁用分析',
@@ -552,6 +554,8 @@ export const zhHans: TranslationStructure = {
         hideArchived: '隐藏已归档',
         newSession: '新建会话',
         projects: "项目",
+        activeToday: '今天活跃',
+        activeEarlier: '更早活跃',
     },
 
     zen: {

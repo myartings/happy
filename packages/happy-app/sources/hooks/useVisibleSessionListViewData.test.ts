@@ -13,6 +13,31 @@ function row(id: string, active: boolean, createdAt: number, lastMessageSentAt?:
 }
 
 describe('buildVisibleSessionListViewData', () => {
+    it('separates globally sorted active sessions into today and earlier activity groups', () => {
+        const now = new Date(2026, 7, 6, 12, 0, 0).getTime();
+        const today = new Date(2026, 7, 6, 9, 0, 0).getTime();
+        const yesterday = new Date(2026, 7, 5, 18, 0, 0).getTime();
+        const data: SessionListViewItem[] = [{
+            type: 'active-sessions',
+            sessions: [
+                row('earlier', true, yesterday, yesterday),
+                row('today', true, today, today),
+            ],
+        }];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideInactiveSessions: false,
+            sortActiveSessionsGlobally: true,
+            groupActiveSessionsByDate: true,
+            now,
+        });
+
+        expect(result).toMatchObject([
+            { type: 'active-sessions', period: 'today', sessions: [{ id: 'today' }] },
+            { type: 'active-sessions', period: 'earlier', sessions: [{ id: 'earlier' }] },
+        ]);
+    });
+
     it('shows active sessions from every device and project in one recent-activity list', () => {
         const data: SessionListViewItem[] = [
             {
@@ -80,6 +105,7 @@ describe('buildVisibleSessionListViewData', () => {
         const result = buildVisibleSessionListViewData(data, {
             hideInactiveSessions: false,
             sortActiveSessionsGlobally: false,
+            groupActiveSessionsByDate: true,
         });
 
         expect(result?.map((item) => item.type)).toEqual([

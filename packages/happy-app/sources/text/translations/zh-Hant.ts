@@ -238,6 +238,8 @@ export const zhHant: TranslationStructure = {
         groupToolCallsSubtitle: '將連續的工具呼叫摺疊到單一容器中',
         showActiveSessionRuntime: '顯示活躍工作階段執行環境',
         showActiveSessionRuntimeSubtitle: '在活躍工作階段中顯示裝置平台、AI 平台和模型',
+        groupActiveSessionsByDate: '依日期分隔活躍工作階段',
+        groupActiveSessionsByDateSubtitle: '將全域排序的活躍工作階段分為今天活躍和較早活躍',
         privacy: '隱私',
         privacyDescription: '完全停用所有分析和遙測。不會向 PostHog 或任何其他追蹤服務傳送資料。',
         disableAnalytics: '停用分析',
@@ -551,6 +553,8 @@ export const zhHant: TranslationStructure = {
         hideArchived: '隱藏已封存',
         newSession: '新建對話',
         projects: "專案",
+        activeToday: '今天活躍',
+        activeEarlier: '較早活躍',
     },
 
     zen: {

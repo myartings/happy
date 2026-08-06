@@ -255,6 +255,8 @@ export const pl: TranslationStructure = {
         groupToolCallsSubtitle: 'Zwijaj kolejne wywołania narzędzi w jeden kontener',
         showActiveSessionRuntime: 'Pokaż środowisko aktywnych sesji',
         showActiveSessionRuntimeSubtitle: 'Pokazuj platformę urządzenia, dostawcę AI i model w aktywnych sesjach',
+        groupActiveSessionsByDate: 'Grupuj aktywne sesje według daty',
+        groupActiveSessionsByDateSubtitle: 'Podziel globalnie sortowane aktywne sesje na dzisiejsze i wcześniejsze',
         privacy: 'Prywatność',
         privacyDescription: 'Całkowicie wyłącza wszystkie analizy i telemetrię. Żadne dane nie będą wysyłane do PostHog ani żadnego innego serwisu śledzącego.',
         disableAnalytics: 'Wyłącz analitykę',
@@ -567,6 +569,8 @@ export const pl: TranslationStructure = {
         hideArchived: 'Ukryj zarchiwizowane',
         newSession: 'Nowa sesja',
         projects: "Projekty",
+        activeToday: 'Aktywne dzisiaj',
+        activeEarlier: 'Aktywne wcześniej',
     },
 
     zen: {

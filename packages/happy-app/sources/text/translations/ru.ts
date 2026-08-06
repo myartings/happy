@@ -224,6 +224,8 @@ export const ru: TranslationStructure = {
         groupToolCallsSubtitle: 'Сворачивать подряд идущие вызовы инструментов в один блок',
         showActiveSessionRuntime: 'Показывать среду активных сессий',
         showActiveSessionRuntimeSubtitle: 'Показывать платформу устройства, ИИ-провайдера и модель в активных сессиях',
+        groupActiveSessionsByDate: 'Группировать активные сессии по дате',
+        groupActiveSessionsByDateSubtitle: 'Разделять глобально отсортированные активные сессии на сегодняшние и более ранние',
         privacy: 'Конфиденциальность',
         privacyDescription: 'Полностью отключает всю аналитику и телеметрию. Никакие данные не будут отправляться в PostHog или другие сервисы отслеживания.',
         disableAnalytics: 'Отключить аналитику',
@@ -567,6 +569,8 @@ export const ru: TranslationStructure = {
         hideArchived: 'Скрыть архив',
         newSession: 'Новая сессия',
         projects: "Проекты",
+        activeToday: 'Активные сегодня',
+        activeEarlier: 'Активные ранее',
     },
 
     zen: {
