@@ -222,6 +222,8 @@ export const ru: TranslationStructure = {
         hideInactiveSessionsSubtitle: 'Показывать в списке только активные чаты',
         groupToolCalls: 'Группировать вызовы инструментов',
         groupToolCallsSubtitle: 'Сворачивать подряд идущие вызовы инструментов в один блок',
+        showActiveSessionRuntime: 'Показывать среду активных сессий',
+        showActiveSessionRuntimeSubtitle: 'Показывать платформу устройства, ИИ-провайдера и модель в активных сессиях',
         privacy: 'Конфиденциальность',
         privacyDescription: 'Полностью отключает всю аналитику и телеметрию. Никакие данные не будут отправляться в PostHog или другие сервисы отслеживания.',
         disableAnalytics: 'Отключить аналитику',

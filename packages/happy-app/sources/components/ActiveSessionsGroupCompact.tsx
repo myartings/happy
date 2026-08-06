@@ -8,7 +8,7 @@ import { type SessionState, formatPathRelativeToHome, vibingMessages, formatLast
 import { Avatar } from './Avatar';
 import { Typography } from '@/constants/Typography';
 import { StatusDot } from './StatusDot';
-import { useAllMachines, useSessionGitStatus, useSetting } from '@/sync/storage';
+import { useAllMachines, useMachine, useSessionGitStatus, useSetting } from '@/sync/storage';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { t } from '@/text';
 import { useNavigateToSession } from '@/hooks/useNavigateToSession';
@@ -23,6 +23,8 @@ import { useRouter } from 'expo-router';
 import { SessionShortcutHintBadge } from './ShortcutHints';
 import { buildActiveSessionDisplayGroups } from '@/utils/sessionDisplayOrder';
 import { ProviderIcon } from './ProviderIcon';
+import { SessionRuntimeMetadata } from './SessionRuntimeMetadata';
+import { getSessionPlatformKind } from '@/utils/sessionRuntimeDisplay';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -249,6 +251,11 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
         : baseStatus;
     const navigateToSession = useNavigateToSession();
+    const showActiveSessionRuntime = useSetting('showActiveSessionRuntime');
+    const machine = useMachine(session.machineId ?? '');
+    const runtimePlatformKind = session.platformKind === 'unknown'
+        ? getSessionPlatformKind(machine?.metadata?.platform)
+        : session.platformKind;
     const swipeableRef = React.useRef<Swipeable | null>(null);
     const swipeEnabled = Platform.OS !== 'web';
     const [actionsAnchor, setActionsAnchor] = React.useState<SessionActionsAnchor | null>(null);
@@ -340,14 +347,23 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                         style={styles.sessionShortcutBadge}
                     />
                 </View>
-                {session.identityLine && (
+                {showActiveSessionRuntime ? (
+                    <SessionRuntimeMetadata
+                        platformKind={runtimePlatformKind}
+                        providerKind={session.providerKind}
+                        providerName={session.providerName}
+                        modelName={session.modelName}
+                        identityLine={session.identityLine}
+                        activitySummary={session.activitySummary}
+                    />
+                ) : session.identityLine ? (
                     <View style={styles.sessionIdentityRow}>
                         <ProviderIcon kind={session.providerKind} size={11} />
                         <Text style={styles.sessionIdentity} numberOfLines={1}>
                             {session.identityLine}{session.modelName ? ` · ${session.modelName}` : ''}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
                         </Text>
                     </View>
-                )}
+                ) : null}
             </View>
         </Pressable>
     );

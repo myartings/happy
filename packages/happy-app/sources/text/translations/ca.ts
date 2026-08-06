@@ -236,6 +236,8 @@ export const ca: TranslationStructure = {
         hideInactiveSessionsSubtitle: 'Mostra només els xats actius a la llista',
         groupToolCalls: 'Agrupa les crides a eines',
         groupToolCallsSubtitle: 'Replega les crides consecutives a eines en un sol contenidor',
+        showActiveSessionRuntime: 'Mostra l’entorn de les sessions actives',
+        showActiveSessionRuntimeSubtitle: 'Mostra la plataforma del dispositiu, el proveïdor d’IA i el model a les sessions actives',
         privacy: 'Privadesa',
         privacyDescription: 'Desactiva completament tota l\'analítica i telemetria. No s\'enviaran dades a PostHog ni a cap altre servei de seguiment.',
         disableAnalytics: 'Desactivar analítica',

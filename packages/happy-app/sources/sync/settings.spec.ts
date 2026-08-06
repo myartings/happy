@@ -8,6 +8,11 @@ describe('settings', () => {
             expect(settingsParse({ sortActiveSessionsGlobally: true }).sortActiveSessionsGlobally).toBe(true);
         });
 
+        it('defaults active-session runtime details off and accepts an explicit opt-in', () => {
+            expect(settingsParse({}).showActiveSessionRuntime).toBe(false);
+            expect(settingsParse({ showActiveSessionRuntime: true }).showActiveSessionRuntime).toBe(true);
+        });
+
         it('should return defaults when given invalid input', () => {
             expect(settingsParse(null)).toEqual(settingsDefaults);
             expect(settingsParse(undefined)).toEqual(settingsDefaults);
@@ -193,6 +198,7 @@ describe('settings', () => {
                 agentInputEnterToSend: true,
                 avatarStyle: 'brutalist',
                 showFlavorIcons: false,
+                showActiveSessionRuntime: false,
                 userMessageBubbleColor: 'gray',
                 sessionStatusBarDisplay: 'hidden',
                 usageLimitShowRemaining: false,

@@ -236,6 +236,8 @@ export const zhHant: TranslationStructure = {
         hideInactiveSessionsSubtitle: '僅在清單中顯示活躍的聊天',
         groupToolCalls: '分組工具呼叫',
         groupToolCallsSubtitle: '將連續的工具呼叫摺疊到單一容器中',
+        showActiveSessionRuntime: '顯示活躍工作階段執行環境',
+        showActiveSessionRuntimeSubtitle: '在活躍工作階段中顯示裝置平台、AI 平台和模型',
         privacy: '隱私',
         privacyDescription: '完全停用所有分析和遙測。不會向 PostHog 或任何其他追蹤服務傳送資料。',
         disableAnalytics: '停用分析',

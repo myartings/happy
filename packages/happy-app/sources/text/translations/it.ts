@@ -234,6 +234,8 @@ export const it: TranslationStructure = {
         hideInactiveSessionsSubtitle: 'Mostra solo le chat attive nella tua lista',
         groupToolCalls: 'Raggruppa chiamate agli strumenti',
         groupToolCallsSubtitle: 'Comprimi le chiamate consecutive agli strumenti in un unico contenitore',
+        showActiveSessionRuntime: 'Mostra ambiente sessioni attive',
+        showActiveSessionRuntimeSubtitle: 'Mostra piattaforma del dispositivo, provider IA e modello nelle sessioni attive',
         privacy: 'Privacy',
         privacyDescription: 'Disabilita completamente tutte le analisi e la telemetria. Nessun dato verrà inviato a PostHog o ad altri servizi di tracciamento.',
         disableAnalytics: 'Disabilita analisi',

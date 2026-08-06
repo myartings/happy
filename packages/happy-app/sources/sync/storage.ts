@@ -36,6 +36,7 @@ import { DecryptedArtifact } from "./artifactTypes";
 import { FeedItem } from "./feedTypes";
 import { getRigActivityIndicators, getRigIdentity } from './rig';
 import { indexSessionsById } from './sessionIdentity';
+import { resolveSessionRuntimeDisplay, type SessionPlatformKind } from '@/utils/sessionRuntimeDisplay';
 
 // Debounce timer for realtimeMode changes
 let realtimeModeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -89,7 +90,9 @@ export interface SessionRowData {
     clientId: string | null;
     identityLine: string | null;
     providerKind: string | null;
+    providerName: string | null;
     modelName: string | null;
+    platformKind: SessionPlatformKind;
     activitySummary: string | null;
     state: SessionState;
     // activeAt is only present on inactive sessions because it changes on every
@@ -131,6 +134,10 @@ function buildSessionRowData(session: Session, unreadSessionIds?: Set<string>): 
 
     const rigIdentity = getRigIdentity(session.metadata);
     const rigActivity = getRigActivityIndicators(session.metadata);
+    const runtimeDisplay = resolveSessionRuntimeDisplay({
+        metadata: session.metadata,
+        modelMode: session.modelMode,
+    });
     return {
         id: session.id,
         name: getSessionName(session),
@@ -139,8 +146,10 @@ function buildSessionRowData(session: Session, unreadSessionIds?: Set<string>): 
         flavor: session.metadata?.flavor ?? null,
         clientId: session.metadata?.client?.id ?? null,
         identityLine: rigIdentity ? `${rigIdentity.clientName} · ${rigIdentity.providerName}` : null,
-        providerKind: session.metadata?.provider?.kind ?? null,
-        modelName: rigIdentity?.modelName ?? null,
+        providerKind: rigIdentity?.providerKind ?? runtimeDisplay.agentKind,
+        providerName: rigIdentity?.providerName ?? runtimeDisplay.agentLabel,
+        modelName: rigIdentity?.modelName ?? runtimeDisplay.modelLabel,
+        platformKind: runtimeDisplay.platformKind,
         activitySummary: rigActivity.length > 0
             ? rigActivity.map((item) => `${item.count}${item.queued ? `+${item.queued}` : ''} ${item.key}`).join(' · ')
             : null,
@@ -1097,18 +1106,21 @@ export const storage = create<StorageState>()((set, get) => {
             const session = state.sessions[sessionId];
             if (!session) return state;
 
-            // No need to rebuild sessionListViewData since mode picks don't affect the list display
+            const updatedSessions = {
+                ...state.sessions,
+                [sessionId]: {
+                    ...session,
+                    ...(patch.permissionMode !== undefined && { permissionMode: patch.permissionMode }),
+                    ...(patch.modelMode !== undefined && { modelMode: patch.modelMode }),
+                    ...(patch.effortLevel !== undefined && { effortLevel: patch.effortLevel }),
+                },
+            };
+
             return {
                 ...state,
-                sessions: {
-                    ...state.sessions,
-                    [sessionId]: {
-                        ...session,
-                        ...(patch.permissionMode !== undefined && { permissionMode: patch.permissionMode }),
-                        ...(patch.modelMode !== undefined && { modelMode: patch.modelMode }),
-                        ...(patch.effortLevel !== undefined && { effortLevel: patch.effortLevel }),
-                    }
-                }
+                sessions: updatedSessions,
+                // Model picks are visible in active-session runtime metadata.
+                sessionListViewData: buildSessionListViewData(updatedSessions, state.unreadSessionIds),
             };
         }),
         markSessionMessageSent: (sessionId: string) => set((state) => {

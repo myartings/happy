@@ -22,6 +22,7 @@ export default function FeaturesSettingsScreen() {
     const [expImageUpload, setExpImageUpload] = useSettingMutable('expImageUpload');
     const [sortSessionsByActivity, setSortSessionsByActivity] = useSettingMutable('sortSessionsByActivity');
     const [sortActiveSessionsGlobally, setSortActiveSessionsGlobally] = useSettingMutable('sortActiveSessionsGlobally');
+    const [showActiveSessionRuntime, setShowActiveSessionRuntime] = useSettingMutable('showActiveSessionRuntime');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -74,6 +75,18 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={sortActiveSessionsGlobally}
                             onValueChange={setSortActiveSessionsGlobally}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title={t('settingsFeatures.showActiveSessionRuntime')}
+                    subtitle={t('settingsFeatures.showActiveSessionRuntimeSubtitle')}
+                    icon={<Ionicons name="desktop-outline" size={29} color="#5856D6" />}
+                    rightElement={
+                        <Switch
+                            value={showActiveSessionRuntime}
+                            onValueChange={setShowActiveSessionRuntime}
                         />
                     }
                     showChevron={false}
