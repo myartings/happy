@@ -1,5 +1,6 @@
 import type { Session } from './storageTypes';
 import type { SessionRowData } from './storage';
+import { getRepoPath, getWorktreeName } from '@/utils/worktreePath';
 
 // One git worktree inside a project. `id` is empty and `name` is null for
 // the project's primary tree, which always sorts first.
@@ -28,9 +29,9 @@ export function isProjectSession(session: Session): boolean {
 }
 
 /**
- * Groups sessions without a native project identity by machine and working
- * directory. This gives Happy CLI sessions the same project-card presentation
- * as Rig without merging identical paths from different computers.
+ * Groups sessions without a native project identity by machine and repository.
+ * Happy-managed worktrees become named workspaces inside their parent project,
+ * matching Rig's project-card structure without merging computers together.
  */
 export function buildPathProjectGroups(
     sessions: Session[],
@@ -39,28 +40,48 @@ export function buildPathProjectGroups(
     idPrefix: string,
 ): ProjectGroupData[] {
     const projects = new Map<string, ProjectGroupData>();
+    const workspaces = new Map<string, ProjectWorkspaceGroup>();
 
     for (const session of sessions) {
         const machineId = session.metadata?.machineId ?? null;
         const path = session.metadata?.path?.trim() || '';
-        const key = JSON.stringify([machineId, path]);
+        const repoPath = getRepoPath(path);
+        const worktreeName = getWorktreeName(path);
+        const key = JSON.stringify([machineId, repoPath]);
         let group = projects.get(key);
         if (!group) {
             group = {
                 id: `${idPrefix}:${key}`,
-                name: pathProjectName(path, session.metadata?.homeDir),
+                name: pathProjectName(repoPath, session.metadata?.homeDir),
                 machineId,
-                workspaces: [{ id: '', name: null, sessions: [] }],
+                workspaces: [],
                 sessionCount: 0,
                 activeCount: 0,
             };
             projects.set(key, group);
         }
 
-        group.workspaces[0].sessions.push(toRow(session));
+        const workspaceId = worktreeName ? path : '';
+        const workspaceKey = `${key}\u0000${workspaceId}`;
+        let workspace = workspaces.get(workspaceKey);
+        if (!workspace) {
+            workspace = { id: workspaceId, name: worktreeName, sessions: [] };
+            workspaces.set(workspaceKey, workspace);
+            group.workspaces.push(workspace);
+        }
+
+        workspace.sessions.push(toRow(session));
         group.sessionCount += 1;
         if (isActive(session)) {
             group.activeCount += 1;
+        }
+    }
+
+    for (const group of projects.values()) {
+        const primaryIndex = group.workspaces.findIndex((workspace) => workspace.id === '');
+        if (primaryIndex > 0) {
+            const [primary] = group.workspaces.splice(primaryIndex, 1);
+            group.workspaces.unshift(primary);
         }
     }
 

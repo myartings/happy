@@ -106,6 +106,7 @@ export interface SessionRowData {
     machineId: string | null;
     path: string | null;
     homeDir: string | null;
+    gitBranch: string | null;
     completedTodosCount: number;
     totalTodosCount: number;
     hasUnread: boolean;
@@ -165,6 +166,7 @@ function buildSessionRowData(session: Session, unreadSessionIds?: Set<string>): 
         machineId: session.metadata?.machineId ?? null,
         path: session.metadata?.path ?? null,
         homeDir: session.metadata?.homeDir ?? null,
+        gitBranch: session.metadata?.gitBranch?.trim() || null,
         completedTodosCount: session.todos?.filter(todo => todo.status === 'completed').length ?? 0,
         totalTodosCount: session.todos?.length ?? 0,
         hasUnread: unreadSessionIds?.has(session.id) ?? false,

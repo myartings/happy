@@ -32,6 +32,7 @@ function session(
         machineId,
         path,
         homeDir: null,
+        gitBranch: null,
         completedTodosCount: 0,
         totalTodosCount: 0,
         hasUnread: false,
