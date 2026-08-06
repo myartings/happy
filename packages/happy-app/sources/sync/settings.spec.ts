@@ -3,6 +3,11 @@ import { settingsParse, applySettings, settingsDefaults, settingsToSyncPayload, 
 
 describe('settings', () => {
     describe('settingsParse', () => {
+        it('defaults global active-session sorting off and accepts an explicit opt-in', () => {
+            expect(settingsParse({}).sortActiveSessionsGlobally).toBe(false);
+            expect(settingsParse({ sortActiveSessionsGlobally: true }).sortActiveSessionsGlobally).toBe(true);
+        });
+
         it('should return defaults when given invalid input', () => {
             expect(settingsParse(null)).toEqual(settingsDefaults);
             expect(settingsParse(undefined)).toEqual(settingsDefaults);
@@ -193,6 +198,7 @@ describe('settings', () => {
                 usageLimitShowRemaining: false,
                 hideInactiveSessions: false,
                 sortSessionsByActivity: false,
+                sortActiveSessionsGlobally: false,
                 expResumeSession: false,
                 fileDiffsSidebar: false,
                 groupToolCalls: false,

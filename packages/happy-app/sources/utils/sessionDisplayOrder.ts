@@ -82,6 +82,7 @@ export function getSessionShortcutIdsInDisplayOrder(
     data: readonly SessionListViewItem[] | null,
     machines: readonly SessionDisplayMachine[],
     unknownText: string,
+    sortActiveSessionsGlobally = false,
 ): string[] {
     if (!data) {
         return [];
@@ -90,6 +91,10 @@ export function getSessionShortcutIdsInDisplayOrder(
     const sessionIds: string[] = [];
     data.forEach((item) => {
         if (item.type === 'active-sessions') {
+            if (sortActiveSessionsGlobally) {
+                item.sessions.forEach((session) => sessionIds.push(session.id));
+                return;
+            }
             const machineGroups = buildActiveSessionDisplayGroups(item.sessions, machines, unknownText);
             machineGroups.forEach((machineGroup) => {
                 Array.from(machineGroup.projects.values())

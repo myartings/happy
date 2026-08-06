@@ -21,6 +21,7 @@ export default function FeaturesSettingsScreen() {
     const [groupToolCalls, setGroupToolCalls] = useSettingMutable('groupToolCalls');
     const [expImageUpload, setExpImageUpload] = useSettingMutable('expImageUpload');
     const [sortSessionsByActivity, setSortSessionsByActivity] = useSettingMutable('sortSessionsByActivity');
+    const [sortActiveSessionsGlobally, setSortActiveSessionsGlobally] = useSettingMutable('sortActiveSessionsGlobally');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -61,6 +62,18 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={sortSessionsByActivity}
                             onValueChange={setSortSessionsByActivity}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title="Sort Active Sessions Globally"
+                    subtitle="Show active sessions in one list ordered by recent activity"
+                    icon={<Ionicons name="list-outline" size={29} color="#34C759" />}
+                    rightElement={
+                        <Switch
+                            value={sortActiveSessionsGlobally}
+                            onValueChange={setSortActiveSessionsGlobally}
                         />
                     }
                     showChevron={false}

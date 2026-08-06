@@ -92,10 +92,11 @@ export interface SessionRowData {
     modelName: string | null;
     activitySummary: string | null;
     state: SessionState;
-    // Only present on inactive sessions — active sessions never show "last seen"
-    // and activeAt updates on every heartbeat, causing needless deep-equal diffs
+    // activeAt is only present on inactive sessions because it changes on every
+    // heartbeat. Stable creation/send timestamps are available for display order.
     activeAt?: number;
     createdAt?: number;
+    lastMessageSentAt?: number;
     hasDraft: boolean;
     active: boolean;
     machineId: string | null;
@@ -144,7 +145,9 @@ function buildSessionRowData(session: Session, unreadSessionIds?: Set<string>): 
             ? rigActivity.map((item) => `${item.count}${item.queued ? `+${item.queued}` : ''} ${item.key}`).join(' · ')
             : null,
         state,
-        ...(!session.active && { activeAt: session.activeAt, createdAt: session.createdAt }),
+        ...(!session.active && { activeAt: session.activeAt }),
+        createdAt: session.createdAt,
+        lastMessageSentAt: session.lastMessageSentAt,
         hasDraft: !!session.draft,
         active: session.active,
         machineId: session.metadata?.machineId ?? null,

@@ -87,4 +87,19 @@ describe('session display order', () => {
             'inactive-6',
         ]);
     });
+
+    it('numbers globally sorted active sessions without regrouping them by machine', () => {
+        const data: SessionListViewItem[] = [{
+            type: 'active-sessions',
+            sessions: [
+                session('recent-zulu', 'machine-z', '/project'),
+                session('older-alpha', 'machine-a', '/project'),
+            ],
+        }];
+
+        expect(getSessionShortcutIdsInDisplayOrder(data, machines, 'Unknown', true)).toEqual([
+            'recent-zulu',
+            'older-alpha',
+        ]);
+    });
 });
