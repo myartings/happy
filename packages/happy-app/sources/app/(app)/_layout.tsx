@@ -69,6 +69,14 @@ export default function RootLayout() {
                 }}
             />
             <Stack.Screen
+                name="prompts"
+                options={{
+                    headerShown: false,
+                    headerTitle: t('promptHistory.title'),
+                    headerBackTitle: t('common.home'),
+                }}
+            />
+            <Stack.Screen
                 name="settings/index"
                 options={{
                     headerShown: true,

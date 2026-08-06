@@ -316,6 +316,26 @@ export const zhHans: TranslationStructure = {
         viewAll: '查看所有会话',
     },
 
+    promptHistory: {
+        title: '我的输入',
+        searchPlaceholder: '搜索我的输入、会话或项目',
+        timeline: '活动时间线',
+        allInputs: '全部输入',
+        allProjects: '全部项目',
+        allAgents: '全部 Agent',
+        today: '今天',
+        yesterday: '昨天',
+        loadMore: '加载更早会话',
+        loading: '正在读取加密会话历史…',
+        empty: '没有找到匹配的输入',
+        openSession: '打开会话',
+        completed: '已完成',
+        inProgress: '进行中',
+        followUps: ({ count }: { count: number }) => `${count} 条后续输入`,
+        loadError: ({ count }: { count: number }) => `${count} 个会话加载失败`,
+        scannedProgress: ({ count, total }: { count: number; total: number }) => `已扫描 ${count}/${total} 个会话`,
+    },
+
     session: {
         inputPlaceholder: '输入消息...',
         inactiveArchived: '此会话处于非活动状态。',

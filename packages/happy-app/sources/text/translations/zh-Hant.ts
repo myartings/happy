@@ -315,6 +315,26 @@ export const zhHant: TranslationStructure = {
         viewAll: '查看所有工作階段',
     },
 
+    promptHistory: {
+        title: '我的輸入',
+        searchPlaceholder: '搜尋我的輸入、工作階段或專案',
+        timeline: '活動時間軸',
+        allInputs: '全部輸入',
+        allProjects: '全部專案',
+        allAgents: '全部 Agent',
+        today: '今天',
+        yesterday: '昨天',
+        loadMore: '載入更早工作階段',
+        loading: '正在讀取加密工作階段歷史…',
+        empty: '找不到符合的輸入',
+        openSession: '開啟工作階段',
+        completed: '已完成',
+        inProgress: '進行中',
+        followUps: ({ count }: { count: number }) => `${count} 條後續輸入`,
+        loadError: ({ count }: { count: number }) => `${count} 個工作階段載入失敗`,
+        scannedProgress: ({ count, total }: { count: number; total: number }) => `已掃描 ${count}/${total} 個工作階段`,
+    },
+
     session: {
         inputPlaceholder: '輸入訊息...',
         inactiveArchived: '此會話處於非活動狀態。',

@@ -332,6 +332,26 @@ export const pl: TranslationStructure = {
         viewAll: 'Zobacz wszystkie sesje',
     },
 
+    promptHistory: {
+        title: 'My Inputs',
+        searchPlaceholder: 'Search your inputs, sessions, or projects',
+        timeline: 'Activity timeline',
+        allInputs: 'All inputs',
+        allProjects: 'All projects',
+        allAgents: 'All agents',
+        today: 'Today',
+        yesterday: 'Yesterday',
+        loadMore: 'Load earlier sessions',
+        loading: 'Loading encrypted session history…',
+        empty: 'No matching inputs found',
+        openSession: 'Open session',
+        completed: 'Completed',
+        inProgress: 'In progress',
+        followUps: ({ count }: { count: number }) => count + ' follow-up ' + (count === 1 ? 'input' : 'inputs'),
+        loadError: ({ count }: { count: number }) => count + ' ' + (count === 1 ? 'session' : 'sessions') + ' failed',
+        scannedProgress: ({ count, total }: { count: number; total: number }) => count + ' of ' + total + ' sessions scanned',
+    },
+
     session: {
         inputPlaceholder: 'Wpisz wiadomość...',
         inactiveArchived: 'Ta sesja jest nieaktywna.',

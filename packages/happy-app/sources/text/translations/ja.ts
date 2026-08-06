@@ -316,6 +316,26 @@ export const ja: TranslationStructure = {
         viewAll: 'すべてのセッションを表示',
     },
 
+    promptHistory: {
+        title: '自分の入力',
+        searchPlaceholder: '入力、セッション、プロジェクトを検索',
+        timeline: 'アクティビティ',
+        allInputs: 'すべての入力',
+        allProjects: 'すべてのプロジェクト',
+        allAgents: 'すべてのエージェント',
+        today: '今日',
+        yesterday: '昨日',
+        loadMore: '以前のセッションを読み込む',
+        loading: '暗号化された履歴を読み込み中…',
+        empty: '一致する入力がありません',
+        openSession: 'セッションを開く',
+        completed: '完了',
+        inProgress: '進行中',
+        followUps: ({ count }: { count: number }) => `後続の入力 ${count} 件`,
+        loadError: ({ count }: { count: number }) => `${count} 件のセッションを読み込めませんでした`,
+        scannedProgress: ({ count, total }: { count: number; total: number }) => `${total} 件中 ${count} 件をスキャン済み`,
+    },
+
     session: {
         inputPlaceholder: 'メッセージを入力...',
         inactiveArchived: 'このセッションは非アクティブです。',

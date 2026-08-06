@@ -39,6 +39,7 @@ import { emitReadyIfIdle } from './emitReadyIfIdle';
 import { enqueueCodexUserText, isCodexClearText } from './codexClearCommand';
 import { downloadCodexFileEventAttachment } from './utils/attachmentEvents';
 import { prepareCodexImageInputItems } from './utils/imageInput';
+import { withCodexRuntimeModelMetadata } from './codexRuntimeModelMetadata';
 import { createSerialAsyncHandler } from './utils/serialAsyncHandler';
 import { buildCodexThreadBackfillEnvelopes } from './utils/threadImageBackfill';
 import {
@@ -154,7 +155,8 @@ export async function runCodex(opts: {
     const forkedFromMessageId = process.env.HAPPY_FORKED_FROM_MESSAGE_ID;
     const isSideChat = process.env.HAPPY_SIDE_CHAT === '1';
 
-    const { state, metadata } = createSessionMetadata({
+    const initialModel = opts.model ?? DEFAULT_CODEX_MODEL;
+    const { state, metadata: baseMetadata } = createSessionMetadata({
         flavor: 'codex',
         machineId,
         startedBy: opts.startedBy,
@@ -164,6 +166,7 @@ export async function runCodex(opts: {
         ...(forkedFromMessageId ? { forkedFromMessageId } : {}),
         ...(isSideChat ? { isSideChat: true } : {}),
     });
+    const metadata = withCodexRuntimeModelMetadata(baseMetadata, initialModel);
 
     const skillCommands = await discoverCodexSkillCommands();
     if (skillCommands.length > 0) {
@@ -272,7 +275,7 @@ export async function runCodex(opts: {
     // default for plain codex is yolo, and it must not wave through a
     // straggler approval after an abort.
     let currentPermissionModeExplicitlySet = false;
-    let currentModel: string | undefined = opts.model ?? DEFAULT_CODEX_MODEL;
+    let currentModel: string | undefined = initialModel;
     let currentEffort: ReasoningEffort | undefined = opts.effort ?? DEFAULT_CODEX_EFFORT;
     let currentAppendSystemPrompt: string | undefined = undefined;
 
@@ -335,6 +338,10 @@ export async function runCodex(opts: {
         if (message.meta?.hasOwnProperty('model')) {
             messageModel = message.meta.model || undefined;
             currentModel = messageModel;
+            const publishedModelMode = currentModel ?? 'default';
+            if (session.getMetadata()?.modelMode !== publishedModelMode) {
+                session.updateMetadata((metadata) => withCodexRuntimeModelMetadata(metadata, currentModel));
+            }
             logger.debug(`[Codex] Model updated from user message: ${messageModel || 'reset to default'}`);
         } else {
             logger.debug(`[Codex] User message received with no model override, using current: ${currentModel || 'default'}`);

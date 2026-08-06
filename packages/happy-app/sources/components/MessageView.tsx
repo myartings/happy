@@ -14,17 +14,20 @@ import { Option } from './markdown/MarkdownView';
 import { layout } from "./layout";
 import { parseLocalCommandMessage, isUserSlashCommandEcho } from './parseLocalCommandMessage';
 import { resolveUserMessageBubbleColor } from '@/utils/userMessageBubbleColor';
+import { getMessageTargetNativeId } from '@/utils/messageTarget';
 
 
 export const MessageView = React.memo((props: {
   message: Message;
   metadata: Metadata | null;
   sessionId: string;
+  highlighted?: boolean;
   getMessageById?: (id: string) => Message | null;
 }) => {
   return (
     <View
-      style={styles.messageContainer}
+      nativeID={getMessageTargetNativeId(props.message.id)}
+      style={[styles.messageContainer, props.highlighted && styles.messageHighlighted]}
       renderToHardwareTextureAndroid={Platform.OS !== 'web'}
     >
       <View style={styles.messageContent}>
@@ -246,6 +249,10 @@ const styles = StyleSheet.create((theme) => ({
   messageContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+  },
+  messageHighlighted: {
+    backgroundColor: 'rgba(139, 124, 255, 0.16)',
+    borderRadius: 12,
   },
   messageContent: {
     flexDirection: 'column',
