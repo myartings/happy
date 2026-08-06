@@ -36,7 +36,11 @@ export const SettingsSchema = z.object({
     sessionStatusBarDisplay: z.enum(SESSION_STATUS_BAR_DISPLAY_MODES).describe('Whether/where to show the branch, model, effort, and context status bar'),
     usageLimitShowRemaining: z.boolean().describe('Show plan rate limits as quota remaining instead of quota used'),
 
-    hideInactiveSessions: z.boolean().describe('Hide inactive sessions in the main list'),
+    // Drives the archive-visibility toggle: it hides archived sessions, not
+    // merely disconnected ones. The key keeps its original name because these
+    // settings sync between devices and app versions field by field, with no
+    // rename migration to carry an old key across.
+    hideInactiveSessions: z.boolean().describe('Hide archived sessions in the main list'),
     sortSessionsByActivity: z.boolean().describe('Sort the session list by last activity instead of creation date'),
     sortActiveSessionsGlobally: z.boolean().describe('Show active sessions in one global list ordered by recent user activity'),
     groupActiveSessionsByDate: z.boolean().describe('Split globally sorted active sessions into today and earlier activity groups'),

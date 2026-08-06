@@ -1,32 +1,102 @@
-import { describe, expect, it } from 'vitest';
-
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionListViewItem, SessionRowData } from '@/sync/storage';
 import { buildVisibleSessionListViewData } from '@/utils/visibleSessionListViewData';
 
-function row(id: string, active: boolean, createdAt: number, lastMessageSentAt?: number): SessionRowData {
+const mocks = vi.hoisted(() => ({
+    data: null as SessionListViewItem[] | null,
+    hideArchivedSessions: false,
+    sortActiveSessionsGlobally: false,
+    groupActiveSessionsByDate: false,
+}));
+
+vi.mock('react', () => ({
+    useMemo: <T,>(factory: () => T) => factory(),
+}));
+
+vi.mock('@/sync/storage', () => ({
+    useSessionListViewData: () => mocks.data,
+    useSetting: (key: string) => {
+        switch (key) {
+            case 'hideInactiveSessions': return mocks.hideArchivedSessions;
+            case 'sortActiveSessionsGlobally': return mocks.sortActiveSessionsGlobally;
+            case 'groupActiveSessionsByDate': return mocks.groupActiveSessionsByDate;
+            default: throw new Error(`Unexpected setting read: ${key}`);
+        }
+    },
+}));
+
+import { useHasArchivedSessions, useVisibleSessionListViewData } from './useVisibleSessionListViewData';
+
+function row(
+    id: string,
+    options: {
+        active?: boolean;
+        archived?: boolean;
+        createdAt?: number;
+        lastMessageSentAt?: number;
+    } = {},
+): SessionRowData {
     return {
         id,
-        active,
-        createdAt,
-        lastMessageSentAt,
+        name: id,
+        active: options.active ?? false,
+        archived: options.archived ?? false,
+        createdAt: options.createdAt ?? 0,
+        lastMessageSentAt: options.lastMessageSentAt,
     } as SessionRowData;
 }
 
+function project(
+    id: string,
+    sessions: SessionRowData[],
+    source: 'rig' | 'happy' = 'rig',
+): Extract<SessionListViewItem, { type: 'project' }> {
+    return {
+        type: 'project',
+        source,
+        project: {
+            id,
+            name: id,
+            machineId: 'machine-1',
+            sessionCount: sessions.length,
+            activeCount: sessions.filter((session) => session.active).length,
+            workspaces: [{ id: '', name: null, sessions }],
+        },
+    };
+}
+
+function projectSessionIds(items: SessionListViewItem[]): string[] {
+    return items.flatMap((item) => item.type === 'project'
+        ? item.project.workspaces.flatMap((workspace) => workspace.sessions.map((session) => session.id))
+        : []);
+}
+
+function flatSessionIds(items: SessionListViewItem[]): string[] {
+    return items.flatMap((item) => item.type === 'session' ? [item.session.id] : []);
+}
+
+beforeEach(() => {
+    mocks.data = null;
+    mocks.hideArchivedSessions = false;
+    mocks.sortActiveSessionsGlobally = false;
+    mocks.groupActiveSessionsByDate = false;
+});
+
 describe('buildVisibleSessionListViewData', () => {
-    it('separates globally sorted active sessions into today and earlier activity groups', () => {
+    it('separates globally sorted active sessions into today and earlier groups', () => {
         const now = new Date(2026, 7, 6, 12, 0, 0).getTime();
         const today = new Date(2026, 7, 6, 9, 0, 0).getTime();
         const yesterday = new Date(2026, 7, 5, 18, 0, 0).getTime();
         const data: SessionListViewItem[] = [{
             type: 'active-sessions',
             sessions: [
-                row('earlier', true, yesterday, yesterday),
-                row('today', true, today, today),
+                row('earlier', { active: true, createdAt: yesterday, lastMessageSentAt: yesterday }),
+                row('today', { active: true, createdAt: today, lastMessageSentAt: today }),
             ],
         }];
 
         const result = buildVisibleSessionListViewData(data, {
-            hideInactiveSessions: false,
+            hideArchivedSessions: false,
             sortActiveSessionsGlobally: true,
             groupActiveSessionsByDate: true,
             now,
@@ -38,41 +108,28 @@ describe('buildVisibleSessionListViewData', () => {
         ]);
     });
 
-    it('shows active sessions from every device and project in one recent-activity list', () => {
+    it('collects active sessions from every project into recent-activity order', () => {
         const data: SessionListViewItem[] = [
-            {
-                type: 'project',
-                project: {
-                    id: 'project-1',
-                    name: 'Happy',
-                    machineId: 'machine-a',
-                    sessionCount: 2,
-                    activeCount: 1,
-                    workspaces: [{
-                        id: '',
-                        name: null,
-                        sessions: [
-                            row('project-active', true, 10, 300),
-                            row('project-inactive', false, 20, 400),
-                        ],
-                    }],
-                },
-            },
+            { type: 'projects-header', source: 'rig' },
+            project('project-1', [
+                row('project-active', { active: true, lastMessageSentAt: 300 }),
+                row('project-inactive', { lastMessageSentAt: 400 }),
+            ]),
             {
                 type: 'active-sessions',
                 sessions: [
-                    row('plain-old', true, 30, 100),
-                    row('plain-new', true, 40, 500),
+                    row('plain-old', { active: true, lastMessageSentAt: 100 }),
+                    row('plain-new', { active: true, lastMessageSentAt: 500 }),
                 ],
             },
         ];
 
         const result = buildVisibleSessionListViewData(data, {
-            hideInactiveSessions: false,
+            hideArchivedSessions: false,
             sortActiveSessionsGlobally: true,
-        });
+        })!;
 
-        expect(result?.[0]).toMatchObject({
+        expect(result[0]).toMatchObject({
             type: 'active-sessions',
             sessions: [
                 { id: 'plain-new' },
@@ -80,65 +137,111 @@ describe('buildVisibleSessionListViewData', () => {
                 { id: 'plain-old' },
             ],
         });
+        expect(projectSessionIds(result)).toEqual(['project-inactive']);
     });
 
-    it('preserves the existing project-first layout when the new setting is off', () => {
-        const project: SessionListViewItem = {
-            type: 'project',
-            project: {
-                id: 'project-1',
-                name: 'Happy',
-                machineId: 'machine-a',
-                sessionCount: 1,
-                activeCount: 1,
-                workspaces: [{ id: '', name: null, sessions: [row('project-active', true, 10)] }],
-            },
-        };
+    it('preserves the official project-card order when global sorting is off', () => {
         const data: SessionListViewItem[] = [
-            { type: 'active-sessions', sessions: [row('plain-active', true, 20)] },
-            { type: 'projects-header' },
-            project,
+            { type: 'projects-header', source: 'rig' },
+            project('project-1', [row('project-active', { active: true })]),
+            { type: 'active-sessions', sessions: [row('plain-active', { active: true })] },
             { type: 'header', title: 'Today' },
-            { type: 'session', session: row('inactive', false, 30) },
+            { type: 'session', session: row('inactive') },
         ];
 
-        const result = buildVisibleSessionListViewData(data, {
-            hideInactiveSessions: false,
+        expect(buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
             sortActiveSessionsGlobally: false,
-            groupActiveSessionsByDate: true,
-        });
-
-        expect(result?.map((item) => item.type)).toEqual([
-            'projects-header',
-            'project',
-            'active-sessions',
-            'archive-toggle',
-            'header',
-            'session',
-        ]);
+        })).toEqual(data);
     });
 
-    it('removes an empty projects section after moving its active sessions into the global list', () => {
+    it('removes a source header after moving its only active project session', () => {
         const data: SessionListViewItem[] = [
-            { type: 'projects-header' },
-            {
-                type: 'project',
-                project: {
-                    id: 'project-1',
-                    name: 'Happy',
-                    machineId: 'machine-a',
-                    sessionCount: 1,
-                    activeCount: 1,
-                    workspaces: [{ id: '', name: null, sessions: [row('project-active', true, 10, 300)] }],
-                },
-            },
+            { type: 'projects-header', source: 'rig' },
+            project('project-1', [row('project-active', { active: true, lastMessageSentAt: 300 })]),
         ];
 
         const result = buildVisibleSessionListViewData(data, {
-            hideInactiveSessions: false,
+            hideArchivedSessions: false,
             sortActiveSessionsGlobally: true,
         });
 
         expect(result?.map((item) => item.type)).toEqual(['active-sessions']);
+    });
+
+    it('hides archived rows but keeps disconnected live work in both list shapes', () => {
+        const data: SessionListViewItem[] = [
+            { type: 'projects-header', source: 'rig' },
+            project('p1', [row('project-disconnected'), row('project-archived', { archived: true })]),
+            { type: 'header', title: 'Today' },
+            { type: 'session', session: row('flat-disconnected') },
+            { type: 'session', session: row('flat-archived', { archived: true }) },
+        ];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: true,
+            sortActiveSessionsGlobally: false,
+        })!;
+
+        expect(projectSessionIds(result)).toEqual(['project-disconnected']);
+        expect(flatSessionIds(result)).toEqual(['flat-disconnected']);
+    });
+
+    it('drops empty date and project headers after archive filtering', () => {
+        const data: SessionListViewItem[] = [
+            { type: 'projects-header', source: 'rig' },
+            project('p1', [row('project-archived', { archived: true })]),
+            { type: 'header', title: 'Today' },
+            { type: 'session', session: row('flat-archived', { archived: true }) },
+            { type: 'header', title: 'Yesterday' },
+            { type: 'session', session: row('flat-disconnected') },
+        ];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: true,
+            sortActiveSessionsGlobally: false,
+        })!;
+
+        expect(result.map((item) => item.type === 'header' ? item.title : item.type))
+            .toEqual(['Yesterday', 'session']);
+    });
+});
+
+describe('useVisibleSessionListViewData', () => {
+    it('passes through a list that has not loaded yet', () => {
+        expect(useVisibleSessionListViewData()).toBeNull();
+    });
+
+    it('combines archive filtering with global active-session grouping', () => {
+        const now = Date.now();
+        mocks.data = [project('p1', [
+            row('live', { active: true, lastMessageSentAt: now }),
+            row('archived', { archived: true }),
+        ])];
+        mocks.hideArchivedSessions = true;
+        mocks.sortActiveSessionsGlobally = true;
+        mocks.groupActiveSessionsByDate = true;
+
+        expect(useVisibleSessionListViewData()).toMatchObject([
+            { type: 'active-sessions', period: 'today', sessions: [{ id: 'live' }] },
+        ]);
+    });
+});
+
+describe('useHasArchivedSessions', () => {
+    it('is false when only disconnected sessions exist', () => {
+        mocks.data = [project('p1', [row('project-disconnected')])];
+        expect(useHasArchivedSessions()).toBe(false);
+    });
+
+    it('finds archived sessions in project, active, and flat list shapes', () => {
+        for (const data of [
+            [project('p1', [row('archived', { archived: true })])],
+            [{ type: 'active-sessions' as const, sessions: [row('archived', { archived: true })] }],
+            [{ type: 'session' as const, session: row('archived', { archived: true }) }],
+        ]) {
+            mocks.data = data;
+            expect(useHasArchivedSessions()).toBe(true);
+        }
     });
 });
