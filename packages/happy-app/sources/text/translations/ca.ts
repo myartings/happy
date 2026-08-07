@@ -577,6 +577,7 @@ export const ca: TranslationStructure = {
         projects: "Projectes",
         activeToday: 'Actives avui',
         activeEarlier: 'Actives anteriorment',
+        needsAttention: ({ count }: { count: number }) => `Requereix atenció (${count})`,
     },
 
     zen: {

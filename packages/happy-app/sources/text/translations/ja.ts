@@ -578,6 +578,7 @@ export const ja: TranslationStructure = {
         projects: "プロジェクト",
         activeToday: '今日アクティブ',
         activeEarlier: '以前にアクティブ',
+        needsAttention: ({ count }: { count: number }) => `対応が必要（${count}）`,
     },
 
     zen: {

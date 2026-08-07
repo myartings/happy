@@ -34,6 +34,8 @@ function row(
         archived?: boolean;
         createdAt?: number;
         lastMessageSentAt?: number;
+        state?: SessionRowData['state'];
+        hasUnread?: boolean;
     } = {},
 ): SessionRowData {
     return {
@@ -43,6 +45,8 @@ function row(
         archived: options.archived ?? false,
         createdAt: options.createdAt ?? 0,
         lastMessageSentAt: options.lastMessageSentAt,
+        state: options.state ?? 'waiting',
+        hasUnread: options.hasUnread ?? false,
     } as SessionRowData;
 }
 
@@ -204,6 +208,61 @@ describe('buildVisibleSessionListViewData', () => {
 
         expect(result.map((item) => item.type === 'header' ? item.title : item.type))
             .toEqual(['Yesterday', 'session']);
+    });
+
+    it('moves sessions that need attention to one leading section without duplicates', () => {
+        const data: SessionListViewItem[] = [
+            { type: 'projects-header', source: 'rig' },
+            project('p1', [
+                row('ordinary-project', { active: true, lastMessageSentAt: 500 }),
+                row('unread-project', { active: true, hasUnread: true, lastMessageSentAt: 300 }),
+            ]),
+            {
+                type: 'active-sessions',
+                sessions: [
+                    row('permission', { active: true, state: 'permission_required', lastMessageSentAt: 100 }),
+                    row('ordinary-active', { active: true, lastMessageSentAt: 400 }),
+                ],
+            },
+            { type: 'header', title: 'Today' },
+            { type: 'session', session: row('unread-flat', { hasUnread: true, lastMessageSentAt: 200 }) },
+            { type: 'session', session: row('ordinary-flat') },
+        ];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+        })!;
+
+        expect(result[0]).toMatchObject({
+            type: 'attention-sessions',
+            sessions: [
+                { id: 'permission' },
+                { id: 'unread-project' },
+                { id: 'unread-flat' },
+            ],
+        });
+        expect(projectSessionIds(result)).toEqual(['ordinary-project']);
+        expect(result.flatMap((item) => item.type === 'active-sessions'
+            ? item.sessions.map((session) => session.id)
+            : [])).toEqual(['ordinary-active']);
+        expect(flatSessionIds(result)).toEqual(['ordinary-flat']);
+    });
+
+    it('does not promote archived sessions with unread results', () => {
+        const archived = row('archived-unread', { archived: true, hasUnread: true });
+        const result = buildVisibleSessionListViewData([
+            { type: 'header', title: 'Earlier' },
+            { type: 'session', session: archived },
+        ], {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+        });
+
+        expect(result).toEqual([
+            { type: 'header', title: 'Earlier' },
+            { type: 'session', session: archived },
+        ]);
     });
 });
 

@@ -577,6 +577,7 @@ export const zhHant: TranslationStructure = {
         projects: "專案",
         activeToday: '今天活躍',
         activeEarlier: '較早活躍',
+        needsAttention: ({ count }: { count: number }) => `需要你處理（${count}）`,
     },
 
     zen: {

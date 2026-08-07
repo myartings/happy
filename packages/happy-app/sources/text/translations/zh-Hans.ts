@@ -578,6 +578,7 @@ export const zhHans: TranslationStructure = {
         projects: "项目",
         activeToday: '今天活跃',
         activeEarlier: '更早活跃',
+        needsAttention: ({ count }: { count: number }) => `需要你处理（${count}）`,
     },
 
     zen: {

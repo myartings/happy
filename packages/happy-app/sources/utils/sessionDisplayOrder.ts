@@ -90,7 +90,7 @@ export function getSessionShortcutIdsInDisplayOrder(
 
     const sessionIds: string[] = [];
     data.forEach((item) => {
-        if (item.type === 'active-sessions') {
+        if (item.type === 'active-sessions' || item.type === 'attention-sessions') {
             if (sortActiveSessionsGlobally) {
                 item.sessions.forEach((session) => sessionIds.push(session.id));
                 return;

@@ -34,7 +34,7 @@ export function useHasArchivedSessions(): boolean {
                     workspace.sessions.some((session) => session.archived),
                 );
             }
-            if (item.type === 'active-sessions') {
+            if (item.type === 'active-sessions' || item.type === 'attention-sessions') {
                 return item.sessions.some((session) => session.archived);
             }
             return item.type === 'session' && item.session.archived;

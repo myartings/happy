@@ -577,6 +577,7 @@ export const es: TranslationStructure = {
         projects: "Proyectos",
         activeToday: 'Activas hoy',
         activeEarlier: 'Activas anteriormente',
+        needsAttention: ({ count }: { count: number }) => `Requiere atención (${count})`,
     },
 
     zen: {

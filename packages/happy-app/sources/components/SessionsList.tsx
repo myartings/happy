@@ -265,7 +265,7 @@ export function SessionsList({
 
         const result: SessionListViewItem[] = [];
         sourceData.forEach((item, index) => {
-            if (item.type === 'active-sessions') {
+            if (item.type === 'active-sessions' || item.type === 'attention-sessions') {
                 const sessions = item.sessions.filter(matches);
                 if (sessions.length > 0) result.push({ ...item, sessions });
                 return;
@@ -294,6 +294,7 @@ export function SessionsList({
     const keyExtractor = React.useCallback((item: SessionListViewItem, index: number) => {
         switch (item.type) {
             case 'header': return `header-${item.title}-${index}`;
+            case 'attention-sessions': return 'attention-sessions';
             case 'active-sessions': return `active-sessions-${item.period ?? 'all'}`;
             case 'project-group': return `project-group-${item.machine.id}-${item.displayPath}-${index}`;
             case 'projects-header': return `projects-header-${item.source}`;
@@ -325,6 +326,21 @@ export function SessionsList({
                                 </Text>
                             </View>
                         ) : null}
+                        <ActiveSessionsGroupCompact
+                            sessions={item.sessions}
+                            selectedSessionId={selectedSessionId}
+                        />
+                    </View>
+                );
+
+            case 'attention-sessions':
+                return (
+                    <View>
+                        <View style={styles.headerSection}>
+                            <Text style={styles.headerText}>
+                                {t('sidebar.needsAttention', { count: item.sessions.length })}
+                            </Text>
+                        </View>
                         <ActiveSessionsGroupCompact
                             sessions={item.sessions}
                             selectedSessionId={selectedSessionId}

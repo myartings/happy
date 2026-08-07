@@ -592,6 +592,7 @@ export const en = {
         projects: 'Projects',
         activeToday: 'Active today',
         activeEarlier: 'Active earlier',
+        needsAttention: ({ count }: { count: number }) => `Needs attention (${count})`,
     },
 
     zen: {
