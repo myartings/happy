@@ -37,6 +37,7 @@ import { FeedItem } from "./feedTypes";
 import { getRigActivityIndicators, getRigIdentity, isRigMetadata } from './rig';
 import { indexSessionsById } from './sessionIdentity';
 import { resolveSessionRuntimeDisplay, type SessionPlatformKind } from '@/utils/sessionRuntimeDisplay';
+import { resolveLatestSessionActivityAt } from '@/utils/sessionActivity';
 
 // Debounce timer for realtimeMode changes
 let realtimeModeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -255,7 +256,7 @@ interface StorageState {
     getActiveSessions: () => Session[];
     updateSessionDraft: (sessionId: string, draft: string | null) => void;
     updateSessionAgentModes: (sessionId: string, patch: SessionAgentModesPatch) => void;
-    markSessionMessageSent: (sessionId: string) => void;
+    markSessionUserActivity: (sessionId: string, activityAt?: number) => void;
     // Artifact methods
     applyArtifacts: (artifacts: DecryptedArtifact[]) => void;
     addArtifact: (artifact: DecryptedArtifact) => void;
@@ -1068,7 +1069,7 @@ export const storage = create<StorageState>()((set, get) => {
                 sessionListViewData: buildSessionListViewData(updatedSessions, state.unreadSessionIds),
             };
         }),
-        markSessionMessageSent: (sessionId: string) => set((state) => {
+        markSessionUserActivity: (sessionId: string, activityAt = Date.now()) => set((state) => {
             const session = state.sessions[sessionId];
             if (!session) return state;
 
@@ -1076,7 +1077,7 @@ export const storage = create<StorageState>()((set, get) => {
                 ...state.sessions,
                 [sessionId]: {
                     ...session,
-                    lastMessageSentAt: Date.now()
+                    lastMessageSentAt: resolveLatestSessionActivityAt(session.lastMessageSentAt, activityAt)
                 }
             };
 
