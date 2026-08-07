@@ -32,7 +32,7 @@ export function SessionRuntimeMetadata({
     identityLine,
     activitySummary,
 }: {
-    platformKind: SessionPlatformKind;
+    platformKind: SessionPlatformKind | null;
     projectName: string | null;
     providerKind: string | null;
     providerName: string | null;
@@ -41,16 +41,20 @@ export function SessionRuntimeMetadata({
     activitySummary: string | null;
 }) {
     const details = [identityLine ?? providerName, projectName, modelName, activitySummary].filter(Boolean) as string[];
-    const accessibilityLabel = [platformLabels[platformKind], ...details].join(', ');
+    const accessibilityLabel = [platformKind ? platformLabels[platformKind] : null, ...details].filter(Boolean).join(', ');
+
+    if (!platformKind && !providerKind && details.length === 0) return null;
 
     return (
         <View style={styles.row} accessible accessibilityLabel={accessibilityLabel}>
-            <PlatformIcon kind={platformKind} size={12} />
-            <Text style={styles.separator}>·</Text>
+            {platformKind ? <PlatformIcon kind={platformKind} size={12} /> : null}
+            {platformKind && (providerKind || details.length > 0) ? <Text style={styles.separator}>·</Text> : null}
             {providerKind ? <ProviderIcon kind={providerKind} size={11} /> : null}
-            <Text style={styles.details} numberOfLines={1}>
-                {details.join(' · ')}
-            </Text>
+            {details.length > 0 ? (
+                <Text style={styles.details} numberOfLines={1}>
+                    {details.join(' · ')}
+                </Text>
+            ) : null}
         </View>
     );
 }

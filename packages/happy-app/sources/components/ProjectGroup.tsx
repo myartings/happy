@@ -7,6 +7,7 @@ import { Typography } from '@/constants/Typography';
 import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable } from '@/sync/storage';
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
 import { ProjectTodoButton } from './ProjectTodoButton';
+import { shouldShowWorkspaceLabel } from '@/utils/sessionRowDisplayContext';
 
 interface ProjectGroupProps {
     project: ProjectGroupData;
@@ -33,7 +34,6 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
         const machine = machines.find(m => m.id === project.machineId);
         return machine?.metadata?.displayName || machine?.metadata?.host || null;
     }, [machines, project.machineId]);
-
     return (
         <View style={styles.container}>
             <Pressable style={styles.header} onPress={toggleCollapsed} hitSlop={8}>
@@ -55,7 +55,6 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                 </View>
                 <ProjectTodoButton
                     projectKey={`project:${project.id}`}
-                    showLabel
                 />
                 <Text style={styles.count}>
                     {project.activeCount > 0 ? `${project.activeCount}/${project.sessionCount}` : project.sessionCount}
@@ -66,6 +65,10 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                 <WorkspaceSection
                     key={workspace.id || 'primary'}
                     workspace={workspace}
+                    showLabel={shouldShowWorkspaceLabel({
+                        workspaceCount: project.workspaces.length,
+                        workspaceName: workspace.name,
+                    })}
                     showTopBorder={workspaceIndex > 0}
                     selectedSessionId={selectedSessionId}
                 />
@@ -74,20 +77,35 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
     );
 });
 
-const WorkspaceSection = React.memo(({ workspace, showTopBorder, selectedSessionId }: {
+const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, selectedSessionId }: {
     workspace: ProjectWorkspaceGroup;
+    showLabel: boolean;
     showTopBorder: boolean;
     selectedSessionId?: string;
 }) => {
     const styles = stylesheet;
+    const { theme } = useUnistyles();
     return (
         <View style={styles.workspace}>
+            {showLabel && (
+                <View style={styles.workspaceHeader}>
+                    <Ionicons
+                        name={workspace.name ? 'git-branch-outline' : 'folder-outline'}
+                        size={13}
+                        color={theme.colors.textSecondary}
+                    />
+                    <Text style={styles.workspaceTitle} numberOfLines={1}>
+                        {workspace.name ?? 'main'}
+                    </Text>
+                </View>
+            )}
             {workspace.sessions.map((session, index) => (
                 <CompactSessionRow
                     key={session.id}
                     session={session}
                     selected={session.id === selectedSessionId}
                     showBorder={showTopBorder || index > 0}
+                    displayContext="workspace"
                 />
             ))}
         </View>
@@ -134,5 +152,19 @@ const stylesheet = StyleSheet.create((theme) => ({
     },
     workspace: {
         paddingLeft: 10,
+    },
+    workspaceHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 12,
+        paddingTop: 8,
+        paddingBottom: 4,
+    },
+    workspaceTitle: {
+        flex: 1,
+        fontSize: 12,
+        color: theme.colors.textSecondary,
+        ...Typography.default('semiBold'),
     },
 }));
