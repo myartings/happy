@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
-import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable, useSessionGitStatus } from '@/sync/storage';
+import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable } from '@/sync/storage';
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
 import { ProjectTodoButton } from './ProjectTodoButton';
 
@@ -34,8 +34,6 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
         return machine?.metadata?.displayName || machine?.metadata?.host || null;
     }, [machines, project.machineId]);
 
-    const showPrimaryWorkspaceLabel = project.workspaces.length > 1;
-
     return (
         <View style={styles.container}>
             <Pressable style={styles.header} onPress={toggleCollapsed} hitSlop={8}>
@@ -64,11 +62,11 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                 </Text>
             </Pressable>
 
-            {!collapsed && project.workspaces.map(workspace => (
+            {!collapsed && project.workspaces.map((workspace, workspaceIndex) => (
                 <WorkspaceSection
                     key={workspace.id || 'primary'}
                     workspace={workspace}
-                    showPrimaryLabel={showPrimaryWorkspaceLabel}
+                    showTopBorder={workspaceIndex > 0}
                     selectedSessionId={selectedSessionId}
                 />
             ))}
@@ -76,50 +74,20 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
     );
 });
 
-const WorkspaceSection = React.memo(({ workspace, showPrimaryLabel, selectedSessionId }: {
+const WorkspaceSection = React.memo(({ workspace, showTopBorder, selectedSessionId }: {
     workspace: ProjectWorkspaceGroup;
-    showPrimaryLabel: boolean;
+    showTopBorder: boolean;
     selectedSessionId?: string;
 }) => {
     const styles = stylesheet;
-    const { theme } = useUnistyles();
-    const firstSessionId = workspace.sessions[0]?.id ?? '';
-    const reportedBranchName = workspace.sessions[0]?.gitBranch?.trim() || null;
-    const gitStatus = useSessionGitStatus(firstSessionId);
-    const branchName = gitStatus && gitStatus.lastUpdatedAt > 0
-        ? gitStatus.branch?.trim() || null
-        : reportedBranchName;
-    const showHeader = !!workspace.name || !!branchName || showPrimaryLabel;
-
     return (
         <View style={styles.workspace}>
-            {showHeader && (
-                <View style={styles.workspaceHeader}>
-                    {workspace.name ? (
-                        <>
-                            <MaterialCommunityIcons name="tree" size={13} color={theme.colors.textSecondary} />
-                            <Text style={styles.workspaceTitle} numberOfLines={1}>{workspace.name}</Text>
-                        </>
-                    ) : showPrimaryLabel ? (
-                        <>
-                            <Ionicons name="folder-outline" size={13} color={theme.colors.textSecondary} />
-                            <Text style={styles.workspaceTitle} numberOfLines={1}>main</Text>
-                        </>
-                    ) : null}
-                    {branchName && (
-                        <View style={styles.branchLabel}>
-                            <Ionicons name="git-branch-outline" size={13} color={theme.colors.textSecondary} />
-                            <Text style={styles.branchTitle} numberOfLines={1}>{branchName}</Text>
-                        </View>
-                    )}
-                </View>
-            )}
             {workspace.sessions.map((session, index) => (
                 <CompactSessionRow
                     key={session.id}
                     session={session}
                     selected={session.id === selectedSessionId}
-                    showBorder={index > 0}
+                    showBorder={showTopBorder || index > 0}
                 />
             ))}
         </View>
@@ -166,32 +134,5 @@ const stylesheet = StyleSheet.create((theme) => ({
     },
     workspace: {
         paddingLeft: 10,
-    },
-    workspaceHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-        paddingHorizontal: 12,
-        paddingTop: 8,
-        paddingBottom: 4,
-    },
-    workspaceTitle: {
-        flexShrink: 1,
-        fontSize: 12,
-        color: theme.colors.textSecondary,
-        ...Typography.default('semiBold'),
-    },
-    branchLabel: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexShrink: 1,
-        gap: 3,
-        marginLeft: 4,
-    },
-    branchTitle: {
-        flexShrink: 1,
-        fontSize: 12,
-        color: theme.colors.textSecondary,
-        ...Typography.default(),
     },
 }));
