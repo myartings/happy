@@ -63,6 +63,7 @@ import { FeedItem } from './feedTypes';
 import { UserProfile } from './friendTypes';
 import { resolveControlHandoffDirection } from './controlHandoff';
 import { resolveMessageModeMeta } from './messageMeta';
+import { getUserMessageActivityAt } from '@/utils/sessionActivity';
 import {
     MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
@@ -901,7 +902,7 @@ class Sync {
 
         // Stamp local activity time so the (opt-in) activity sort bubbles this session
         // up on user action only — not on background agent output.
-        storage.getState().markSessionMessageSent(sessionId);
+        storage.getState().markSessionUserActivity(sessionId, createdAt);
 
         this.getSendSync(sessionId).invalidate();
         this.maybeStartBackgroundSendWatchdog();
@@ -2442,6 +2443,11 @@ class Sync {
                             ...(isTaskComplete ? { thinking: false } : {}),
                             ...(isTaskStarted ? { thinking: true } : {})
                         }])
+
+                        const userActivityAt = getUserMessageActivityAt(lastMessage);
+                        if (userActivityAt !== null) {
+                            storage.getState().markSessionUserActivity(updateData.body.sid, userActivityAt);
+                        }
                     } else {
                         // Fetch sessions again if we don't have this session
                         this.fetchSessions();
