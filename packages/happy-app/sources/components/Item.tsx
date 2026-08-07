@@ -18,6 +18,7 @@ import { BubblePressable } from './BubblePressable';
 
 export interface ItemProps {
     title: string;
+    titleAccessory?: React.ReactNode;
     subtitle?: string;
     subtitleLines?: number; // set 0 or undefined for auto/multiline
     detail?: string;
@@ -64,6 +65,14 @@ const stylesheet = StyleSheet.create((theme, runtime) => ({
     centerContent: {
         flex: 1,
         justifyContent: 'center',
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        minWidth: 0,
+    },
+    titleTextContainer: {
+        flexShrink: 1,
     },
     title: {
         ...Typography.default('regular'),
@@ -122,6 +131,7 @@ export const Item = React.memo<ItemProps>((props) => {
     
     const {
         title,
+        titleAccessory,
         subtitle,
         subtitleLines,
         detail,
@@ -216,12 +226,24 @@ export const Item = React.memo<ItemProps>((props) => {
 
                 {/* Center Section */}
                 <View style={styles.centerContent}>
-                    <Text 
-                        style={[styles.title, titleColor, titleStyle]}
-                        numberOfLines={subtitle ? 1 : 2}
-                    >
-                        {title}
-                    </Text>
+                    {titleAccessory ? (
+                        <View style={styles.titleRow}>
+                            <Text
+                                style={[styles.title, styles.titleTextContainer, titleColor, titleStyle]}
+                                numberOfLines={subtitle ? 1 : 2}
+                            >
+                                {title}
+                            </Text>
+                            {titleAccessory}
+                        </View>
+                    ) : (
+                        <Text
+                            style={[styles.title, titleColor, titleStyle]}
+                            numberOfLines={subtitle ? 1 : 2}
+                        >
+                            {title}
+                        </Text>
+                    )}
                     {subtitle && (() => {
                         // Allow multiline when requested or when content contains line breaks
                         const effectiveLines = subtitleLines !== undefined

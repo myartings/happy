@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
-import { useSetting } from '@/sync/storage';
+import { useLocalSetting, useSetting } from '@/sync/storage';
 import { t } from '@/text';
 
 interface ProjectTodoButtonProps {
@@ -25,6 +25,7 @@ export const ProjectTodoButton = React.memo(({
     const { theme } = useUnistyles();
     const router = useRouter();
     const projectTodos = useSetting('projectTodos');
+    const enabled = useLocalSetting('devProjectTodosEnabled');
     const todos = projectKey ? projectTodos[projectKey] ?? [] : Object.values(projectTodos).flat();
     const pendingCount = todos.filter((todo) => !todo.completed).length;
     const color = tintColor ?? theme.colors.textSecondary;
@@ -37,6 +38,8 @@ export const ProjectTodoButton = React.memo(({
             router.push('/project-todos' as any);
         }
     }, [projectKey, router]);
+
+    if (!enabled) return null;
 
     return (
         <Pressable

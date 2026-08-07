@@ -4,6 +4,8 @@ export interface VisibleSessionListOptions {
     hideArchivedSessions: boolean;
     sortActiveSessionsGlobally: boolean;
     groupActiveSessionsByDate?: boolean;
+    needsAttentionSessionsEnabled?: boolean;
+    worktreeProjectIdentityEnabled?: boolean;
     now?: number;
 }
 
@@ -123,6 +125,39 @@ function prioritizeAttentionSessions(data: readonly SessionListViewItem[]): Sess
     return [{ type: 'attention-sessions', sessions: attentionSessions }, ...cleanedItems];
 }
 
+function restoreOfficialWorktreeProjectIdentity(data: readonly SessionListViewItem[]): SessionListViewItem[] {
+    return data.flatMap((item): SessionListViewItem[] => {
+        if (item.type !== 'project' || item.source !== 'happy') return [item];
+
+        return item.project.workspaces.map((workspace) => {
+            const activeCount = workspace.sessions.filter((session) => session.active).length;
+            if (!workspace.name) {
+                return {
+                    ...item,
+                    project: {
+                        ...item.project,
+                        workspaces: [workspace],
+                        sessionCount: workspace.sessions.length,
+                        activeCount,
+                    },
+                };
+            }
+            return {
+                type: 'project',
+                source: 'happy',
+                project: {
+                    ...item.project,
+                    id: `${item.project.id}:official:${workspace.id}`,
+                    name: workspace.name,
+                    workspaces: [{ ...workspace, id: '', name: null }],
+                    sessionCount: workspace.sessions.length,
+                    activeCount,
+                },
+            };
+        });
+    });
+}
+
 function filterArchivedSessions(
     data: readonly SessionListViewItem[],
     hideArchivedSessions: boolean,
@@ -181,8 +216,14 @@ export function buildVisibleSessionListViewData(
 ): SessionListViewItem[] | null {
     if (!data) return null;
 
-    const visibleData = filterArchivedSessions(data, options.hideArchivedSessions);
-    if (!options.sortActiveSessionsGlobally) return prioritizeAttentionSessions(visibleData);
+    const identityData = options.worktreeProjectIdentityEnabled === false
+        ? restoreOfficialWorktreeProjectIdentity(data)
+        : data;
+    const visibleData = filterArchivedSessions(identityData, options.hideArchivedSessions);
+    const prioritize = (items: readonly SessionListViewItem[]) => options.needsAttentionSessionsEnabled === false
+        ? [...items]
+        : prioritizeAttentionSessions(items);
+    if (!options.sortActiveSessionsGlobally) return prioritize(visibleData);
 
     const activeSessions: SessionRowData[] = [];
     const remainingItems: SessionListViewItem[] = [];
@@ -218,5 +259,5 @@ export function buildVisibleSessionListViewData(
         activeItems.push({ type: 'active-sessions', sessions: activeSessions });
     }
 
-    return prioritizeAttentionSessions([...activeItems, ...removeEmptyProjectHeaders(remainingItems)]);
+    return prioritize([...activeItems, ...removeEmptyProjectHeaders(remainingItems)]);
 }

@@ -3,12 +3,12 @@ import { View, Pressable, Platform } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Text } from '@/components/StyledText';
 import { SessionRowData } from '@/sync/storage';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { type SessionState, formatPathRelativeToHome, vibingMessages, formatLastSeen } from '@/utils/sessionUtils';
 import { Avatar } from './Avatar';
 import { Typography } from '@/constants/Typography';
 import { StatusDot } from './StatusDot';
-import { useAllMachines, useMachine, useSessionGitStatus, useSetting } from '@/sync/storage';
+import { useAllMachines, useLocalSetting, useMachine, useSessionGitStatus, useSetting } from '@/sync/storage';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { t } from '@/text';
 import { useNavigateToSession } from '@/hooks/useNavigateToSession';
@@ -17,7 +17,7 @@ import { HappyError } from '@/utils/errors';
 import { SessionActionsAnchor, SessionActionsPopover } from './SessionActionsPopover';
 import { useSessionActionAlert } from '@/hooks/useSessionQuickActions';
 import { sessionKill } from '@/sync/ops';
-import { isWorktreePath, getRepoPath } from '@/utils/worktree';
+import { isWorktreePath, getRepoPath, getWorktreeName } from '@/utils/worktree';
 import { useNewSessionDraft } from '@/hooks/useNewSessionDraft';
 import { useRouter } from 'expo-router';
 import { SessionShortcutHintBadge } from './ShortcutHints';
@@ -50,9 +50,10 @@ function useSectionGitInfo(sessionId: string) {
 
     return React.useMemo(() => {
         if (!gitStatus || gitStatus.lastUpdatedAt === 0) {
-            return { linesAdded: 0, linesRemoved: 0, hasChanges: false };
+            return { branch: null, linesAdded: 0, linesRemoved: 0, hasChanges: false };
         }
         return {
+            branch: gitStatus.branch,
             linesAdded: gitStatus.unstagedLinesAdded,
             linesRemoved: gitStatus.unstagedLinesRemoved,
             hasChanges: gitStatus.unstagedLinesAdded > 0 || gitStatus.unstagedLinesRemoved > 0,
@@ -67,6 +68,7 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
     const { theme } = useUnistyles();
     const router = useRouter();
     const draft = useNewSessionDraft();
+    const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
 
     const sessionPath = session.path || '';
     const isWorktree = isWorktreePath(sessionPath);
@@ -82,6 +84,9 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
     });
 
     const gitInfo = useSectionGitInfo(session.id);
+    const worktreeName = isWorktree ? getWorktreeName(sessionPath) : null;
+    const branchName = worktreeName || gitInfo.branch || session.gitBranch;
+    const showOfficialBranchHeader = !environmentLabelsEnabled && !!branchName;
 
     const handleAdd = React.useCallback(() => {
         const machineId = session.machineId;
@@ -99,7 +104,7 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
 
     return (
         <View
-            style={styles.sectionHeaderSingleLine}
+            style={showOfficialBranchHeader ? styles.sectionHeader : styles.sectionHeaderSingleLine}
             // @ts-ignore - Web only events
             onMouseEnter={() => setIsHovered(true)}
             // @ts-ignore - Web only events
@@ -112,21 +117,28 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
 
             {/* Project name + aggregate changes */}
             <View style={styles.sectionHeaderContent}>
-                <View style={styles.projectSummaryRow}>
-                    <Text style={styles.sectionHeaderPath} numberOfLines={1}>
-                        {repoFolderName}
-                    </Text>
-                    {gitInfo.hasChanges ? (
-                        <View style={styles.changeSummary}>
+                <Text style={styles.sectionHeaderPath} numberOfLines={1}>
+                    {repoFolderName}
+                </Text>
+                {showOfficialBranchHeader ? (
+                    <View style={styles.branchRow}>
+                        <Text style={styles.branchText} numberOfLines={1}>{branchName}</Text>
+                        {isWorktree ? (
+                            <MaterialCommunityIcons name="tree" size={11} color={theme.colors.textSecondary} style={styles.worktreeIcon} />
+                        ) : null}
+                        {gitInfo.linesAdded > 0 && <Text style={styles.addedText}>+{gitInfo.linesAdded}</Text>}
+                        {gitInfo.linesRemoved > 0 && <Text style={styles.removedText}>-{gitInfo.linesRemoved}</Text>}
+                    </View>
+                ) : gitInfo.hasChanges ? (
+                    <View style={styles.changeSummary}>
                             {gitInfo.linesAdded > 0 && (
                                 <Text style={styles.addedText}>+{gitInfo.linesAdded}</Text>
                             )}
                             {gitInfo.linesRemoved > 0 && (
                                 <Text style={styles.removedText}>-{gitInfo.linesRemoved}</Text>
                             )}
-                        </View>
-                    ) : null}
-                </View>
+                    </View>
+                ) : null}
             </View>
 
             {projectTodoKey && (
@@ -256,6 +268,8 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
     const navigateToSession = useNavigateToSession();
     const showActiveSessionRuntime = useSetting('showActiveSessionRuntime');
     const showSessionModel = useSetting('showSessionModel');
+    const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
+    const enhancedStatusDotsEnabled = useLocalSetting('devEnhancedStatusDotsEnabled');
     const machine = useMachine(session.machineId ?? '');
     const runtimePlatformKind = session.platformKind === 'unknown'
         ? getSessionPlatformKind(machine?.metadata?.platform)
@@ -317,7 +331,9 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                 />
             );
         } else if (session.state === 'permission_required' || session.state === 'thinking') {
-            indicator = <StatusDot color={status.dotColor} isPulsing={status.isPulsing} size={9} pulseOpacity={0.2} />;
+            indicator = enhancedStatusDotsEnabled
+                ? <StatusDot color={status.dotColor} isPulsing={status.isPulsing} size={9} pulseOpacity={0.2} />
+                : <StatusDot color={status.dotColor} isPulsing={status.isPulsing} />;
         } else if (session.state === 'waiting') {
             indicator = <StatusDot color={theme.colors.textSecondary} isPulsing={false} />;
         }
@@ -357,7 +373,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                         style={styles.sessionShortcutBadge}
                     />
                 </View>
-                {environment ? <SessionEnvironmentMetadata environment={environment} /> : null}
+                {environmentLabelsEnabled && environment ? <SessionEnvironmentMetadata environment={environment} /> : null}
                 {showActiveSessionRuntime ? (
                     <SessionRuntimeMetadata
                         platformKind={runtimePlatformKind}
@@ -425,6 +441,13 @@ const stylesheet = StyleSheet.create((theme) => ({
         paddingTop: 8,
     },
     // Section header styles
+    sectionHeader: {
+        paddingTop: 12,
+        paddingBottom: Platform.select({ ios: 6, default: 8 }),
+        paddingHorizontal: Platform.select({ ios: 32, default: 24 }),
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     sectionHeaderSingleLine: {
         paddingTop: 12,
         paddingBottom: Platform.select({ ios: 6, default: 8 }),
@@ -458,6 +481,20 @@ const stylesheet = StyleSheet.create((theme) => ({
         flexDirection: 'row',
         alignItems: 'center',
         flexShrink: 0,
+    },
+    branchRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 1,
+    },
+    branchText: {
+        fontSize: 11,
+        color: theme.colors.textSecondary,
+        ...Typography.default('regular'),
+        flexShrink: 1,
+    },
+    worktreeIcon: {
+        marginLeft: 4,
     },
     addedText: {
         fontSize: 11,
