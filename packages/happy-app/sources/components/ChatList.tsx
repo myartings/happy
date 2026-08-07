@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useSession, useSessionMessages, useSetting } from "@/sync/storage";
+import { useLocalSetting, useSession, useSessionMessages, useSetting } from "@/sync/storage";
 import { sync } from '@/sync/sync';
 import { ActivityIndicator, AppState, FlatList, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, View, ViewToken } from 'react-native';
 import { useCallback } from 'react';
@@ -122,6 +122,7 @@ const ChatListInternal = React.memo((props: {
     onBottomDockVisibilityChange?: (visible: boolean) => void,
 }) => {
     const { theme } = useUnistyles();
+    const promptHistoryNavigatorEnabled = useLocalSetting('devPromptHistoryNavigatorEnabled');
     const flatListRef = React.useRef<FlatList>(null);
     const handledTargetMessageRef = React.useRef<string | null>(null);
     const targetIndexRef = React.useRef<number | null>(null);
@@ -594,12 +595,14 @@ const ChatListInternal = React.memo((props: {
                     }, 100);
                 }}
             />
-            <SessionPromptHistoryNavigator
-                sessionId={props.sessionId}
-                loadedMessages={props.messages}
-                activePromptId={activePromptId}
-                bottomContentInset={props.bottomContentInset}
-            />
+            {promptHistoryNavigatorEnabled ? (
+                <SessionPromptHistoryNavigator
+                    sessionId={props.sessionId}
+                    loadedMessages={props.messages}
+                    activePromptId={activePromptId}
+                    bottomContentInset={props.bottomContentInset}
+                />
+            ) : null}
             {showScrollButton && (
                 <View style={[
                     styles.scrollButtonContainer,

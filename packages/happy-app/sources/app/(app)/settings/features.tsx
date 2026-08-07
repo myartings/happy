@@ -7,6 +7,7 @@ import { useSettingMutable, useLocalSettingMutable } from '@/sync/storage';
 import { Switch } from '@/components/Switch';
 import { t } from '@/text';
 import { isTauri } from '@/utils/isTauri';
+import { DevFeatureBadge } from '@/components/DevFeatureBadge';
 
 export default function FeaturesSettingsScreen() {
     const [experiments, setExperiments] = useSettingMutable('experiments');
@@ -25,6 +26,12 @@ export default function FeaturesSettingsScreen() {
     const [groupActiveSessionsByDate, setGroupActiveSessionsByDate] = useSettingMutable('groupActiveSessionsByDate');
     const [showActiveSessionRuntime, setShowActiveSessionRuntime] = useSettingMutable('showActiveSessionRuntime');
     const [showSessionModel, setShowSessionModel] = useSettingMutable('showSessionModel');
+    const [devProjectTodosEnabled, setDevProjectTodosEnabled] = useLocalSettingMutable('devProjectTodosEnabled');
+    const [devNeedsAttentionSessionsEnabled, setDevNeedsAttentionSessionsEnabled] = useLocalSettingMutable('devNeedsAttentionSessionsEnabled');
+    const [devPromptHistoryNavigatorEnabled, setDevPromptHistoryNavigatorEnabled] = useLocalSettingMutable('devPromptHistoryNavigatorEnabled');
+    const [devSessionEnvironmentLabelsEnabled, setDevSessionEnvironmentLabelsEnabled] = useLocalSettingMutable('devSessionEnvironmentLabelsEnabled');
+    const [devWorktreeProjectIdentityEnabled, setDevWorktreeProjectIdentityEnabled] = useLocalSettingMutable('devWorktreeProjectIdentityEnabled');
+    const [devEnhancedStatusDotsEnabled, setDevEnhancedStatusDotsEnabled] = useLocalSettingMutable('devEnhancedStatusDotsEnabled');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -69,54 +76,104 @@ export default function FeaturesSettingsScreen() {
                     }
                     showChevron={false}
                 />
+            </ItemGroup>
+
+            <ItemGroup
+                title="Personal Development"
+                footer="Personal feature switches for comparing with the official Happy experience. Turning one off keeps its data."
+            >
+                <Item
+                    title="Project Todos"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Show project todo shortcuts and the project todo page"
+                    icon={<Ionicons name="checkbox-outline" size={29} color="#34C759" />}
+                    rightElement={<Switch value={devProjectTodosEnabled} onValueChange={setDevProjectTodosEnabled} />}
+                    showChevron={false}
+                />
+                <Item
+                    title="Needs Attention Sessions"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Collect unread and permission-blocked sessions at the top"
+                    icon={<Ionicons name="alert-circle-outline" size={29} color="#FF9500" />}
+                    rightElement={<Switch value={devNeedsAttentionSessionsEnabled} onValueChange={setDevNeedsAttentionSessionsEnabled} />}
+                    showChevron={false}
+                />
+                <Item
+                    title="Prompt History Navigator"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Show the message rail for jumping between your previous prompts"
+                    icon={<Ionicons name="time-outline" size={29} color="#007AFF" />}
+                    rightElement={<Switch value={devPromptHistoryNavigatorEnabled} onValueChange={setDevPromptHistoryNavigatorEnabled} />}
+                    showChevron={false}
+                />
+                <Item
+                    title="Session Environment Labels"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Show both worktree and branch names directly on session rows"
+                    icon={<Ionicons name="git-branch-outline" size={29} color="#AF52DE" />}
+                    rightElement={<Switch value={devSessionEnvironmentLabelsEnabled} onValueChange={setDevSessionEnvironmentLabelsEnabled} />}
+                    showChevron={false}
+                />
+                <Item
+                    title="Worktree Project Identity"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Keep managed worktrees grouped under their repository project"
+                    icon={<Ionicons name="folder-open-outline" size={29} color="#5AC8FA" />}
+                    rightElement={<Switch value={devWorktreeProjectIdentityEnabled} onValueChange={setDevWorktreeProjectIdentityEnabled} />}
+                    showChevron={false}
+                />
+                <Item
+                    title="Enhanced Session Status Dots"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Use larger, higher-contrast indicators for active sessions"
+                    icon={<Ionicons name="radio-button-on-outline" size={29} color="#FF2D55" />}
+                    rightElement={<Switch value={devEnhancedStatusDotsEnabled} onValueChange={setDevEnhancedStatusDotsEnabled} />}
+                    showChevron={false}
+                />
                 <Item
                     title="Sort Active Sessions Globally"
+                    titleAccessory={<DevFeatureBadge />}
                     subtitle="Show active sessions in one list ordered by recent activity"
                     icon={<Ionicons name="list-outline" size={29} color="#34C759" />}
-                    rightElement={
-                        <Switch
-                            value={sortActiveSessionsGlobally}
-                            onValueChange={setSortActiveSessionsGlobally}
-                        />
-                    }
+                    rightElement={<Switch value={sortActiveSessionsGlobally} onValueChange={setSortActiveSessionsGlobally} />}
                     showChevron={false}
                 />
                 <Item
                     title={t('settingsFeatures.groupActiveSessionsByDate')}
+                    titleAccessory={<DevFeatureBadge />}
                     subtitle={t('settingsFeatures.groupActiveSessionsByDateSubtitle')}
                     icon={<Ionicons name="calendar-outline" size={29} color="#007AFF" />}
-                    rightElement={
-                        <Switch
-                            value={groupActiveSessionsByDate}
-                            onValueChange={setGroupActiveSessionsByDate}
-                        />
-                    }
+                    rightElement={<Switch value={groupActiveSessionsByDate} onValueChange={setGroupActiveSessionsByDate} />}
                     showChevron={false}
                 />
                 <Item
                     title={t('settingsFeatures.showActiveSessionRuntime')}
+                    titleAccessory={<DevFeatureBadge />}
                     subtitle={t('settingsFeatures.showActiveSessionRuntimeSubtitle')}
                     icon={<Ionicons name="desktop-outline" size={29} color="#5856D6" />}
-                    rightElement={
-                        <Switch
-                            value={showActiveSessionRuntime}
-                            onValueChange={setShowActiveSessionRuntime}
-                        />
-                    }
+                    rightElement={<Switch value={showActiveSessionRuntime} onValueChange={setShowActiveSessionRuntime} />}
                     showChevron={false}
                 />
                 <Item
                     title={t('settingsFeatures.showSessionModel')}
+                    titleAccessory={<DevFeatureBadge />}
                     subtitle={t('settingsFeatures.showSessionModelSubtitle')}
                     icon={<Ionicons name="hardware-chip-outline" size={29} color="#AF52DE" />}
-                    rightElement={
-                        <Switch
-                            value={showSessionModel}
-                            onValueChange={setShowSessionModel}
-                        />
-                    }
+                    rightElement={<Switch value={showSessionModel} onValueChange={setShowSessionModel} />}
                     showChevron={false}
                 />
+                {Platform.OS === 'web' && isTauri() && (
+                    <Item
+                        title="Desktop Session Notifications"
+                        titleAccessory={<DevFeatureBadge />}
+                        subtitle={desktopSessionNotificationsEnabled
+                            ? "Show native desktop notifications when background sessions need attention"
+                            : "Desktop session notifications are disabled on this device"}
+                        icon={<Ionicons name="notifications-outline" size={29} color="#FF9500" />}
+                        rightElement={<Switch value={desktopSessionNotificationsEnabled} onValueChange={setDesktopSessionNotificationsEnabled} />}
+                        showChevron={false}
+                    />
+                )}
             </ItemGroup>
 
             {/* Experimental Features */}
@@ -235,22 +292,6 @@ export default function FeaturesSettingsScreen() {
                         }
                         showChevron={false}
                     />
-                    {isTauri() && (
-                        <Item
-                            title="Desktop Session Notifications"
-                            subtitle={desktopSessionNotificationsEnabled
-                                ? "Show native desktop notifications when background sessions need attention"
-                                : "Desktop session notifications are disabled on this device"}
-                            icon={<Ionicons name="notifications-outline" size={29} color="#FF9500" />}
-                            rightElement={
-                                <Switch
-                                    value={desktopSessionNotificationsEnabled}
-                                    onValueChange={setDesktopSessionNotificationsEnabled}
-                                />
-                            }
-                            showChevron={false}
-                        />
-                    )}
                 </ItemGroup>
             )}
         </ItemList>

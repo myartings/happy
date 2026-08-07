@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
     hideArchivedSessions: false,
     sortActiveSessionsGlobally: false,
     groupActiveSessionsByDate: false,
+    needsAttentionSessionsEnabled: true,
+    worktreeProjectIdentityEnabled: true,
 }));
 
 vi.mock('react', () => ({
@@ -21,6 +23,13 @@ vi.mock('@/sync/storage', () => ({
             case 'sortActiveSessionsGlobally': return mocks.sortActiveSessionsGlobally;
             case 'groupActiveSessionsByDate': return mocks.groupActiveSessionsByDate;
             default: throw new Error(`Unexpected setting read: ${key}`);
+        }
+    },
+    useLocalSetting: (key: string) => {
+        switch (key) {
+            case 'devNeedsAttentionSessionsEnabled': return mocks.needsAttentionSessionsEnabled;
+            case 'devWorktreeProjectIdentityEnabled': return mocks.worktreeProjectIdentityEnabled;
+            default: throw new Error(`Unexpected local setting read: ${key}`);
         }
     },
 }));
@@ -84,6 +93,8 @@ beforeEach(() => {
     mocks.hideArchivedSessions = false;
     mocks.sortActiveSessionsGlobally = false;
     mocks.groupActiveSessionsByDate = false;
+    mocks.needsAttentionSessionsEnabled = true;
+    mocks.worktreeProjectIdentityEnabled = true;
 });
 
 describe('buildVisibleSessionListViewData', () => {
@@ -263,6 +274,47 @@ describe('buildVisibleSessionListViewData', () => {
             { type: 'header', title: 'Earlier' },
             { type: 'session', session: archived },
         ]);
+    });
+
+    it('restores the official list when needs-attention promotion is disabled', () => {
+        const data: SessionListViewItem[] = [
+            { type: 'active-sessions', sessions: [row('permission', { active: true, state: 'permission_required' })] },
+            { type: 'session', session: row('unread', { hasUnread: true }) },
+        ];
+
+        expect(buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            needsAttentionSessionsEnabled: false,
+        })).toEqual(data);
+    });
+
+    it('restores official worktree-as-project identity when personal grouping is disabled', () => {
+        const worktreeSession = row('worktree');
+        const data: SessionListViewItem[] = [{
+            type: 'project',
+            source: 'happy',
+            project: {
+                id: 'repo',
+                name: 'happy',
+                machineId: 'machine-1',
+                sessionCount: 1,
+                activeCount: 0,
+                workspaces: [{ id: '/happy/.dev/worktree/eager-cloud', name: 'eager-cloud', sessions: [worktreeSession] }],
+            },
+        }];
+
+        expect(buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            worktreeProjectIdentityEnabled: false,
+        })).toMatchObject([{
+            type: 'project',
+            project: {
+                name: 'eager-cloud',
+                workspaces: [{ id: '', name: null, sessions: [{ id: 'worktree' }] }],
+            },
+        }]);
     });
 });
 
