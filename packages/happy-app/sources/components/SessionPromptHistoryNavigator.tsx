@@ -21,6 +21,7 @@ import { t } from '@/text';
 import {
     getPromptIndexFromTrackPosition,
     getPromptRailMetrics,
+    getPromptRailTickWidth,
     getSampledPromptIndices,
     mergeSessionPromptHistory,
 } from '@/utils/sessionPromptHistory';
@@ -266,6 +267,7 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
     const { theme } = useUnistyles();
     const [trackHeight, setTrackHeight] = React.useState(1);
     const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+    const [isRailHovered, setIsRailHovered] = React.useState(false);
     const activeIndex = props.prompts.findIndex((prompt) => prompt.id === props.activePromptId);
     const effectiveActiveIndex = props.activePromptId && activeIndex >= 0
         ? activeIndex
@@ -340,7 +342,11 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                     transform: [{ translateY: -railMetrics.totalHeight / 2 }],
                 },
             ]}
-            pointerEvents="box-none"
+            onPointerEnter={() => setIsRailHovered(true)}
+            onPointerLeave={() => {
+                setIsRailHovered(false);
+                setHoveredIndex(null);
+            }}
         >
             <Pressable
                 accessibilityRole="button"
@@ -348,7 +354,10 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                 disabled={effectiveActiveIndex === 0 && !props.loadFailed && (!props.hasMore || props.isLoading)}
                 onPress={goOlder}
                 hitSlop={8}
-                style={styles.desktopRailArrow}
+                style={[
+                    styles.desktopRailArrow,
+                    !isRailHovered && styles.desktopRailArrowHidden,
+                ]}
             >
                 {props.isLoading && effectiveActiveIndex === 0 ? (
                     <ActivityIndicator size="small" color={theme.colors.textSecondary} />
@@ -368,13 +377,20 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                 onLayout={(event) => setTrackHeight(Math.max(1, event.nativeEvent.layout.height))}
                 style={[styles.desktopRailTrack, { height: railMetrics.trackHeight }]}
             >
-                {sampledIndices.map((index) => (
+                {sampledIndices.map((index, sampledIndex) => (
                     <View
                         key={props.prompts[index].id}
                         pointerEvents="none"
                         style={[
                             styles.desktopRailTick,
-                            { top: `${props.prompts.length <= 1 ? 50 : (index / (props.prompts.length - 1)) * 100}%` as any },
+                            {
+                                top: `${props.prompts.length <= 1 ? 50 : (index / (props.prompts.length - 1)) * 100}%` as any,
+                                width: getPromptRailTickWidth(
+                                    sampledIndex,
+                                    sampledIndices.length,
+                                    index === effectiveActiveIndex,
+                                ),
+                            },
                             index === effectiveActiveIndex && styles.desktopRailTickActive,
                         ]}
                     />
@@ -385,7 +401,10 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                         style={[
                             styles.desktopRailTick,
                             styles.desktopRailTickActive,
-                            { top: `${props.prompts.length <= 1 ? 50 : (effectiveActiveIndex / (props.prompts.length - 1)) * 100}%` as any },
+                            {
+                                top: `${props.prompts.length <= 1 ? 50 : (effectiveActiveIndex / (props.prompts.length - 1)) * 100}%` as any,
+                                width: getPromptRailTickWidth(0, 1, true),
+                            },
                         ]}
                     />
                 )}
@@ -405,7 +424,10 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                 disabled={effectiveActiveIndex >= props.prompts.length - 1}
                 onPress={goNewer}
                 hitSlop={8}
-                style={styles.desktopRailArrow}
+                style={[
+                    styles.desktopRailArrow,
+                    !isRailHovered && styles.desktopRailArrowHidden,
+                ]}
             >
                 <Ionicons name="chevron-down" size={15} color={theme.colors.textSecondary} />
             </Pressable>
@@ -422,7 +444,7 @@ const styles = StyleSheet.create((theme) => ({
         position: 'absolute',
         right: 8,
         top: '50%',
-        width: 30,
+        width: 36,
         alignItems: 'center',
         zIndex: 20,
     },
@@ -432,23 +454,27 @@ const styles = StyleSheet.create((theme) => ({
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 8,
+        opacity: 1,
+        transitionProperty: 'opacity',
+        transitionDuration: '140ms',
+    } as any,
+    desktopRailArrowHidden: {
+        opacity: 0,
     },
     desktopRailTrack: {
-        width: 28,
+        width: 32,
         marginVertical: 3,
         outlineStyle: 'none',
     } as any,
     desktopRailTick: {
         position: 'absolute',
         right: 2,
-        width: 10,
         height: 1,
         borderRadius: 1,
         backgroundColor: theme.colors.textSecondary,
         opacity: 0.5,
     },
     desktopRailTickActive: {
-        width: 18,
         height: 2,
         backgroundColor: theme.colors.text,
         opacity: 1,

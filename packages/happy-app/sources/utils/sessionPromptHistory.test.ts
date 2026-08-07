@@ -5,6 +5,7 @@ import type { Message } from '@/sync/typesMessage';
 import {
     getPromptIndexFromTrackPosition,
     getPromptRailMetrics,
+    getPromptRailTickWidth,
     getSampledPromptIndices,
     mergeSessionPromptHistory,
     resolveVisiblePromptId,
@@ -32,6 +33,13 @@ describe('session prompt history', () => {
         expect(sampled).toHaveLength(20);
         expect(sampled[0]).toBe(0);
         expect(sampled.at(-1)).toBe(99);
+    });
+
+    it('uses Grok-like short, medium, and major tick lengths on the desktop rail', () => {
+        expect([0, 1, 2, 3, 4, 5].map((index) => (
+            getPromptRailTickWidth(index, 6, false)
+        ))).toEqual([12, 20, 28, 12, 20, 28]);
+        expect(getPromptRailTickWidth(1, 6, true)).toBe(28);
     });
 
     it('merges fetched prompts with currently loaded user messages chronologically', () => {

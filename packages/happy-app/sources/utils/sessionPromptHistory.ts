@@ -6,6 +6,7 @@ const MAX_VISIBLE_PROMPT_RAIL_TICKS = 20;
 const PROMPT_RAIL_MIN_TRACK_HEIGHT = 24;
 const PROMPT_RAIL_TICK_GAP = 4;
 const PROMPT_RAIL_CHROME_HEIGHT = 58;
+const PROMPT_RAIL_TICK_WIDTHS = [12, 20, 28] as const;
 
 export function getSampledPromptIndices(count: number): number[] {
     if (count <= 0) return [];
@@ -29,6 +30,16 @@ export function getPromptRailMetrics(promptCount: number): { trackHeight: number
         trackHeight,
         totalHeight: trackHeight + PROMPT_RAIL_CHROME_HEIGHT,
     };
+}
+
+export function getPromptRailTickWidth(
+    sampledIndex: number,
+    sampledCount: number,
+    isActive: boolean,
+): number {
+    if (isActive || sampledCount <= 1) return PROMPT_RAIL_TICK_WIDTHS[2];
+    const normalizedIndex = Math.max(0, Math.min(sampledCount - 1, sampledIndex));
+    return PROMPT_RAIL_TICK_WIDTHS[normalizedIndex % PROMPT_RAIL_TICK_WIDTHS.length];
 }
 
 export function mergeSessionPromptHistory(
