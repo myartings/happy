@@ -170,6 +170,20 @@ describe('buildVisibleSessionListViewData', () => {
         })).toEqual(data);
     });
 
+    it('ignores date grouping while global sorting is off', () => {
+        const data: SessionListViewItem[] = [
+            project('project-1', [row('project-active', { active: true })]),
+            { type: 'active-sessions', sessions: [row('plain-active', { active: true })] },
+        ];
+
+        expect(buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            groupActiveSessionsByDate: true,
+            needsAttentionSessionsEnabled: false,
+        })).toEqual(data);
+    });
+
     it('removes a source header after moving its only active project session', () => {
         const data: SessionListViewItem[] = [
             { type: 'projects-header', source: 'rig' },

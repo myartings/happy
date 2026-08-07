@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, FlatList, NativeScrollEvent, NativeSyntheticEvent, Platform } from 'react-native';
 import { Text } from '@/components/StyledText';
 import { usePathname } from 'expo-router';
-import { SessionListViewItem, SessionRowData, useSetting } from '@/sync/storage';
+import { SessionListViewItem, SessionRowData, useLocalSetting, useSetting } from '@/sync/storage';
 import { filterProjectGroup, sessionMatchesQuery } from '@/sync/projectGroups';
 import { Ionicons } from '@expo/vector-icons';
 import { type SessionState, formatLastSeen, vibingMessages } from '@/utils/sessionUtils';
@@ -456,12 +456,14 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
     isSingle?: boolean;
 }) => {
     const showSessionModel = useSetting('showSessionModel');
+    const needsAttentionSessionsEnabled = useLocalSetting('devNeedsAttentionSessionsEnabled');
     const styles = stylesheet;
     const navigateToSession = useNavigateToSession();
     const [actionsAnchor, setActionsAnchor] = React.useState<SessionActionsAnchor | null>(null);
     const baseStatus = STATUS_CONFIG[session.state];
     // Override to solid blue when session has unread results
-    const status = session.hasUnread
+    const showUnreadAttentionState = needsAttentionSessionsEnabled && session.hasUnread;
+    const status = showUnreadAttentionState
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
         : baseStatus;
 
@@ -469,7 +471,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
         return vibingMessages[Math.floor(Math.random() * vibingMessages.length)].toLowerCase() + '…';
     }, [session.state]);
 
-    const statusText = session.hasUnread
+    const statusText = showUnreadAttentionState
         ? t('status.unread')
         : session.state === 'thinking'
             ? vibingMessage

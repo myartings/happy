@@ -143,7 +143,13 @@ export default function FeaturesSettingsScreen() {
                     titleAccessory={<DevFeatureBadge />}
                     subtitle={t('settingsFeatures.groupActiveSessionsByDateSubtitle')}
                     icon={<Ionicons name="calendar-outline" size={29} color="#007AFF" />}
-                    rightElement={<Switch value={groupActiveSessionsByDate} onValueChange={setGroupActiveSessionsByDate} />}
+                    rightElement={(
+                        <Switch
+                            value={groupActiveSessionsByDate}
+                            onValueChange={setGroupActiveSessionsByDate}
+                            disabled={!sortActiveSessionsGlobally}
+                        />
+                    )}
                     showChevron={false}
                 />
                 <Item

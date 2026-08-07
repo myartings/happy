@@ -25,10 +25,9 @@ import { buildActiveSessionDisplayGroups } from '@/utils/sessionDisplayOrder';
 import { ProviderIcon } from './ProviderIcon';
 import { SessionRuntimeMetadata } from './SessionRuntimeMetadata';
 import { getSessionPlatformKind, resolveSessionProjectName } from '@/utils/sessionRuntimeDisplay';
-import { ProjectTodoButton } from './ProjectTodoButton';
-import { resolveProjectTodoKey } from '@/sync/projectTodos';
 import { SessionEnvironmentMetadata } from './SessionEnvironmentMetadata';
 import { resolveSessionEnvironmentDisplay } from '@/utils/sessionEnvironmentDisplay';
+import { resolveSessionRowDisplayPolicy, type SessionRowDisplayContext } from '@/utils/sessionRowDisplayContext';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -77,16 +76,13 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
         ? formatPathRelativeToHome(repoPath, session.homeDir ?? undefined)
         : displayPath;
     const repoFolderName = repoPath.split(/[/\\]/).filter(Boolean).pop() || repoDisplayPath;
-    const projectTodoKey = resolveProjectTodoKey({
-        projectName: repoFolderName,
-        machineId: session.machineId,
-        path: repoPath,
-    });
-
     const gitInfo = useSectionGitInfo(session.id);
     const worktreeName = isWorktree ? getWorktreeName(sessionPath) : null;
-    const branchName = worktreeName || gitInfo.branch || session.gitBranch;
-    const showOfficialBranchHeader = !environmentLabelsEnabled && !!branchName;
+    const branchName = gitInfo.branch || session.gitBranch;
+    const officialBranchName = worktreeName || branchName;
+    const environment = resolveSessionEnvironmentDisplay(sessionPath, gitInfo.branch, session.gitBranch);
+    const showEnhancedWorktreeHeader = environmentLabelsEnabled && !!environment?.worktreeName;
+    const showOfficialBranchHeader = !environmentLabelsEnabled && !!officialBranchName;
 
     const handleAdd = React.useCallback(() => {
         const machineId = session.machineId;
@@ -104,7 +100,7 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
 
     return (
         <View
-            style={showOfficialBranchHeader ? styles.sectionHeader : styles.sectionHeaderSingleLine}
+            style={showOfficialBranchHeader || showEnhancedWorktreeHeader ? styles.sectionHeader : styles.sectionHeaderSingleLine}
             // @ts-ignore - Web only events
             onMouseEnter={() => setIsHovered(true)}
             // @ts-ignore - Web only events
@@ -120,9 +116,16 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
                 <Text style={styles.sectionHeaderPath} numberOfLines={1}>
                     {repoFolderName}
                 </Text>
-                {showOfficialBranchHeader ? (
+                {showEnhancedWorktreeHeader && environment?.worktreeName ? (
                     <View style={styles.branchRow}>
-                        <Text style={styles.branchText} numberOfLines={1}>{branchName}</Text>
+                        <MaterialCommunityIcons name="tree" size={11} color={theme.colors.textSecondary} />
+                        <Text style={styles.branchText} numberOfLines={1}>{environment.worktreeName}</Text>
+                        {gitInfo.linesAdded > 0 && <Text style={styles.addedText}>+{gitInfo.linesAdded}</Text>}
+                        {gitInfo.linesRemoved > 0 && <Text style={styles.removedText}>-{gitInfo.linesRemoved}</Text>}
+                    </View>
+                ) : showOfficialBranchHeader ? (
+                    <View style={styles.branchRow}>
+                        <Text style={styles.branchText} numberOfLines={1}>{officialBranchName}</Text>
                         {isWorktree ? (
                             <MaterialCommunityIcons name="tree" size={11} color={theme.colors.textSecondary} style={styles.worktreeIcon} />
                         ) : null}
@@ -140,13 +143,6 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
                     </View>
                 ) : null}
             </View>
-
-            {projectTodoKey && (
-                <ProjectTodoButton
-                    projectKey={projectTodoKey}
-                    showLabel
-                />
-            )}
 
             {/* + button — vertically centered, large hit area; desktop: hover-only */}
             <Pressable
@@ -204,6 +200,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId }: Acti
                             session={session}
                             selected={selectedSessionId === session.id}
                             showBorder={index < sessions.length - 1}
+                            displayContext="flat"
                         />
                     ))}
                 </View>
@@ -243,6 +240,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId }: Acti
                                                 session={session}
                                                 selected={selectedSessionId === session.id}
                                                 showBorder={index < projectGroup.sessions.length - 1}
+                                                displayContext="grouped"
                                             />
                                         ))}
                                     </View>
@@ -257,19 +255,30 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId }: Acti
 }
 
 // Compact session row with status dot indicator
-export const CompactSessionRow = React.memo(({ session, selected, showBorder }: { session: SessionRowData; selected?: boolean; showBorder?: boolean }) => {
+export const CompactSessionRow = React.memo(({ session, selected, showBorder, displayContext }: {
+    session: SessionRowData;
+    selected?: boolean;
+    showBorder?: boolean;
+    displayContext: SessionRowDisplayContext;
+}) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const baseStatus = STATUS_CONFIG[session.state];
-    // Override to solid blue when session has unread results
-    const status = session.hasUnread
-        ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
-        : baseStatus;
     const navigateToSession = useNavigateToSession();
     const showActiveSessionRuntime = useSetting('showActiveSessionRuntime');
     const showSessionModel = useSetting('showSessionModel');
     const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
     const enhancedStatusDotsEnabled = useLocalSetting('devEnhancedStatusDotsEnabled');
+    const needsAttentionSessionsEnabled = useLocalSetting('devNeedsAttentionSessionsEnabled');
+    const displayPolicy = resolveSessionRowDisplayPolicy({
+        context: displayContext,
+        environmentLabelsEnabled,
+        needsAttentionSessionsEnabled,
+    });
+    // Unread blue is part of the personal needs-attention treatment.
+    const status = displayPolicy.showUnreadAttentionState && session.hasUnread
+        ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
+        : baseStatus;
     const machine = useMachine(session.machineId ?? '');
     const runtimePlatformKind = session.platformKind === 'unknown'
         ? getSessionPlatformKind(machine?.metadata?.platform)
@@ -320,7 +329,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
     const renderLeadingIndicator = () => {
         let indicator: React.ReactNode = null;
 
-        if (session.hasUnread) {
+        if (displayPolicy.showUnreadAttentionState && session.hasUnread) {
             indicator = <StatusDot color={status.dotColor} isPulsing={false} />;
         } else if (session.state === 'waiting' && session.hasDraft) {
             indicator = (
@@ -373,11 +382,15 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder }: 
                         style={styles.sessionShortcutBadge}
                     />
                 </View>
-                {environmentLabelsEnabled && environment ? <SessionEnvironmentMetadata environment={environment} /> : null}
+                {displayPolicy.environmentPlacement === 'full' && environment ? (
+                    <SessionEnvironmentMetadata environment={environment} />
+                ) : displayPolicy.environmentPlacement === 'branch-only' && environment?.branchName ? (
+                    <SessionEnvironmentMetadata environment={{ worktreeName: null, branchName: environment.branchName }} />
+                ) : null}
                 {showActiveSessionRuntime ? (
                     <SessionRuntimeMetadata
-                        platformKind={runtimePlatformKind}
-                        projectName={resolveSessionProjectName(session.projectName, session.path)}
+                        platformKind={displayPolicy.showPlatform ? runtimePlatformKind : null}
+                        projectName={displayPolicy.showProjectName ? resolveSessionProjectName(session.projectName, session.path) : null}
                         providerKind={showSessionModel ? session.providerKind : null}
                         providerName={showSessionModel ? session.providerName : null}
                         modelName={showSessionModel ? session.modelName : null}
@@ -486,6 +499,7 @@ const stylesheet = StyleSheet.create((theme) => ({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 1,
+        gap: 3,
     },
     branchText: {
         fontSize: 11,
