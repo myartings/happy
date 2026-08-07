@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useSession, useSessionMessages, useSetting } from "@/sync/storage";
 import { sync } from '@/sync/sync';
-import { ActivityIndicator, AppState, FlatList, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, View } from 'react-native';
+import { ActivityIndicator, AppState, FlatList, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, View, ViewToken } from 'react-native';
 import { useCallback } from 'react';
 import { useHeaderHeight } from '@/utils/responsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,8 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { resolveControlMode } from '@/sync/controlHandoff';
 import { usesControlledSessionUi } from '@/sync/rig';
 import { getMessageTargetNativeId, resolveMessageTargetAction } from '@/utils/messageTarget';
+import { SessionPromptHistoryNavigator } from './SessionPromptHistoryNavigator';
+import { resolveVisiblePromptId } from '@/utils/sessionPromptHistory';
 
 const SCROLL_THRESHOLD = 300;
 const DOCK_DETAILS_SHOW_OFFSET = 16;
@@ -125,6 +127,7 @@ const ChatListInternal = React.memo((props: {
     const targetIndexRef = React.useRef<number | null>(null);
     const targetMessageIdRef = React.useRef<string | null>(null);
     const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
+    const [activePromptId, setActivePromptId] = React.useState<string | null>(null);
     const [showScrollButton, setShowScrollButton] = React.useState(false);
     const [handoffListRevision, setHandoffListRevision] = React.useState(0);
     // Tracks whether the scroll-button is currently shown, so we only call
@@ -277,6 +280,9 @@ const ChatListInternal = React.memo((props: {
 
     const prevUserMsgIdRef = React.useRef(latestUserMsgId);
     React.useEffect(() => {
+        if (latestUserMsgId) setActivePromptId(latestUserMsgId);
+    }, [latestUserMsgId, props.sessionId]);
+    React.useEffect(() => {
         if (latestUserMsgId && latestUserMsgId !== prevUserMsgIdRef.current) {
             prevUserMsgIdRef.current = latestUserMsgId;
             manuallyCollapsedRef.current.clear();
@@ -307,6 +313,16 @@ const ChatListInternal = React.memo((props: {
     }, []);
 
     const keyExtractor = useCallback((item: DisplayItem) => item.id, []);
+    const viewabilityConfig = React.useRef({ itemVisiblePercentThreshold: 15 }).current;
+    const handleViewableItemsChanged = React.useRef((info: { viewableItems: ViewToken[] }) => {
+        const visibleIndices = info.viewableItems.flatMap((token) => (
+            typeof token.index === 'number' ? [token.index] : []
+        ));
+        const promptId = resolveVisiblePromptId(displayItemsRef.current, visibleIndices);
+        if (promptId) {
+            setActivePromptId((current) => current === promptId ? current : promptId);
+        }
+    }).current;
 
     const updateHeaderBackdropVisibility = useCallback(() => {
         if (!props.onHeaderBackdropVisibilityChange || !props.headerOverlayHeight) {
@@ -537,6 +553,8 @@ const ChatListInternal = React.memo((props: {
                 contentContainerStyle={{ paddingTop: 8 + (props.bottomContentInset ?? 0) }}
                 renderItem={renderItem}
                 onScroll={handleScroll}
+                onViewableItemsChanged={handleViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
                 onScrollBeginDrag={handleScrollBeginDrag}
                 onScrollEndDrag={handleScrollEndDrag}
                 onMomentumScrollEnd={handleMomentumScrollEnd}
@@ -575,6 +593,12 @@ const ChatListInternal = React.memo((props: {
                         if (targetMessageId) revealWebMessage(targetMessageId);
                     }, 100);
                 }}
+            />
+            <SessionPromptHistoryNavigator
+                sessionId={props.sessionId}
+                loadedMessages={props.messages}
+                activePromptId={activePromptId}
+                bottomContentInset={props.bottomContentInset}
             />
             {showScrollButton && (
                 <View style={[

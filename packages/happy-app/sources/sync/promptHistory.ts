@@ -10,6 +10,12 @@ export type PromptHistoryItem = {
     text: string;
 };
 
+export type PromptHistoryPage = {
+    items: PromptHistoryItem[];
+    hasMore: boolean;
+    nextBeforeSeq: number | null;
+};
+
 export function extractPromptHistoryItems(
     sessionId: string,
     messages: readonly (DecryptedMessage | null)[],
