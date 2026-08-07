@@ -44,6 +44,85 @@ function removeEmptyProjectHeaders(data: readonly SessionListViewItem[]): Sessio
     );
 }
 
+function removeEmptyFlatHeaders(data: readonly SessionListViewItem[]): SessionListViewItem[] {
+    const result: SessionListViewItem[] = [];
+    let pendingHeader: Extract<SessionListViewItem, { type: 'header' }> | null = null;
+    let pendingProjectGroup: Extract<SessionListViewItem, { type: 'project-group' }> | null = null;
+
+    for (const item of data) {
+        if (item.type === 'header') {
+            pendingHeader = item;
+            pendingProjectGroup = null;
+            continue;
+        }
+        if (item.type === 'project-group') {
+            pendingProjectGroup = item;
+            continue;
+        }
+        if (item.type === 'session') {
+            if (pendingHeader) result.push(pendingHeader);
+            if (pendingProjectGroup) result.push(pendingProjectGroup);
+            pendingHeader = null;
+            pendingProjectGroup = null;
+            result.push(item);
+            continue;
+        }
+
+        pendingHeader = null;
+        pendingProjectGroup = null;
+        result.push(item);
+    }
+
+    return result;
+}
+
+function needsAttention(session: SessionRowData): boolean {
+    return !session.archived && (session.state === 'permission_required' || session.hasUnread);
+}
+
+function prioritizeAttentionSessions(data: readonly SessionListViewItem[]): SessionListViewItem[] {
+    const attentionSessions: SessionRowData[] = [];
+    const remainingItems: SessionListViewItem[] = [];
+
+    for (const item of data) {
+        if (item.type === 'attention-sessions') {
+            attentionSessions.push(...item.sessions);
+            continue;
+        }
+        if (item.type === 'active-sessions') {
+            const attention = item.sessions.filter(needsAttention);
+            const remaining = item.sessions.filter((session) => !needsAttention(session));
+            attentionSessions.push(...attention);
+            if (remaining.length > 0) remainingItems.push({ ...item, sessions: remaining });
+            continue;
+        }
+        if (item.type === 'project') {
+            for (const workspace of item.project.workspaces) {
+                attentionSessions.push(...workspace.sessions.filter(needsAttention));
+            }
+            const project = filterProjectSessions(item, (session) => !needsAttention(session));
+            if (project) remainingItems.push(project);
+            continue;
+        }
+        if (item.type === 'session' && needsAttention(item.session)) {
+            attentionSessions.push(item.session);
+            continue;
+        }
+        remainingItems.push(item);
+    }
+
+    if (attentionSessions.length === 0) return [...data];
+
+    attentionSessions.sort((left, right) => {
+        const permissionPriority = Number(right.state === 'permission_required')
+            - Number(left.state === 'permission_required');
+        return permissionPriority || activityTime(right) - activityTime(left);
+    });
+
+    const cleanedItems = removeEmptyProjectHeaders(removeEmptyFlatHeaders(remainingItems));
+    return [{ type: 'attention-sessions', sessions: attentionSessions }, ...cleanedItems];
+}
+
 function filterArchivedSessions(
     data: readonly SessionListViewItem[],
     hideArchivedSessions: boolean,
@@ -85,7 +164,7 @@ function filterArchivedSessions(
             if (project) result.push(project);
             continue;
         }
-        if (item.type === 'active-sessions') {
+        if (item.type === 'active-sessions' || item.type === 'attention-sessions') {
             const sessions = item.sessions.filter((session) => !session.archived);
             if (sessions.length > 0) result.push({ ...item, sessions });
             continue;
@@ -103,7 +182,7 @@ export function buildVisibleSessionListViewData(
     if (!data) return null;
 
     const visibleData = filterArchivedSessions(data, options.hideArchivedSessions);
-    if (!options.sortActiveSessionsGlobally) return visibleData;
+    if (!options.sortActiveSessionsGlobally) return prioritizeAttentionSessions(visibleData);
 
     const activeSessions: SessionRowData[] = [];
     const remainingItems: SessionListViewItem[] = [];
@@ -139,5 +218,5 @@ export function buildVisibleSessionListViewData(
         activeItems.push({ type: 'active-sessions', sessions: activeSessions });
     }
 
-    return [...activeItems, ...removeEmptyProjectHeaders(remainingItems)];
+    return prioritizeAttentionSessions([...activeItems, ...removeEmptyProjectHeaders(remainingItems)]);
 }

@@ -182,6 +182,7 @@ function buildSessionRowData(session: Session, unreadSessionIds?: Set<string>): 
 // Unified list item type for SessionsList component
 export type SessionListViewItem =
     | { type: 'header'; title: string }
+    | { type: 'attention-sessions'; sessions: SessionRowData[] }
     | { type: 'active-sessions'; sessions: SessionRowData[]; period?: 'today' | 'earlier' }
     | { type: 'project-group'; displayPath: string; machine: Machine }
     | { type: 'projects-header'; source: 'rig' | 'happy' }
