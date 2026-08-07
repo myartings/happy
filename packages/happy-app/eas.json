@@ -49,6 +49,17 @@
         "APP_ENV": "production",
         "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
       }
+    },
+    "personal": {
+      "autoIncrement": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_ENV": "personal",
+        "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
+      }
     }
   },
   "submit": {

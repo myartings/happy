@@ -1,0 +1,38 @@
+diff --git a/android/CMakeLists.txt b/android/CMakeLists.txt
+index aea3c381f8313e821bb32672f9dea6679a1691ad..e08a42727aed839ff17c387bf1c58bf471a72db7 100644
+--- a/android/CMakeLists.txt
++++ b/android/CMakeLists.txt
+@@ -1,14 +1,21 @@
+ cmake_minimum_required(VERSION 3.4.1)
+ 
++project(react_native_libsodium LANGUAGES C CXX)
++
+ set (CMAKE_VERBOSE_MAKEFILE ON)
+ set (CMAKE_CXX_STANDARD 20)
+ 
++# Gradle passes NODE_MODULES_DIR with native path separators. Normalize it so
++# Windows backslashes are not interpreted as CMake escape sequences (for
++# example, `C:\Users` contains the invalid `\U` escape).
++file(TO_CMAKE_PATH "${NODE_MODULES_DIR}" NODE_MODULES_CMAKE_DIR)
++
+ # add directories to "include" search paths
+ include_directories(
+             ../cpp
+-            "${NODE_MODULES_DIR}/react-native/React"
+-            "${NODE_MODULES_DIR}/react-native/React/Base"
+-            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
++            "${NODE_MODULES_CMAKE_DIR}/react-native/React"
++            "${NODE_MODULES_CMAKE_DIR}/react-native/React/Base"
++            "${NODE_MODULES_CMAKE_DIR}/react-native/ReactCommon/jsi"
+ )
+ 
+ # set the base libsodium build directory
+@@ -33,7 +40,7 @@ set_target_properties( sodium PROPERTIES IMPORTED_LOCATION ${LIBSODIUM_BUILD_DIR
+ # which will be built from the listed source files
+ add_library(libsodium
+   SHARED
+-  "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
++  "${NODE_MODULES_CMAKE_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+   ../cpp/react-native-libsodium.cpp
+   ../cpp/react-native-libsodium.h
+   cpp-adapter.cpp
