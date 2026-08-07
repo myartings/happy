@@ -4,6 +4,8 @@ import type { PromptHistoryItem } from '@/sync/promptHistory';
 import type { Message } from '@/sync/typesMessage';
 import {
     getPromptIndexFromTrackPosition,
+    getPromptRailMetrics,
+    getSampledPromptIndices,
     mergeSessionPromptHistory,
     resolveVisiblePromptId,
 } from './sessionPromptHistory';
@@ -21,6 +23,17 @@ function item(message: Message): DisplayItem {
 }
 
 describe('session prompt history', () => {
+    it('keeps the desktop prompt rail compact with tightly spaced sampled ticks', () => {
+        expect(getPromptRailMetrics(5)).toEqual({ trackHeight: 24, totalHeight: 82 });
+        expect(getPromptRailMetrics(10)).toEqual({ trackHeight: 36, totalHeight: 94 });
+        expect(getPromptRailMetrics(100)).toEqual({ trackHeight: 76, totalHeight: 134 });
+
+        const sampled = getSampledPromptIndices(100);
+        expect(sampled).toHaveLength(20);
+        expect(sampled[0]).toBe(0);
+        expect(sampled.at(-1)).toBe(99);
+    });
+
     it('merges fetched prompts with currently loaded user messages chronologically', () => {
         const fetched: PromptHistoryItem[] = [
             { id: 'older', localId: null, sessionId: 's', seq: 1, createdAt: 10, text: 'old' },

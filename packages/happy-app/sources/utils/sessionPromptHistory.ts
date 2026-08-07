@@ -2,6 +2,35 @@ import type { DisplayItem } from '@/hooks/useGroupedMessages';
 import type { PromptHistoryItem } from '@/sync/promptHistory';
 import type { Message } from '@/sync/typesMessage';
 
+const MAX_VISIBLE_PROMPT_RAIL_TICKS = 20;
+const PROMPT_RAIL_MIN_TRACK_HEIGHT = 24;
+const PROMPT_RAIL_TICK_GAP = 4;
+const PROMPT_RAIL_CHROME_HEIGHT = 58;
+
+export function getSampledPromptIndices(count: number): number[] {
+    if (count <= 0) return [];
+    if (count <= MAX_VISIBLE_PROMPT_RAIL_TICKS) {
+        return Array.from({ length: count }, (_, index) => index);
+    }
+    const result = new Set<number>();
+    for (let index = 0; index < MAX_VISIBLE_PROMPT_RAIL_TICKS; index += 1) {
+        result.add(Math.round((index / (MAX_VISIBLE_PROMPT_RAIL_TICKS - 1)) * (count - 1)));
+    }
+    return Array.from(result.values());
+}
+
+export function getPromptRailMetrics(promptCount: number): { trackHeight: number; totalHeight: number } {
+    const visibleTickCount = Math.min(Math.max(0, promptCount), MAX_VISIBLE_PROMPT_RAIL_TICKS);
+    const trackHeight = Math.max(
+        PROMPT_RAIL_MIN_TRACK_HEIGHT,
+        (visibleTickCount - 1) * PROMPT_RAIL_TICK_GAP,
+    );
+    return {
+        trackHeight,
+        totalHeight: trackHeight + PROMPT_RAIL_CHROME_HEIGHT,
+    };
+}
+
 export function mergeSessionPromptHistory(
     sessionId: string,
     fetched: readonly PromptHistoryItem[],

@@ -20,10 +20,10 @@ import type { Message } from '@/sync/typesMessage';
 import { t } from '@/text';
 import {
     getPromptIndexFromTrackPosition,
+    getPromptRailMetrics,
+    getSampledPromptIndices,
     mergeSessionPromptHistory,
 } from '@/utils/sessionPromptHistory';
-
-const MAX_VISIBLE_TICKS = 80;
 
 type PromptHistoryState = {
     fetched: PromptHistoryItem[];
@@ -314,6 +314,7 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
         ? 0
         : Math.max(0, Math.min(trackHeight - 88, (hoveredIndex / (props.prompts.length - 1)) * trackHeight - 34));
     const sampledIndices = getSampledPromptIndices(props.prompts.length);
+    const railMetrics = getPromptRailMetrics(props.prompts.length);
 
     const goOlder = () => {
         if (effectiveActiveIndex > 0) {
@@ -331,7 +332,16 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
     };
 
     return (
-        <View style={styles.desktopRailContainer} pointerEvents="box-none">
+        <View
+            style={[
+                styles.desktopRailContainer,
+                {
+                    height: railMetrics.totalHeight,
+                    transform: [{ translateY: -railMetrics.totalHeight / 2 }],
+                },
+            ]}
+            pointerEvents="box-none"
+        >
             <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={props.loadFailed ? t('common.retry') : t('promptHistory.loadMore')}
@@ -356,7 +366,7 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                 accessibilityRole="adjustable"
                 accessibilityLabel={t('promptHistory.title')}
                 onLayout={(event) => setTrackHeight(Math.max(1, event.nativeEvent.layout.height))}
-                style={styles.desktopRailTrack}
+                style={[styles.desktopRailTrack, { height: railMetrics.trackHeight }]}
             >
                 {sampledIndices.map((index) => (
                     <View
@@ -403,16 +413,6 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
     );
 });
 
-function getSampledPromptIndices(count: number): number[] {
-    if (count <= 0) return [];
-    if (count <= MAX_VISIBLE_TICKS) return Array.from({ length: count }, (_, index) => index);
-    const result = new Set<number>();
-    for (let index = 0; index < MAX_VISIBLE_TICKS; index += 1) {
-        result.add(Math.round((index / (MAX_VISIBLE_TICKS - 1)) * (count - 1)));
-    }
-    return Array.from(result.values());
-}
-
 function formatPromptTime(timestamp: number): string {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -421,8 +421,7 @@ const styles = StyleSheet.create((theme) => ({
     desktopRailContainer: {
         position: 'absolute',
         right: 8,
-        top: 18,
-        bottom: 18,
+        top: '50%',
         width: 30,
         alignItems: 'center',
         zIndex: 20,
@@ -435,7 +434,6 @@ const styles = StyleSheet.create((theme) => ({
         borderRadius: 8,
     },
     desktopRailTrack: {
-        flex: 1,
         width: 28,
         marginVertical: 3,
         outlineStyle: 'none',
