@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Text, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePathname, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useHeaderHeight } from '@/utils/responsive';
 import { VoiceAssistantStatusBar } from './VoiceAssistantStatusBar';
 import { useRealtimeStatus, useSettingMutable } from '@/sync/storage';
@@ -73,28 +73,6 @@ const stylesheet = StyleSheet.create((theme) => ({
         color: theme.colors.text,
         ...Typography.default('semiBold'),
     },
-    navigationButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginHorizontal: 16,
-        marginTop: 4,
-        marginBottom: 4,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        borderRadius: 10,
-        gap: 9,
-    },
-    navigationButtonSelected: {
-        backgroundColor: theme.colors.surfaceSelected,
-    },
-    navigationText: {
-        fontSize: 14,
-        color: theme.colors.textSecondary,
-        ...Typography.default('semiBold'),
-    },
-    navigationTextSelected: {
-        color: theme.colors.text,
-    },
     settingsRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -119,7 +97,6 @@ export const SidebarView = React.memo(() => {
     const styles = stylesheet;
     const safeArea = useSafeAreaInsets();
     const router = useRouter();
-    const pathname = usePathname();
     const headerHeight = useHeaderHeight();
     const realtimeStatus = useRealtimeStatus();
     const hasArchivedSessions = useHasArchivedSessions();
@@ -131,7 +108,6 @@ export const SidebarView = React.memo(() => {
     const handleNewSession = React.useCallback(() => {
         router.navigate('/new');
     }, [router]);
-    const promptHistorySelected = pathname === '/prompts';
     const handleArchiveVisibility = React.useCallback(() => {
         setHideArchivedSessions(!hideArchivedSessions);
     }, [hideArchivedSessions, setHideArchivedSessions]);
@@ -175,24 +151,6 @@ export const SidebarView = React.memo(() => {
             </View>
 
             <ProjectTodoButton showLabel style={styles.projectTodosButton} />
-
-            <Pressable
-                onPress={() => router.push('/prompts' as never)}
-                style={({ pressed }) => [
-                    styles.navigationButton,
-                    promptHistorySelected && styles.navigationButtonSelected,
-                    pressed && styles.newSessionButtonPressed,
-                ]}
-            >
-                <Ionicons
-                    name="document-text-outline"
-                    size={17}
-                    color={promptHistorySelected ? stylesheet.navigationTextSelected.color : stylesheet.navigationText.color}
-                />
-                <Text style={[styles.navigationText, promptHistorySelected && styles.navigationTextSelected]}>
-                    {t('promptHistory.title')}
-                </Text>
-            </Pressable>
 
             {realtimeStatus !== 'disconnected' && (
                 <VoiceAssistantStatusBar variant="sidebar" />
