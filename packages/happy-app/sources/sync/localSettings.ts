@@ -20,8 +20,12 @@ export const LocalSettingsSchema = z.object({
     devNeedsAttentionSessionsEnabled: z.boolean().describe('Show the personal needs-attention session section'),
     devPromptHistoryNavigatorEnabled: z.boolean().describe('Show the personal prompt history navigator'),
     devSessionEnvironmentLabelsEnabled: z.boolean().describe('Show personal branch and worktree labels on session rows'),
-    devWorktreeProjectIdentityEnabled: z.boolean().describe('Group managed worktrees under their repository project'),
     devEnhancedStatusDotsEnabled: z.boolean().describe('Use the personal high-visibility active-session status dots'),
+    devSortActiveSessionsGloballyEnabled: z.boolean().describe('Show active sessions in one global list ordered by recent user activity'),
+    devGroupActiveSessionsByDateEnabled: z.boolean().describe('Split globally sorted active sessions into today and earlier activity groups'),
+    devShowActiveSessionRuntimeEnabled: z.boolean().describe('Show project, device platform, AI provider, and model details on active session rows'),
+    devShowSessionModelEnabled: z.boolean().describe('Show the AI provider icon and name plus the model name and version in session UI'),
+    devPersonalDisplaySettingsMigrated: z.boolean().describe('Whether legacy synced personal display preferences were copied to this device'),
     // Right file sidebar: which panels the user has opened and which is active.
     // Persisted so the layout survives reloads and long absences.
     sidebarPanelsOpen: z.array(z.enum(['changes', 'allFiles', 'sideChat'])).describe('Open right-sidebar panels, in tab order'),
@@ -60,8 +64,12 @@ export const localSettingsDefaults: LocalSettings = {
     devNeedsAttentionSessionsEnabled: true,
     devPromptHistoryNavigatorEnabled: true,
     devSessionEnvironmentLabelsEnabled: true,
-    devWorktreeProjectIdentityEnabled: true,
     devEnhancedStatusDotsEnabled: true,
+    devSortActiveSessionsGloballyEnabled: false,
+    devGroupActiveSessionsByDateEnabled: false,
+    devShowActiveSessionRuntimeEnabled: false,
+    devShowSessionModelEnabled: true,
+    devPersonalDisplaySettingsMigrated: false,
     sidebarPanelsOpen: [],
     sidebarPanelActive: null,
     acknowledgedCliVersions: {},
@@ -87,4 +95,38 @@ export function localSettingsParse(settings: unknown): LocalSettings {
 
 export function applyLocalSettings(settings: LocalSettings, delta: Partial<LocalSettings>): LocalSettings {
     return { ...localSettingsDefaults, ...settings, ...delta };
+}
+
+export function buildPersonalDisplaySettingsMigration(
+    localSettings: LocalSettings,
+    accountSettings: unknown,
+): Partial<LocalSettings> | null {
+    if (localSettings.devPersonalDisplaySettingsMigrated) return null;
+
+    const legacy = accountSettings && typeof accountSettings === 'object'
+        ? accountSettings as Record<string, unknown>
+        : {};
+    const inheritBoolean = (legacyKey: string, fallback: boolean): boolean => (
+        typeof legacy[legacyKey] === 'boolean' ? legacy[legacyKey] : fallback
+    ) as boolean;
+
+    return {
+        devSortActiveSessionsGloballyEnabled: inheritBoolean(
+            'sortActiveSessionsGlobally',
+            localSettings.devSortActiveSessionsGloballyEnabled,
+        ),
+        devGroupActiveSessionsByDateEnabled: inheritBoolean(
+            'groupActiveSessionsByDate',
+            localSettings.devGroupActiveSessionsByDateEnabled,
+        ),
+        devShowActiveSessionRuntimeEnabled: inheritBoolean(
+            'showActiveSessionRuntime',
+            localSettings.devShowActiveSessionRuntimeEnabled,
+        ),
+        devShowSessionModelEnabled: inheritBoolean(
+            'showSessionModel',
+            localSettings.devShowSessionModelEnabled,
+        ),
+        devPersonalDisplaySettingsMigrated: true,
+    };
 }

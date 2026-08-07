@@ -27,6 +27,7 @@ import { isRunningOnMac } from '@/utils/platform';
 import { NormalizedMessage, normalizeRawMessage, RawRecord } from './typesRaw';
 import { extractPromptHistoryItems, PromptHistoryPage } from './promptHistory';
 import { applySettings, Settings, settingsDefaults, settingsParse, settingsToSyncPayload, SUPPORTED_SCHEMA_VERSION } from './settings';
+import { buildPersonalDisplaySettingsMigration } from './localSettings';
 import { Profile, profileParse } from './profile';
 import { loadPendingSettings, savePendingSettings } from './persistence';
 import {
@@ -913,7 +914,10 @@ class Sync {
         const merged = Object.keys(this.pendingSettings).length > 0
             ? applySettings(serverSettings, this.pendingSettings)
             : serverSettings;
-        storage.getState().applySettings(merged, version);
+        const state = storage.getState();
+        const localMigration = buildPersonalDisplaySettingsMigration(state.localSettings, merged);
+        if (localMigration) state.applyLocalSettings(localMigration);
+        state.applySettings(merged, version);
     }
 
     applySettings = (delta: Partial<Settings>) => {

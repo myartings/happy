@@ -22,16 +22,15 @@ export default function FeaturesSettingsScreen() {
     const [groupToolCalls, setGroupToolCalls] = useSettingMutable('groupToolCalls');
     const [expImageUpload, setExpImageUpload] = useSettingMutable('expImageUpload');
     const [sortSessionsByActivity, setSortSessionsByActivity] = useSettingMutable('sortSessionsByActivity');
-    const [sortActiveSessionsGlobally, setSortActiveSessionsGlobally] = useSettingMutable('sortActiveSessionsGlobally');
-    const [groupActiveSessionsByDate, setGroupActiveSessionsByDate] = useSettingMutable('groupActiveSessionsByDate');
-    const [showActiveSessionRuntime, setShowActiveSessionRuntime] = useSettingMutable('showActiveSessionRuntime');
-    const [showSessionModel, setShowSessionModel] = useSettingMutable('showSessionModel');
     const [devProjectTodosEnabled, setDevProjectTodosEnabled] = useLocalSettingMutable('devProjectTodosEnabled');
     const [devNeedsAttentionSessionsEnabled, setDevNeedsAttentionSessionsEnabled] = useLocalSettingMutable('devNeedsAttentionSessionsEnabled');
     const [devPromptHistoryNavigatorEnabled, setDevPromptHistoryNavigatorEnabled] = useLocalSettingMutable('devPromptHistoryNavigatorEnabled');
     const [devSessionEnvironmentLabelsEnabled, setDevSessionEnvironmentLabelsEnabled] = useLocalSettingMutable('devSessionEnvironmentLabelsEnabled');
-    const [devWorktreeProjectIdentityEnabled, setDevWorktreeProjectIdentityEnabled] = useLocalSettingMutable('devWorktreeProjectIdentityEnabled');
     const [devEnhancedStatusDotsEnabled, setDevEnhancedStatusDotsEnabled] = useLocalSettingMutable('devEnhancedStatusDotsEnabled');
+    const [devSortActiveSessionsGloballyEnabled, setDevSortActiveSessionsGloballyEnabled] = useLocalSettingMutable('devSortActiveSessionsGloballyEnabled');
+    const [devGroupActiveSessionsByDateEnabled, setDevGroupActiveSessionsByDateEnabled] = useLocalSettingMutable('devGroupActiveSessionsByDateEnabled');
+    const [devShowActiveSessionRuntimeEnabled, setDevShowActiveSessionRuntimeEnabled] = useLocalSettingMutable('devShowActiveSessionRuntimeEnabled');
+    const [devShowSessionModelEnabled, setDevShowSessionModelEnabled] = useLocalSettingMutable('devShowSessionModelEnabled');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -80,7 +79,7 @@ export default function FeaturesSettingsScreen() {
 
             <ItemGroup
                 title="Personal Development"
-                footer="Personal feature switches for comparing with the official Happy experience. Turning one off keeps its data."
+                footer="Device-local feature switches for comparing with the official Happy experience. Turning one off keeps its data."
             >
                 <Item
                     title="Project Todos"
@@ -115,14 +114,6 @@ export default function FeaturesSettingsScreen() {
                     showChevron={false}
                 />
                 <Item
-                    title="Worktree Project Identity"
-                    titleAccessory={<DevFeatureBadge />}
-                    subtitle="Keep managed worktrees grouped under their repository project"
-                    icon={<Ionicons name="folder-open-outline" size={29} color="#5AC8FA" />}
-                    rightElement={<Switch value={devWorktreeProjectIdentityEnabled} onValueChange={setDevWorktreeProjectIdentityEnabled} />}
-                    showChevron={false}
-                />
-                <Item
                     title="Enhanced Session Status Dots"
                     titleAccessory={<DevFeatureBadge />}
                     subtitle="Use larger, higher-contrast indicators for active sessions"
@@ -135,7 +126,7 @@ export default function FeaturesSettingsScreen() {
                     titleAccessory={<DevFeatureBadge />}
                     subtitle="Show active sessions in one list ordered by recent activity"
                     icon={<Ionicons name="list-outline" size={29} color="#34C759" />}
-                    rightElement={<Switch value={sortActiveSessionsGlobally} onValueChange={setSortActiveSessionsGlobally} />}
+                    rightElement={<Switch value={devSortActiveSessionsGloballyEnabled} onValueChange={setDevSortActiveSessionsGloballyEnabled} />}
                     showChevron={false}
                 />
                 <Item
@@ -145,9 +136,9 @@ export default function FeaturesSettingsScreen() {
                     icon={<Ionicons name="calendar-outline" size={29} color="#007AFF" />}
                     rightElement={(
                         <Switch
-                            value={groupActiveSessionsByDate}
-                            onValueChange={setGroupActiveSessionsByDate}
-                            disabled={!sortActiveSessionsGlobally}
+                            value={devGroupActiveSessionsByDateEnabled}
+                            onValueChange={setDevGroupActiveSessionsByDateEnabled}
+                            disabled={!devSortActiveSessionsGloballyEnabled}
                         />
                     )}
                     showChevron={false}
@@ -157,7 +148,7 @@ export default function FeaturesSettingsScreen() {
                     titleAccessory={<DevFeatureBadge />}
                     subtitle={t('settingsFeatures.showActiveSessionRuntimeSubtitle')}
                     icon={<Ionicons name="desktop-outline" size={29} color="#5856D6" />}
-                    rightElement={<Switch value={showActiveSessionRuntime} onValueChange={setShowActiveSessionRuntime} />}
+                    rightElement={<Switch value={devShowActiveSessionRuntimeEnabled} onValueChange={setDevShowActiveSessionRuntimeEnabled} />}
                     showChevron={false}
                 />
                 <Item
@@ -165,7 +156,7 @@ export default function FeaturesSettingsScreen() {
                     titleAccessory={<DevFeatureBadge />}
                     subtitle={t('settingsFeatures.showSessionModelSubtitle')}
                     icon={<Ionicons name="hardware-chip-outline" size={29} color="#AF52DE" />}
-                    rightElement={<Switch value={showSessionModel} onValueChange={setShowSessionModel} />}
+                    rightElement={<Switch value={devShowSessionModelEnabled} onValueChange={setDevShowSessionModelEnabled} />}
                     showChevron={false}
                 />
                 {Platform.OS === 'web' && isTauri() && (
