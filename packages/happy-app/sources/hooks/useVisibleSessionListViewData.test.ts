@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
     sortActiveSessionsGlobally: false,
     groupActiveSessionsByDate: false,
     needsAttentionSessionsEnabled: true,
-    worktreeProjectIdentityEnabled: true,
 }));
 
 vi.mock('react', () => ({
@@ -20,15 +19,14 @@ vi.mock('@/sync/storage', () => ({
     useSetting: (key: string) => {
         switch (key) {
             case 'hideInactiveSessions': return mocks.hideArchivedSessions;
-            case 'sortActiveSessionsGlobally': return mocks.sortActiveSessionsGlobally;
-            case 'groupActiveSessionsByDate': return mocks.groupActiveSessionsByDate;
             default: throw new Error(`Unexpected setting read: ${key}`);
         }
     },
     useLocalSetting: (key: string) => {
         switch (key) {
             case 'devNeedsAttentionSessionsEnabled': return mocks.needsAttentionSessionsEnabled;
-            case 'devWorktreeProjectIdentityEnabled': return mocks.worktreeProjectIdentityEnabled;
+            case 'devSortActiveSessionsGloballyEnabled': return mocks.sortActiveSessionsGlobally;
+            case 'devGroupActiveSessionsByDateEnabled': return mocks.groupActiveSessionsByDate;
             default: throw new Error(`Unexpected local setting read: ${key}`);
         }
     },
@@ -94,7 +92,6 @@ beforeEach(() => {
     mocks.sortActiveSessionsGlobally = false;
     mocks.groupActiveSessionsByDate = false;
     mocks.needsAttentionSessionsEnabled = true;
-    mocks.worktreeProjectIdentityEnabled = true;
 });
 
 describe('buildVisibleSessionListViewData', () => {
@@ -303,7 +300,7 @@ describe('buildVisibleSessionListViewData', () => {
         })).toEqual(data);
     });
 
-    it('restores official worktree-as-project identity when personal grouping is disabled', () => {
+    it('always preserves repository project identity for managed worktrees', () => {
         const worktreeSession = row('worktree');
         const data: SessionListViewItem[] = [{
             type: 'project',
@@ -321,12 +318,11 @@ describe('buildVisibleSessionListViewData', () => {
         expect(buildVisibleSessionListViewData(data, {
             hideArchivedSessions: false,
             sortActiveSessionsGlobally: false,
-            worktreeProjectIdentityEnabled: false,
         })).toMatchObject([{
             type: 'project',
             project: {
-                name: 'eager-cloud',
-                workspaces: [{ id: '', name: null, sessions: [{ id: 'worktree' }] }],
+                name: 'happy',
+                workspaces: [{ name: 'eager-cloud', sessions: [{ id: 'worktree' }] }],
             },
         }]);
     });

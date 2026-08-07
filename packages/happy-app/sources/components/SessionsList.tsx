@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, FlatList, NativeScrollEvent, NativeSyntheticEvent, Platform } from 'react-native';
 import { Text } from '@/components/StyledText';
 import { usePathname } from 'expo-router';
-import { SessionListViewItem, SessionRowData, useLocalSetting, useSetting } from '@/sync/storage';
+import { SessionListViewItem, SessionRowData, useLocalSetting } from '@/sync/storage';
 import { filterProjectGroup, sessionMatchesQuery } from '@/sync/projectGroups';
 import { Ionicons } from '@expo/vector-icons';
 import { type SessionState, formatLastSeen, vibingMessages } from '@/utils/sessionUtils';
@@ -455,7 +455,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
     isLast?: boolean;
     isSingle?: boolean;
 }) => {
-    const showSessionModel = useSetting('showSessionModel');
+    const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const needsAttentionSessionsEnabled = useLocalSetting('devNeedsAttentionSessionsEnabled');
     const styles = stylesheet;
     const navigateToSession = useNavigateToSession();

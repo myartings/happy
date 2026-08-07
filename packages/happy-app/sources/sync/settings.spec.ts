@@ -3,24 +3,24 @@ import { settingsParse, applySettings, settingsDefaults, settingsToSyncPayload, 
 
 describe('settings', () => {
     describe('settingsParse', () => {
-        it('defaults global active-session sorting off and accepts an explicit opt-in', () => {
-            expect(settingsParse({}).sortActiveSessionsGlobally).toBe(false);
-            expect(settingsParse({ sortActiveSessionsGlobally: true }).sortActiveSessionsGlobally).toBe(true);
-        });
+        it('preserves legacy synced personal display fields without treating them as current settings', () => {
+            const parsed = settingsParse({
+                sortActiveSessionsGlobally: true,
+                groupActiveSessionsByDate: true,
+                showActiveSessionRuntime: true,
+                showSessionModel: false,
+            }) as Settings & Record<string, unknown>;
 
-        it('defaults active-session runtime details off and accepts an explicit opt-in', () => {
-            expect(settingsParse({}).showActiveSessionRuntime).toBe(false);
-            expect(settingsParse({ showActiveSessionRuntime: true }).showActiveSessionRuntime).toBe(true);
-        });
-
-        it('shows session models by default and accepts an explicit opt-out', () => {
-            expect(settingsParse({}).showSessionModel).toBe(true);
-            expect(settingsParse({ showSessionModel: false }).showSessionModel).toBe(false);
-        });
-
-        it('defaults active-session date grouping off and accepts an explicit opt-in', () => {
-            expect(settingsParse({}).groupActiveSessionsByDate).toBe(false);
-            expect(settingsParse({ groupActiveSessionsByDate: true }).groupActiveSessionsByDate).toBe(true);
+            expect(parsed).toMatchObject({
+                sortActiveSessionsGlobally: true,
+                groupActiveSessionsByDate: true,
+                showActiveSessionRuntime: true,
+                showSessionModel: false,
+            });
+            expect(settingsDefaults).not.toHaveProperty('sortActiveSessionsGlobally');
+            expect(settingsDefaults).not.toHaveProperty('groupActiveSessionsByDate');
+            expect(settingsDefaults).not.toHaveProperty('showActiveSessionRuntime');
+            expect(settingsDefaults).not.toHaveProperty('showSessionModel');
         });
 
         it('defaults project todos empty and preserves valid synced items', () => {
@@ -223,15 +223,11 @@ describe('settings', () => {
                 agentInputEnterToSend: true,
                 avatarStyle: 'brutalist',
                 showFlavorIcons: false,
-                showActiveSessionRuntime: false,
-                showSessionModel: true,
-                groupActiveSessionsByDate: false,
                 userMessageBubbleColor: 'gray',
                 sessionStatusBarDisplay: 'hidden',
                 usageLimitShowRemaining: false,
                 hideInactiveSessions: false,
                 sortSessionsByActivity: false,
-                sortActiveSessionsGlobally: false,
                 expResumeSession: false,
                 fileDiffsSidebar: false,
                 groupToolCalls: false,
@@ -260,6 +256,21 @@ describe('settings', () => {
     });
 
     describe('settingsToSyncPayload', () => {
+        it('does not republish legacy device-local display preferences', () => {
+            const parsed = settingsParse({
+                sortActiveSessionsGlobally: true,
+                groupActiveSessionsByDate: true,
+                showActiveSessionRuntime: true,
+                showSessionModel: false,
+            });
+
+            const payload = settingsToSyncPayload(parsed);
+            expect(payload).not.toHaveProperty('sortActiveSessionsGlobally');
+            expect(payload).not.toHaveProperty('groupActiveSessionsByDate');
+            expect(payload).not.toHaveProperty('showActiveSessionRuntime');
+            expect(payload).not.toHaveProperty('showSessionModel');
+        });
+
         it('includes project todos in the cross-device settings payload', () => {
             const projectTodos = {
                 'project:happy': [{

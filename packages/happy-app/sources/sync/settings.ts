@@ -42,10 +42,6 @@ export const SettingsSchema = z.object({
     // rename migration to carry an old key across.
     hideInactiveSessions: z.boolean().describe('Hide archived sessions in the main list'),
     sortSessionsByActivity: z.boolean().describe('Sort the session list by last activity instead of creation date'),
-    sortActiveSessionsGlobally: z.boolean().describe('Show active sessions in one global list ordered by recent user activity'),
-    groupActiveSessionsByDate: z.boolean().describe('Split globally sorted active sessions into today and earlier activity groups'),
-    showActiveSessionRuntime: z.boolean().describe('Show project, device platform, AI provider, and model details on active session rows'),
-    showSessionModel: z.boolean().describe('Show the AI provider icon and name plus the model name and version in session UI'),
     expResumeSession: z.boolean().describe('Enable experimental session resume feature'),
     fileDiffsSidebar: z.boolean().describe('Show the file diffs sidebar next to the chat on desktop'),
     groupToolCalls: z.boolean().describe('Collapse consecutive tool calls into grouped containers in chat'),
@@ -125,10 +121,6 @@ export const settingsDefaults: Settings = {
 
     hideInactiveSessions: false,
     sortSessionsByActivity: false,
-    sortActiveSessionsGlobally: false,
-    groupActiveSessionsByDate: false,
-    showActiveSessionRuntime: false,
-    showSessionModel: true,
     expResumeSession: false,
     fileDiffsSidebar: false,
     groupToolCalls: false,
@@ -205,6 +197,17 @@ export function applySettings(settings: Settings, delta: Partial<Settings>): Set
 
 export function settingsToSyncPayload(settings: Settings): Partial<Settings> {
     const result: Partial<Settings> = { ...settings };
+    // These personal display preferences moved to LocalSettings. Older clients
+    // may leave them in the forward-compatible settings object, but this client
+    // must not publish device-local A/B choices back to the account.
+    for (const legacyLocalKey of [
+        'sortActiveSessionsGlobally',
+        'groupActiveSessionsByDate',
+        'showActiveSessionRuntime',
+        'showSessionModel',
+    ]) {
+        delete (result as Record<string, unknown>)[legacyLocalKey];
+    }
     const compactAgentOverrides = Object.fromEntries(
         Object.entries(settings.agentDefaultOverrides ?? {}).filter(([, value]) => (
             value && typeof value === 'object' && Object.keys(value).length > 0

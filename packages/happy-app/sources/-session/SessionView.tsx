@@ -99,7 +99,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const isTablet = useIsTablet();
     const { width: windowWidth } = useWindowDimensions();
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
-    const showSessionModel = useSetting('showSessionModel');
+    const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const zenMode = useLocalSetting('zenMode');
     const [headerBackdropVisible, setHeaderBackdropVisible] = React.useState(false);
 
@@ -769,7 +769,7 @@ export function SessionViewLoaded({
     const gitStatus = useSessionGitStatus(sessionId);
     const alwaysShowContextSize = useSetting('alwaysShowContextSize');
     const sessionStatusBarDisplay = useSetting('sessionStatusBarDisplay');
-    const showSessionModel = useSetting('showSessionModel');
+    const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const experiments = useSetting('experiments');
     const expResumeSession = useSetting('expResumeSession');
     const { canResume, resumeSession, resumingSession } = useSessionQuickActions(session);
