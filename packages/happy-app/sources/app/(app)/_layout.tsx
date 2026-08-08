@@ -332,6 +332,18 @@ export default function RootLayout() {
                 }}
             />
             <Stack.Screen
+                name="github-issues/index"
+                options={{ headerShown: true, headerTitle: 'GitHub Issues', headerBackTitle: t('common.back') }}
+            />
+            <Stack.Screen
+                name="github-issues/[number]"
+                options={{ headerShown: true, headerTitle: 'Issue', headerBackTitle: 'Issues' }}
+            />
+            <Stack.Screen
+                name="github-issues/new"
+                options={{ headerShown: true, headerTitle: 'New Issue', headerBackTitle: t('common.cancel') }}
+            />
+            <Stack.Screen
                 name="settings/connect/claude"
                 options={{
                     headerShown: true,

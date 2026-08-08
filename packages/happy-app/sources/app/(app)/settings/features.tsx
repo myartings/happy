@@ -23,6 +23,7 @@ export default function FeaturesSettingsScreen() {
     const [expImageUpload, setExpImageUpload] = useSettingMutable('expImageUpload');
     const [sortSessionsByActivity, setSortSessionsByActivity] = useSettingMutable('sortSessionsByActivity');
     const [devProjectTodosEnabled, setDevProjectTodosEnabled] = useLocalSettingMutable('devProjectTodosEnabled');
+    const [devGithubIssuesEnabled, setDevGithubIssuesEnabled] = useLocalSettingMutable('devGithubIssuesEnabled');
     const [devNeedsAttentionSessionsEnabled, setDevNeedsAttentionSessionsEnabled] = useLocalSettingMutable('devNeedsAttentionSessionsEnabled');
     const [devPromptHistoryNavigatorEnabled, setDevPromptHistoryNavigatorEnabled] = useLocalSettingMutable('devPromptHistoryNavigatorEnabled');
     const [devSessionEnvironmentLabelsEnabled, setDevSessionEnvironmentLabelsEnabled] = useLocalSettingMutable('devSessionEnvironmentLabelsEnabled');
@@ -87,6 +88,14 @@ export default function FeaturesSettingsScreen() {
                     subtitle="Show project todo shortcuts and the project todo page"
                     icon={<Ionicons name="checkbox-outline" size={29} color="#34C759" />}
                     rightElement={<Switch value={devProjectTodosEnabled} onValueChange={setDevProjectTodosEnabled} />}
+                    showChevron={false}
+                />
+                <Item
+                    title="GitHub Issues"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Manage selected repositories without leaving Happy (requires server support)"
+                    icon={<Ionicons name="logo-github" size={29} color="#24292F" />}
+                    rightElement={<Switch value={devGithubIssuesEnabled} onValueChange={setDevGithubIssuesEnabled} />}
                     showChevron={false}
                 />
                 <Item

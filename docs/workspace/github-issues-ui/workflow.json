@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "github-issues-ui",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Configure a test GitHub App, apply migration, and run live phone/tablet/desktop OAuth and destructive-action smoke checks",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/github-issues-ui.md; docs/tasks/github-issues-ui-tasks.md",
+      "updated": "2026-08-08T12:21:16+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D4 accepted in decisions.md; authorization recorded in ADR 0005",
+      "updated": "2026-08-08T12:21:17+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature-local app and server modules with six-operation Happy DTO seam; guarded host integration; Project Todos unchanged",
+      "updated": "2026-08-08T12:21:17+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "GitHub tokens remain encrypted server-only; fine-grained selected-repository permissions; permanent delete capability-gated; client and server switches default off",
+      "updated": "2026-08-08T12:21:17+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Feature-gated app/server MVP implemented with encrypted GitHub App token refresh, normalized Issue adapter, cross-platform entries, and targeted tests",
+      "updated": "2026-08-08T12:51:20+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "App/server typechecks and 20 targeted tests pass; full app suite passes; full server suite 102/103 with unrelated attachment local-download failure reproduced alone; live GitHub App/device E2E unavailable",
+      "updated": "2026-08-08T12:51:21+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed against spec, task, ADR, security, compatibility, rollback, tests, and feature isolation; no blocking finding remains",
+      "updated": "2026-08-08T12:51:48+00:00"
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "Implementation complete; live GitHub App migration/OAuth/device smoke and one unrelated server test remain explicit gaps",
+      "updated": "2026-08-08T12:52:24+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-08T11:38:37+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-08T12:21:16+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/github-issues-ui.md; docs/tasks/github-issues-ui-tasks.md"
+    },
+    {
+      "at": "2026-08-08T12:21:17+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 accepted in decisions.md; authorization recorded in ADR 0005"
+    },
+    {
+      "at": "2026-08-08T12:21:17+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "GitHub tokens remain encrypted server-only; fine-grained selected-repository permissions; permanent delete capability-gated; client and server switches default off"
+    },
+    {
+      "at": "2026-08-08T12:21:17+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature-local app and server modules with six-operation Happy DTO seam; guarded host integration; Project Todos unchanged"
+    },
+    {
+      "at": "2026-08-08T12:21:17+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement server Issue adapter and guarded cross-platform client vertical slices"
+    },
+    {
+      "at": "2026-08-08T12:51:20+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Feature-gated app/server MVP implemented with encrypted GitHub App token refresh, normalized Issue adapter, cross-platform entries, and targeted tests"
+    },
+    {
+      "at": "2026-08-08T12:51:20+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final checks, whole-diff review, staged workflow CI, and archive"
+    },
+    {
+      "at": "2026-08-08T12:51:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "App/server typechecks and 20 targeted tests pass; full app suite passes; full server suite 102/103 with unrelated attachment local-download failure reproduced alone; live GitHub App/device E2E unavailable"
+    },
+    {
+      "at": "2026-08-08T12:51:48+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed against spec, task, ADR, security, compatibility, rollback, tests, and feature isolation; no blocking finding remains"
+    },
+    {
+      "at": "2026-08-08T12:51:48+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize records, archive with commit pending, and run staged workflow CI"
+    },
+    {
+      "at": "2026-08-08T12:52:24+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "Implementation complete; live GitHub App migration/OAuth/device smoke and one unrelated server test remain explicit gaps"
+    },
+    {
+      "at": "2026-08-08T12:52:32+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented default-off Happy GitHub Issues MVP with fine-grained GitHub App authorization, server proxy, token refresh, cross-platform UI, and contextual session routing; commit: pending; follow-up: Configure a test GitHub App, apply migration, and run live phone/tablet/desktop OAuth and destructive-action smoke checks"
+    }
+  ],
+  "updated": "2026-08-08T12:52:32+00:00",
+  "archivedAt": "2026-08-08T12:52:32+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented default-off Happy GitHub Issues MVP with fine-grained GitHub App authorization, server proxy, token refresh, cross-platform UI, and contextual session routing",
+  "archiveFollowUp": "Configure a test GitHub App, apply migration, and run live phone/tablet/desktop OAuth and destructive-action smoke checks"
+}

@@ -16,6 +16,7 @@ import {
 } from '@/components/modelModeOptions';
 import { getSuggestions } from '@/components/autocomplete/suggestions';
 import { ChatHeaderView } from '@/components/ChatHeaderView';
+import { GithubIssuesButton } from '@/components/GithubIssuesButton';
 import { ChatList } from '@/components/ChatList';
 import { Deferred } from '@/components/Deferred';
 import { EmptyMessages } from '@/components/EmptyMessages';
@@ -363,18 +364,21 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     }, [session, isDataReady, showSessionModel]);
     const headerRight = session && deviceType === 'phone' && Platform.OS !== 'web'
         ? (
-            <Pressable
-                onPress={() => router.push(`/session/${sessionId}/info`)}
-                hitSlop={10}
-            >
-                <Avatar
-                    id={getSessionAvatarId(session)}
-                    size={28}
-                    monochrome={!headerProps.isConnected}
-                    flavor={session.metadata?.flavor}
-                    clientId={session.metadata?.client?.id}
-                />
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <GithubIssuesButton tintColor={theme.colors.header.tint} sessionId={sessionId} cwd={session.metadata?.path} />
+                <Pressable
+                    onPress={() => router.push(`/session/${sessionId}/info`)}
+                    hitSlop={10}
+                >
+                    <Avatar
+                        id={getSessionAvatarId(session)}
+                        size={28}
+                        monochrome={!headerProps.isConnected}
+                        flavor={session.metadata?.flavor}
+                        clientId={session.metadata?.client?.id}
+                    />
+                </Pressable>
+            </View>
         )
         : null;
 

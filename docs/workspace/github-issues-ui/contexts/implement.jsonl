@@ -1,0 +1,11 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/github-issues-ui.md","reason":"Accepted product, security, API, and isolation contract"}
+{"path":"packages/happy-app/sources/sync/apiGithub.ts","reason":"Current client GitHub connection boundary"}
+{"path":"packages/happy-server/sources/app/api/routes/connectRoutes.ts","reason":"Current authorization and token exchange boundary"}
+{"path":"packages/happy-server/sources/app/github/githubConnect.ts","reason":"Encrypted GitHub credential persistence"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Small desktop and tablet navigation seam"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Small session-context navigation seam"}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Device-local feature flag"}
+{"path":"packages/happy-app/sources/features/github-issues/githubIssuesApi.ts","reason":"Feature-owned client/server DTO seam"}
+{"path":"packages/happy-server/sources/app/github/githubIssuesService.ts","reason":"Feature-owned GitHub Issue domain adapter"}
+{"path":"packages/happy-server/sources/app/api/routes/githubIssuesRoutes.ts","reason":"Authenticated server feature boundary"}
