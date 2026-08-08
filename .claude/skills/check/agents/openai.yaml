@@ -1,0 +1,4 @@
+interface:
+  display_name: "Check Acceptance"
+  short_description: "Verify contracts with deterministic evidence"
+  default_prompt: "Use $check to verify the active work against acceptance criteria and evidence."

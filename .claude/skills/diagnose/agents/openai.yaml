@@ -1,0 +1,4 @@
+interface:
+  display_name: "Diagnose Failure"
+  short_description: "Find root cause through evidence and falsifiable hypotheses"
+  default_prompt: "Use $diagnose to investigate this failure before changing code."

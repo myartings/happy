@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"AGENTS.md","reason":"Happy-owned rules plus the personal feature lifecycle"}
+{"path":".ai/project.json","reason":"Happy commands, protection rules, risk triggers, and tracker target"}
+{"path":".ai/template-adoption.json","reason":"Allowlisted workflow-core adoption boundary"}
+{"path":"scripts/validate-happy-workflow.py","reason":"Deterministic enforcement for the selective adoption"}
+{"path":"docs/specs/workflow-adoption.md","reason":"Accepted bootstrap behavior and evidence contract"}
+{"path":"docs/tasks/workflow-adoption-tasks.md","reason":"Bounded implementation slices"}

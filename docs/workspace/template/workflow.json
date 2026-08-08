@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "slug": "<feature>",
+  "intensity": "feature",
+  "phase": "planning",
+  "nextAction": "Resolve scope and acceptance criteria",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {"status": "pending", "evidence": "", "updated": "<date>"},
+    "decisions": {"status": "pending", "evidence": "", "updated": "<date>"},
+    "scoping": {"status": "pending", "evidence": "", "updated": "<date>"},
+    "risk": {"status": "pending", "evidence": "", "updated": "<date>"},
+    "implementation": {"status": "pending", "evidence": "", "updated": "<date>"},
+    "check": {"status": "pending", "evidence": "", "updated": "<date>"},
+    "review": {"status": "pending", "evidence": "", "updated": "<date>"},
+    "finish": {"status": "pending", "evidence": "", "updated": "<date>"}
+  },
+  "history": [],
+  "updated": "<date>"
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "source": "../ai-coding-template",
+  "policy": "selective-workflow-core",
+  "include": [
+    ".agents/skills",
+    ".claude/skills",
+    "docs/adr/0003-mandatory-formal-project-lifecycle.md",
+    "docs/adr/0004-commit-bound-workflow-enforcement.md",
+    "docs/tasks/template.md",
+    "docs/workflow",
+    "docs/workflow.md",
+    "docs/workspace/template",
+    "scripts/test-workflow.py",
+    "scripts/test-workflow-ci.py",
+    "scripts/workflow-audit.py",
+    "scripts/workflow-check.py",
+    "scripts/workflow-ci.py",
+    "scripts/workflow-state.py"
+  ],
+  "preserve": [
+    "AGENTS.md",
+    ".ai/project.json",
+    "scripts/workflow-ci.py",
+    ".agents/agents",
+    ".agents/skills/agent-browser",
+    ".agents/skills/control-flow",
+    ".agents/skills/dev",
+    ".agents/skills/maintain",
+    ".agents/skills/metrics-graphana",
+    ".agents/skills/office-hours",
+    ".agents/skills/release",
+    ".agents/skills/sessions",
+    ".agents/skills/terminal-emulator",
+    ".claude/settings.json",
+    ".claude/launch.json"
+  ],
+  "requiredProjectChecks": []
+}

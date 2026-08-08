@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tracker Workflow"
+  short_description: "Create, triage, link, and finish external work items safely"
+  default_prompt: "Use $tracker-workflow to operate the configured project tracker safely."

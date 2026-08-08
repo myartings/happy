@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batch Plan"
+  short_description: "Plan batches, worktrees, agents, dependencies, and integration"
+  default_prompt: "Use $batch-plan to design safe isolated or delegated execution."
