@@ -5,6 +5,32 @@ export type MessageTargetAction =
     | { type: 'not-found' }
     | { type: 'scroll'; index: number; messageId: string };
 
+export type MessageTargetRequest = {
+    messageId: string;
+    localId?: string;
+    createdAt?: number;
+    revision: number;
+    requestKey: string;
+    renderAll: boolean;
+};
+
+export function createMessageTargetRequest(
+    messageId: string,
+    localId: string | null | undefined,
+    createdAt: number | undefined,
+    previousRevision: number,
+): MessageTargetRequest {
+    const revision = previousRevision + 1;
+    return {
+        messageId,
+        ...(localId ? { localId } : {}),
+        ...(createdAt !== undefined ? { createdAt } : {}),
+        revision,
+        requestKey: `prompt:${revision}`,
+        renderAll: true,
+    };
+}
+
 export function getMessageTargetNativeId(messageId: string): string {
     return `message-target-${messageId}`;
 }

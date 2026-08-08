@@ -15,7 +15,7 @@ import { Octicons } from '@expo/vector-icons';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { resolveControlMode } from '@/sync/controlHandoff';
 import { usesControlledSessionUi } from '@/sync/rig';
-import { getMessageTargetNativeId, resolveMessageTargetAction } from '@/utils/messageTarget';
+import { createMessageTargetRequest, getMessageTargetNativeId, resolveMessageTargetAction, type MessageTargetRequest } from '@/utils/messageTarget';
 import { SessionPromptHistoryNavigator } from './SessionPromptHistoryNavigator';
 import { resolveVisiblePromptId } from '@/utils/sessionPromptHistory';
 
@@ -124,10 +124,11 @@ const ChatListInternal = React.memo((props: {
     const { theme } = useUnistyles();
     const promptHistoryNavigatorEnabled = useLocalSetting('devPromptHistoryNavigatorEnabled');
     const flatListRef = React.useRef<FlatList>(null);
-    const handledTargetMessageRef = React.useRef<string | null>(null);
+    const handledTargetRequestRef = React.useRef<string | null>(null);
     const targetIndexRef = React.useRef<number | null>(null);
     const targetMessageIdRef = React.useRef<string | null>(null);
     const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
+    const [localMessageTarget, setLocalMessageTarget] = React.useState<MessageTargetRequest | null>(null);
     const [activePromptId, setActivePromptId] = React.useState<string | null>(null);
     const [showScrollButton, setShowScrollButton] = React.useState(false);
     const [handoffListRevision, setHandoffListRevision] = React.useState(0);
@@ -177,6 +178,14 @@ const ChatListInternal = React.memo((props: {
         [collapseCurrentTurn],
     );
     const displayItems = useGroupedMessages(props.messages, groupToolCalls, groupingOptions);
+    const targetMessageId = localMessageTarget ? localMessageTarget.messageId : props.targetMessageId;
+    const targetMessageLocalId = localMessageTarget ? localMessageTarget.localId : props.targetMessageLocalId;
+    const targetMessageCreatedAt = localMessageTarget ? localMessageTarget.createdAt : props.targetMessageCreatedAt;
+    const routeTargetKey = props.targetMessageId
+        ? `route:${props.targetMessageId}:${props.targetMessageLocalId ?? ''}:${props.targetMessageCreatedAt ?? ''}`
+        : null;
+    const targetRequestKey = localMessageTarget?.requestKey ?? routeTargetKey;
+    const renderAllForTarget = localMessageTarget ? localMessageTarget.renderAll : !!props.targetMessageId;
     const targetAction = React.useMemo(
         () => resolveMessageTargetAction(
             displayItems.map((item) => ({
@@ -184,13 +193,13 @@ const ChatListInternal = React.memo((props: {
                 localId: item.type === 'message' && 'localId' in item.message ? item.message.localId : null,
                 createdAt: item.type === 'message' ? item.message.createdAt : null,
             })),
-            props.targetMessageId,
-            props.targetMessageLocalId,
-            props.targetMessageCreatedAt,
+            targetMessageId,
+            targetMessageLocalId,
+            targetMessageCreatedAt,
             props.hasMoreOlder,
             props.isLoadingOlder,
         ),
-        [displayItems, props.hasMoreOlder, props.isLoadingOlder, props.targetMessageId, props.targetMessageLocalId, props.targetMessageCreatedAt],
+        [displayItems, props.hasMoreOlder, props.isLoadingOlder, targetMessageId, targetMessageLocalId, targetMessageCreatedAt],
     );
     targetIndexRef.current = targetAction.type === 'scroll' ? targetAction.index : null;
     targetMessageIdRef.current = targetAction.type === 'scroll' ? targetAction.messageId : null;
@@ -355,19 +364,47 @@ const ChatListInternal = React.memo((props: {
         props.onBottomDockVisibilityChange(visible);
     }, [props.onBottomDockVisibilityChange]);
 
+    const handleSelectPrompt = useCallback((messageId: string, localId?: string | null, createdAt?: number) => {
+        setLocalMessageTarget((current) => createMessageTargetRequest(
+            messageId,
+            localId,
+            createdAt,
+            current?.revision ?? 0,
+        ));
+    }, []);
+
     React.useEffect(() => {
-        const targetMessageId = props.targetMessageId;
-        if (!targetMessageId || handledTargetMessageRef.current === targetMessageId) return;
+        setLocalMessageTarget(null);
+        handledTargetRequestRef.current = null;
+    }, [props.sessionId]);
+
+    const previousRouteTargetKeyRef = React.useRef(routeTargetKey);
+    React.useEffect(() => {
+        if (previousRouteTargetKeyRef.current === routeTargetKey) return;
+        previousRouteTargetKeyRef.current = routeTargetKey;
+        setLocalMessageTarget(null);
+        handledTargetRequestRef.current = null;
+    }, [routeTargetKey]);
+
+    React.useEffect(() => {
+        if (!targetMessageId || !targetRequestKey || handledTargetRequestRef.current === targetRequestKey) return;
 
         if (targetAction.type === 'load-older') {
             void sync.loadOlderMessages(props.sessionId);
+            return;
+        }
+        if (targetAction.type === 'not-found' && targetRequestKey.startsWith('prompt:')) {
+            handledTargetRequestRef.current = targetRequestKey;
+            setLocalMessageTarget((current) => current?.requestKey === targetRequestKey
+                ? { ...current, renderAll: false }
+                : current);
             return;
         }
         if (targetAction.type !== 'scroll') {
             return;
         }
 
-        handledTargetMessageRef.current = targetMessageId;
+        handledTargetRequestRef.current = targetRequestKey;
         setHighlightedMessageId(targetAction.messageId);
         setBottomDockVisibility(false);
         const scrollTimer = setTimeout(() => {
@@ -382,12 +419,17 @@ const ChatListInternal = React.memo((props: {
         }, 50);
         const highlightTimer = setTimeout(() => {
             setHighlightedMessageId((current) => current === targetAction.messageId ? null : current);
+            if (targetRequestKey.startsWith('prompt:')) {
+                setLocalMessageTarget((current) => current?.requestKey === targetRequestKey
+                    ? { ...current, renderAll: false }
+                    : current);
+            }
         }, 3000);
         return () => {
             clearTimeout(scrollTimer);
             clearTimeout(highlightTimer);
         };
-    }, [props.sessionId, props.targetMessageId, setBottomDockVisibility, targetAction]);
+    }, [props.sessionId, setBottomDockVisibility, targetAction, targetMessageId, targetRequestKey]);
 
     const updateBottomDockVisibility = useCallback((offsetY: number) => {
         // Treat this as a user-scroll state. Hysteresis avoids toggling while
@@ -526,13 +568,13 @@ const ChatListInternal = React.memo((props: {
                 ref={flatListRef}
                 data={displayItems}
                 inverted={true}
-                initialNumToRender={props.targetMessageId ? 500 : 10}
-                maxToRenderPerBatch={props.targetMessageId ? 500 : 10}
-                updateCellsBatchingPeriod={props.targetMessageId ? 0 : 50}
-                windowSize={props.targetMessageId ? 101 : 21}
-                removeClippedSubviews={props.targetMessageId ? false : undefined}
+                initialNumToRender={renderAllForTarget ? 500 : 10}
+                maxToRenderPerBatch={renderAllForTarget ? 500 : 10}
+                updateCellsBatchingPeriod={renderAllForTarget ? 0 : 50}
+                windowSize={renderAllForTarget ? 101 : 21}
+                removeClippedSubviews={renderAllForTarget ? false : undefined}
                 keyExtractor={keyExtractor}
-                maintainVisibleContentPosition={props.targetMessageId ? undefined : {
+                maintainVisibleContentPosition={renderAllForTarget ? undefined : {
                     // Anchor on the second-newest message (index 1), not the
                     // newest. The newest slot (index 0) gets a brand-new item
                     // each agent token, which would otherwise destabilise the
@@ -601,6 +643,7 @@ const ChatListInternal = React.memo((props: {
                     loadedMessages={props.messages}
                     activePromptId={activePromptId}
                     bottomContentInset={props.bottomContentInset}
+                    onSelectPrompt={handleSelectPrompt}
                 />
             ) : null}
             {showScrollButton && (

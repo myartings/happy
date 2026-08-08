@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { getMessageTargetNativeId, resolveMessageTargetAction } from './messageTarget';
+import { createMessageTargetRequest, getMessageTargetNativeId, resolveMessageTargetAction } from './messageTarget';
+
+describe('createMessageTargetRequest', () => {
+    it('assigns a new request key when the same prompt is selected repeatedly', () => {
+        const first = createMessageTargetRequest('target', 'local-target', 123, 0);
+        const second = createMessageTargetRequest('target', 'local-target', 123, first.revision);
+
+        expect(first).toMatchObject({ messageId: 'target', localId: 'local-target', createdAt: 123, revision: 1, renderAll: true });
+        expect(second).toMatchObject({ messageId: 'target', localId: 'local-target', createdAt: 123, revision: 2, renderAll: true });
+        expect(second.requestKey).not.toBe(first.requestKey);
+    });
+});
 
 describe('resolveMessageTargetAction', () => {
     const items = [{ id: 'newest' }, { id: 'target', localId: 'local-target', createdAt: 123 }, { id: 'oldest' }];

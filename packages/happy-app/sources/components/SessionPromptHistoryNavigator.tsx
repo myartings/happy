@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Typography } from '@/constants/Typography';
-import { useNavigateToSessionMessage } from '@/hooks/useNavigateToSession';
 import type { PromptHistoryItem } from '@/sync/promptHistory';
 import { sync } from '@/sync/sync';
 import type { Message } from '@/sync/typesMessage';
@@ -37,11 +36,11 @@ export const SessionPromptHistoryNavigator = React.memo(function SessionPromptHi
     loadedMessages: readonly Message[];
     activePromptId: string | null;
     bottomContentInset?: number;
+    onSelectPrompt: (messageId: string, localId?: string | null, createdAt?: number) => void;
 }) {
     const { theme } = useUnistyles();
     const safeArea = useSafeAreaInsets();
     const { width: viewportWidth } = useWindowDimensions();
-    const navigateToMessage = useNavigateToSessionMessage();
     const [history, setHistory] = React.useState<PromptHistoryState>({
         fetched: [],
         hasMore: false,
@@ -130,13 +129,12 @@ export const SessionPromptHistoryNavigator = React.memo(function SessionPromptHi
 
     const selectPrompt = React.useCallback((prompt: PromptHistoryItem) => {
         setMobileOpen(false);
-        navigateToMessage(
-            prompt.sessionId,
+        props.onSelectPrompt(
             prompt.id,
             prompt.localId,
             prompt.createdAt,
         );
-    }, [navigateToMessage]);
+    }, [props.onSelectPrompt]);
 
     if (prompts.length === 0 && !isLoading) return null;
 
