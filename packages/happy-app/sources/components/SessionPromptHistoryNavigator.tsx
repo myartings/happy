@@ -444,7 +444,7 @@ const styles = StyleSheet.create((theme) => ({
         position: 'absolute',
         right: 8,
         top: '50%',
-        width: 36,
+        width: 48,
         alignItems: 'center',
         zIndex: 20,
     },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create((theme) => ({
         opacity: 0,
     },
     desktopRailTrack: {
-        width: 32,
+        width: 44,
         marginVertical: 3,
         outlineStyle: 'none',
     } as any,
@@ -481,7 +481,7 @@ const styles = StyleSheet.create((theme) => ({
     },
     desktopPreview: {
         position: 'absolute',
-        right: 32,
+        right: 48,
         width: 300,
         minHeight: 72,
         paddingHorizontal: 14,

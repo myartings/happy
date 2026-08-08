@@ -4,9 +4,9 @@ import type { Message } from '@/sync/typesMessage';
 
 const MAX_VISIBLE_PROMPT_RAIL_TICKS = 20;
 const PROMPT_RAIL_MIN_TRACK_HEIGHT = 24;
-const PROMPT_RAIL_TICK_GAP = 4;
+const PROMPT_RAIL_TICK_GAP = 20;
 const PROMPT_RAIL_CHROME_HEIGHT = 58;
-const PROMPT_RAIL_TICK_WIDTHS = [12, 20, 28] as const;
+const PROMPT_RAIL_TICK_WIDTHS = [16, 28, 40] as const;
 
 export function getSampledPromptIndices(count: number): number[] {
     if (count <= 0) return [];

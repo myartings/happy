@@ -24,10 +24,10 @@ function item(message: Message): DisplayItem {
 }
 
 describe('session prompt history', () => {
-    it('keeps the desktop prompt rail compact with tightly spaced sampled ticks', () => {
-        expect(getPromptRailMetrics(5)).toEqual({ trackHeight: 24, totalHeight: 82 });
-        expect(getPromptRailMetrics(10)).toEqual({ trackHeight: 36, totalHeight: 94 });
-        expect(getPromptRailMetrics(100)).toEqual({ trackHeight: 76, totalHeight: 134 });
+    it('matches the taller Grok-like rail spacing while sampling long histories', () => {
+        expect(getPromptRailMetrics(5)).toEqual({ trackHeight: 80, totalHeight: 138 });
+        expect(getPromptRailMetrics(10)).toEqual({ trackHeight: 180, totalHeight: 238 });
+        expect(getPromptRailMetrics(100)).toEqual({ trackHeight: 380, totalHeight: 438 });
 
         const sampled = getSampledPromptIndices(100);
         expect(sampled).toHaveLength(20);
@@ -38,8 +38,8 @@ describe('session prompt history', () => {
     it('uses Grok-like short, medium, and major tick lengths on the desktop rail', () => {
         expect([0, 1, 2, 3, 4, 5].map((index) => (
             getPromptRailTickWidth(index, 6, false)
-        ))).toEqual([12, 20, 28, 12, 20, 28]);
-        expect(getPromptRailTickWidth(1, 6, true)).toBe(28);
+        ))).toEqual([16, 28, 40, 16, 28, 40]);
+        expect(getPromptRailTickWidth(1, 6, true)).toBe(40);
     });
 
     it('merges fetched prompts with currently loaded user messages chronologically', () => {
