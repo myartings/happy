@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":".ai/template-adoption.json","reason":"Forbidden and allowed template surfaces"}
+{"path":"scripts/validate-happy-workflow.py","reason":"Selective adoption validator"}
+{"path":"scripts/test-workflow.py","reason":"Workflow state-machine behavior tests"}
+{"path":"scripts/test-workflow-core.py","reason":"Happy adapter excluding two template-maintenance-only tests"}
+{"path":"scripts/test-workflow-ci.py","reason":"Commit-bound workflow enforcement tests"}
+{"path":"docs/workspace/workflow-adoption/validation.md","reason":"Evidence ledger for exact check outcomes"}

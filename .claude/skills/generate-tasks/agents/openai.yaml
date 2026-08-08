@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate Tasks"
+  short_description: "Break an accepted specification into reviewable tasks"
+  default_prompt: "Use $generate-tasks to create a dependency-aware implementation task list."

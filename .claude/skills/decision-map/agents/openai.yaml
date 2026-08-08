@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map Decisions"
+  short_description: "Resolve open decisions before committing to a plan"
+  default_prompt: "Use $decision-map to identify and resolve decisions blocking this work."

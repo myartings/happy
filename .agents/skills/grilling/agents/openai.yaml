@@ -1,0 +1,4 @@
+interface:
+  display_name: "Focused Grilling"
+  short_description: "Resolve one material decision at a time before building"
+  default_prompt: "Use $grilling to stress-test this plan one decision at a time and recommend a default for each choice."

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "name": "Happy",
+  "profile": "typescript-monorepo",
+  "maturity": "production",
+  "commands": {
+    "setup": [
+      "pnpm install --frozen-lockfile"
+    ],
+    "format": [],
+    "lint": [],
+    "typecheck": [
+      "pnpm --filter happy-app typecheck",
+      "pnpm --filter happy-server typecheck"
+    ],
+    "test": [
+      "pnpm --filter happy-app exec vitest run",
+      "pnpm --filter happy-server test"
+    ],
+    "build": [],
+    "check": [
+      "python3 scripts/validate-happy-workflow.py",
+      "python3 scripts/test-workflow-core.py",
+      "python3 scripts/test-workflow-ci.py",
+      "python3 scripts/workflow-audit.py --strict"
+    ]
+  },
+  "tracker": {
+    "provider": "github",
+    "target": "myartings/happy",
+    "categories": {
+      "bug": "bug",
+      "enhancement": "enhancement"
+    },
+    "states": {
+      "needsTriage": "needs-triage",
+      "needsInfo": "needs-info",
+      "readyForAgent": "ready-for-agent",
+      "readyForHuman": "ready-for-human",
+      "wontfix": "wontfix"
+    }
+  },
+  "protectedPaths": [
+    ".env",
+    ".env.*",
+    "**/secrets/**",
+    "**/credentials/**",
+    ".git/**",
+    "packages/happy-app/android/**",
+    "packages/happy-app/ios/**"
+  ],
+  "generatedPaths": [
+    "node_modules/**",
+    "packages/*/node_modules/**",
+    "packages/happy-app/dist/**",
+    "packages/happy-app/.expo/**",
+    "packages/happy-app/src-tauri/target/**",
+    "coverage/**"
+  ],
+  "riskTriggers": [
+    "authentication",
+    "authorization",
+    "GitHub permissions",
+    "data migration",
+    "privacy",
+    "security",
+    "production deployment",
+    "destructive operation",
+    "session protocol",
+    "cross-device synchronization"
+  ]
+}

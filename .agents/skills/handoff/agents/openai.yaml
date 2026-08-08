@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Handoff"
+  short_description: "Write a durable handoff for another session or person"
+  default_prompt: "Use $handoff to capture current state, evidence, blockers, and next steps."

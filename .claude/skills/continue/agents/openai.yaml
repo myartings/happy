@@ -1,0 +1,4 @@
+interface:
+  display_name: "Continue Work"
+  short_description: "Advance the active task through the correct workflow gate"
+  default_prompt: "Use $continue to advance the active repository workflow safely."

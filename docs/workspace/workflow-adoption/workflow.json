@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "slug": "workflow-adoption",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Create the GitHub Issue feature specification on a personal branch from dev",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/workflow-adoption.md; docs/tasks/workflow-adoption-tasks.md",
+      "updated": "2026-08-08T08:18:05+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "Selective adoption, origin/dev branch, and bootstrap validation decisions recorded in decisions.md",
+      "updated": "2026-08-08T08:18:05+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Isolated worktree, allowlisted template subset, preserved Happy files, and deterministic seams recorded",
+      "updated": "2026-08-08T08:18:05+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Workflow documentation and local Python enforcement only; no Happy product behavior, credentials, dependencies, or external mutations",
+      "updated": "2026-08-08T08:18:05+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Selective manifest applied with 0-file dry-run drift; Happy validator passed; original rules and skills preserved",
+      "updated": "2026-08-08T08:18:23+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-08T08:22:24+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review confirms an additive workflow-only surface; original main clean at upstream/main; selective sync drift zero; no product, CI, dependency, or release changes",
+      "updated": "2026-08-08T08:24:30+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review and complete acceptance coverage document verification, whole-diff boundary, rollback, promoted rules, and Issue-feature follow-up",
+      "updated": "2026-08-08T08:25:28+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-08T08:17:02+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-08T08:18:05+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/workflow-adoption.md; docs/tasks/workflow-adoption-tasks.md"
+    },
+    {
+      "at": "2026-08-08T08:18:05+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "Selective adoption, origin/dev branch, and bootstrap validation decisions recorded in decisions.md"
+    },
+    {
+      "at": "2026-08-08T08:18:05+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Workflow documentation and local Python enforcement only; no Happy product behavior, credentials, dependencies, or external mutations"
+    },
+    {
+      "at": "2026-08-08T08:18:05+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Isolated worktree, allowlisted template subset, preserved Happy files, and deterministic seams recorded"
+    },
+    {
+      "at": "2026-08-08T08:18:06+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Install and validate the selective Happy workflow core"
+    },
+    {
+      "at": "2026-08-08T08:18:23+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Selective manifest applied with 0-file dry-run drift; Happy validator passed; original rules and skills preserved"
+    },
+    {
+      "at": "2026-08-08T08:18:23+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run workflow-core behavior tests and strict audit in Linux CI-compatible environment"
+    },
+    {
+      "at": "2026-08-08T08:18:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "4 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-08T08:19:46+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "4 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-08T08:22:24+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-08T08:24:30+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review confirms an additive workflow-only surface; original main clean at upstream/main; selective sync drift zero; no product, CI, dependency, or release changes"
+    },
+    {
+      "at": "2026-08-08T08:24:40+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize records, archive with commit pending, and run staged workflow CI"
+    },
+    {
+      "at": "2026-08-08T08:25:28+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review and complete acceptance coverage document verification, whole-diff boundary, rollback, promoted rules, and Issue-feature follow-up"
+    },
+    {
+      "at": "2026-08-08T08:25:35+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Selective ai-coding-template workflow core adopted for Happy personal feature development; commit: pending; follow-up: Create the GitHub Issue feature specification on a personal branch from dev"
+    }
+  ],
+  "updated": "2026-08-08T08:25:35+00:00",
+  "archivedAt": "2026-08-08T08:25:35+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Selective ai-coding-template workflow core adopted for Happy personal feature development",
+  "archiveFollowUp": "Create the GitHub Issue feature specification on a personal branch from dev"
+}

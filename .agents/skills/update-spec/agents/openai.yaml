@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Project Guidance"
+  short_description: "Promote reusable learning into durable project guidance"
+  default_prompt: "Use $update-spec to capture this reusable project learning."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start Work"
+  short_description: "Resume from repository state and choose the next action"
+  default_prompt: "Use $start to inspect repository state and produce a concise resume brief."

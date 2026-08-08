@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Driven Development"
+  short_description: "Develop logic through a red-green-refactor feedback loop"
+  default_prompt: "Use $tdd to implement this behavior with focused tests first."

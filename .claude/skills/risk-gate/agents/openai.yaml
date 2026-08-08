@@ -1,0 +1,4 @@
+interface:
+  display_name: "Assess Risk"
+  short_description: "Identify high-consequence changes and required controls"
+  default_prompt: "Use $risk-gate to assess this change and define required safeguards."

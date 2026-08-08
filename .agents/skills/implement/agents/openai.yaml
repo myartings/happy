@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement Work"
+  short_description: "Build the smallest accepted slice and validate incrementally"
+  default_prompt: "Use $implement to implement the current accepted task slice."
