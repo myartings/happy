@@ -20,7 +20,7 @@ const easProjectId = isPersonal
     : "4558dd3d-cd5a-47cd-bad9-e591a241cc06";
 const expoOwner = isPersonal ? process.env.EXPO_OWNER : "bulkacorp";
 const updatesUrl = isPersonal
-    ? process.env.EXPO_UPDATES_URL
+    ? (process.env.EXPO_UPDATES_URL || (easProjectId ? `https://u.expo.dev/${easProjectId}` : undefined))
     : "https://u.expo.dev/4558dd3d-cd5a-47cd-bad9-e591a241cc06";
 const googleServicesFile = isPersonal
     ? process.env.GOOGLE_SERVICES_FILE
@@ -73,9 +73,9 @@ const buildMetadata = loadBuildMetadata();
 export default {
     expo: {
         name,
-        slug: "happy",
+        slug: isPersonal ? "happy-personal" : "happy",
         version: "1.7.0",
-        runtimeVersion: "21",
+        runtimeVersion: isPersonal ? { policy: "appVersion" } : "21",
         orientation: "default",
         icon: "./sources/assets/images/icon.png",
         scheme,

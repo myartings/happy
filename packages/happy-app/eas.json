@@ -53,6 +53,8 @@
     "personal": {
       "autoIncrement": true,
       "distribution": "internal",
+      "channel": "personal",
+      "environment": "production",
       "android": {
         "buildType": "apk"
       },
