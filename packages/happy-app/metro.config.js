@@ -6,6 +6,21 @@ const config = getDefaultConfig(__dirname, {
   isCSSEnabled: true,
 });
 
+// Keep workspace packages resolvable when Expo's automatic workspace-root
+// mode is disabled (required by native release bundling on Windows).
+const workspaceNodeModules = path.resolve(__dirname, '../../node_modules');
+const happyWireWorkspace = path.resolve(__dirname, '../happy-wire');
+config.watchFolders = Array.from(new Set([
+  ...(config.watchFolders ?? []),
+  workspaceNodeModules,
+  happyWireWorkspace,
+]));
+config.resolver.nodeModulesPaths = Array.from(new Set([
+  ...(config.resolver.nodeModulesPaths ?? []),
+  path.resolve(__dirname, 'node_modules'),
+  workspaceNodeModules,
+]));
+
 // Add support for .wasm files (required by Skia for all platforms)
 // Source: https://shopify.github.io/react-native-skia/docs/getting-started/installation/
 config.resolver.assetExts.push('wasm');

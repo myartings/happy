@@ -1,16 +1,30 @@
 const { execFileSync } = require('node:child_process');
 
 const variant = process.env.APP_ENV || 'development';
+const isPersonal = variant === 'personal';
 const name = {
     development: "Happy (dev)",
     preview: "Happy (preview)",
-    production: "Happy"
+    production: "Happy",
+    personal: "Happy Personal"
 }[variant];
 const bundleId = {
     development: "com.slopus.happy.dev",
     preview: "com.slopus.happy.preview",
-    production: "com.ex3ndr.happy"
+    production: "com.ex3ndr.happy",
+    personal: "com.myartings.happy"
 }[variant];
+const scheme = isPersonal ? "happy-personal" : "happy";
+const easProjectId = isPersonal
+    ? process.env.EXPO_PUBLIC_EAS_PROJECT_ID
+    : "4558dd3d-cd5a-47cd-bad9-e591a241cc06";
+const expoOwner = isPersonal ? process.env.EXPO_OWNER : "bulkacorp";
+const updatesUrl = isPersonal
+    ? (process.env.EXPO_UPDATES_URL || (easProjectId ? `https://u.expo.dev/${easProjectId}` : undefined))
+    : "https://u.expo.dev/4558dd3d-cd5a-47cd-bad9-e591a241cc06";
+const googleServicesFile = isPersonal
+    ? process.env.GOOGLE_SERVICES_FILE
+    : "./google-services.json";
 // const stagingElevenLabsAgentId = 'agent_7801k2c0r5hjfraa1kdbytpvs6yt';
 const productionElevenLabsAgentId = 'agent_6701k211syvvegba4kt7m68nxjmw';
 const elevenLabsAgentId = {
@@ -22,6 +36,7 @@ const consoleLoggingDefault = {
     development: true,
     preview: true,
     production: false,
+    personal: true,
 }[variant];
 
 function git(args) {
@@ -58,12 +73,12 @@ const buildMetadata = loadBuildMetadata();
 export default {
     expo: {
         name,
-        slug: "happy",
+        slug: isPersonal ? "happy-personal" : "happy",
         version: "1.7.0",
-        runtimeVersion: "21",
+        runtimeVersion: isPersonal ? { policy: "appVersion" } : "21",
         orientation: "default",
         icon: "./sources/assets/images/icon.png",
-        scheme: "happy",
+        scheme,
         userInterfaceStyle: "automatic",
         ios: {
             supportsTablet: true,
@@ -112,7 +127,7 @@ export default {
                 "android.permission.READ_MEDIA_VIDEO",
             ],
             package: bundleId,
-            googleServicesFile: "./google-services.json",
+            ...(googleServicesFile ? { googleServicesFile } : {}),
             intentFilters: variant === 'production' ? [
                 {
                     "action": "VIEW",
@@ -207,12 +222,14 @@ export default {
                 }
             ]
         ],
-        updates: {
-            url: "https://u.expo.dev/4558dd3d-cd5a-47cd-bad9-e591a241cc06",
-            requestHeaders: {
-                "expo-channel-name": "production"
+        updates: updatesUrl
+            ? {
+                url: updatesUrl,
+                requestHeaders: {
+                    "expo-channel-name": isPersonal ? "personal" : "production"
+                }
             }
-        },
+            : { enabled: false },
         experiments: {
             typedRoutes: true
         },
@@ -220,9 +237,7 @@ export default {
             router: {
                 root: "./sources/app"
             },
-            eas: {
-                projectId: "4558dd3d-cd5a-47cd-bad9-e591a241cc06"
-            },
+            ...(easProjectId ? { eas: { projectId: easProjectId } } : {}),
             app: {
                 postHogKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY,
                 revenueCatAppleKey: process.env.EXPO_PUBLIC_REVENUE_CAT_APPLE,
@@ -234,6 +249,6 @@ export default {
                 buildCommitTimestamp: buildMetadata.commitTimestamp,
             }
         },
-        owner: "bulkacorp"
+        ...(expoOwner ? { owner: expoOwner } : {})
     }
 };

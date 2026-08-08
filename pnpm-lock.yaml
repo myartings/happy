@@ -9,6 +9,11 @@ overrides:
   parse-path: 7.0.3
   '@types/parse-path': 7.0.3
 
+patchedDependencies:
+  '@more-tech/react-native-libsodium@1.5.6':
+    hash: 7eee5e7f24b062e44ec86a0c8394158e694237f70526a3df9b1b9a37781307db
+    path: patches/@more-tech__react-native-libsodium@1.5.6.patch
+
 importers:
 
   .: {}
@@ -460,7 +465,7 @@ importers:
         version: 0.14.4(react@19.2.0)
       '@more-tech/react-native-libsodium':
         specifier: ^1.5.5
-        version: 1.5.6(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.2.0))(react@19.2.0)
+        version: 1.5.6(patch_hash=7eee5e7f24b062e44ec86a0c8394158e694237f70526a3df9b1b9a37781307db)(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.2.0))(react@19.2.0)
       '@paralleldrive/cuid2':
         specifier: ^2.3.1
         version: 2.3.1
@@ -15502,7 +15507,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@more-tech/react-native-libsodium@1.5.6(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.2.0))(react@19.2.0)':
+  '@more-tech/react-native-libsodium@1.5.6(patch_hash=7eee5e7f24b062e44ec86a0c8394158e694237f70526a3df9b1b9a37781307db)(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@noble/hashes': 1.8.0
       '@types/libsodium-wrappers': 0.7.14

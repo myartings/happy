@@ -54,7 +54,10 @@
             "node-pty",
             "prisma",
             "sharp"
-        ]
+        ],
+        "patchedDependencies": {
+            "@more-tech/react-native-libsodium@1.5.6": "patches/@more-tech__react-native-libsodium@1.5.6.patch"
+        }
     },
     "packageManager": "pnpm@10.11.0"
 }

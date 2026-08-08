@@ -1,0 +1,107 @@
+name: Personal mobile OTA
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: Short description of the OTA update
+        required: true
+        type: string
+      platform:
+        description: Mobile platform to update
+        required: true
+        default: android
+        type: choice
+        options:
+          - android
+          - ios
+          - all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: personal-mobile-ota
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'myartings/happy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_ENV: personal
+      NODE_ENV: production
+      EXPO_NO_METRO_WORKSPACE_ROOT: '1'
+      EXPO_OWNER: ${{ vars.EXPO_OWNER }}
+      EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EXPO_PUBLIC_EAS_PROJECT_ID }}
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      OTA_MESSAGE: ${{ inputs.message }}
+      OTA_PLATFORM: ${{ inputs.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate OTA credentials
+        shell: bash
+        run: |
+          set -eu
+          test -n "$EXPO_TOKEN" || { echo "Missing GitHub secret: EXPO_TOKEN" >&2; exit 1; }
+          test -n "$EXPO_OWNER" || { echo "Missing GitHub variable: EXPO_OWNER" >&2; exit 1; }
+          test -n "$EXPO_PUBLIC_EAS_PROJECT_ID" || { echo "Missing GitHub variable: EXPO_PUBLIC_EAS_PROJECT_ID" >&2; exit 1; }
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace dependency
+        run: pnpm --filter @slopus/happy-wire --fail-if-no-match build
+
+      - name: TypeScript typecheck
+        run: pnpm --filter happy-app typecheck
+
+      - name: Validate personal Expo configuration
+        shell: bash
+        run: |
+          pnpm --filter happy-app exec expo config --type public --json > "$RUNNER_TEMP/personal-expo-config.json"
+          node - "$RUNNER_TEMP/personal-expo-config.json" <<'NODE'
+          const fs = require('node:fs');
+          const config = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const expectedProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID;
+          const expectedOwner = process.env.EXPO_OWNER;
+          const expectedUrl = `https://u.expo.dev/${expectedProjectId}`;
+          const failures = [];
+
+          if (config.name !== 'Happy Personal') failures.push('name');
+          if (config.slug !== 'happy-personal') failures.push('slug');
+          if (config.owner !== expectedOwner) failures.push('owner');
+          if (config.android?.package !== 'com.myartings.happy') failures.push('android.package');
+          if (config.ios?.bundleIdentifier !== 'com.myartings.happy') failures.push('ios.bundleIdentifier');
+          if (config.extra?.eas?.projectId !== expectedProjectId) failures.push('extra.eas.projectId');
+          if (config.updates?.url !== expectedUrl) failures.push('updates.url');
+          if (config.updates?.requestHeaders?.['expo-channel-name'] !== 'personal') failures.push('updates channel');
+          if (config.runtimeVersion?.policy !== 'appVersion') failures.push('runtimeVersion policy');
+
+          if (failures.length) {
+            console.error(`Invalid personal Expo configuration: ${failures.join(', ')}`);
+            process.exit(1);
+          }
+
+          console.log('Personal Expo configuration is valid.');
+          NODE
+
+      - name: Publish personal OTA
+        run: >-
+          pnpm --filter happy-app run ota:personal --
+          --platform "$OTA_PLATFORM"
+          --message "$OTA_MESSAGE"
+          --non-interactive
