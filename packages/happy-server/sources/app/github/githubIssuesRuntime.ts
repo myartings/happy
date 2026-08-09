@@ -32,7 +32,7 @@ export const githubTransport: GithubTransport = {
             const code = response.status === 401 ? 'github_auth_required'
                 : response.status === 429 || response.headers.get('x-ratelimit-remaining') === '0' ? 'github_rate_limited'
                     : response.status === 403 ? 'github_forbidden'
-                    : response.status === 404 ? 'github_not_found'
+                    : response.status === 404 || response.status === 410 ? 'github_not_found'
                         : 'github_request_failed';
             throw new GithubIssuesError(payload?.message ?? 'GitHub request failed', response.status, code);
         }
