@@ -67,9 +67,6 @@ export function connectRoutes(app: Fastify) {
         if (!clientId || !redirectUri) {
             return reply.code(400).send({ error: 'GitHub OAuth not configured' });
         }
-        if (process.env.HAPPY_GITHUB_ISSUES_ENABLED === 'true' && !process.env.GITHUB_APP_SLUG) {
-            return reply.code(400).send({ error: 'GitHub App not configured' });
-        }
 
         // Generate ephemeral state token (5 minutes TTL)
         const state = await auth.createGithubToken(request.userId);
@@ -78,11 +75,9 @@ export function connectRoutes(app: Fastify) {
         const params = new URLSearchParams({
             client_id: clientId,
             redirect_uri: redirectUri,
+            scope: 'read:user,user:email,read:org,codespace',
             state: state
         });
-        if (process.env.HAPPY_GITHUB_ISSUES_ENABLED !== 'true') {
-            params.set('scope', 'read:user,user:email,read:org,codespace');
-        }
 
         const url = `https://github.com/login/oauth/authorize?${params.toString()}`;
 
@@ -132,10 +127,6 @@ export function connectRoutes(app: Fastify) {
 
             const tokenResponseData = await tokenResponse.json() as {
                 access_token?: string;
-                refresh_token?: string;
-                expires_in?: number;
-                refresh_token_expires_in?: number;
-                scope?: string;
                 error?: string;
                 error_description?: string;
             };
@@ -162,13 +153,7 @@ export function connectRoutes(app: Fastify) {
 
             // Use the new githubConnect operation
             const ctx = Context.create(userId);
-            await githubConnect(ctx, userData, accessToken!, {
-                refreshToken: tokenResponseData.refresh_token,
-                expiresIn: tokenResponseData.expires_in,
-                refreshTokenExpiresIn: tokenResponseData.refresh_token_expires_in,
-                permissions: tokenResponseData.scope ? { scope: tokenResponseData.scope } : undefined,
-                authKind: process.env.HAPPY_GITHUB_ISSUES_ENABLED === 'true' && !!process.env.GITHUB_APP_SLUG ? 'github_app' : 'legacy',
-            });
+            await githubConnect(ctx, userData, accessToken!);
 
             // Redirect to app with success
             return reply.redirect(`https://app.happy.engineering?github=connected&user=${encodeURIComponent(userData.login)}`);

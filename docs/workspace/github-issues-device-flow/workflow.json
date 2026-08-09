@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "slug": "github-issues-device-flow",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Run mobile live acceptance, Issue-only disconnect/profile-isolation, dedicated official-profile regression coverage, and deferred schema cleanup after the acceptance interval",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/github-issues-device-flow.md defines 14 acceptance criteria and a verification matrix",
+      "updated": "2026-08-09T12:05:13+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/github-issues-device-flow/decisions.md resolves authentication, storage, platform, server, and migration decisions",
+      "updated": "2026-08-09T12:05:13+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/specs/github-issues-device-flow.md defines goals, non-goals, supported platforms, rollout slices, and server cleanup",
+      "updated": "2026-08-09T12:05:13+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "ADR 0006 and context.md identify token, Device Flow, platform, isolation, and migration risks with fail-closed mitigations",
+      "updated": "2026-08-09T12:05:14+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Direct Device Flow client, secure platform adapters, GitHub CRUD UI, and server proxy retirement implemented with 19 targeted tests",
+      "updated": "2026-08-09T13:45:55+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "App full suite 100/100 files and 1013/1013 tests; app/server typechecks and workflow checks pass; unrelated server attachment GET baseline failure recorded in validation.md",
+      "updated": "2026-08-09T16:21:18+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no feature blocker; finish.md records credential boundaries, rollback, and explicit mobile/isolation follow-ups",
+      "updated": "2026-08-09T16:22:09+00:00"
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "finish.md and validation.md record Windows live CRUD/persistence, green app suite/typechecks/workflow checks, unrelated server baseline failure, rollback, and accepted mobile/isolation follow-ups",
+      "updated": "2026-08-09T16:22:54+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T11:56:21+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T12:05:13+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/github-issues-device-flow.md defines 14 acceptance criteria and a verification matrix"
+    },
+    {
+      "at": "2026-08-09T12:05:13+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/github-issues-device-flow/decisions.md resolves authentication, storage, platform, server, and migration decisions"
+    },
+    {
+      "at": "2026-08-09T12:05:13+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/github-issues-device-flow.md defines goals, non-goals, supported platforms, rollout slices, and server cleanup"
+    },
+    {
+      "at": "2026-08-09T12:05:14+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "ADR 0006 and context.md identify token, Device Flow, platform, isolation, and migration risks with fail-closed mitigations"
+    },
+    {
+      "at": "2026-08-09T12:05:15+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Review ADR 0006 and migration specification before implementation"
+    },
+    {
+      "at": "2026-08-09T13:12:33+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement Device Flow core with tests, then platform adapters and UI cutover"
+    },
+    {
+      "at": "2026-08-09T13:45:55+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Direct Device Flow client, secure platform adapters, GitHub CRUD UI, and server proxy retirement implemented with 19 targeted tests"
+    },
+    {
+      "at": "2026-08-09T13:46:13+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Complete GitHub sudo authentication, configure public Client ID, build, and run live Windows acceptance"
+    },
+    {
+      "at": "2026-08-09T16:21:18+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "App full suite 100/100 files and 1013/1013 tests; app/server typechecks and workflow checks pass; unrelated server attachment GET baseline failure recorded in validation.md"
+    },
+    {
+      "at": "2026-08-09T16:21:18+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "accepted_gaps",
+      "evidence": "Manual diff and credential-boundary review found no feature blocker; mobile live acceptance, Issue disconnect/profile-isolation manual check, and dedicated official-profile regression test remain documented gaps"
+    },
+    {
+      "at": "2026-08-09T16:22:09+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no feature blocker; finish.md records credential boundaries, rollback, and explicit mobile/isolation follow-ups"
+    },
+    {
+      "at": "2026-08-09T16:22:10+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive and commit the Windows-accepted implementation with mobile and isolation follow-ups"
+    },
+    {
+      "at": "2026-08-09T16:22:54+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "finish.md and validation.md record Windows live CRUD/persistence, green app suite/typechecks/workflow checks, unrelated server baseline failure, rollback, and accepted mobile/isolation follow-ups"
+    },
+    {
+      "at": "2026-08-09T16:23:02+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Migrated GitHub Issues to client-side Device Flow with secure local credentials and Windows-live CRUD acceptance; commit: pending; follow-up: Run mobile live acceptance, Issue-only disconnect/profile-isolation, dedicated official-profile regression coverage, and deferred schema cleanup after the acceptance interval"
+    }
+  ],
+  "updated": "2026-08-09T16:23:02+00:00",
+  "archivedAt": "2026-08-09T16:23:02+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Migrated GitHub Issues to client-side Device Flow with secure local credentials and Windows-live CRUD acceptance",
+  "archiveFollowUp": "Run mobile live acceptance, Issue-only disconnect/profile-isolation, dedicated official-profile regression coverage, and deferred schema cleanup after the acceptance interval"
+}

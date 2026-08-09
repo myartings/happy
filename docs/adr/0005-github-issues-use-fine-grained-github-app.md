@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted on 2026-08-08.
+Superseded on 2026-08-09 by ADR 0006. The minimum GitHub App permissions and
+selected-repository installation model remain valid; the server-held token and
+server-proxy decisions do not.
 
 ## Context
 

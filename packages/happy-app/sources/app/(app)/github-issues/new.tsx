@@ -2,20 +2,19 @@ import * as React from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useUnistyles } from 'react-native-unistyles';
-import { useAuth } from '@/auth/AuthContext';
 import { githubIssuesApi } from '@/features/github-issues/githubIssuesApi';
 import { useLocalSetting } from '@/sync/storage';
 import { Modal } from '@/modal';
 
 export default function NewGithubIssueScreen() {
     const { owner, repo } = useLocalSearchParams<{ owner: string; repo: string }>();
-    const { credentials } = useAuth(); const router = useRouter(); const { theme } = useUnistyles();
+    const router = useRouter(); const { theme } = useUnistyles();
     const enabled = useLocalSetting('devGithubIssuesEnabled');
     const [title, setTitle] = React.useState(''); const [body, setBody] = React.useState(''); const [saving, setSaving] = React.useState(false);
     const submit = async () => {
-        if (!credentials || !title.trim()) return;
+        if (!title.trim()) return;
         setSaving(true);
-        try { const issue = await githubIssuesApi.create(credentials, owner, repo, title, body); router.replace({ pathname: '/github-issues/[number]', params: { owner, repo, number: issue.number } } as any); }
+        try { const issue = await githubIssuesApi.createIssue({ owner, repo, title, body }); router.replace({ pathname: '/github-issues/[number]', params: { owner, repo, number: issue.number } } as any); }
         catch (e) { Modal.alert('Could not create issue', e instanceof Error ? e.message : 'Unknown error'); }
         finally { setSaving(false); }
     };

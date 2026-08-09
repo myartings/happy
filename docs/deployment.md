@@ -44,9 +44,6 @@ This document describes how to deploy the Happy backend (`packages/happy-server`
 - GitHub OAuth/App: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_APP_ID`, `GITHUB_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`, plus redirect URL/URI.
   - `GITHUB_REDIRECT_URL` is used by the OAuth callback handler.
   - `GITHUB_REDIRECT_URI` is used by the GitHub App initializer.
-  - `HAPPY_GITHUB_ISSUES_ENABLED=true` enables the default-off Issue proxy.
-  - `GITHUB_APP_SLUG` is required when Issues are enabled and builds the selected-repository installation URL.
-  - Configure the GitHub App with Metadata read and Issues read/write only.
 - Voice: `ELEVENLABS_API_KEY` (required for `/v1/voice/conversations` in production).
 - Subscriptions: `REVENUECAT_API_KEY` (server-side RevenueCat key, required for voice subscription checks).
 - Debug logging: `DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING` (enables file logging + dev log endpoint).
