@@ -8,7 +8,7 @@ import { type SessionState, formatPathRelativeToHome, vibingMessages, formatLast
 import { Avatar } from './Avatar';
 import { Typography } from '@/constants/Typography';
 import { StatusDot } from './StatusDot';
-import { useAllMachines, useLocalSetting, useMachine, useSessionGitStatus } from '@/sync/storage';
+import { useAllMachines, useLocalSetting, useMachine, useSessionGitStatus, useSetting } from '@/sync/storage';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { t } from '@/text';
 import { useNavigateToSession } from '@/hooks/useNavigateToSession';
@@ -181,7 +181,7 @@ const MachineSeparator = React.memo(({ machineName, machineId }: { machineName: 
 export function ActiveSessionsGroupCompact({ sessions, selectedSessionId }: ActiveSessionsGroupProps) {
     const styles = stylesheet;
     const machines = useAllMachines();
-    const sortActiveSessionsGlobally = useLocalSetting('devSortActiveSessionsGloballyEnabled');
+    const sortActiveSessionsGlobally = useSetting('sortActiveSessionsGlobally');
 
     const machineGroups = React.useMemo(() => buildActiveSessionDisplayGroups(
         sessions,
@@ -269,7 +269,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
     const enhancedStatusDotsEnabled = useLocalSetting('devEnhancedStatusDotsEnabled');
-    const needsAttentionSessionsEnabled = useLocalSetting('devNeedsAttentionSessionsEnabled');
+    const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
     const displayPolicy = resolveSessionRowDisplayPolicy({
         context: displayContext,
         environmentLabelsEnabled,

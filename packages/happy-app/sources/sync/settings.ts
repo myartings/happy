@@ -2,6 +2,7 @@ import * as z from 'zod';
 import { AgentDefaultOverridesSchema } from './agentDefaults';
 import { DEFAULT_USER_MESSAGE_BUBBLE_COLOR } from '../utils/userMessageBubbleColor';
 import { ProjectTodosSchema } from './projectTodos';
+import { mergeSessionAttentionMarkers, SessionAttentionMarkersSchema } from './sessionAttentionMarkers';
 
 //
 // Settings Schema
@@ -42,6 +43,11 @@ export const SettingsSchema = z.object({
     // rename migration to carry an old key across.
     hideInactiveSessions: z.boolean().describe('Hide archived sessions in the main list'),
     sortSessionsByActivity: z.boolean().describe('Sort the session list by last activity instead of creation date'),
+    sortActiveSessionsGlobally: z.boolean().describe('Show active sessions in one global list ordered by recent activity'),
+    groupActiveSessionsByDate: z.boolean().describe('Split globally sorted active sessions into today and earlier groups'),
+    needsAttentionSessionsEnabled: z.boolean().describe('Collect unread and permission-blocked sessions at the top'),
+    sessionListSettingsMigrated: z.boolean().describe('Whether device-local session list choices were migrated to synced settings'),
+    sessionAttentionMarkers: SessionAttentionMarkersSchema.describe('Cross-device unread/read sequence markers by session'),
     expResumeSession: z.boolean().describe('Enable experimental session resume feature'),
     fileDiffsSidebar: z.boolean().describe('Show the file diffs sidebar next to the chat on desktop'),
     groupToolCalls: z.boolean().describe('Collapse consecutive tool calls into grouped containers in chat'),
@@ -121,6 +127,11 @@ export const settingsDefaults: Settings = {
 
     hideInactiveSessions: false,
     sortSessionsByActivity: false,
+    sortActiveSessionsGlobally: false,
+    groupActiveSessionsByDate: false,
+    needsAttentionSessionsEnabled: true,
+    sessionListSettingsMigrated: false,
+    sessionAttentionMarkers: {},
     expResumeSession: false,
     fileDiffsSidebar: false,
     groupToolCalls: false,
@@ -184,6 +195,12 @@ export function settingsParse(settings: unknown): Settings {
 export function applySettings(settings: Settings, delta: Partial<Settings>): Settings {
     // Original behavior: start with settings, apply delta, fill in missing with defaults
     const result = { ...settings, ...delta };
+    if (delta.sessionAttentionMarkers) {
+        result.sessionAttentionMarkers = mergeSessionAttentionMarkers(
+            settings.sessionAttentionMarkers,
+            delta.sessionAttentionMarkers,
+        );
+    }
 
     // Fill in any missing fields with defaults
     Object.keys(settingsDefaults).forEach(key => {
@@ -197,12 +214,10 @@ export function applySettings(settings: Settings, delta: Partial<Settings>): Set
 
 export function settingsToSyncPayload(settings: Settings): Partial<Settings> {
     const result: Partial<Settings> = { ...settings };
-    // These personal display preferences moved to LocalSettings. Older clients
-    // may leave them in the forward-compatible settings object, but this client
-    // must not publish device-local A/B choices back to the account.
+    // These runtime-detail preferences remain device-local. Older clients may
+    // leave them in the forward-compatible settings object, but this client
+    // must not publish those device-local choices back to the account.
     for (const legacyLocalKey of [
-        'sortActiveSessionsGlobally',
-        'groupActiveSessionsByDate',
         'showActiveSessionRuntime',
         'showSessionModel',
     ]) {

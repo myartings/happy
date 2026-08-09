@@ -6,7 +6,7 @@ import { CommandPalette } from './CommandPalette';
 import { Command } from './types';
 import { useGlobalKeyboard } from '@/hooks/useGlobalKeyboard';
 import { useAuth } from '@/auth/AuthContext';
-import { storage, useAllMachines, useLocalSetting } from '@/sync/storage';
+import { storage, useAllMachines, useSetting } from '@/sync/storage';
 import { useShallow } from 'zustand/react/shallow';
 import { useNavigateToSession } from '@/hooks/useNavigateToSession';
 import { ShortcutHintsProvider } from '@/components/ShortcutHints';
@@ -28,7 +28,7 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
     const commandPaletteEnabled = storage(useShallow((state) => state.localSettings.commandPaletteEnabled));
     const sessionListViewData = useVisibleSessionListViewData();
     const machines = useAllMachines();
-    const sortActiveSessionsGlobally = useLocalSetting('devSortActiveSessionsGloballyEnabled');
+    const sortActiveSessionsGlobally = useSetting('sortActiveSessionsGlobally');
     const navigateToSession = useNavigateToSession();
     const preferredModifier = useMemo(() => getPreferredShortcutModifier(
         typeof navigator === 'undefined' ? undefined : navigator

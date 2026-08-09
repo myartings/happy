@@ -19,15 +19,10 @@ vi.mock('@/sync/storage', () => ({
     useSetting: (key: string) => {
         switch (key) {
             case 'hideInactiveSessions': return mocks.hideArchivedSessions;
+            case 'needsAttentionSessionsEnabled': return mocks.needsAttentionSessionsEnabled;
+            case 'sortActiveSessionsGlobally': return mocks.sortActiveSessionsGlobally;
+            case 'groupActiveSessionsByDate': return mocks.groupActiveSessionsByDate;
             default: throw new Error(`Unexpected setting read: ${key}`);
-        }
-    },
-    useLocalSetting: (key: string) => {
-        switch (key) {
-            case 'devNeedsAttentionSessionsEnabled': return mocks.needsAttentionSessionsEnabled;
-            case 'devSortActiveSessionsGloballyEnabled': return mocks.sortActiveSessionsGlobally;
-            case 'devGroupActiveSessionsByDateEnabled': return mocks.groupActiveSessionsByDate;
-            default: throw new Error(`Unexpected local setting read: ${key}`);
         }
     },
 }));

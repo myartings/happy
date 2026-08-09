@@ -982,7 +982,7 @@ export function SessionViewLoaded({
         // embedded (e.g. the side-chat panel) so a second mounted chat body
         // doesn't steal "currently viewing" from the primary session.
         if (!embedded) {
-            storage.getState().setCurrentViewingSession(sessionId);
+            sync.setCurrentViewingSession(sessionId);
         }
 
         // Initialize git status sync for this session
@@ -994,7 +994,7 @@ export function SessionViewLoaded({
                 // is no longer protected solely by the primary-view marker.
                 const current = storage.getState().currentViewingSessionId;
                 if (current === sessionId) {
-                    storage.getState().setCurrentViewingSession(null);
+                    sync.setCurrentViewingSession(null);
                 }
             }
             sync.onSessionHidden(sessionId);

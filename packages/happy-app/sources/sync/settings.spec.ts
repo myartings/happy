@@ -3,7 +3,37 @@ import { settingsParse, applySettings, settingsDefaults, settingsToSyncPayload, 
 
 describe('settings', () => {
     describe('settingsParse', () => {
-        it('preserves legacy synced personal display fields without treating them as current settings', () => {
+        it('syncs personal session-list choices and attention markers', () => {
+            const parsed = settingsParse({
+                sortActiveSessionsGlobally: true,
+                groupActiveSessionsByDate: true,
+                needsAttentionSessionsEnabled: false,
+                sessionListSettingsMigrated: true,
+                sessionAttentionMarkers: {
+                    'session-1': { unreadSeq: 12, readSeq: 8 },
+                },
+            });
+
+            expect(parsed).toMatchObject({
+                sortActiveSessionsGlobally: true,
+                groupActiveSessionsByDate: true,
+                needsAttentionSessionsEnabled: false,
+                sessionListSettingsMigrated: true,
+                sessionAttentionMarkers: {
+                    'session-1': { unreadSeq: 12, readSeq: 8 },
+                },
+            });
+            expect(settingsToSyncPayload(parsed)).toMatchObject({
+                sortActiveSessionsGlobally: true,
+                groupActiveSessionsByDate: true,
+                needsAttentionSessionsEnabled: false,
+                sessionAttentionMarkers: {
+                    'session-1': { unreadSeq: 12, readSeq: 8 },
+                },
+            });
+        });
+
+        it('recognizes synced session-list fields while preserving unrelated legacy display fields', () => {
             const parsed = settingsParse({
                 sortActiveSessionsGlobally: true,
                 groupActiveSessionsByDate: true,
@@ -17,8 +47,8 @@ describe('settings', () => {
                 showActiveSessionRuntime: true,
                 showSessionModel: false,
             });
-            expect(settingsDefaults).not.toHaveProperty('sortActiveSessionsGlobally');
-            expect(settingsDefaults).not.toHaveProperty('groupActiveSessionsByDate');
+            expect(settingsDefaults).toHaveProperty('sortActiveSessionsGlobally', false);
+            expect(settingsDefaults).toHaveProperty('groupActiveSessionsByDate', false);
             expect(settingsDefaults).not.toHaveProperty('showActiveSessionRuntime');
             expect(settingsDefaults).not.toHaveProperty('showSessionModel');
         });
@@ -155,6 +185,26 @@ describe('settings', () => {
             });
         });
 
+        it('merges concurrent session-attention markers without losing newer read or unread progress', () => {
+            const currentSettings = makeSettings({
+                sessionAttentionMarkers: {
+                    'session-1': { unreadSeq: 12, readSeq: 8 },
+                },
+            });
+
+            const result = applySettings(currentSettings, {
+                sessionAttentionMarkers: {
+                    'session-1': { unreadSeq: 10, readSeq: 12 },
+                    'session-2': { unreadSeq: 4, readSeq: 0 },
+                },
+            });
+
+            expect(result.sessionAttentionMarkers).toEqual({
+                'session-1': { unreadSeq: 12, readSeq: 12 },
+                'session-2': { unreadSeq: 4, readSeq: 0 },
+            });
+        });
+
         it('should handle empty delta', () => {
             const currentSettings = makeSettings({ viewInline: true, avatarStyle: 'gradient' });
             expect(applySettings(currentSettings, {})).toEqual(currentSettings);
@@ -228,6 +278,11 @@ describe('settings', () => {
                 usageLimitShowRemaining: false,
                 hideInactiveSessions: false,
                 sortSessionsByActivity: false,
+                sortActiveSessionsGlobally: false,
+                groupActiveSessionsByDate: false,
+                needsAttentionSessionsEnabled: true,
+                sessionListSettingsMigrated: false,
+                sessionAttentionMarkers: {},
                 expResumeSession: false,
                 fileDiffsSidebar: false,
                 groupToolCalls: false,
@@ -256,7 +311,7 @@ describe('settings', () => {
     });
 
     describe('settingsToSyncPayload', () => {
-        it('does not republish legacy device-local display preferences', () => {
+        it('publishes session-list choices but not the remaining device-local display preferences', () => {
             const parsed = settingsParse({
                 sortActiveSessionsGlobally: true,
                 groupActiveSessionsByDate: true,
@@ -265,8 +320,8 @@ describe('settings', () => {
             });
 
             const payload = settingsToSyncPayload(parsed);
-            expect(payload).not.toHaveProperty('sortActiveSessionsGlobally');
-            expect(payload).not.toHaveProperty('groupActiveSessionsByDate');
+            expect(payload).toHaveProperty('sortActiveSessionsGlobally', true);
+            expect(payload).toHaveProperty('groupActiveSessionsByDate', true);
             expect(payload).not.toHaveProperty('showActiveSessionRuntime');
             expect(payload).not.toHaveProperty('showSessionModel');
         });

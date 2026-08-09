@@ -26,6 +26,7 @@ import { Profile } from "./profile";
 import { UserProfile, RelationshipUpdatedEvent } from "./friendTypes";
 import { loadSettings, loadLocalSettings, saveLocalSettings, saveSettings, loadPurchases, savePurchases, loadProfile, saveProfile, loadSessionDrafts, saveSessionDrafts } from "./persistence";
 import { isAgentModePushPending } from "./agentModesPending";
+import { didSessionBecomeUnread, getUnreadSessionIds } from './sessionAttentionMarkers';
 import { loadSessionLastMessageSentAt, saveSessionLastMessageSentAt } from "./persistence";
 import type { CustomerInfo } from './revenueCat/types';
 import React from "react";
@@ -276,7 +277,7 @@ interface StorageState {
     // Feed methods
     applyFeedItems: (items: FeedItem[]) => void;
     clearFeed: () => void;
-    // Unread session tracking (memory-only)
+    // Runtime mirror of the synced session-attention markers.
     unreadSessionIds: Set<string>;
     currentViewingSessionId: string | null;
     markSessionRead: (sessionId: string) => void;
@@ -396,7 +397,7 @@ export const storage = create<StorageState>()((set, get) => {
         socketLastDisconnectedAt: null,
         isDataReady: false,
         nativeUpdateStatus: null,
-        unreadSessionIds: new Set<string>(),
+        unreadSessionIds: getUnreadSessionIds(settings.sessionAttentionMarkers),
         currentViewingSessionId: null,
         isMutableToolCall: (sessionId: string, callId: string) => {
             const sessionMessages = get().sessionMessages[sessionId];
@@ -601,14 +602,18 @@ export const storage = create<StorageState>()((set, get) => {
             sessions.forEach(session => {
                 const oldSession = state.sessions[session.id];
                 if (!oldSession) return;
-                const wasActive = oldSession.thinking === true
-                    || (oldSession.agentState?.requests && Object.keys(oldSession.agentState.requests).length > 0);
                 const newSession = mergedSessions[session.id];
-                if (!newSession || !wasActive) return;
-                const isNowIdle = newSession.thinking !== true
-                    && newSession.presence === 'online'
-                    && (!newSession.agentState?.requests || Object.keys(newSession.agentState.requests).length === 0);
-                if (isNowIdle && state.currentViewingSessionId !== session.id) {
+                if (!newSession) return;
+                const becameUnread = didSessionBecomeUnread({
+                    thinking: oldSession.thinking === true,
+                    hasPendingRequests: !!oldSession.agentState?.requests && Object.keys(oldSession.agentState.requests).length > 0,
+                    presence: oldSession.presence,
+                }, {
+                    thinking: newSession.thinking === true,
+                    hasPendingRequests: !!newSession.agentState?.requests && Object.keys(newSession.agentState.requests).length > 0,
+                    presence: newSession.presence,
+                }, state.currentViewingSessionId === session.id);
+                if (becameUnread) {
                     if (!unreadSessionIds.has(session.id)) {
                         unreadSessionIds = new Set(unreadSessionIds);
                         unreadSessionIds.add(session.id);
@@ -867,19 +872,30 @@ export const storage = create<StorageState>()((set, get) => {
             };
         }),
         applySettingsLocal: (settings: Partial<Settings>) => set((state) => {
-            saveSettings(applySettings(state.settings, settings), state.settingsVersion ?? 0);
+            const updatedSettings = applySettings(state.settings, settings);
+            const unreadSessionIds = getUnreadSessionIds(updatedSettings.sessionAttentionMarkers);
+            saveSettings(updatedSettings, state.settingsVersion ?? 0);
             return {
                 ...state,
-                settings: applySettings(state.settings, settings)
+                settings: updatedSettings,
+                unreadSessionIds,
+                sessionListViewData: state.sessionListViewData === null
+                    ? null
+                    : buildSessionListViewData(state.sessions, unreadSessionIds),
             };
         }),
         applySettings: (settings: Settings, version: number) => set((state) => {
             if (state.settingsVersion === null || state.settingsVersion < version) {
+                const unreadSessionIds = getUnreadSessionIds(settings.sessionAttentionMarkers);
                 saveSettings(settings, version);
                 return {
                     ...state,
                     settings,
-                    settingsVersion: version
+                    settingsVersion: version,
+                    unreadSessionIds,
+                    sessionListViewData: state.sessionListViewData === null
+                        ? null
+                        : buildSessionListViewData(state.sessions, unreadSessionIds),
                 };
             } else {
                 return state;
