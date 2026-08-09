@@ -31,6 +31,7 @@ let logBuffer: any[] = []
 const MAX_BUFFER_SIZE = MAX_APP_LOG_ENTRIES
 let isConsolePatched = false
 let remoteLogServerUrl: string | null = null
+let remoteLogRequestInFlight = false
 let consoleOutputEnabled = false
 let originalConsole: {
   log: typeof console.log,
@@ -82,11 +83,13 @@ export function initConsoleLogging() {
   }
 
   function sendLog(level: string, formatted: string) {
-    if (!remoteLogServerUrl) {
+    if (!remoteLogServerUrl || remoteLogRequestInFlight) {
       return
     }
 
-    void fetch(remoteLogServerUrl + '/logs', {
+    const targetUrl = remoteLogServerUrl
+    remoteLogRequestInFlight = true
+    void fetch(targetUrl + '/logs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -96,7 +99,15 @@ export function initConsoleLogging() {
         source: 'mobile',
         platform: Platform.OS,
       })
-    }).catch(() => {})
+    }).then((response) => {
+      if (!response.ok) {
+        remoteLogServerUrl = null
+      }
+    }).catch(() => {
+      remoteLogServerUrl = null
+    }).finally(() => {
+      remoteLogRequestInFlight = false
+    })
   }
 
   // Patch console methods

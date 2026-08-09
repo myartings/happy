@@ -750,7 +750,9 @@ function buildEnvVars(envDir: string, serverPort: number, expoPort: number): Rec
         // App (Expo)
         EXPO_PUBLIC_SERVER_URL: `http://localhost:${serverPort}`,
         EXPO_PUBLIC_HAPPY_SERVER_URL: `http://localhost:${serverPort}`,
-        EXPO_PUBLIC_LOG_SERVER_URL: "http://localhost:8787",
+        // Remote logging is opt-in. Pointing every environment at an absent
+        // localhost service makes the dev fetch inspector emit error overlays.
+        EXPO_PUBLIC_LOG_SERVER_URL: process.env.EXPO_PUBLIC_LOG_SERVER_URL || "",
         EXPO_PORT: String(expoPort),
 
         // CLI
