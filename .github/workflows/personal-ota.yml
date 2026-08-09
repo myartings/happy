@@ -136,7 +136,7 @@ jobs:
           if [ "$OTA_PLATFORM" = 'android' ]; then
             export EAS_SKIP_AUTO_FINGERPRINT=1
           fi
-          pnpm --filter happy-app run ota:personal -- \
+          pnpm --filter happy-app run ota:personal \
             --platform "$OTA_PLATFORM" \
             --message "$OTA_MESSAGE" \
             --non-interactive
