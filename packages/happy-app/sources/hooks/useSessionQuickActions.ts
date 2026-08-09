@@ -17,6 +17,7 @@ import { getSessionForkSource } from '@/utils/sessionFork';
 import { useRouter } from 'expo-router';
 import { useSession } from '@/sync/storage';
 import { DuplicateSheet } from '@/components/DuplicateSheet';
+import { WorktreeForkSheet } from '@/components/WorktreeForkSheet';
 import type { SessionActionShortcutId } from '@/keyboard/shortcuts';
 import { isRigMetadata } from '@/sync/rig';
 
@@ -257,6 +258,14 @@ export function useSessionQuickActions(
         } as any);
     }, [canFork, session.id]);
 
+    const openWorktreeForkSheet = React.useCallback(() => {
+        if (!canFork) return;
+        Modal.show({
+            component: WorktreeForkSheet,
+            props: { sessionId: session.id },
+        } as any);
+    }, [canFork, session.id]);
+
     const canCopySessionMetadata = __DEV__ || devModeEnabled;
 
     const actionItems = React.useMemo<SessionActionItem[]>(() => {
@@ -270,6 +279,7 @@ export function useSessionQuickActions(
 
         if (canFork) {
             items.push({ id: 'fork', icon: 'git-branch-outline', label: t('session.forkAction'), onPress: forkSession });
+            items.push({ id: 'fork-worktree', icon: 'git-compare-outline', label: t('session.worktreeForkAction'), onPress: openWorktreeForkSheet });
             items.push({ id: 'duplicate', icon: 'time-outline', label: t('session.duplicateAction'), onPress: openDuplicateSheet });
         }
 
@@ -291,6 +301,7 @@ export function useSessionQuickActions(
         forkSession,
         openDetails,
         openDuplicateSheet,
+        openWorktreeForkSheet,
         resumeAvailability.canShowResume,
         resumeSession,
     ]);
@@ -321,6 +332,7 @@ export function useSessionQuickActions(
         forking,
         openDetails,
         openDuplicateSheet,
+        openWorktreeForkSheet,
         resumeSession,
         resumeSessionSubtitle: resumeAvailability.subtitle,
         resumingSession,

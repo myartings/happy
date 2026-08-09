@@ -12,16 +12,21 @@ import {
 
 describe('claudeSessionFork', () => {
     let projectDir: string;
+    let targetProjectDir: string;
     const sourceId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
     beforeEach(async () => {
         projectDir = join(tmpdir(), `claude-fork-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+        targetProjectDir = `${projectDir}-target`;
         await mkdir(projectDir, { recursive: true });
     });
 
     afterEach(async () => {
         if (existsSync(projectDir)) {
             await rm(projectDir, { recursive: true, force: true });
+        }
+        if (existsSync(targetProjectDir)) {
+            await rm(targetProjectDir, { recursive: true, force: true });
         }
     });
 
@@ -60,6 +65,17 @@ describe('claudeSessionFork', () => {
         it('throws ForkSourceMissingError when source jsonl is absent', async () => {
             await expect(forkSession(projectDir, 'does-not-exist'))
                 .rejects.toBeInstanceOf(ForkSourceMissingError);
+        });
+
+        it('copies the conversation into a different target project directory', async () => {
+            await writeSource([{ type: 'user', uuid: 'u1', message: { role: 'user', content: 'hi' } }]);
+
+            const newId = await forkSession(projectDir, sourceId, targetProjectDir);
+
+            expect(existsSync(join(projectDir, `${newId}.jsonl`))).toBe(false);
+            const original = await readFile(join(projectDir, `${sourceId}.jsonl`));
+            const copy = await readFile(join(targetProjectDir, `${newId}.jsonl`));
+            expect(copy.equals(original)).toBe(true);
         });
     });
 

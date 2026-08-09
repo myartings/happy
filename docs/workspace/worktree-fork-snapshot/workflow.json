@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "worktree-fork-snapshot",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Merge into dev and upgrade desktop when requested",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/worktree-fork-snapshot.md acceptance criteria accepted by user; docs/tasks/worktree-fork-snapshot-tasks.md",
+      "updated": "2026-08-09T21:43:19+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-fork-snapshot/decisions.md D1-D6",
+      "updated": "2026-08-09T21:43:19+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/specs/worktree-fork-snapshot.md boundaries; docs/workspace/worktree-fork-snapshot/contexts/implement.jsonl",
+      "updated": "2026-08-09T21:43:19+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Fail-closed Git states, source immutability, bounded cleanup, and rollback are specified in docs/specs/worktree-fork-snapshot.md",
+      "updated": "2026-08-09T21:43:20+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Machine snapshot module, provider orchestration, right-click action, and confirmation sheet implemented with targeted tests",
+      "updated": "2026-08-09T22:15:53+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "App full suite 1024/1024 passed with 10s timeout; CLI build/typecheck and 22 affected tests pass; full CLI unit suite has documented unrelated native-Windows platform failures",
+      "updated": "2026-08-09T22:19:32+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed for bounded paths, parameterized Git execution, source revalidation, provider target directory, rollback ownership, unchanged legacy fork/side-chat, UI eligibility, and localization",
+      "updated": "2026-08-09T22:19:33+00:00"
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "Finish review completed; implementation verified with documented unrelated Windows-only CLI suite gap",
+      "updated": "2026-08-09T22:19:53+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T21:42:07+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T21:43:19+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/worktree-fork-snapshot.md acceptance criteria accepted by user; docs/tasks/worktree-fork-snapshot-tasks.md"
+    },
+    {
+      "at": "2026-08-09T21:43:19+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-fork-snapshot/decisions.md D1-D6"
+    },
+    {
+      "at": "2026-08-09T21:43:19+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/worktree-fork-snapshot.md boundaries; docs/workspace/worktree-fork-snapshot/contexts/implement.jsonl"
+    },
+    {
+      "at": "2026-08-09T21:43:20+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Fail-closed Git states, source immutability, bounded cleanup, and rollback are specified in docs/specs/worktree-fork-snapshot.md"
+    },
+    {
+      "at": "2026-08-09T21:43:20+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write machine-side snapshot tests before implementation"
+    },
+    {
+      "at": "2026-08-09T22:15:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Machine snapshot module, provider orchestration, right-click action, and confirmation sheet implemented with targeted tests"
+    },
+    {
+      "at": "2026-08-09T22:15:53+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final typechecks, suites, workflow audit, and whole-diff review"
+    },
+    {
+      "at": "2026-08-09T22:19:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "App full suite 1024/1024 passed with 10s timeout; CLI build/typecheck and 22 affected tests pass; full CLI unit suite has documented unrelated native-Windows platform failures"
+    },
+    {
+      "at": "2026-08-09T22:19:33+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed for bounded paths, parameterized Git execution, source revalidation, provider target directory, rollback ownership, unchanged legacy fork/side-chat, UI eligibility, and localization"
+    },
+    {
+      "at": "2026-08-09T22:19:33+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish review and archive evidence"
+    },
+    {
+      "at": "2026-08-09T22:19:53+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "Finish review completed; implementation verified with documented unrelated Windows-only CLI suite gap"
+    },
+    {
+      "at": "2026-08-09T22:19:53+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented isolated Worktree session forking with exact dirty snapshot inheritance, provider continuation, rollback, and localized UI; commit: pending; follow-up: Merge into dev and upgrade desktop when requested"
+    }
+  ],
+  "updated": "2026-08-09T22:19:53+00:00",
+  "archivedAt": "2026-08-09T22:19:53+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented isolated Worktree session forking with exact dirty snapshot inheritance, provider continuation, rollback, and localized UI",
+  "archiveFollowUp": "Merge into dev and upgrade desktop when requested"
+}

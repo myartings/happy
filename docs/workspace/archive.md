@@ -11,3 +11,4 @@
 | 2026-08-10 | personal-eas-preview-environment | pending | Use plan-compatible preview environment for Personal EAS profiles | Merge to dev, configure project preview variables, and retry internal build |
 | 2026-08-10 | personal-ota-preview-environment | pending | Align personal OTA with the supported preview EAS environment | Merge PR #31, push a unique Android OTA tag, and monitor the hosted run |
 | 2026-08-10 | personal-ota-pnpm-args | pending | Remove the redundant pnpm separator blocking hosted Android OTA publication | Merge the repair PR, push a new unique Android OTA tag, and monitor publication |
+| 2026-08-10 | worktree-fork-snapshot | pending | Implemented isolated Worktree session forking with exact dirty snapshot inheritance, provider continuation, rollback, and localized UI | Merge into dev and upgrade desktop when requested |

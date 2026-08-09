@@ -205,6 +205,8 @@ export interface ClaudeForkSessionOptions {
     machineId: string;
     /** Working directory of the source session — used to derive the Claude project dir. */
     directory: string;
+    /** Optional target directory when the fork moves into a new Worktree. */
+    targetDirectory?: string;
     /** Source Claude session UUID (Session.metadata.claudeSessionId on the parent). */
     claudeSessionId: string;
 }
@@ -244,6 +246,50 @@ export interface CodexRewindPoint {
 export type CodexListRewindPointsResult =
     | { type: 'success'; points: CodexRewindPoint[] }
     | { type: 'error'; errorMessage: string };
+
+export type WorktreeSnapshotInspection = {
+    sourceDirectory: string;
+    repositoryRoot: string;
+    primaryRepositoryRoot: string;
+    head: string;
+    branch: string | null;
+    stagedCount: number;
+    unstagedCount: number;
+    untrackedCount: number;
+    untrackedBytes: number;
+    isDirty: boolean;
+};
+
+export type CreatedWorktreeSnapshot = WorktreeSnapshotInspection & {
+    worktreeRoot: string;
+    sessionDirectory: string;
+    branchName: string;
+    cleanupToken: string;
+};
+
+export async function inspectSessionWorktree(machineId: string, directory: string): Promise<WorktreeSnapshotInspection> {
+    return apiSocket.machineRPC<WorktreeSnapshotInspection, { directory: string }>(
+        machineId,
+        'worktree-snapshot-inspect',
+        { directory },
+    );
+}
+
+async function createSessionWorktree(machineId: string, directory: string, inheritChanges: boolean): Promise<CreatedWorktreeSnapshot> {
+    return apiSocket.machineRPC<CreatedWorktreeSnapshot, { directory: string; inheritChanges: boolean }>(
+        machineId,
+        'worktree-snapshot-create',
+        { directory, inheritChanges },
+    );
+}
+
+async function cleanupSessionWorktree(machineId: string, cleanupToken: string): Promise<void> {
+    await apiSocket.machineRPC(machineId, 'worktree-snapshot-cleanup', { cleanupToken });
+}
+
+async function finalizeSessionWorktree(machineId: string, cleanupToken: string): Promise<void> {
+    await apiSocket.machineRPC(machineId, 'worktree-snapshot-finalize', { cleanupToken });
+}
 
 export interface ResumeSessionOptions {
     machineId: string;
@@ -317,15 +363,16 @@ export async function machineSpawnNewSession(options: SpawnSessionOptions): Prom
  * session row to the copied conversation.
  */
 export async function claudeForkSession(options: ClaudeForkSessionOptions): Promise<ClaudeForkSessionResult> {
-    const { machineId, directory, claudeSessionId } = options;
+    const { machineId, directory, targetDirectory, claudeSessionId } = options;
     try {
         const result = await apiSocket.machineRPC<ClaudeForkSessionResult, {
             directory: string;
+            targetDirectory?: string;
             claudeSessionId: string;
         }>(
             machineId,
             'claude-fork-session',
-            { directory, claudeSessionId },
+            { directory, targetDirectory, claudeSessionId },
         );
         return result;
     } catch (error) {
@@ -376,16 +423,17 @@ export async function claudeListRewindPoints(
 export async function claudeDuplicateSession(
     options: ClaudeForkSessionOptions & { cutAfterUuid: string },
 ): Promise<ClaudeForkSessionResult> {
-    const { machineId, directory, claudeSessionId, cutAfterUuid } = options;
+    const { machineId, directory, targetDirectory, claudeSessionId, cutAfterUuid } = options;
     try {
         const result = await apiSocket.machineRPC<ClaudeForkSessionResult, {
             directory: string;
+            targetDirectory?: string;
             claudeSessionId: string;
             cutAfterUuid: string;
         }>(
             machineId,
             'claude-duplicate-session',
-            { directory, claudeSessionId, cutAfterUuid },
+            { directory, targetDirectory, claudeSessionId, cutAfterUuid },
         );
         return result;
     } catch (error) {
@@ -1166,6 +1214,86 @@ export async function forkAndSpawn(
     }
 
     return spawnResult;
+}
+
+/**
+ * Fork a provider conversation into a newly-created Git worktree, then start
+ * the child Happy session from that isolated directory. Until the session is
+ * successfully spawned the worktree remains rollback-owned by this operation.
+ */
+export async function forkInWorktreeAndSpawn(
+    source: ForkSource,
+    inheritChanges: boolean,
+): Promise<SpawnSessionResult> {
+    let created: CreatedWorktreeSnapshot | null = null;
+
+    try {
+        created = await createSessionWorktree(source.machineId, source.directory, inheritChanges);
+
+        let spawnResult: SpawnSessionResult;
+        if (source.kind === 'codex') {
+            const forkResult = await codexForkThread({
+                machineId: source.machineId,
+                directory: created.sessionDirectory,
+                codexThreadId: source.codexThreadId,
+            });
+            if (forkResult.type !== 'success') {
+                await cleanupSessionWorktree(source.machineId, created.cleanupToken).catch(() => undefined);
+                return { type: 'error', errorMessage: forkResult.errorMessage };
+            }
+            spawnResult = await machineSpawnNewSession({
+                machineId: source.machineId,
+                directory: created.sessionDirectory,
+                agent: 'codex',
+                approvedNewDirectoryCreation: false,
+                resumeCodexThreadId: forkResult.newCodexThreadId,
+                parentSessionId: source.sessionId,
+            });
+        } else {
+            const forkResult = await claudeForkSession({
+                machineId: source.machineId,
+                directory: source.directory,
+                targetDirectory: created.sessionDirectory,
+                claudeSessionId: source.claudeSessionId,
+            });
+            if (forkResult.type !== 'success') {
+                await cleanupSessionWorktree(source.machineId, created.cleanupToken).catch(() => undefined);
+                return { type: 'error', errorMessage: forkResult.errorMessage };
+            }
+            spawnResult = await machineSpawnNewSession({
+                machineId: source.machineId,
+                directory: created.sessionDirectory,
+                agent: 'claude',
+                approvedNewDirectoryCreation: false,
+                resumeClaudeSessionId: forkResult.newClaudeSessionId,
+                parentSessionId: source.sessionId,
+            });
+        }
+
+        if (spawnResult.type !== 'success') {
+            await cleanupSessionWorktree(source.machineId, created.cleanupToken).catch(() => undefined);
+            return spawnResult;
+        }
+
+        // Ownership has moved to the newly-running session. Token finalization
+        // is best-effort because a transient acknowledgement failure must not
+        // tear down a worktree underneath an agent that already started.
+        await finalizeSessionWorktree(source.machineId, created.cleanupToken).catch(() => undefined);
+        try {
+            await sync.refreshSessions();
+        } catch {
+            // Broadcast sync will still hydrate the child session.
+        }
+        return spawnResult;
+    } catch (error) {
+        if (created) {
+            await cleanupSessionWorktree(source.machineId, created.cleanupToken).catch(() => undefined);
+        }
+        return {
+            type: 'error',
+            errorMessage: error instanceof Error ? error.message : 'Failed to fork session into a worktree',
+        };
+    }
 }
 
 /**

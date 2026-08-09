@@ -28,6 +28,13 @@ import {
     forkCodexThread,
     listCodexRewindPoints,
 } from '@/codex/codexThreadFork';
+import { randomUUID } from 'node:crypto';
+import {
+    cleanupWorktreeSnapshot,
+    createWorktreeSnapshot,
+    inspectWorktreeSnapshot,
+    type CreatedWorktreeSnapshot,
+} from '@/git/worktreeSnapshot';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -120,6 +127,7 @@ export class ApiMachineClient {
     private rpcHandlerManager: RpcHandlerManager;
     private resumeSessionHandler: ((sessionId: string, options?: { model?: string; permissionMode?: string }) => Promise<SpawnSessionResult>) | null = null;
     private reconnectInterval: NodeJS.Timeout | null = null;
+    private pendingWorktreeSnapshots = new Map<string, CreatedWorktreeSnapshot>();
 
     constructor(
         private token: string,
@@ -190,6 +198,40 @@ export class ApiMachineClient {
             return { message: 'Session stopped' };
         });
 
+        this.rpcHandlerManager.registerHandler('worktree-snapshot-inspect', async (params: any) => {
+            const directory = requireNonEmptyString(params?.directory, 'directory');
+            return inspectWorktreeSnapshot(directory);
+        });
+
+        this.rpcHandlerManager.registerHandler('worktree-snapshot-create', async (params: any) => {
+            const directory = requireNonEmptyString(params?.directory, 'directory');
+            if (typeof params?.inheritChanges !== 'boolean') {
+                throw new Error('inheritChanges must be a boolean');
+            }
+            const created = await createWorktreeSnapshot({
+                sourceDirectory: directory,
+                inheritChanges: params.inheritChanges,
+            });
+            const cleanupToken = randomUUID();
+            this.pendingWorktreeSnapshots.set(cleanupToken, created);
+            return { ...created, cleanupToken };
+        });
+
+        this.rpcHandlerManager.registerHandler('worktree-snapshot-cleanup', async (params: any) => {
+            const cleanupToken = requireNonEmptyString(params?.cleanupToken, 'cleanupToken');
+            const created = this.pendingWorktreeSnapshots.get(cleanupToken);
+            if (!created) return { success: false, errorMessage: 'Worktree cleanup token is no longer active' };
+            this.pendingWorktreeSnapshots.delete(cleanupToken);
+            await cleanupWorktreeSnapshot(created);
+            return { success: true };
+        });
+
+        this.rpcHandlerManager.registerHandler('worktree-snapshot-finalize', async (params: any) => {
+            const cleanupToken = requireNonEmptyString(params?.cleanupToken, 'cleanupToken');
+            const existed = this.pendingWorktreeSnapshots.delete(cleanupToken);
+            return { success: existed };
+        });
+
         // Register Claude session fork handlers (used by app-side fork /
         // duplicate flows). These take the source session's working
         // directory and underlying Claude UUID, copy the on-disk JSONL
@@ -198,7 +240,7 @@ export class ApiMachineClient {
         // `resumeClaudeSessionId` set so `claude --resume <newUuid>`
         // continues the conversation.
         this.rpcHandlerManager.registerHandler('claude-fork-session', async (params: any) => {
-            const { directory, claudeSessionId } = params || {};
+            const { directory, targetDirectory, claudeSessionId } = params || {};
             if (typeof directory !== 'string' || directory.length === 0) {
                 throw new Error('directory is required');
             }
@@ -206,7 +248,13 @@ export class ApiMachineClient {
                 throw new Error('claudeSessionId must be a valid UUID');
             }
             try {
-                const newClaudeSessionId = await claudeForkSession(getProjectPath(directory), claudeSessionId);
+                const newClaudeSessionId = await claudeForkSession(
+                    getProjectPath(directory),
+                    claudeSessionId,
+                    typeof targetDirectory === 'string' && targetDirectory.length > 0
+                        ? getProjectPath(targetDirectory)
+                        : undefined,
+                );
                 return { type: 'success', newClaudeSessionId };
             } catch (error) {
                 if (error instanceof ForkSourceMissingError) {
@@ -240,7 +288,7 @@ export class ApiMachineClient {
         });
 
         this.rpcHandlerManager.registerHandler('claude-duplicate-session', async (params: any) => {
-            const { directory, claudeSessionId, cutAfterUuid } = params || {};
+            const { directory, targetDirectory, claudeSessionId, cutAfterUuid } = params || {};
             if (typeof directory !== 'string' || directory.length === 0) {
                 throw new Error('directory is required');
             }
@@ -255,6 +303,9 @@ export class ApiMachineClient {
                     getProjectPath(directory),
                     claudeSessionId,
                     cutAfterUuid,
+                    typeof targetDirectory === 'string' && targetDirectory.length > 0
+                        ? getProjectPath(targetDirectory)
+                        : undefined,
                 );
                 return { type: 'success', newClaudeSessionId };
             } catch (error) {

@@ -14,7 +14,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { copyFile, rename, readFile, unlink } from "node:fs/promises";
+import { copyFile, mkdir, rename, readFile, unlink } from "node:fs/promises";
 import { createReadStream, createWriteStream } from "node:fs";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
@@ -62,12 +62,17 @@ function isUserPrompt(parsed: any): boolean {
  * level (single copyFile call), so concurrent writes by Claude to the
  * source do not corrupt the destination.
  */
-export async function forkSession(projectDir: string, sourceClaudeSessionId: string): Promise<string> {
+export async function forkSession(
+    projectDir: string,
+    sourceClaudeSessionId: string,
+    targetProjectDir: string = projectDir,
+): Promise<string> {
     const newId = randomUUID();
     const src = jsonlPath(projectDir, sourceClaudeSessionId);
-    const dst = jsonlPath(projectDir, newId);
+    const dst = jsonlPath(targetProjectDir, newId);
 
     try {
+        await mkdir(targetProjectDir, { recursive: true });
         await copyFile(src, dst);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -101,10 +106,12 @@ export async function forkAndTruncateSession(
     projectDir: string,
     sourceClaudeSessionId: string,
     cutAfterUuid: string,
+    targetProjectDir: string = projectDir,
 ): Promise<string> {
     const newId = randomUUID();
     const src = jsonlPath(projectDir, sourceClaudeSessionId);
-    const finalDst = jsonlPath(projectDir, newId);
+    await mkdir(targetProjectDir, { recursive: true });
+    const finalDst = jsonlPath(targetProjectDir, newId);
     const tempDst = `${finalDst}.tmp-${process.pid}-${Date.now()}`;
 
     const readStream = createReadStream(src, { encoding: 'utf-8' });
