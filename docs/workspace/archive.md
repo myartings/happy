@@ -9,3 +9,4 @@
 | 2026-08-10 | happy-ios-release | pending | Add guarded Happy Personal iOS internal, TestFlight, and EAS Update release paths. | None |
 | 2026-08-10 | personal-eas-environment-isolation | pending | Isolate Happy Personal EAS build profiles from shared production variables | Merge to dev, configure project-scoped personal environment values, and retry internal build |
 | 2026-08-10 | personal-eas-preview-environment | pending | Use plan-compatible preview environment for Personal EAS profiles | Merge to dev, configure project preview variables, and retry internal build |
+| 2026-08-10 | personal-ota-preview-environment | pending | Align personal OTA with the supported preview EAS environment | Merge PR #31, push a unique Android OTA tag, and monitor the hosted run |
