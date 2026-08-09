@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useUnistyles } from 'react-native-unistyles';
 import { useAuth } from '@/auth/AuthContext';
 import { githubIssuesApi, type GithubIssue } from '@/features/github-issues/githubIssuesApi';
 import { useLocalSetting } from '@/sync/storage';
 import { MarkdownView } from '@/components/markdown/MarkdownView';
+import { Modal } from '@/modal';
 
 export default function GithubIssueDetailScreen() {
     const params = useLocalSearchParams<{ owner: string; repo: string; number: string }>();
@@ -25,9 +26,22 @@ export default function GithubIssueDetailScreen() {
         try {
             await githubIssuesApi.setState(credentials, params.owner, params.repo, number, issue.state === 'open' ? 'closed' : 'open');
             await load();
-        } catch (e) { Alert.alert('Could not update issue', e instanceof Error ? e.message : 'Unknown error'); }
+        } catch (e) { Modal.alert('Could not update issue', e instanceof Error ? e.message : 'Unknown error'); }
     };
-    const remove = () => Alert.alert('Permanently delete issue?', 'This cannot be undone on GitHub.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: async () => { if (!credentials) return; try { await githubIssuesApi.delete(credentials, params.owner, params.repo, number); router.back(); } catch (e) { Alert.alert('Could not delete issue', e instanceof Error ? e.message : 'Unknown error'); } } }]);
+    const remove = async () => {
+        const confirmed = await Modal.confirm(
+            'Permanently delete issue?',
+            'This cannot be undone on GitHub.',
+            { cancelText: 'Cancel', confirmText: 'Delete', destructive: true },
+        );
+        if (!confirmed || !credentials) return;
+        try {
+            await githubIssuesApi.delete(credentials, params.owner, params.repo, number);
+            router.back();
+        } catch (e) {
+            Modal.alert('Could not delete issue', e instanceof Error ? e.message : 'Unknown error');
+        }
+    };
     return <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }} style={{ flex: 1, backgroundColor: theme.colors.groupped.background }}>
         <Text style={{ color: theme.colors.textSecondary }}>{params.owner}/{params.repo} · #{issue.number} · {issue.state}</Text>
         <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: '600' }}>{issue.title}</Text>

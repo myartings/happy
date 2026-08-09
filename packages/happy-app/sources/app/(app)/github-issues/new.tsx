@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useUnistyles } from 'react-native-unistyles';
 import { useAuth } from '@/auth/AuthContext';
 import { githubIssuesApi } from '@/features/github-issues/githubIssuesApi';
 import { useLocalSetting } from '@/sync/storage';
+import { Modal } from '@/modal';
 
 export default function NewGithubIssueScreen() {
     const { owner, repo } = useLocalSearchParams<{ owner: string; repo: string }>();
@@ -15,7 +16,7 @@ export default function NewGithubIssueScreen() {
         if (!credentials || !title.trim()) return;
         setSaving(true);
         try { const issue = await githubIssuesApi.create(credentials, owner, repo, title, body); router.replace({ pathname: '/github-issues/[number]', params: { owner, repo, number: issue.number } } as any); }
-        catch (e) { Alert.alert('Could not create issue', e instanceof Error ? e.message : 'Unknown error'); }
+        catch (e) { Modal.alert('Could not create issue', e instanceof Error ? e.message : 'Unknown error'); }
         finally { setSaving(false); }
     };
     const inputStyle = { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.divider, borderWidth: 1, borderRadius: 10, padding: 12 } as const;
