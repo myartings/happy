@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -8,6 +8,7 @@ import { Typography } from '@/constants/Typography';
 import { useLocalSetting } from '@/sync/storage';
 import { sessionBash } from '@/sync/ops';
 import { parseGithubRepository } from '@/features/github-issues/githubRepository';
+import { isTauri } from '@/utils/isTauri';
 
 export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintColor, sessionId, cwd }: {
     showLabel?: boolean; style?: StyleProp<ViewStyle>; tintColor?: string; sessionId?: string; cwd?: string;
@@ -27,7 +28,7 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
         }
         router.push('/github-issues' as any);
     }, [cwd, router, sessionId]);
-    if (!enabled) return null;
+    if (!enabled || (Platform.OS === 'web' && !isTauri())) return null;
     return (
         <Pressable accessibilityRole="button" accessibilityLabel="GitHub Issues" onPress={() => void openIssues()}
             style={({ pressed }) => [styles.button, showLabel && styles.labeled, pressed && styles.pressed, style]}>

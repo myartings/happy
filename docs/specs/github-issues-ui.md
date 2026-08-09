@@ -4,6 +4,11 @@ Status: Proposed for review
 Owner: personal Happy `dev` branch  
 Feature flag: required, default off
 
+> Authentication, credential storage, API transport, server isolation, and
+> rollout details in this original UI specification are superseded by
+> `docs/specs/github-issues-device-flow.md` and ADR 0006. The product scope,
+> navigation model, wireframes, and Issue interactions remain the UI baseline.
+
 ## Problem
 
 Happy's personal Project Todos are convenient but local to Happy and do not

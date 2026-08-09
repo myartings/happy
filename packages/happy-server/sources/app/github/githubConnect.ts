@@ -26,14 +26,7 @@ import { githubDisconnect } from "./githubDisconnect";
 export async function githubConnect(
     ctx: Context,
     githubProfile: GitHubProfile,
-    accessToken: string,
-    credential?: {
-        refreshToken?: string;
-        expiresIn?: number;
-        refreshTokenExpiresIn?: number;
-        permissions?: unknown;
-        authKind?: 'legacy' | 'github_app';
-    },
+    accessToken: string
 ): Promise<void> {
     const userId = ctx.uid;
     const githubUserId = githubProfile.id.toString();
@@ -44,20 +37,6 @@ export async function githubConnect(
         select: { githubUserId: true, username: true }
     });
     if (currentUser.githubUserId === githubUserId) {
-        await db.githubUser.update({
-            where: { id: githubUserId },
-            data: {
-                profile: githubProfile,
-                token: encryptString(['user', userId, 'github', 'token'], accessToken),
-                refreshToken: credential?.refreshToken
-                    ? encryptString(['user', userId, 'github', 'refresh-token'], credential.refreshToken)
-                    : undefined,
-                tokenExpiresAt: credential?.expiresIn ? new Date(Date.now() + credential.expiresIn * 1000) : undefined,
-                refreshTokenExpiresAt: credential?.refreshTokenExpiresIn ? new Date(Date.now() + credential.refreshTokenExpiresIn * 1000) : undefined,
-                permissions: credential?.permissions as any,
-                authKind: credential?.authKind,
-            },
-        });
         return;
     }
 
@@ -89,22 +68,12 @@ export async function githubConnect(
             where: { id: githubUserId },
             update: {
                 profile: githubProfile,
-                token: encryptString(['user', userId, 'github', 'token'], accessToken),
-                refreshToken: credential?.refreshToken ? encryptString(['user', userId, 'github', 'refresh-token'], credential.refreshToken) : undefined,
-                tokenExpiresAt: credential?.expiresIn ? new Date(Date.now() + credential.expiresIn * 1000) : undefined,
-                refreshTokenExpiresAt: credential?.refreshTokenExpiresIn ? new Date(Date.now() + credential.refreshTokenExpiresIn * 1000) : undefined,
-                permissions: credential?.permissions as any,
-                authKind: credential?.authKind,
+                token: encryptString(['user', userId, 'github', 'token'], accessToken)
             },
             create: {
                 id: githubUserId,
                 profile: githubProfile,
-                token: encryptString(['user', userId, 'github', 'token'], accessToken),
-                refreshToken: credential?.refreshToken ? encryptString(['user', userId, 'github', 'refresh-token'], credential.refreshToken) : undefined,
-                tokenExpiresAt: credential?.expiresIn ? new Date(Date.now() + credential.expiresIn * 1000) : undefined,
-                refreshTokenExpiresAt: credential?.refreshTokenExpiresIn ? new Date(Date.now() + credential.refreshTokenExpiresIn * 1000) : undefined,
-                permissions: credential?.permissions as any,
-                authKind: credential?.authKind ?? 'legacy',
+                token: encryptString(['user', userId, 'github', 'token'], accessToken)
             }
         });
 

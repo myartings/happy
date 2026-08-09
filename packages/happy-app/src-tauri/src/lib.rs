@@ -2,6 +2,81 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, OnceLock};
 use tauri::{AppHandle, Emitter, Manager};
 
+const MAX_GITHUB_ISSUES_CREDENTIAL_BYTES: usize = 16 * 1024;
+const GITHUB_ISSUES_CREDENTIAL_ACCOUNT: &str = "github-issues-device-flow-v1";
+static GITHUB_ISSUES_CREDENTIAL_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn github_issues_credential_entry(app: &AppHandle) -> Result<keyring::Entry, String> {
+    keyring::Entry::new(&app.config().identifier, GITHUB_ISSUES_CREDENTIAL_ACCOUNT)
+        .map_err(|_| "secure credential storage is unavailable".to_string())
+}
+
+fn with_github_issues_credential_lock<T>(
+    operation: impl FnOnce() -> Result<T, String>,
+) -> Result<T, String> {
+    let lock = GITHUB_ISSUES_CREDENTIAL_LOCK.get_or_init(|| Mutex::new(()));
+    let _guard = lock
+        .lock()
+        .map_err(|_| "secure credential storage is unavailable".to_string())?;
+    operation()
+}
+
+fn assert_main_window(window: &tauri::WebviewWindow) -> Result<(), String> {
+    if window.label() == "main" {
+        Ok(())
+    } else {
+        Err("GitHub Issues credential access is unavailable from this window".to_string())
+    }
+}
+
+#[tauri::command]
+fn get_github_issues_credential(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+) -> Result<Option<String>, String> {
+    assert_main_window(&window)?;
+    with_github_issues_credential_lock(|| {
+        let entry = github_issues_credential_entry(&app)?;
+        match entry.get_password() {
+            Ok(value) => Ok(Some(value)),
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(_) => Err("secure credential storage is unavailable".to_string()),
+        }
+    })
+}
+
+#[tauri::command]
+fn set_github_issues_credential(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    value: String,
+) -> Result<(), String> {
+    assert_main_window(&window)?;
+    if value.is_empty() || value.len() > MAX_GITHUB_ISSUES_CREDENTIAL_BYTES {
+        return Err("invalid GitHub Issues credential payload".to_string());
+    }
+    with_github_issues_credential_lock(|| {
+        github_issues_credential_entry(&app)?
+            .set_password(&value)
+            .map_err(|_| "secure credential storage is unavailable".to_string())
+    })
+}
+
+#[tauri::command]
+fn delete_github_issues_credential(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+) -> Result<(), String> {
+    assert_main_window(&window)?;
+    with_github_issues_credential_lock(|| {
+        let entry = github_issues_credential_entry(&app)?;
+        match entry.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(_) => Err("secure credential storage is unavailable".to_string()),
+        }
+    })
+}
+
 #[cfg(target_os = "macos")]
 mod webview_recovery {
     use objc2::runtime::{AnyObject, Imp, Sel};
@@ -348,7 +423,12 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![show_desktop_session_notification])
+        .invoke_handler(tauri::generate_handler![
+            show_desktop_session_notification,
+            get_github_issues_credential,
+            set_github_issues_credential,
+            delete_github_issues_credential,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

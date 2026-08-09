@@ -8,8 +8,11 @@ import { Switch } from '@/components/Switch';
 import { t } from '@/text';
 import { isTauri } from '@/utils/isTauri';
 import { DevFeatureBadge } from '@/components/DevFeatureBadge';
+import { useRouter } from 'expo-router';
 
 export default function FeaturesSettingsScreen() {
+    const githubIssuesSupported = Platform.OS !== 'web' || isTauri();
+    const router = useRouter();
     const [experiments, setExperiments] = useSettingMutable('experiments');
     const [analyticsOptOut, setAnalyticsOptOut] = useSettingMutable('analyticsOptOut');
     const [agentInputEnterToSend, setAgentInputEnterToSend] = useSettingMutable('agentInputEnterToSend');
@@ -93,11 +96,21 @@ export default function FeaturesSettingsScreen() {
                 <Item
                     title="GitHub Issues"
                     titleAccessory={<DevFeatureBadge />}
-                    subtitle="Manage selected repositories without leaving Happy (requires server support)"
+                    subtitle={githubIssuesSupported
+                        ? "Manage selected repositories with a device-local GitHub connection"
+                        : "Available in Happy desktop and mobile"}
                     icon={<Ionicons name="logo-github" size={29} color="#24292F" />}
-                    rightElement={<Switch value={devGithubIssuesEnabled} onValueChange={setDevGithubIssuesEnabled} />}
+                    rightElement={<Switch value={devGithubIssuesEnabled && githubIssuesSupported} onValueChange={setDevGithubIssuesEnabled} disabled={!githubIssuesSupported} />}
                     showChevron={false}
                 />
+                {githubIssuesSupported && devGithubIssuesEnabled && (
+                    <Item
+                        title="GitHub Issues connection"
+                        subtitle="Connect, remove this device, or manage repository access"
+                        icon={<Ionicons name="key-outline" size={29} color="#5856D6" />}
+                        onPress={() => router.push('/github-issues' as any)}
+                    />
+                )}
                 <Item
                     title="Needs Attention Sessions"
                     titleAccessory={<DevFeatureBadge />}

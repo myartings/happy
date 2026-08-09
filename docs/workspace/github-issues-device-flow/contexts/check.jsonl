@@ -1,0 +1,11 @@
+{"path":".ai/project.json","reason":"Authoritative verification and protected-path policy"}
+{"path":"docs/specs/github-issues-device-flow.md","reason":"Acceptance criteria and verification matrix"}
+{"path":"docs/adr/0006-github-issues-use-client-device-flow.md","reason":"Security and architecture decision under review"}
+{"path":"docs/tasks/github-issues-device-flow-tasks.md","reason":"Implementation and definition-of-done coverage"}
+{"path":"docs/workspace/github-issues-device-flow/decisions.md","reason":"Resolved design decisions"}
+{"path":"docs/workspace/github-issues-device-flow/validation.md","reason":"Exact evidence ledger and remaining gaps"}
+{"path":"packages/happy-app/sources/features/github-issues","reason":"Module locality, tests, and secret handling"}
+{"path":"packages/happy-app/src-tauri","reason":"Desktop capability and credential Adapter security"}
+{"path":"packages/happy-server/sources/app/github","reason":"Issue proxy removal and profile regressions"}
+{"path":"packages/happy-server/sources/app/api/routes","reason":"Route removal and official connect-flow review"}
+{"path":"packages/happy-server/prisma","reason":"Immutable history and forward-only schema cleanup"}

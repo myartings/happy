@@ -1,0 +1,16 @@
+{"path":"CONTEXT.md","reason":"Shared repository boundaries and project language"}
+{"path":".ai/project.json","reason":"Risk triggers and authoritative verification commands"}
+{"path":"docs/specs/github-issues-ui.md","reason":"Existing product scope, navigation, and interaction baseline"}
+{"path":"docs/specs/github-issues-device-flow.md","reason":"Canonical migration and acceptance contract"}
+{"path":"docs/adr/0005-github-issues-use-fine-grained-github-app.md","reason":"Superseded server-proxy decision and retained permission rationale"}
+{"path":"docs/adr/0006-github-issues-use-client-device-flow.md","reason":"Accepted authentication, storage, and transport architecture"}
+{"path":"docs/tasks/github-issues-device-flow-tasks.md","reason":"Ordered implementation slices and guardrails"}
+{"path":"packages/happy-app/sources/features/github-issues","reason":"Feature-local Module and existing DTO/repository logic"}
+{"path":"packages/happy-app/sources/app/(app)/github-issues","reason":"Existing Issue list, detail, and create screens"}
+{"path":"packages/happy-app/sources/auth/tokenStorage.ts","reason":"Existing platform storage precedent and prohibited generic-web fallback"}
+{"path":"packages/happy-app/sources/utils/isTauri.ts","reason":"Desktop runtime discrimination"}
+{"path":"packages/happy-app/src-tauri","reason":"Desktop HTTP and OS credential-store Adapter registration"}
+{"path":"packages/happy-server/sources/app/api/routes","reason":"Verify the retired Issue proxy stays absent while preserving unrelated routes"}
+{"path":"packages/happy-server/sources/app/github","reason":"Issue service/runtime removal and official GitHub profile preservation"}
+{"path":"packages/happy-server/sources/app/api/routes/connectRoutes.ts","reason":"Restore official profile-only authorization behavior"}
+{"path":"packages/happy-server/prisma","reason":"Preserve migration history and stage forward cleanup"}
