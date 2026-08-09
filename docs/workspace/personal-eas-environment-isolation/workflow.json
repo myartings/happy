@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "personal-eas-environment-isolation",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Merge to dev, configure project-scoped personal environment values, and retry internal build",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/plans/personal-eas-environment-isolation-prd.md defines acceptance criteria",
+      "updated": "2026-08-09T17:55:02+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-eas-environment-isolation/decisions.md records shared-variable isolation decisions",
+      "updated": "2026-08-09T17:55:02+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/tasks/personal-eas-environment-isolation-tasks.md limits change to Personal profiles",
+      "updated": "2026-08-09T17:55:02+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Dedicated personal environment leaves shared production variables and official profiles unchanged",
+      "updated": "2026-08-09T17:55:02+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Both Personal profiles select environment personal; official profiles unchanged",
+      "updated": "2026-08-09T17:56:12+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Profile assertions, Expo identity assertions, app/server typechecks, and 28 workflow tests passed",
+      "updated": "2026-08-09T17:56:12+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff contains only profile isolation, accepted contracts, and workflow evidence; no credentials",
+      "updated": "2026-08-09T17:56:12+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Implementation verified; operational build retry follows merge to dev",
+      "updated": "2026-08-09T17:56:12+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T17:53:14+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T17:55:02+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/plans/personal-eas-environment-isolation-prd.md defines acceptance criteria"
+    },
+    {
+      "at": "2026-08-09T17:55:02+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-eas-environment-isolation/decisions.md records shared-variable isolation decisions"
+    },
+    {
+      "at": "2026-08-09T17:55:02+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/tasks/personal-eas-environment-isolation-tasks.md limits change to Personal profiles"
+    },
+    {
+      "at": "2026-08-09T17:55:02+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Dedicated personal environment leaves shared production variables and official profiles unchanged"
+    },
+    {
+      "at": "2026-08-09T17:55:02+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Verify profile contract before implementation gate"
+    },
+    {
+      "at": "2026-08-09T17:55:02+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Validate dedicated Personal EAS environment configuration"
+    },
+    {
+      "at": "2026-08-09T17:56:12+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Both Personal profiles select environment personal; official profiles unchanged"
+    },
+    {
+      "at": "2026-08-09T17:56:12+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Complete whole-diff review and finish gate"
+    },
+    {
+      "at": "2026-08-09T17:56:12+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Profile assertions, Expo identity assertions, app/server typechecks, and 28 workflow tests passed"
+    },
+    {
+      "at": "2026-08-09T17:56:12+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff contains only profile isolation, accepted contracts, and workflow evidence; no credentials"
+    },
+    {
+      "at": "2026-08-09T17:56:12+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive verified workflow for commit and PR"
+    },
+    {
+      "at": "2026-08-09T17:56:12+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Implementation verified; operational build retry follows merge to dev"
+    },
+    {
+      "at": "2026-08-09T17:56:20+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Isolate Happy Personal EAS build profiles from shared production variables; commit: pending; follow-up: Merge to dev, configure project-scoped personal environment values, and retry internal build"
+    }
+  ],
+  "updated": "2026-08-09T17:56:20+00:00",
+  "archivedAt": "2026-08-09T17:56:20+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Isolate Happy Personal EAS build profiles from shared production variables",
+  "archiveFollowUp": "Merge to dev, configure project-scoped personal environment values, and retry internal build"
+}

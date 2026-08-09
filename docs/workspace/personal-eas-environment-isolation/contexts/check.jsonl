@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands."}
+{"path":"packages/happy-app/eas.json","reason":"Verify Personal and official profile boundaries."}
+{"path":"packages/happy-app/app.config.js","reason":"Verify resolved Personal Expo identity."}
+{"path":"docs/specs/personal-eas-environment-isolation.md","reason":"Map checks to acceptance criteria."}
+{"path":"docs/workspace/personal-eas-environment-isolation/validation.md","reason":"Evidence ledger for exact check outcomes."}
