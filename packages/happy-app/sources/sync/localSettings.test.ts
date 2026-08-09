@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     applyLocalSettings,
     buildPersonalDisplaySettingsMigration,
+    buildSyncedSessionListSettingsMigration,
     LocalSettingsSchema,
     localSettingsDefaults,
     localSettingsParse,
@@ -75,7 +76,7 @@ describe('personal development local settings', () => {
         expect(LocalSettingsSchema.shape).not.toHaveProperty('devWorktreeProjectIdentityEnabled');
     });
 
-    it('inherits legacy synced display choices once on each device', () => {
+    it('inherits only display choices that remain device-local', () => {
         const migration = buildPersonalDisplaySettingsMigration(localSettingsDefaults, {
             sortActiveSessionsGlobally: true,
             groupActiveSessionsByDate: true,
@@ -84,8 +85,6 @@ describe('personal development local settings', () => {
         });
 
         expect(migration).toEqual({
-            devSortActiveSessionsGloballyEnabled: true,
-            devGroupActiveSessionsByDateEnabled: true,
             devShowActiveSessionRuntimeEnabled: true,
             devShowSessionModelEnabled: false,
             devPersonalDisplaySettingsMigrated: true,
@@ -103,5 +102,30 @@ describe('personal development local settings', () => {
             sortActiveSessionsGlobally: true,
             showSessionModel: false,
         })).toBeNull();
+    });
+
+    it('migrates current session-list choices to account settings once', () => {
+        expect(buildSyncedSessionListSettingsMigration(applyLocalSettings(localSettingsDefaults, {
+            devSortActiveSessionsGloballyEnabled: true,
+            devGroupActiveSessionsByDateEnabled: true,
+            devNeedsAttentionSessionsEnabled: false,
+        }), {})).toEqual({
+            accountDelta: {
+                sortActiveSessionsGlobally: true,
+                groupActiveSessionsByDate: true,
+                needsAttentionSessionsEnabled: false,
+                sessionListSettingsMigrated: true,
+            },
+            localDelta: { devSessionListSettingsSynced: true },
+        });
+    });
+
+    it('accepts an existing account migration without overwriting it', () => {
+        expect(buildSyncedSessionListSettingsMigration(localSettingsDefaults, {
+            sessionListSettingsMigrated: true,
+        })).toEqual({
+            accountDelta: null,
+            localDelta: { devSessionListSettingsSynced: true },
+        });
     });
 });

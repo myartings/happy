@@ -27,12 +27,12 @@ export default function FeaturesSettingsScreen() {
     const [sortSessionsByActivity, setSortSessionsByActivity] = useSettingMutable('sortSessionsByActivity');
     const [devProjectTodosEnabled, setDevProjectTodosEnabled] = useLocalSettingMutable('devProjectTodosEnabled');
     const [devGithubIssuesEnabled, setDevGithubIssuesEnabled] = useLocalSettingMutable('devGithubIssuesEnabled');
-    const [devNeedsAttentionSessionsEnabled, setDevNeedsAttentionSessionsEnabled] = useLocalSettingMutable('devNeedsAttentionSessionsEnabled');
+    const [needsAttentionSessionsEnabled, setNeedsAttentionSessionsEnabled] = useSettingMutable('needsAttentionSessionsEnabled');
     const [devPromptHistoryNavigatorEnabled, setDevPromptHistoryNavigatorEnabled] = useLocalSettingMutable('devPromptHistoryNavigatorEnabled');
     const [devSessionEnvironmentLabelsEnabled, setDevSessionEnvironmentLabelsEnabled] = useLocalSettingMutable('devSessionEnvironmentLabelsEnabled');
     const [devEnhancedStatusDotsEnabled, setDevEnhancedStatusDotsEnabled] = useLocalSettingMutable('devEnhancedStatusDotsEnabled');
-    const [devSortActiveSessionsGloballyEnabled, setDevSortActiveSessionsGloballyEnabled] = useLocalSettingMutable('devSortActiveSessionsGloballyEnabled');
-    const [devGroupActiveSessionsByDateEnabled, setDevGroupActiveSessionsByDateEnabled] = useLocalSettingMutable('devGroupActiveSessionsByDateEnabled');
+    const [sortActiveSessionsGlobally, setSortActiveSessionsGlobally] = useSettingMutable('sortActiveSessionsGlobally');
+    const [groupActiveSessionsByDate, setGroupActiveSessionsByDate] = useSettingMutable('groupActiveSessionsByDate');
     const [devShowActiveSessionRuntimeEnabled, setDevShowActiveSessionRuntimeEnabled] = useLocalSettingMutable('devShowActiveSessionRuntimeEnabled');
     const [devShowSessionModelEnabled, setDevShowSessionModelEnabled] = useLocalSettingMutable('devShowSessionModelEnabled');
 
@@ -116,7 +116,7 @@ export default function FeaturesSettingsScreen() {
                     titleAccessory={<DevFeatureBadge />}
                     subtitle="Collect unread and permission-blocked sessions at the top"
                     icon={<Ionicons name="alert-circle-outline" size={29} color="#FF9500" />}
-                    rightElement={<Switch value={devNeedsAttentionSessionsEnabled} onValueChange={setDevNeedsAttentionSessionsEnabled} />}
+                    rightElement={<Switch value={needsAttentionSessionsEnabled} onValueChange={setNeedsAttentionSessionsEnabled} />}
                     showChevron={false}
                 />
                 <Item
@@ -148,7 +148,7 @@ export default function FeaturesSettingsScreen() {
                     titleAccessory={<DevFeatureBadge />}
                     subtitle="Show active sessions in one list ordered by recent activity"
                     icon={<Ionicons name="list-outline" size={29} color="#34C759" />}
-                    rightElement={<Switch value={devSortActiveSessionsGloballyEnabled} onValueChange={setDevSortActiveSessionsGloballyEnabled} />}
+                    rightElement={<Switch value={sortActiveSessionsGlobally} onValueChange={setSortActiveSessionsGlobally} />}
                     showChevron={false}
                 />
                 <Item
@@ -158,9 +158,9 @@ export default function FeaturesSettingsScreen() {
                     icon={<Ionicons name="calendar-outline" size={29} color="#007AFF" />}
                     rightElement={(
                         <Switch
-                            value={devGroupActiveSessionsByDateEnabled}
-                            onValueChange={setDevGroupActiveSessionsByDateEnabled}
-                            disabled={!devSortActiveSessionsGloballyEnabled}
+                            value={groupActiveSessionsByDate}
+                            onValueChange={setGroupActiveSessionsByDate}
+                            disabled={!sortActiveSessionsGlobally}
                         />
                     )}
                     showChevron={false}

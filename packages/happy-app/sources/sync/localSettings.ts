@@ -27,6 +27,7 @@ export const LocalSettingsSchema = z.object({
     devShowActiveSessionRuntimeEnabled: z.boolean().describe('Show project, device platform, AI provider, and model details on active session rows'),
     devShowSessionModelEnabled: z.boolean().describe('Show the AI provider icon and name plus the model name and version in session UI'),
     devPersonalDisplaySettingsMigrated: z.boolean().describe('Whether legacy synced personal display preferences were copied to this device'),
+    devSessionListSettingsSynced: z.boolean().describe('Whether device-local session list choices were migrated to account settings'),
     // Right file sidebar: which panels the user has opened and which is active.
     // Persisted so the layout survives reloads and long absences.
     sidebarPanelsOpen: z.array(z.enum(['changes', 'allFiles', 'sideChat'])).describe('Open right-sidebar panels, in tab order'),
@@ -72,6 +73,7 @@ export const localSettingsDefaults: LocalSettings = {
     devShowActiveSessionRuntimeEnabled: false,
     devShowSessionModelEnabled: true,
     devPersonalDisplaySettingsMigrated: false,
+    devSessionListSettingsSynced: false,
     sidebarPanelsOpen: [],
     sidebarPanelActive: null,
     acknowledgedCliVersions: {},
@@ -113,14 +115,6 @@ export function buildPersonalDisplaySettingsMigration(
     ) as boolean;
 
     return {
-        devSortActiveSessionsGloballyEnabled: inheritBoolean(
-            'sortActiveSessionsGlobally',
-            localSettings.devSortActiveSessionsGloballyEnabled,
-        ),
-        devGroupActiveSessionsByDateEnabled: inheritBoolean(
-            'groupActiveSessionsByDate',
-            localSettings.devGroupActiveSessionsByDateEnabled,
-        ),
         devShowActiveSessionRuntimeEnabled: inheritBoolean(
             'showActiveSessionRuntime',
             localSettings.devShowActiveSessionRuntimeEnabled,
@@ -130,5 +124,31 @@ export function buildPersonalDisplaySettingsMigration(
             localSettings.devShowSessionModelEnabled,
         ),
         devPersonalDisplaySettingsMigrated: true,
+    };
+}
+
+export function buildSyncedSessionListSettingsMigration(
+    localSettings: LocalSettings,
+    accountSettings: { sessionListSettingsMigrated?: boolean },
+): {
+    accountDelta: {
+        sortActiveSessionsGlobally: boolean;
+        groupActiveSessionsByDate: boolean;
+        needsAttentionSessionsEnabled: boolean;
+        sessionListSettingsMigrated: true;
+    } | null;
+    localDelta: { devSessionListSettingsSynced: true };
+} | null {
+    if (localSettings.devSessionListSettingsSynced) return null;
+    return {
+        accountDelta: accountSettings.sessionListSettingsMigrated
+            ? null
+            : {
+                sortActiveSessionsGlobally: localSettings.devSortActiveSessionsGloballyEnabled,
+                groupActiveSessionsByDate: localSettings.devGroupActiveSessionsByDateEnabled,
+                needsAttentionSessionsEnabled: localSettings.devNeedsAttentionSessionsEnabled,
+                sessionListSettingsMigrated: true,
+            },
+        localDelta: { devSessionListSettingsSynced: true },
     };
 }

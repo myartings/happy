@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SessionListViewItem, useLocalSetting, useSessionListViewData, useSetting } from '@/sync/storage';
+import { SessionListViewItem, useSessionListViewData, useSetting } from '@/sync/storage';
 import { buildVisibleSessionListViewData } from '@/utils/visibleSessionListViewData';
 
 /**
@@ -13,9 +13,9 @@ import { buildVisibleSessionListViewData } from '@/utils/visibleSessionListViewD
 export function useVisibleSessionListViewData(): SessionListViewItem[] | null {
     const data = useSessionListViewData();
     const hideArchivedSessions = useSetting('hideInactiveSessions');
-    const sortActiveSessionsGlobally = useLocalSetting('devSortActiveSessionsGloballyEnabled');
-    const groupActiveSessionsByDate = useLocalSetting('devGroupActiveSessionsByDateEnabled');
-    const needsAttentionSessionsEnabled = useLocalSetting('devNeedsAttentionSessionsEnabled');
+    const sortActiveSessionsGlobally = useSetting('sortActiveSessionsGlobally');
+    const groupActiveSessionsByDate = useSetting('groupActiveSessionsByDate');
+    const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
 
     return React.useMemo(() => buildVisibleSessionListViewData(data, {
         hideArchivedSessions,

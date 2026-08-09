@@ -27,7 +27,8 @@ import { isRunningOnMac } from '@/utils/platform';
 import { NormalizedMessage, normalizeRawMessage, RawRecord } from './typesRaw';
 import { extractPromptHistoryItems, PromptHistoryPage } from './promptHistory';
 import { applySettings, Settings, settingsDefaults, settingsParse, settingsToSyncPayload, SUPPORTED_SCHEMA_VERSION } from './settings';
-import { buildPersonalDisplaySettingsMigration } from './localSettings';
+import { buildPersonalDisplaySettingsMigration, buildSyncedSessionListSettingsMigration } from './localSettings';
+import { didSessionBecomeUnread, markSessionAttentionRead, markSessionAttentionUnread } from './sessionAttentionMarkers';
 import { Profile, profileParse } from './profile';
 import { loadPendingSettings, savePendingSettings } from './persistence';
 import {
@@ -915,9 +916,16 @@ class Sync {
             ? applySettings(serverSettings, this.pendingSettings)
             : serverSettings;
         const state = storage.getState();
+        const sessionListMigration = buildSyncedSessionListSettingsMigration(state.localSettings, merged);
         const localMigration = buildPersonalDisplaySettingsMigration(state.localSettings, merged);
         if (localMigration) state.applyLocalSettings(localMigration);
         state.applySettings(merged, version);
+        if (sessionListMigration) {
+            state.applyLocalSettings(sessionListMigration.localDelta);
+            if (sessionListMigration.accountDelta) {
+                this.applySettings(sessionListMigration.accountDelta);
+            }
+        }
     }
 
     applySettings = (delta: Partial<Settings>) => {
@@ -939,6 +947,21 @@ class Sync {
 
         // Invalidate settings sync
         this.settingsSync.invalidate();
+    }
+
+    setCurrentViewingSession = (sessionId: string | null) => {
+        const state = storage.getState();
+        const wasUnread = sessionId ? state.unreadSessionIds.has(sessionId) : false;
+        state.setCurrentViewingSession(sessionId);
+        if (!sessionId || !wasUnread) return;
+
+        const markers = markSessionAttentionRead(
+            storage.getState().settings.sessionAttentionMarkers,
+            sessionId,
+        );
+        if (markers !== storage.getState().settings.sessionAttentionMarkers) {
+            this.applySettings({ sessionAttentionMarkers: markers });
+        }
     }
 
     refreshPurchases = () => {
@@ -3033,10 +3056,32 @@ class Sync {
     private applySessions = (sessions: (Omit<Session, "presence"> & {
         presence?: "online" | number;
     })[]) => {
-        const active = storage.getState().getActiveSessions();
+        const beforeState = storage.getState();
+        const active = beforeState.getActiveSessions();
         storage.getState().applySessions(sessions);
-        const newActive = storage.getState().getActiveSessions();
+        const afterState = storage.getState();
+        const newActive = afterState.getActiveSessions();
         this.applySessionDiff(active, newActive);
+
+        let markers = afterState.settings.sessionAttentionMarkers;
+        for (const incoming of sessions) {
+            const previous = beforeState.sessions[incoming.id];
+            const session = afterState.sessions[incoming.id];
+            if (!previous || !session) continue;
+            const becameUnread = didSessionBecomeUnread({
+                thinking: previous.thinking === true,
+                hasPendingRequests: !!previous.agentState?.requests && Object.keys(previous.agentState.requests).length > 0,
+                presence: previous.presence,
+            }, {
+                thinking: session.thinking === true,
+                hasPendingRequests: !!session.agentState?.requests && Object.keys(session.agentState.requests).length > 0,
+                presence: session.presence,
+            }, beforeState.currentViewingSessionId === session.id);
+            if (becameUnread) markers = markSessionAttentionUnread(markers, session.id, session.seq);
+        }
+        if (markers !== afterState.settings.sessionAttentionMarkers) {
+            this.applySettings({ sessionAttentionMarkers: markers });
+        }
     }
 
     private applySessionDiff = (active: Session[], newActive: Session[]) => {
