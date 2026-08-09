@@ -1,0 +1,4 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands."}
+{"path":"packages/happy-app/eas.json","reason":"Verify both Personal profiles use preview."}
+{"path":"docs/specs/personal-eas-environment-isolation.md","reason":"Map checks to corrected acceptance criteria."}
+{"path":"docs/workspace/personal-eas-preview-environment/validation.md","reason":"Evidence ledger for exact check outcomes."}

@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "slug": "happy-ios-release",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Accepted PRD/spec/tasks define personal internal, TestFlight, and iOS EAS Update channels with deterministic dry-run acceptance.",
+      "updated": "2026-08-09T16:29:11+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/happy-ios-release/decisions.md resolves EAS ownership, profile isolation, credential location, and OTA-server boundary.",
+      "updated": "2026-08-09T16:29:11+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "High-risk single-slice scope is bounded to three repos; no subagents or production mutations; tests cover config resolution, shell routing, skill parity, and dry-runs.",
+      "updated": "2026-08-09T16:29:11+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/plans/happy-ios-release-prd.md records profile isolation, clean-dev enforcement, identity validation, strict ATS, credential exclusion, and no-live-deploy controls.",
+      "updated": "2026-08-09T16:29:11+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Happy personal-store profile and strict ATS implemented; happy-manager commands/skill and iosTemplate OTA isolation implemented with dry-run and smoke coverage.",
+      "updated": "2026-08-09T16:42:33+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures",
+      "updated": "2026-08-09T17:05:18+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed across Happy, happy-manager, and ios-coding-template: personal/official profiles are isolated, submit requires an explicit build ID, dry-runs are side-effect free, credentials remain local, and OTA paths reject cross-app/path-traversal input.",
+      "updated": "2026-08-09T16:44:49+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Final merged-base verification passed: Happy app 100 files/1013 tests, Happy server 12 files/95 tests, both typechecks, workflow checks, manager dry-runs, and OTA isolation smoke; no live release executed.",
+      "updated": "2026-08-09T17:05:26+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T16:25:04+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T16:29:11+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Accepted PRD/spec/tasks define personal internal, TestFlight, and iOS EAS Update channels with deterministic dry-run acceptance."
+    },
+    {
+      "at": "2026-08-09T16:29:11+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/happy-ios-release/decisions.md resolves EAS ownership, profile isolation, credential location, and OTA-server boundary."
+    },
+    {
+      "at": "2026-08-09T16:29:11+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/plans/happy-ios-release-prd.md records profile isolation, clean-dev enforcement, identity validation, strict ATS, credential exclusion, and no-live-deploy controls."
+    },
+    {
+      "at": "2026-08-09T16:29:11+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "High-risk single-slice scope is bounded to three repos; no subagents or production mutations; tests cover config resolution, shell routing, skill parity, and dry-runs."
+    },
+    {
+      "at": "2026-08-09T16:42:33+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Happy personal-store profile and strict ATS implemented; happy-manager commands/skill and iosTemplate OTA isolation implemented with dry-run and smoke coverage."
+    },
+    {
+      "at": "2026-08-09T16:42:46+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implementation complete; run full verification."
+    },
+    {
+      "at": "2026-08-09T16:42:46+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured checks and record cross-repository release validation."
+    },
+    {
+      "at": "2026-08-09T16:43:12+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-09T16:44:49+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-09T16:44:49+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed across Happy, happy-manager, and ios-coding-template: personal/official profiles are isolated, submit requires an explicit build ID, dry-runs are side-effect free, credentials remain local, and OTA paths reject cross-app/path-traversal input."
+    },
+    {
+      "at": "2026-08-09T16:45:02+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Implementation verified; await authorization to commit Happy and happy-manager changes."
+    },
+    {
+      "at": "2026-08-09T17:05:18+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-09T17:05:26+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Final merged-base verification passed: Happy app 100 files/1013 tests, Happy server 12 files/95 tests, both typechecks, workflow checks, manager dry-runs, and OTA isolation smoke; no live release executed."
+    },
+    {
+      "at": "2026-08-09T17:05:26+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Add guarded Happy Personal iOS internal, TestFlight, and EAS Update release paths.; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-09T17:05:26+00:00",
+  "archivedAt": "2026-08-09T17:05:26+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Add guarded Happy Personal iOS internal, TestFlight, and EAS Update release paths.",
+  "archiveFollowUp": "None"
+}
