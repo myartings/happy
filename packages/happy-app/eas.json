@@ -54,7 +54,7 @@
       "autoIncrement": true,
       "distribution": "internal",
       "channel": "personal",
-      "environment": "personal",
+      "environment": "preview",
       "android": {
         "buildType": "apk"
       },
@@ -67,7 +67,7 @@
       "autoIncrement": true,
       "distribution": "store",
       "channel": "personal",
-      "environment": "personal",
+      "environment": "preview",
       "env": {
         "APP_ENV": "personal",
         "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"

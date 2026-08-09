@@ -4,7 +4,7 @@
 
 - [x] Reproduce the cross-project environment collision.
 - [x] Document isolation and rollback boundaries.
-- [x] Move both Personal build profiles to environment `personal`.
+- [x] Move both Personal build profiles to the project-isolated `preview` environment supported by the current Expo plan.
 - [x] Verify profile isolation and resolved Expo identity.
 - [ ] Complete review, merge to `dev`, and retry the internal build.
 

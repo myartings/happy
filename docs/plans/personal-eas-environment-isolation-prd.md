@@ -11,13 +11,14 @@ Personal project identity, preventing builds or risking cross-project configurat
 
 ## Outcome
 
-Use a dedicated `personal` EAS environment for both Personal binary profiles so
-personal project variables never collide with official or account-wide production
-configuration.
+Use the default `preview` EAS environment for both Personal binary profiles, with
+variables scoped to the Personal EAS project. This isolates the Personal project
+from account-wide production configuration without requiring a paid custom
+environment.
 
 ## Acceptance
 
-- `build.personal` and `build.personal-store` select environment `personal`.
+- `build.personal` and `build.personal-store` select environment `preview`.
 - Official development, preview, and production profiles remain unchanged.
 - The resolved Personal identity remains `@myartings/happy-personal` with bundle ID
   `com.myartings.happy`.
@@ -26,5 +27,7 @@ configuration.
 ## Risk controls
 
 - Change only the two Personal profiles.
+- Use a default EAS environment supported by the current Expo plan; custom
+  environments require a Production or Enterprise plan.
 - Keep environment values in EAS or untracked local configuration.
 - Build only from clean `dev` after review and merge.

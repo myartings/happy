@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "personal-eas-preview-environment",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Merge to dev, configure project preview variables, and retry internal build",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Existing isolation PRD updated for default preview environment",
+      "updated": "2026-08-09T18:00:16+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "EAS plan limitation and empty preview environment recorded in decisions.md",
+      "updated": "2026-08-09T18:00:16+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Change limited to Personal profiles and isolation contract correction",
+      "updated": "2026-08-09T18:00:16+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Account preview environment has no variables; values will be scoped to Personal project",
+      "updated": "2026-08-09T18:00:16+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Both Personal profiles use plan-compatible preview environment",
+      "updated": "2026-08-09T18:01:09+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Environment inspection, profile assertions, Expo config, app typecheck, and 28 workflow tests passed",
+      "updated": "2026-08-09T18:01:10+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff leaves shared production variables and official profiles unchanged",
+      "updated": "2026-08-09T18:01:10+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Verified correction ready for PR; build retry follows merge",
+      "updated": "2026-08-09T18:01:10+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T17:59:33+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T18:00:16+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Existing isolation PRD updated for default preview environment"
+    },
+    {
+      "at": "2026-08-09T18:00:16+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "EAS plan limitation and empty preview environment recorded in decisions.md"
+    },
+    {
+      "at": "2026-08-09T18:00:16+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Change limited to Personal profiles and isolation contract correction"
+    },
+    {
+      "at": "2026-08-09T18:00:16+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Account preview environment has no variables; values will be scoped to Personal project"
+    },
+    {
+      "at": "2026-08-09T18:00:16+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Verify preview environment profile contract"
+    },
+    {
+      "at": "2026-08-09T18:00:16+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Run profile, identity, and workflow checks"
+    },
+    {
+      "at": "2026-08-09T18:01:09+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Both Personal profiles use plan-compatible preview environment"
+    },
+    {
+      "at": "2026-08-09T18:01:10+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Complete review and archive"
+    },
+    {
+      "at": "2026-08-09T18:01:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Environment inspection, profile assertions, Expo config, app typecheck, and 28 workflow tests passed"
+    },
+    {
+      "at": "2026-08-09T18:01:10+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff leaves shared production variables and official profiles unchanged"
+    },
+    {
+      "at": "2026-08-09T18:01:10+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive corrected plan-compatible environment workflow"
+    },
+    {
+      "at": "2026-08-09T18:01:10+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Verified correction ready for PR; build retry follows merge"
+    },
+    {
+      "at": "2026-08-09T18:01:10+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Use plan-compatible preview environment for Personal EAS profiles; commit: pending; follow-up: Merge to dev, configure project preview variables, and retry internal build"
+    }
+  ],
+  "updated": "2026-08-09T18:01:10+00:00",
+  "archivedAt": "2026-08-09T18:01:10+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Use plan-compatible preview environment for Personal EAS profiles",
+  "archiveFollowUp": "Merge to dev, configure project preview variables, and retry internal build"
+}
