@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"packages/happy-app/app.config.js","reason":"Verify resolved personal Expo identity and ATS."}
+{"path":"packages/happy-app/eas.json","reason":"Verify EAS profile isolation."}
+{"path":"docs/specs/happy-ios-release.md","reason":"Map checks to acceptance criteria."}
+{"path":"docs/workspace/happy-ios-release/validation.md","reason":"Evidence ledger for exact check outcomes"}

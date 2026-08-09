@@ -62,6 +62,16 @@
         "APP_ENV": "personal",
         "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
       }
+    },
+    "personal-store": {
+      "autoIncrement": true,
+      "distribution": "store",
+      "channel": "personal",
+      "environment": "production",
+      "env": {
+        "APP_ENV": "personal",
+        "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
+      }
     }
   },
   "submit": {
@@ -84,6 +94,15 @@
         "appleId": "steve@bulkovo.com",
         "ascAppId": "6748571505",
         "appleTeamId": "466DQWDR8C"
+      }
+    },
+    "personal-store": {
+      "ios": {
+        "ascApiKeyPath": "$APP_STORE_CONNECT_API_KEY_PATH",
+        "ascApiKeyId": "$APP_STORE_CONNECT_API_KEY_ID",
+        "ascApiKeyIssuerId": "$APP_STORE_CONNECT_API_ISSUER_ID",
+        "ascAppId": "$APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "$APPLE_DEVELOPMENT_TEAM"
       }
     }
   }
