@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "personal-ota-pnpm-args",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Merge the repair PR, push a new unique Android OTA tag, and monitor publication",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/personal-ota-pnpm-args.md defines four bounded acceptance criteria",
+      "updated": "2026-08-09T20:39:21+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/decisions.md selects the one-line correction and immutable failed tag",
+      "updated": "2026-08-09T20:39:22+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/tasks/personal-ota-pnpm-args-tasks.md limits implementation to forwarding and checks",
+      "updated": "2026-08-09T20:39:22+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "No publish during implementation; all channel, environment, platform, fingerprint, and identity guards remain",
+      "updated": "2026-08-09T20:39:22+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": ".github/workflows/personal-ota.yml removes only the redundant separator",
+      "updated": "2026-08-09T20:42:29+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/validation.md records EAS parsing, YAML, typecheck, workflow, and diff checks",
+      "updated": "2026-08-09T20:42:29+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/finish.md confirms one-token diff and unchanged release guards",
+      "updated": "2026-08-09T20:42:30+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/finish.md completes acceptance, rollback, and hosted follow-up review",
+      "updated": "2026-08-09T20:42:30+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T20:38:46+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T20:39:21+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/personal-ota-pnpm-args.md defines four bounded acceptance criteria"
+    },
+    {
+      "at": "2026-08-09T20:39:22+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/decisions.md selects the one-line correction and immutable failed tag"
+    },
+    {
+      "at": "2026-08-09T20:39:22+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/tasks/personal-ota-pnpm-args-tasks.md limits implementation to forwarding and checks"
+    },
+    {
+      "at": "2026-08-09T20:39:22+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "No publish during implementation; all channel, environment, platform, fingerprint, and identity guards remain"
+    },
+    {
+      "at": "2026-08-09T20:39:22+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Apply the accepted one-line pnpm forwarding correction"
+    },
+    {
+      "at": "2026-08-09T20:39:23+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remove the redundant separator and verify exact EAS parsing"
+    },
+    {
+      "at": "2026-08-09T20:42:29+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": ".github/workflows/personal-ota.yml removes only the redundant separator"
+    },
+    {
+      "at": "2026-08-09T20:42:29+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Record hosted failure and exact argument-boundary proof"
+    },
+    {
+      "at": "2026-08-09T20:42:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/validation.md records EAS parsing, YAML, typecheck, workflow, and diff checks"
+    },
+    {
+      "at": "2026-08-09T20:42:30+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/finish.md confirms one-token diff and unchanged release guards"
+    },
+    {
+      "at": "2026-08-09T20:42:30+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive, commit, push, and create repair PR"
+    },
+    {
+      "at": "2026-08-09T20:42:30+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-pnpm-args/finish.md completes acceptance, rollback, and hosted follow-up review"
+    },
+    {
+      "at": "2026-08-09T20:42:31+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Remove the redundant pnpm separator blocking hosted Android OTA publication; commit: pending; follow-up: Merge the repair PR, push a new unique Android OTA tag, and monitor publication"
+    }
+  ],
+  "updated": "2026-08-09T20:42:31+00:00",
+  "archivedAt": "2026-08-09T20:42:31+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Remove the redundant pnpm separator blocking hosted Android OTA publication",
+  "archiveFollowUp": "Merge the repair PR, push a new unique Android OTA tag, and monitor publication"
+}
