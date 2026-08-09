@@ -1,0 +1,10 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/github-issues-ui/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/github-issues-ui.md","reason":"Acceptance criteria and failure-state contract"}
+{"path":"packages/happy-app/sources/sync/apiGithub.spec.ts","reason":"Existing GitHub client test family"}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Feature-off parity and inheritance behavior"}
+{"path":"packages/happy-app/sources/features/github-issues/githubRepository.test.ts","reason":"Contextual Git remote mapping behavior"}
+{"path":"packages/happy-server/sources/app/github/githubIssuesService.spec.ts","reason":"Issue normalization, lifecycle, deletion, and path safety"}
+{"path":"packages/happy-server/sources/app/github/githubIssuesFeature.spec.ts","reason":"Server feature switch fails closed"}
+{"path":"packages/happy-server/sources/app/api/routes/connectRoutes.ts","reason":"Authorization and route behavior"}
+{"path":"scripts/workflow-audit.py","reason":"Formal lifecycle validation"}

@@ -134,13 +134,18 @@ model SessionMessage {
 //
 
 model GithubUser {
-    id        String    @id
+    id                    String    @id
     /// [GitHubProfile]
-    profile   Json
-    token     Bytes?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    Account   Account[]
+    profile               Json
+    token                 Bytes?
+    refreshToken          Bytes?
+    tokenExpiresAt        DateTime?
+    refreshTokenExpiresAt DateTime?
+    permissions           Json?
+    authKind              String    @default("legacy")
+    createdAt             DateTime  @default(now())
+    updatedAt             DateTime  @updatedAt
+    Account               Account[]
 }
 
 model GithubOrganization {

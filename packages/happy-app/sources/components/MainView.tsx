@@ -36,6 +36,7 @@ import { MOBILE_GLASS_HEADER_HEIGHT } from './navigation/headerMetrics';
 import { useNewSessionDraft } from '@/hooks/useNewSessionDraft';
 import { useStartSessionFromDraft } from '@/hooks/useStartSessionFromDraft';
 import { ProjectTodoButton } from './ProjectTodoButton';
+import { GithubIssuesButton } from './GithubIssuesButton';
 
 interface MainViewProps {
     variant: 'phone' | 'sidebar';
@@ -303,6 +304,7 @@ const HeaderRight = React.memo(({
             return (
                 <View style={styles.headerActions}>
                     <ProjectTodoButton tintColor={theme.colors.header.tint} />
+                    <GithubIssuesButton tintColor={theme.colors.header.tint} />
                     <Pressable
                         onPress={onSearchPress}
                         accessibilityLabel={t('tools.names.search')}
@@ -349,6 +351,7 @@ const HeaderRight = React.memo(({
         return (
             <View style={styles.headerActions}>
                 <ProjectTodoButton tintColor={theme.colors.header.tint} />
+                <GithubIssuesButton tintColor={theme.colors.header.tint} />
                 {hasArchivedSessions && (
                     <Pressable
                         onPress={onArchiveVisibilityPress}

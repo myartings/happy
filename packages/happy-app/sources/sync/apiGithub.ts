@@ -10,9 +10,9 @@ export interface GitHubOAuthParams {
 export interface GitHubProfile {
     id: number;
     login: string;
-    name: string;
+    name: string | null;
     avatar_url: string;
-    email?: string;
+    email?: string | null;
 }
 
 export interface AccountProfile {

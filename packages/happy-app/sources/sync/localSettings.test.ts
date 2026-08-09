@@ -11,6 +11,7 @@ describe('personal development local settings', () => {
     it('uses the intended defaults for every personal UI feature', () => {
         expect(localSettingsDefaults).toMatchObject({
             devProjectTodosEnabled: true,
+            devGithubIssuesEnabled: false,
             devNeedsAttentionSessionsEnabled: true,
             devPromptHistoryNavigatorEnabled: true,
             devSessionEnvironmentLabelsEnabled: true,
@@ -26,6 +27,7 @@ describe('personal development local settings', () => {
         expect(localSettingsParse({ themePreference: 'dark' })).toMatchObject({
             themePreference: 'dark',
             devProjectTodosEnabled: true,
+            devGithubIssuesEnabled: false,
             devNeedsAttentionSessionsEnabled: true,
             devPromptHistoryNavigatorEnabled: true,
             devSessionEnvironmentLabelsEnabled: true,
