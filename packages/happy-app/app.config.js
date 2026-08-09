@@ -98,7 +98,7 @@ export default {
                 // - In dev/preview only, allow arbitrary HTTP loads so a
                 //   developer pointing the app at their machine doesn't have
                 //   to ship a TLS cert just to test attachment uploads.
-                NSAppTransportSecurity: variant === 'production'
+                NSAppTransportSecurity: (variant === 'production' || isPersonal)
                     ? { NSAllowsLocalNetworking: true }
                     : { NSAllowsLocalNetworking: true, NSAllowsArbitraryLoads: true }
             },

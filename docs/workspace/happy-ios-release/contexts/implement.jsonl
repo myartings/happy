@@ -1,0 +1,6 @@
+{"path":"packages/happy-app/app.config.js","reason":"Personal iOS identity and ATS release policy."}
+{"path":"packages/happy-app/eas.json","reason":"Personal internal, store, and submit profile isolation."}
+{"path":"packages/happy-app/package.json","reason":"Personal iOS command aliases when needed."}
+{"path":"docs/plans/happy-ios-release-prd.md","reason":"Accepted release boundaries and risk controls."}
+{"path":"docs/specs/happy-ios-release.md","reason":"Executable release contract."}
+{"path":"docs/tasks/happy-ios-release-tasks.md","reason":"Acceptance and progress checklist."}
