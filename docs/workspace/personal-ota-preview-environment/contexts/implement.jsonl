@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"packages/happy-app/package.json","reason":"Canonical personal OTA command"}
+{"path":"packages/happy-app/eas.json","reason":"Accepted personal build environment baseline"}
+{"path":"docs/specs/personal-ota-preview-environment.md","reason":"Accepted environment alignment behavior"}
+{"path":"docs/workspace/personal-ota-preview-environment/validation.md","reason":"Exact verification evidence"}

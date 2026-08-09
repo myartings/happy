@@ -1,6 +1,13 @@
 name: Personal mobile OTA
 
+run-name: >-
+  Personal OTA · ${{ github.event_name == 'workflow_dispatch' && inputs.platform || 'android' }} ·
+  ${{ github.event_name == 'workflow_dispatch' && inputs.message || github.ref_name }}
+
 on:
+  push:
+    tags:
+      - 'personal-ota/android/*'
   workflow_dispatch:
     inputs:
       message:
@@ -36,12 +43,25 @@ jobs:
       EXPO_OWNER: ${{ vars.EXPO_OWNER }}
       EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EXPO_PUBLIC_EAS_PROJECT_ID }}
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      OTA_MESSAGE: ${{ inputs.message }}
-      OTA_PLATFORM: ${{ inputs.platform }}
+      OTA_MESSAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.message || format('Personal Android OTA {0}', github.ref_name) }}
+      OTA_PLATFORM: ${{ github.event_name == 'workflow_dispatch' && inputs.platform || 'android' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tagged release commit
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin +refs/heads/dev:refs/remotes/origin/dev
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/dev; then
+            echo "The OTA tag must point to a commit contained in origin/dev." >&2
+            exit 1
+          fi
 
       - name: Validate OTA credentials
         shell: bash
@@ -99,9 +119,24 @@ jobs:
           console.log('Personal Expo configuration is valid.');
           NODE
 
-      - name: Publish personal OTA
+      - name: Validate Android native fingerprint
+        if: env.OTA_PLATFORM == 'android'
+        working-directory: packages/happy-app
         run: >-
-          pnpm --filter happy-app run ota:personal --
-          --platform "$OTA_PLATFORM"
-          --message "$OTA_MESSAGE"
+          pnpm dlx eas-cli@21.7.0 fingerprint:generate
+          --platform android
+          --json
           --non-interactive
+          > "$RUNNER_TEMP/personal-android-fingerprint.json"
+
+      - name: Publish personal OTA
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$OTA_PLATFORM" = 'android' ]; then
+            export EAS_SKIP_AUTO_FINGERPRINT=1
+          fi
+          pnpm --filter happy-app run ota:personal -- \
+            --platform "$OTA_PLATFORM" \
+            --message "$OTA_MESSAGE" \
+            --non-interactive

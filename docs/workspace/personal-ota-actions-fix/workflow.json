@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "personal-ota-actions-fix",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Merge the PR into dev, then push one unique personal-ota/android/* tag and monitor the first hosted run",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/personal-ota-actions-fix.md defines six acceptance criteria",
+      "updated": "2026-08-09T17:51:42+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-actions-fix/decisions.md resolves trigger, main-branch, fingerprint, dispatch, and safety decisions",
+      "updated": "2026-08-09T17:51:42+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/tasks/personal-ota-actions-fix-tasks.md limits implementation to the personal OTA workflow and evidence",
+      "updated": "2026-08-09T17:51:42+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Tag namespace is narrow; tagged SHA must be contained in origin/dev; credentials and configuration checks remain before publish",
+      "updated": "2026-08-09T17:51:43+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": ".github/workflows/personal-ota.yml implements tag trigger, dev ancestry guard, derived inputs, fingerprint preflight, and scoped skip flag",
+      "updated": "2026-08-09T18:12:29+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "docs/workspace/personal-ota-actions-fix/validation.md records passing OTA checks and two reproduced unrelated Windows baseline gaps",
+      "updated": "2026-08-09T18:12:30+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-actions-fix/finish.md records whole-diff safety and rollback review",
+      "updated": "2026-08-09T18:12:30+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-actions-fix/finish.md confirms acceptance, safety, verification, and follow-up",
+      "updated": "2026-08-09T18:12:31+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T17:49:23+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T17:51:42+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/personal-ota-actions-fix.md defines six acceptance criteria"
+    },
+    {
+      "at": "2026-08-09T17:51:42+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-actions-fix/decisions.md resolves trigger, main-branch, fingerprint, dispatch, and safety decisions"
+    },
+    {
+      "at": "2026-08-09T17:51:42+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/tasks/personal-ota-actions-fix-tasks.md limits implementation to the personal OTA workflow and evidence"
+    },
+    {
+      "at": "2026-08-09T17:51:43+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Tag namespace is narrow; tagged SHA must be contained in origin/dev; credentials and configuration checks remain before publish"
+    },
+    {
+      "at": "2026-08-09T17:51:43+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Implement the accepted personal OTA workflow changes"
+    },
+    {
+      "at": "2026-08-09T17:51:43+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add tag trigger, dev ancestry guard, and Android-only fingerprint preflight"
+    },
+    {
+      "at": "2026-08-09T18:12:29+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": ".github/workflows/personal-ota.yml implements tag trigger, dev ancestry guard, derived inputs, fingerprint preflight, and scoped skip flag"
+    },
+    {
+      "at": "2026-08-09T18:12:29+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Review exact validation evidence and accepted baseline gaps"
+    },
+    {
+      "at": "2026-08-09T18:12:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "docs/workspace/personal-ota-actions-fix/validation.md records passing OTA checks and two reproduced unrelated Windows baseline gaps"
+    },
+    {
+      "at": "2026-08-09T18:12:30+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-actions-fix/finish.md records whole-diff safety and rollback review"
+    },
+    {
+      "at": "2026-08-09T18:12:30+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive workflow evidence, commit, push, and open PR"
+    },
+    {
+      "at": "2026-08-09T18:12:31+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-actions-fix/finish.md confirms acceptance, safety, verification, and follow-up"
+    },
+    {
+      "at": "2026-08-09T18:12:49+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Repair personal Android OTA Actions with dev-contained tag releases and Android fingerprint validation; commit: pending; follow-up: Merge the PR into dev, then push one unique personal-ota/android/* tag and monitor the first hosted run"
+    }
+  ],
+  "updated": "2026-08-09T18:12:49+00:00",
+  "archivedAt": "2026-08-09T18:12:49+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Repair personal Android OTA Actions with dev-contained tag releases and Android fingerprint validation",
+  "archiveFollowUp": "Merge the PR into dev, then push one unique personal-ota/android/* tag and monitor the first hosted run"
+}
