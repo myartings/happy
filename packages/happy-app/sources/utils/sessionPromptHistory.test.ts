@@ -3,6 +3,7 @@ import type { DisplayItem } from '@/hooks/useGroupedMessages';
 import type { PromptHistoryItem } from '@/sync/promptHistory';
 import type { Message } from '@/sync/typesMessage';
 import {
+    PROMPT_RAIL_ARROW_HIT_SLOP,
     getPromptIndexFromTrackPosition,
     getPromptRailMetrics,
     getPromptRailTickWidth,
@@ -24,6 +25,21 @@ function item(message: Message): DisplayItem {
 }
 
 describe('session prompt history', () => {
+    it('keeps arrow hit targets out of the adjacent track edges', () => {
+        expect(PROMPT_RAIL_ARROW_HIT_SLOP.older).toEqual({
+            top: 8,
+            right: 8,
+            bottom: 0,
+            left: 8,
+        });
+        expect(PROMPT_RAIL_ARROW_HIT_SLOP.newer).toEqual({
+            top: 0,
+            right: 8,
+            bottom: 8,
+            left: 8,
+        });
+    });
+
     it('matches the taller Grok-like rail spacing while sampling long histories', () => {
         expect(getPromptRailMetrics(5)).toEqual({ trackHeight: 80, totalHeight: 138 });
         expect(getPromptRailMetrics(10)).toEqual({ trackHeight: 180, totalHeight: 238 });

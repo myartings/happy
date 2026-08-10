@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "prompt-rail-edge-hit-targets",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Publish to dev and install a verification build when authorized.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User reports that the bottom few prompt-rail ticks cannot be clicked to navigate.",
+      "updated": "2026-08-10T06:13:20+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "No product choice is needed; constrain only the inward hit-slop edges.",
+      "updated": "2026-08-10T06:14:00+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Scope is the two desktop arrow hitSlop props, shared geometry constants, targeted tests, and workflow evidence.",
+      "updated": "2026-08-10T06:14:00+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Desktop-only pointer hit-target adjustment with no protocol, data, auth, or deployment changes.",
+      "updated": "2026-08-10T06:13:20+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Both arrow hit targets now expand only away from the adjacent track; regression geometry test added.",
+      "updated": "2026-08-10T06:15:10+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Typecheck passed; targeted 13/13 tests passed; full Happy App suite passed 1030/1030; diff check passed.",
+      "updated": "2026-08-10T06:15:10+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Reviewed hit-target geometry, track adjacency, retained accessibility, tests, and unrelated changes; no blockers.",
+      "updated": "2026-08-10T06:15:10+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records scope, checks, whole-diff review, rollback, and publication follow-up.",
+      "updated": "2026-08-10T06:15:10+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-10T06:13:20+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-10T06:13:20+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User reports that the bottom few prompt-rail ticks cannot be clicked to navigate."
+    },
+    {
+      "at": "2026-08-10T06:13:20+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Desktop-only pointer hit-target adjustment with no protocol, data, auth, or deployment changes."
+    },
+    {
+      "at": "2026-08-10T06:14:00+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "No product choice is needed; constrain only the inward hit-slop edges."
+    },
+    {
+      "at": "2026-08-10T06:14:00+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Scope is the two desktop arrow hitSlop props, shared geometry constants, targeted tests, and workflow evidence."
+    },
+    {
+      "at": "2026-08-10T06:14:00+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Define non-overlapping hit-slop geometry for both rail arrows"
+    },
+    {
+      "at": "2026-08-10T06:14:00+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Apply arrow hit-target geometry and add regression coverage"
+    },
+    {
+      "at": "2026-08-10T06:15:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Both arrow hit targets now expand only away from the adjacent track; regression geometry test added."
+    },
+    {
+      "at": "2026-08-10T06:15:10+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Record automated checks and review the whole diff"
+    },
+    {
+      "at": "2026-08-10T06:15:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Typecheck passed; targeted 13/13 tests passed; full Happy App suite passed 1030/1030; diff check passed."
+    },
+    {
+      "at": "2026-08-10T06:15:10+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Reviewed hit-target geometry, track adjacency, retained accessibility, tests, and unrelated changes; no blockers."
+    },
+    {
+      "at": "2026-08-10T06:15:10+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Prepare local handoff pending publication authorization"
+    },
+    {
+      "at": "2026-08-10T06:15:10+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records scope, checks, whole-diff review, rollback, and publication follow-up."
+    },
+    {
+      "at": "2026-08-10T06:15:10+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Keep prompt-rail arrow hit targets from covering the first and last tick regions.; commit: pending; follow-up: Publish to dev and install a verification build when authorized."
+    }
+  ],
+  "updated": "2026-08-10T06:15:10+00:00",
+  "archivedAt": "2026-08-10T06:15:10+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Keep prompt-rail arrow hit targets from covering the first and last tick regions.",
+  "archiveFollowUp": "Publish to dev and install a verification build when authorized."
+}

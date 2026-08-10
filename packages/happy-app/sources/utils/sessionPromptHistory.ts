@@ -8,6 +8,11 @@ const PROMPT_RAIL_TICK_GAP = 20;
 const PROMPT_RAIL_CHROME_HEIGHT = 58;
 const PROMPT_RAIL_TICK_WIDTHS = [16, 28, 40] as const;
 
+export const PROMPT_RAIL_ARROW_HIT_SLOP = {
+    older: { top: 8, right: 8, bottom: 0, left: 8 },
+    newer: { top: 0, right: 8, bottom: 8, left: 8 },
+};
+
 export function getSampledPromptIndices(count: number): number[] {
     if (count <= 0) return [];
     if (count <= MAX_VISIBLE_PROMPT_RAIL_TICKS) {

@@ -18,6 +18,7 @@ import { sync } from '@/sync/sync';
 import type { Message } from '@/sync/typesMessage';
 import { t } from '@/text';
 import {
+    PROMPT_RAIL_ARROW_HIT_SLOP,
     getPromptIndexFromTrackPosition,
     getPromptRailMetrics,
     getPromptRailTickWidth,
@@ -351,7 +352,7 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                 accessibilityLabel={props.loadFailed ? t('common.retry') : t('promptHistory.loadMore')}
                 disabled={effectiveActiveIndex === 0 && !props.loadFailed && (!props.hasMore || props.isLoading)}
                 onPress={goOlder}
-                hitSlop={8}
+                hitSlop={PROMPT_RAIL_ARROW_HIT_SLOP.older}
                 style={[
                     styles.desktopRailArrow,
                     !isRailHovered && styles.desktopRailArrowHidden,
@@ -421,7 +422,7 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
                 accessibilityLabel={t('promptHistory.openSession')}
                 disabled={effectiveActiveIndex >= props.prompts.length - 1}
                 onPress={goNewer}
-                hitSlop={8}
+                hitSlop={PROMPT_RAIL_ARROW_HIT_SLOP.newer}
                 style={[
                     styles.desktopRailArrow,
                     !isRailHovered && styles.desktopRailArrowHidden,
