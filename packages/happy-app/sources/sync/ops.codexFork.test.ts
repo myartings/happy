@@ -134,4 +134,137 @@ describe('codex fork ops', () => {
             }),
         );
     });
+
+    it('forks a Codex session into an isolated worktree and finalizes it after spawn', async () => {
+        machineRPC.mockImplementation(async (_machineId: string, method: string) => {
+            if (method === 'worktree-snapshot-create') {
+                return {
+                    sourceDirectory: '/repo/packages/app',
+                    repositoryRoot: '/repo',
+                    primaryRepositoryRoot: '/repo',
+                    head: 'abc123',
+                    branch: 'dev',
+                    stagedCount: 1,
+                    unstagedCount: 2,
+                    untrackedCount: 1,
+                    untrackedBytes: 42,
+                    isDirty: true,
+                    worktreeRoot: '/repo/.dev/worktree/fork-1234',
+                    sessionDirectory: '/repo/.dev/worktree/fork-1234/packages/app',
+                    branchName: 'happy/fork/1234',
+                    cleanupToken: 'cleanup-1234',
+                };
+            }
+            if (method === 'codex-fork-thread') {
+                return { type: 'success', newCodexThreadId: 'thread-worktree' };
+            }
+            if (method === 'spawn-happy-session') {
+                return { type: 'success', sessionId: 'happy-worktree' };
+            }
+            if (method === 'worktree-snapshot-finalize') {
+                return { success: true };
+            }
+            throw new Error(`unexpected method ${method}`);
+        });
+
+        const { forkInWorktreeAndSpawn } = await import('./ops');
+        const result = await forkInWorktreeAndSpawn({
+            kind: 'codex',
+            sessionId: 'happy-source',
+            machineId: 'machine-1',
+            directory: '/repo/packages/app',
+            codexThreadId: 'thread-source',
+        }, true);
+
+        expect(result).toEqual({ type: 'success', sessionId: 'happy-worktree' });
+        expect(machineRPC).toHaveBeenNthCalledWith(1, 'machine-1', 'worktree-snapshot-create', {
+            directory: '/repo/packages/app',
+            inheritChanges: true,
+        });
+        expect(machineRPC).toHaveBeenNthCalledWith(2, 'machine-1', 'codex-fork-thread', {
+            directory: '/repo/.dev/worktree/fork-1234/packages/app',
+            codexThreadId: 'thread-source',
+        });
+        expect(machineRPC).toHaveBeenNthCalledWith(3, 'machine-1', 'spawn-happy-session', expect.objectContaining({
+            agent: 'codex',
+            directory: '/repo/.dev/worktree/fork-1234/packages/app',
+            resumeCodexThreadId: 'thread-worktree',
+            parentSessionId: 'happy-source',
+        }));
+        expect(machineRPC).toHaveBeenNthCalledWith(4, 'machine-1', 'worktree-snapshot-finalize', {
+            cleanupToken: 'cleanup-1234',
+        });
+        expect(refreshSessions).toHaveBeenCalledTimes(1);
+    });
+
+    it('cleans up the worktree when provider forking fails', async () => {
+        machineRPC.mockImplementation(async (_machineId: string, method: string) => {
+            if (method === 'worktree-snapshot-create') {
+                return {
+                    sessionDirectory: '/repo/.dev/worktree/fork-fail',
+                    cleanupToken: 'cleanup-fail',
+                };
+            }
+            if (method === 'codex-fork-thread') {
+                return { type: 'error', errorMessage: 'provider failed' };
+            }
+            if (method === 'worktree-snapshot-cleanup') {
+                return { success: true };
+            }
+            throw new Error(`unexpected method ${method}`);
+        });
+
+        const { forkInWorktreeAndSpawn } = await import('./ops');
+        const result = await forkInWorktreeAndSpawn({
+            kind: 'codex',
+            sessionId: 'happy-source',
+            machineId: 'machine-1',
+            directory: '/repo',
+            codexThreadId: 'thread-source',
+        }, false);
+
+        expect(result).toEqual({ type: 'error', errorMessage: 'provider failed' });
+        expect(machineRPC).toHaveBeenLastCalledWith('machine-1', 'worktree-snapshot-cleanup', {
+            cleanupToken: 'cleanup-fail',
+        });
+    });
+
+    it('copies a Claude conversation to the target project and cleans up when spawn fails', async () => {
+        machineRPC.mockImplementation(async (_machineId: string, method: string) => {
+            if (method === 'worktree-snapshot-create') {
+                return {
+                    sessionDirectory: '/repo/.dev/worktree/fork-claude',
+                    cleanupToken: 'cleanup-claude',
+                };
+            }
+            if (method === 'claude-fork-session') {
+                return { type: 'success', newClaudeSessionId: 'claude-forked' };
+            }
+            if (method === 'spawn-happy-session') {
+                return { type: 'error', errorMessage: 'spawn failed' };
+            }
+            if (method === 'worktree-snapshot-cleanup') {
+                return { success: true };
+            }
+            throw new Error(`unexpected method ${method}`);
+        });
+
+        const { forkInWorktreeAndSpawn } = await import('./ops');
+        const result = await forkInWorktreeAndSpawn({
+            sessionId: 'happy-source',
+            machineId: 'machine-1',
+            directory: '/repo',
+            claudeSessionId: 'claude-source',
+        }, true);
+
+        expect(result).toEqual({ type: 'error', errorMessage: 'spawn failed' });
+        expect(machineRPC).toHaveBeenNthCalledWith(2, 'machine-1', 'claude-fork-session', {
+            directory: '/repo',
+            targetDirectory: '/repo/.dev/worktree/fork-claude',
+            claudeSessionId: 'claude-source',
+        });
+        expect(machineRPC).toHaveBeenLastCalledWith('machine-1', 'worktree-snapshot-cleanup', {
+            cleanupToken: 'cleanup-claude',
+        });
+    });
 });

@@ -44,6 +44,7 @@ import { isRunningOnMac } from '@/utils/platform';
 import { useDeviceType, useHeaderHeight, useIsLandscape, useIsTablet } from '@/utils/responsive';
 import { resolveStatusBarGitBranch } from '@/utils/sessionStatusBar';
 import { FilesSidebar, SidebarMode } from '@/components/FilesSidebar';
+import { SideChatQuickPanelControls } from '@/components/SideChatQuickPanelControls';
 import { AllFilesDiffView } from '@/components/AllFilesDiffView';
 import { FileViewPanel } from '@/components/FileViewPanel';
 import { prefetchPierreDiff } from '@/components/diff/PierreDiffView';
@@ -79,6 +80,7 @@ import {
     rigCanUseShell,
 } from '@/sync/rig';
 import { RigActivityBar } from '@/components/RigActivityBar';
+import { getSideChatQuickPanelLayout, getSideChatQuickPanelToggleAction, resolveSideChatQuickPanelActivePanel } from '@/utils/sideChatQuickPanel';
 
 export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
     const sessionId = props.id;
@@ -100,34 +102,55 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const isTablet = useIsTablet();
     const { width: windowWidth } = useWindowDimensions();
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
+    const sideChatQuickPanelEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
     const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const zenMode = useLocalSetting('zenMode');
+    const gitStatus = useSessionGitStatus(sessionId);
+    const sideChatForkSource = session ? getSessionForkSource(session) : null;
     const [headerBackdropVisible, setHeaderBackdropVisible] = React.useState(false);
 
     React.useEffect(() => {
         setHeaderBackdropVisible(false);
     }, [sessionId]);
 
-    // Base condition: can we show the diff sidebar at all?
-    const canShowSidebar = fileDiffsSidebarEnabled
-        && (isRunningOnMac() || Platform.OS === 'web')
-        && windowWidth >= SIDEBAR_MIN_WINDOW_WIDTH
-        && (!session || (rigCanBrowseFiles(session.metadata) && rigCanUseShell(session.metadata)))
-        && isDataReady && !!session;
+    // Sidebar panels are user-managed and persisted in local settings so the
+    // layout (which panels are open + which is active) survives reloads and
+    // long absences. State is device-local, shared across sessions.
+    const sidebarPanelsOpen = useLocalSetting('sidebarPanelsOpen') as SidebarMode[];
+    const sidebarPanelActiveRaw = useLocalSetting('sidebarPanelActive') as SidebarMode | null;
+    // Guard against an inconsistent persisted value: the active panel must be
+    // one of the open panels, otherwise fall back to the last opened (or none).
+    const sidebarPanelActive = React.useMemo<SidebarMode | null>(() => {
+        return resolveSideChatQuickPanelActivePanel({
+            featureEnabled: sideChatQuickPanelEnabled,
+            openPanels: sidebarPanelsOpen,
+            storedActivePanel: sidebarPanelActiveRaw,
+        });
+    }, [sideChatQuickPanelEnabled, sidebarPanelActiveRaw, sidebarPanelsOpen]);
 
-    const showSidebar = canShowSidebar && !zenMode;
+    const canUseFiles = !!session
+        && rigCanBrowseFiles(session.metadata)
+        && rigCanUseShell(session.metadata);
+    const sidebarLayout = getSideChatQuickPanelLayout({
+        activePanel: sidebarPanelActive,
+        canUseFiles,
+        canUseSideChat: !!sideChatForkSource,
+        featureEnabled: sideChatQuickPanelEnabled,
+        fileDiffsSidebarEnabled,
+        platformSupported: isRunningOnMac() || Platform.OS === 'web',
+        windowWidth,
+        zenMode,
+    });
+    const canShowSidebar = sidebarLayout.canShowSidebar && isDataReady && !!session;
+    const showSidebar = sidebarLayout.showSidebar && isDataReady && !!session;
+    const showQuickPanelControls = sidebarLayout.showQuickControls && isDataReady && !!session;
+    const showQuickPanelFileActions = sidebarLayout.showFileActions && isDataReady && !!session;
 
-    // Match left sidebar width: 30% of window, clamped to 250–360px
+    // Match left sidebar width: 30% of window, clamped to 250–360px.
     const sidebarWidth = Math.min(Math.max(Math.floor(windowWidth * 0.3), 250), 360);
 
-    // Animate diff sidebar width.
-    //
-    // On web we snap the value (duration: 0). The animated `width` change
-    // triggers a flex-row reflow on every frame, which in turn re-measures
-    // the entire chat tree (FlatList rows, message blocks). At ~60fps that
-    // grinds to ~15fps on dev builds. Snapping skips the layout thrash —
-    // the chat reflows once instead of 60 times. Native keeps the smooth
-    // animation because it runs on Reanimated's UI thread.
+    // On web, snap width changes to avoid reflowing the whole chat tree on
+    // every animation frame. Native keeps the UI-thread animation.
     const sidebarAnim = useSharedValue(showSidebar ? 1 : 0);
     React.useEffect(() => {
         sidebarAnim.value = withTiming(showSidebar ? 1 : 0, {
@@ -141,24 +164,13 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         overflow: 'hidden' as const,
     }));
 
-    // Sidebar panels are user-managed and persisted in local settings so the
-    // layout (which panels are open + which is active) survives reloads and
-    // long absences. State is device-local, shared across sessions.
-    const sidebarPanelsOpen = useLocalSetting('sidebarPanelsOpen') as SidebarMode[];
-    const sidebarPanelActiveRaw = useLocalSetting('sidebarPanelActive') as SidebarMode | null;
-    // Guard against an inconsistent persisted value: the active panel must be
-    // one of the open panels, otherwise fall back to the last opened (or none).
-    const sidebarPanelActive = React.useMemo<SidebarMode | null>(() => {
-        if (sidebarPanelActiveRaw && sidebarPanelsOpen.includes(sidebarPanelActiveRaw)) {
-            return sidebarPanelActiveRaw;
-        }
-        return sidebarPanelsOpen[sidebarPanelsOpen.length - 1] ?? null;
-    }, [sidebarPanelActiveRaw, sidebarPanelsOpen]);
-
     const openSidebarPanel = React.useCallback((panel: SidebarMode) => {
         const cur = storage.getState().localSettings.sidebarPanelsOpen as SidebarMode[];
         const open = cur.includes(panel) ? cur : [...cur, panel];
         storage.getState().applyLocalSettings({ sidebarPanelsOpen: open, sidebarPanelActive: panel });
+    }, []);
+    const collapseSidebar = React.useCallback(() => {
+        storage.getState().applyLocalSettings({ sidebarPanelActive: null });
     }, []);
     const selectSidebarPanel = React.useCallback((panel: SidebarMode) => {
         const cur = storage.getState().localSettings.sidebarPanelsOpen as SidebarMode[];
@@ -178,11 +190,10 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     }, []);
 
     // Side chats live inside the single "sideChat" panel as switchable tabs.
-    // Creation is unified into the sidebar panel picker (the top "+") so there
-    // is no separate per-tab add button. Which side chat is focused lives here
-    // (not in the panel) so the picker can create-and-focus a new one in one go.
+    // The official layout creates them from the picker; quick-panel mode also
+    // exposes that same action beside the tabs. Focus remains owned here so
+    // either entry point can create-and-focus in one operation.
     const rawSideChats = useSideChatSessions(sessionId);
-    const sideChatForkSource = session ? getSessionForkSource(session) : null;
     const [activeSideChatId, setActiveSideChatId] = React.useState<string | null>(null);
     // Optimistically hide a side chat the instant it's closed. The server's
     // /archive only flips active=false (not lifecycleState), so if the CLI is
@@ -234,6 +245,24 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
             openSidebarPanel('sideChat');
         }
     });
+
+    const toggleQuickSideChatPanel = React.useCallback(() => {
+        const action = getSideChatQuickPanelToggleAction({
+            expanded: showSidebar,
+            sideChatCount: sideChats.length,
+        });
+        if (action === 'collapse') {
+            collapseSidebar();
+        } else if (action === 'open') {
+            openSidebarPanel('sideChat');
+        } else {
+            createSideChat();
+        }
+    }, [collapseSidebar, createSideChat, openSidebarPanel, showSidebar, sideChats.length]);
+
+    const changedFilesCount = gitStatus
+        ? gitStatus.modifiedCount + gitStatus.untrackedCount + gitStatus.stagedCount
+        : 0;
 
     const closeSideChat = React.useCallback((id: string) => {
         const idx = sideChats.findIndex((s) => s.id === id);
@@ -380,7 +409,20 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                 </Pressable>
             </View>
         )
-        : null;
+        : showQuickPanelControls && !showSidebar
+            ? (
+                <SideChatQuickPanelControls
+                    activePanel={sidebarPanelActive}
+                    changedFilesCount={changedFilesCount}
+                    creating={creatingSideChat}
+                    expanded={false}
+                    onOpenAllFiles={() => openSidebarPanel('allFiles')}
+                    onOpenChanges={() => openSidebarPanel('changes')}
+                    onToggle={toggleQuickSideChatPanel}
+                    showFileActions={showQuickPanelFileActions}
+                />
+            )
+            : null;
 
     const mainContent = (
         <>
@@ -459,6 +501,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                         identityLine={headerProps.identityLine}
                         extraPathSegment={fileViewPath ?? undefined}
                         rightSlot={(diffViewOpen || !!fileViewPath) ? headerRightSlot : headerRight}
+                        rightSlotPinnedToEdge={showQuickPanelControls && !showSidebar && !diffViewOpen && !fileViewPath}
                         onTitlePress={session ? () => router.push(`/session/${sessionId}/info`) : undefined}
                         onBackPress={() => router.back()}
                     />
@@ -550,14 +593,17 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                         onCreateSideChat={createSideChat}
                         canCreateSideChat={!!sideChatForkSource}
                         creatingSideChat={creatingSideChat}
+                        quickPanelEnabled={sideChatQuickPanelEnabled}
+                        quickPanelExpanded={showSidebar}
+                        quickPanelChangedFilesCount={changedFilesCount}
+                        quickPanelShowFileActions={showQuickPanelFileActions}
+                        onCollapseQuickPanel={collapseSidebar}
                     />
                 </View>
             </Animated.View>
         </View>
     );
 });
-
-const SIDEBAR_MIN_WINDOW_WIDTH = 1100;
 
 // Hoisted so AgentInput's React.memo doesn't see a new array ref on every keystroke
 const AGENT_INPUT_AUTOCOMPLETE_PREFIXES = ['@', '/'];

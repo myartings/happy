@@ -22,9 +22,11 @@ export interface NavigatorPlatformLike {
 }
 
 export type SessionActionShortcutId =
+    | 'pin'
     | 'details'
     | 'resume'
     | 'fork'
+    | 'fork-worktree'
     | 'duplicate'
     | 'copy-metadata'
     | 'copy-metadata-and-logs'
@@ -41,9 +43,11 @@ export interface ShortcutChord {
 }
 
 export const SESSION_ACTION_SHORTCUTS: Readonly<Record<SessionActionShortcutId, ShortcutChord>> = {
+    pin: { key: 'p', code: 'KeyP', keyLabel: 'P', altKey: true },
     details: { key: 'o', code: 'KeyO', keyLabel: 'O', altKey: true },
     resume: { key: 'r', code: 'KeyR', keyLabel: 'R', altKey: true },
     fork: { key: 'f', code: 'KeyF', keyLabel: 'F', altKey: true },
+    'fork-worktree': { key: 'w', code: 'KeyW', keyLabel: 'W', altKey: true, shiftKey: true },
     duplicate: { key: 'd', code: 'KeyD', keyLabel: 'D', altKey: true, shiftKey: true },
     'copy-metadata': { key: 'm', code: 'KeyM', keyLabel: 'M', altKey: true },
     'copy-metadata-and-logs': { key: 'm', code: 'KeyM', keyLabel: 'M', altKey: true, shiftKey: true },

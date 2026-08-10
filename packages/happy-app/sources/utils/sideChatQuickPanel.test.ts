@@ -1,0 +1,105 @@
+import { describe, expect, it } from 'vitest';
+import {
+    getSideChatQuickPanelLayout,
+    getSideChatQuickPanelToggleAction,
+    resolveSideChatQuickPanelActivePanel,
+} from './sideChatQuickPanel';
+
+const baseLayoutInput = {
+    activePanel: null,
+    canUseFiles: true,
+    canUseSideChat: true,
+    featureEnabled: true,
+    fileDiffsSidebarEnabled: false,
+    platformSupported: true,
+    windowWidth: 1400,
+    zenMode: false,
+} as const;
+
+describe('getSideChatQuickPanelLayout', () => {
+    it('keeps the quick panel collapsed until a panel is selected', () => {
+        expect(getSideChatQuickPanelLayout(baseLayoutInput)).toEqual({
+            canShowSidebar: true,
+            showFileActions: true,
+            showQuickControls: true,
+            showSidebar: false,
+        });
+    });
+
+    it('shows a selected quick panel without requiring the file sidebar setting', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            activePanel: 'sideChat',
+        }).showSidebar).toBe(true);
+    });
+
+    it('restores the official always-visible sidebar behavior when disabled', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            featureEnabled: false,
+            fileDiffsSidebarEnabled: true,
+        })).toEqual({
+            canShowSidebar: true,
+            showFileActions: false,
+            showQuickControls: false,
+            showSidebar: true,
+        });
+    });
+
+    it('keeps the official sidebar disabled when its setting is off', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            featureEnabled: false,
+        }).canShowSidebar).toBe(false);
+    });
+
+    it('hides the quick controls and panel in zen mode', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            activePanel: 'sideChat',
+            zenMode: true,
+        })).toMatchObject({
+            showQuickControls: false,
+            showSidebar: false,
+        });
+    });
+
+    it('does not expose the desktop UI on narrow layouts', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            windowWidth: 1099,
+        }).canShowSidebar).toBe(false);
+    });
+});
+
+describe('getSideChatQuickPanelToggleAction', () => {
+    it('collapses an expanded panel without touching sessions', () => {
+        expect(getSideChatQuickPanelToggleAction({ expanded: true, sideChatCount: 1 })).toBe('collapse');
+    });
+
+    it('restores an existing side chat when collapsed', () => {
+        expect(getSideChatQuickPanelToggleAction({ expanded: false, sideChatCount: 2 })).toBe('open');
+    });
+
+    it('creates a side chat only when none exists', () => {
+        expect(getSideChatQuickPanelToggleAction({ expanded: false, sideChatCount: 0 })).toBe('create');
+    });
+});
+
+describe('resolveSideChatQuickPanelActivePanel', () => {
+    it('treats a null active panel as an intentional quick-panel collapse', () => {
+        expect(resolveSideChatQuickPanelActivePanel({
+            featureEnabled: true,
+            openPanels: ['sideChat'],
+            storedActivePanel: null,
+        })).toBeNull();
+    });
+
+    it('preserves the official fallback to the last open panel', () => {
+        expect(resolveSideChatQuickPanelActivePanel({
+            featureEnabled: false,
+            openPanels: ['changes', 'sideChat'],
+            storedActivePanel: null,
+        })).toBe('sideChat');
+    });
+});

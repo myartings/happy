@@ -1,0 +1,9 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/side-chat-quick-panel.md","reason":"Approved scope, non-goals, and acceptance criteria"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Host seam for desktop header controls and sidebar visibility"}
+{"path":"packages/happy-app/sources/components/FilesSidebar.tsx","reason":"Existing Changes, All Files, and side-chat panel host"}
+{"path":"packages/happy-app/sources/components/SideChatPanel.tsx","reason":"Existing side-chat tabs, creation, and fullscreen presentation"}
+{"path":"packages/happy-app/sources/components/SideChatQuickPanelControls.tsx","reason":"Shared quick-panel overflow and collapse/expand controls"}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Device-local personal feature switch"}
+{"path":"packages/happy-app/sources/utils/sideChatQuickPanel.ts","reason":"Pure quick-panel layout and toggle-state decisions"}
+{"path":"packages/happy-app/sources/app/(app)/settings/features.tsx","reason":"Personal Development settings UI"}

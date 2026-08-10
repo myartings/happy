@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".github/workflows/personal-ota.yml","reason":"Failing pnpm-to-EAS argument forwarding"}
+{"path":"packages/happy-app/package.json","reason":"Canonical personal OTA script receiving forwarded arguments"}
+{"path":"docs/specs/personal-ota-pnpm-args.md","reason":"Accepted one-line repair behavior"}
+{"path":"docs/workspace/personal-ota-pnpm-args/validation.md","reason":"Hosted failure and local verification evidence"}

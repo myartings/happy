@@ -1,0 +1,4 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/specs/worktree-fork-snapshot.md","reason":"Acceptance criteria for semantic review"}
+{"path":"docs/tasks/worktree-fork-snapshot-tasks.md","reason":"Implementation completion checklist"}
+{"path":"docs/workspace/worktree-fork-snapshot/validation.md","reason":"Evidence ledger for exact check outcomes"}

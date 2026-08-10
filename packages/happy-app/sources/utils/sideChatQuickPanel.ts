@@ -1,0 +1,63 @@
+export const SIDE_CHAT_QUICK_PANEL_MIN_WINDOW_WIDTH = 1100;
+export type SideChatQuickPanelMode = 'changes' | 'allFiles' | 'sideChat';
+
+export function resolveSideChatQuickPanelActivePanel(input: {
+    featureEnabled: boolean;
+    openPanels: SideChatQuickPanelMode[];
+    storedActivePanel: SideChatQuickPanelMode | null;
+}): SideChatQuickPanelMode | null {
+    if (input.featureEnabled && input.storedActivePanel === null) {
+        return null;
+    }
+    if (input.storedActivePanel && input.openPanels.includes(input.storedActivePanel)) {
+        return input.storedActivePanel;
+    }
+    return input.openPanels[input.openPanels.length - 1] ?? null;
+}
+
+export type SideChatQuickPanelLayoutInput = {
+    activePanel: SideChatQuickPanelMode | null;
+    canUseFiles: boolean;
+    canUseSideChat: boolean;
+    featureEnabled: boolean;
+    fileDiffsSidebarEnabled: boolean;
+    platformSupported: boolean;
+    windowWidth: number;
+    zenMode: boolean;
+};
+
+export function getSideChatQuickPanelLayout(input: SideChatQuickPanelLayoutInput) {
+    const wideDesktop = input.platformSupported
+        && input.windowWidth >= SIDE_CHAT_QUICK_PANEL_MIN_WINDOW_WIDTH;
+
+    if (!input.featureEnabled) {
+        const canShowSidebar = wideDesktop
+            && input.fileDiffsSidebarEnabled
+            && input.canUseFiles;
+        return {
+            canShowSidebar,
+            showFileActions: false,
+            showQuickControls: false,
+            showSidebar: canShowSidebar && !input.zenMode,
+        };
+    }
+
+    const canShowSidebar = wideDesktop
+        && (input.canUseSideChat || input.canUseFiles);
+    return {
+        canShowSidebar,
+        showFileActions: wideDesktop && input.canUseFiles,
+        showQuickControls: wideDesktop && input.canUseSideChat && !input.zenMode,
+        showSidebar: canShowSidebar && !input.zenMode && input.activePanel !== null,
+    };
+}
+
+export type SideChatQuickPanelToggleAction = 'collapse' | 'create' | 'open';
+
+export function getSideChatQuickPanelToggleAction(input: {
+    expanded: boolean;
+    sideChatCount: number;
+}): SideChatQuickPanelToggleAction {
+    if (input.expanded) return 'collapse';
+    return input.sideChatCount > 0 ? 'open' : 'create';
+}

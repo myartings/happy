@@ -1,0 +1,3 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/components/SessionPromptHistoryNavigator.tsx","reason":"Owns desktop rail arrows and track hit targets"}
+{"path":"packages/happy-app/sources/utils/sessionPromptHistory.ts","reason":"Owns testable prompt-rail geometry contracts"}

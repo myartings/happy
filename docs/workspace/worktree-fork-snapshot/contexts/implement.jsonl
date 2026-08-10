@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/worktree-fork-snapshot.md","reason":"Accepted behavior, safety invariants, and provider semantics"}
+{"path":"docs/tasks/worktree-fork-snapshot-tasks.md","reason":"Bounded implementation and verification slices"}
+{"path":"packages/happy-app/sources/sync/ops.ts","reason":"Existing app-side fork and machine RPC seam"}
+{"path":"packages/happy-app/sources/utils/worktree.ts","reason":"Existing managed worktree creation and cleanup utilities"}
+{"path":"packages/happy-app/sources/hooks/useSessionQuickActions.ts","reason":"Existing session-row action integration seam"}
+{"path":"packages/happy-cli/src/api/apiMachine.ts","reason":"Owned machine RPC handler registration"}

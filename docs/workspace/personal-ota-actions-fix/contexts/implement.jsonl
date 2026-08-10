@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":".github/workflows/personal-ota.yml","reason":"Personal EAS Update workflow being repaired"}
+{"path":"docs/specs/personal-ota-actions-fix.md","reason":"Accepted trigger, safety, and publish behavior"}
+{"path":"docs/tasks/personal-ota-actions-fix-tasks.md","reason":"Bounded implementation tasks"}
+{"path":"docs/workspace/personal-ota-actions-fix/validation.md","reason":"Evidence ledger for exact check outcomes"}

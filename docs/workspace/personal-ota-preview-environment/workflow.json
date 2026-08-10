@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "personal-ota-preview-environment",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Merge PR #31, push a unique Android OTA tag, and monitor the hosted run",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/personal-ota-preview-environment.md defines three bounded acceptance criteria",
+      "updated": "2026-08-09T18:20:24+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/decisions.md aligns OTA with the accepted personal build environment",
+      "updated": "2026-08-09T18:20:24+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/tasks/personal-ota-preview-environment-tasks.md limits the code change to one command argument",
+      "updated": "2026-08-09T18:20:24+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Channel, app variant, official commands, and publish behavior remain unchanged; assertions compare OTA to both personal profiles",
+      "updated": "2026-08-09T18:20:25+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "packages/happy-app/package.json changes only ota:personal from production to preview",
+      "updated": "2026-08-09T18:23:24+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/validation.md records all configured checks passing",
+      "updated": "2026-08-09T18:23:25+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/finish.md confirms one-argument scope and rollback",
+      "updated": "2026-08-09T18:23:25+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/finish.md completes acceptance and whole-diff review",
+      "updated": "2026-08-09T18:23:26+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T18:19:46+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T18:20:24+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/personal-ota-preview-environment.md defines three bounded acceptance criteria"
+    },
+    {
+      "at": "2026-08-09T18:20:24+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/decisions.md aligns OTA with the accepted personal build environment"
+    },
+    {
+      "at": "2026-08-09T18:20:24+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/tasks/personal-ota-preview-environment-tasks.md limits the code change to one command argument"
+    },
+    {
+      "at": "2026-08-09T18:20:25+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Channel, app variant, official commands, and publish behavior remain unchanged; assertions compare OTA to both personal profiles"
+    },
+    {
+      "at": "2026-08-09T18:20:25+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Apply the accepted one-argument environment alignment"
+    },
+    {
+      "at": "2026-08-09T18:20:25+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Change ota:personal from production to preview"
+    },
+    {
+      "at": "2026-08-09T18:23:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "packages/happy-app/package.json changes only ota:personal from production to preview"
+    },
+    {
+      "at": "2026-08-09T18:23:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Record configuration, typecheck, workflow, and diff evidence"
+    },
+    {
+      "at": "2026-08-09T18:23:25+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/validation.md records all configured checks passing"
+    },
+    {
+      "at": "2026-08-09T18:23:25+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/finish.md confirms one-argument scope and rollback"
+    },
+    {
+      "at": "2026-08-09T18:23:26+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive and update PR #31"
+    },
+    {
+      "at": "2026-08-09T18:23:26+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/personal-ota-preview-environment/finish.md completes acceptance and whole-diff review"
+    },
+    {
+      "at": "2026-08-09T18:23:27+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Align personal OTA with the supported preview EAS environment; commit: pending; follow-up: Merge PR #31, push a unique Android OTA tag, and monitor the hosted run"
+    }
+  ],
+  "updated": "2026-08-09T18:23:27+00:00",
+  "archivedAt": "2026-08-09T18:23:27+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Align personal OTA with the supported preview EAS environment",
+  "archiveFollowUp": "Merge PR #31, push a unique Android OTA tag, and monitor the hosted run"
+}

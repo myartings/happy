@@ -12,6 +12,8 @@ describe('settings', () => {
                 sessionAttentionMarkers: {
                     'session-1': { unreadSeq: 12, readSeq: 8 },
                 },
+                pinnedSessionIds: ['session-1'],
+                favoriteProjectIds: ['project-1'],
             });
 
             expect(parsed).toMatchObject({
@@ -22,6 +24,8 @@ describe('settings', () => {
                 sessionAttentionMarkers: {
                     'session-1': { unreadSeq: 12, readSeq: 8 },
                 },
+                pinnedSessionIds: ['session-1'],
+                favoriteProjectIds: ['project-1'],
             });
             expect(settingsToSyncPayload(parsed)).toMatchObject({
                 sortActiveSessionsGlobally: true,
@@ -30,6 +34,8 @@ describe('settings', () => {
                 sessionAttentionMarkers: {
                     'session-1': { unreadSeq: 12, readSeq: 8 },
                 },
+                pinnedSessionIds: ['session-1'],
+                favoriteProjectIds: ['project-1'],
             });
         });
 
@@ -283,6 +289,8 @@ describe('settings', () => {
                 needsAttentionSessionsEnabled: true,
                 sessionListSettingsMigrated: false,
                 sessionAttentionMarkers: {},
+                pinnedSessionIds: [],
+                favoriteProjectIds: [],
                 expResumeSession: false,
                 fileDiffsSidebar: false,
                 groupToolCalls: false,
