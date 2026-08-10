@@ -13,6 +13,8 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | `2026-08-10` | Session-panel workflow validation/core and `git diff --check` | passed | Selective workflow validation passed, all 14 workflow-core tests passed, and implementation changes have no whitespace errors. |
 | `2026-08-10` | `happy-manager.ps1 build-desktop` | passed | Expo/Tauri production build produced verified MSI and NSIS artifacts for commit `33a4be64`. |
 | `2026-08-10` | `happy-manager.ps1 update-desktop -DryRun` | passed | The NSIS artifact, installed target, backup retention, process stop, and uninstall-registry rollback plan were resolved without changing the installed app. |
+| `2026-08-10` | `happy-manager.ps1 update-desktop` | passed | The manager stopped the previous process, captured rollback state, installed the feature-branch NSIS artifact, and verified the installed executable SHA-256 against the build artifact. |
+| `2026-08-10` | `happy-manager.ps1 verify-desktop` plus persistent relaunch | passed | Version 0.1.0 launched from `C:\Users\myartings\AppData\Local\Happy (dev)\app.exe`; the smoke process was closed and Happy dev was relaunched for user acceptance. |
 | `2026-08-10` | Session-panel revision review | passed | User approved the Codex-style Session quick popover → right-workspace Issues tab model; full-route desktop composition is superseded. |
 | `2026-08-10` | revision `validate-happy-workflow.py`, `test-workflow-core.py`, and `git diff --check` | passed | Selective workflow validation passed, all 14 workflow-core tests passed, and revised specification/task/evidence documents have no whitespace errors. |
 | `2026-08-10` | `git diff --check` | passed | Approved spec, task plan, and Workspace evidence have no whitespace errors. |
@@ -93,8 +95,8 @@ longer product acceptance after approval of the Session-panel revision.
 - Android live acceptance remains an accepted gap until the native project is
   built from a shorter Windows path or the affected CMake/Ninja path handling is
   fixed.
-- The Session-panel Windows artifact is built and its install plan is verified;
-  replacing and visually accepting the installed Happy dev client requires an
-  explicit install request.
+- The Session-panel Windows artifact is installed and automated launch
+  verification passed. Visual confirmation of the anchored popover and Issues
+  workspace tab in the running client remains pending user acceptance.
 - The unrelated Happy Server local attachment-download test remains red on this
   Windows checkout (404 versus expected 200); no server files changed.
