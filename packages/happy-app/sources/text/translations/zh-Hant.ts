@@ -5,7 +5,7 @@
  * - Functions with typed object parameters for dynamic text
  */
 
-import { TranslationStructure } from "../_default";
+import { en, TranslationStructure } from "../_default";
 
 /**
  * Chinese plural helper function
@@ -1086,6 +1086,8 @@ export const zhHant: TranslationStructure = {
         notSupportedTitle: '不支援圖片',
         notSupportedMessage: '此代理不支援圖片附件。圖片未傳送。',
     },
+
+    githubIssues: en.githubIssues,
 
     projectTodos: {
         title: '我的專案 Todo',

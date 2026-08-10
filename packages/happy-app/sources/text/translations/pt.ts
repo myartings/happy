@@ -1,4 +1,4 @@
-import type { TranslationStructure } from '../_default';
+import { en, type TranslationStructure } from '../_default';
 
 /**
  * Portuguese plural helper function
@@ -1085,6 +1085,8 @@ export const pt: TranslationStructure = {
         notSupportedTitle: 'Imagens não suportadas',
         notSupportedMessage: 'Este agente não suporta anexos de imagem. As imagens não foram enviadas.',
     },
+
+    githubIssues: en.githubIssues,
 
     projectTodos: {
         title: 'Todo do projeto',

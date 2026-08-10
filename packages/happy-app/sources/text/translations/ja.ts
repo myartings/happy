@@ -5,7 +5,7 @@
  * - Functions with typed object parameters for dynamic text
  */
 
-import { TranslationStructure } from "../_default";
+import { en, TranslationStructure } from "../_default";
 
 /**
  * Japanese plural helper function
@@ -1088,6 +1088,8 @@ export const ja: TranslationStructure = {
         notSupportedTitle: '画像はサポートされていません',
         notSupportedMessage: 'このエージェントは画像の添付に対応していません。画像は送信されませんでした。',
     },
+
+    githubIssues: en.githubIssues,
 
     projectTodos: {
         title: 'プロジェクト Todo',

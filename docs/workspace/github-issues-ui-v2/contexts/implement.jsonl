@@ -1,0 +1,9 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/github-issues-ui-v2.md","reason":"Approved product, interaction, and acceptance contract"}
+{"path":"docs/specs/github-issues-device-flow.md","reason":"Credential, platform, and direct GitHub infrastructure contract to preserve"}
+{"path":"docs/tasks/github-issues-ui-v2-tasks.md","reason":"Dependency-aware implementation slices and guardrails"}
+{"path":"packages/happy-app/sources/features/github-issues","reason":"Deep feature Module for GitHub transport, repository resolution, presentation state, and dispatch"}
+{"path":"packages/happy-app/sources/app/(app)/github-issues","reason":"Issue list, detail, and creation route composition"}
+{"path":"packages/happy-app/sources/components/GithubIssuesButton.tsx","reason":"Narrow Session/home/sidebar entry seam"}
+{"path":"packages/happy-app/sources/app/(app)/project-todos.tsx","reason":"Existing Happy-native project picker and Session draft dispatch interaction reference"}
+{"path":"packages/happy-app/sources/sync/projectTodos.ts","reason":"Existing current/new Session draft preparation reference"}

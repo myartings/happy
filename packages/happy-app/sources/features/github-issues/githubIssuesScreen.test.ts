@@ -6,70 +6,90 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 const { openExternalUrl, screenState } = vi.hoisted(() => ({
     openExternalUrl: vi.fn(async () => undefined),
     screenState: {
-        authorizationSnapshot: null as any,
-        connectionState: null as any,
+        authorizationSnapshot: { status: 'idle' } as any,
+        connectionState: { status: 'connected', account: { login: 'myartings' } } as any,
         repositories: [] as any[],
+        listError: null as Error | null,
+        issues: { open: [] as any[], closed: [] as any[] },
+        params: { owner: 'myartings', repo: 'happy' } as Record<string, string>,
     },
 }));
 
 vi.mock('@/utils/openExternalUrl', () => ({ openExternalUrl }));
+vi.mock('@/modal', () => ({ Modal: { confirm: vi.fn(async () => false) } }));
+vi.mock('@/text', async () => {
+    const { en } = await import('@/text/_default');
+    return { t: (key: string, params?: any) => { let value: any = en; for (const part of key.split('.')) value = value[part]; return typeof value === 'function' ? value(params) : value; } };
+});
 vi.mock('react-native', async () => {
     const ReactModule = await import('react');
     const host = (name: string) => (props: any) => ReactModule.createElement(name, props, props.children);
     return {
         ActivityIndicator: host('ActivityIndicator'),
         AppState: { addEventListener: () => ({ remove: () => undefined }) },
-        Linking: { openURL: vi.fn(async () => undefined) },
         Pressable: host('Pressable'),
-        Text: host('Text'),
+        RefreshControl: host('RefreshControl'),
+        ScrollView: host('ScrollView'),
         View: host('View'),
     };
 });
+vi.mock('@expo/vector-icons', async () => {
+    const ReactModule = await import('react');
+    return { Ionicons: (props: any) => ReactModule.createElement('Ionicons', props) };
+});
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn(async () => undefined) }));
-vi.mock('expo-router', () => ({
-    useLocalSearchParams: () => ({}),
-    useRouter: () => ({ push: vi.fn() }),
-}));
+vi.mock('expo-router', async () => {
+    const ReactModule = await import('react');
+    return {
+        Stack: { Screen: (props: any) => ReactModule.createElement('StackScreen', props) },
+        useLocalSearchParams: () => screenState.params,
+        useRouter: () => ({ push: vi.fn() }),
+    };
+});
 vi.mock('react-native-unistyles', () => ({
-    useUnistyles: () => ({
-        theme: { colors: { button: { primary: { tint: 'white' } }, textLink: 'cyan', textSecondary: 'gray' } },
-    }),
+    StyleSheet: { create: (styles: any) => styles({ colors: {
+        button: { primary: { background: 'blue', tint: 'white' } },
+        groupped: { background: 'background' }, header: { tint: 'header' }, input: { background: 'input', text: 'text' },
+        surface: 'surface', surfaceHigh: 'high', surfaceSelected: 'selected', text: 'text', textDestructive: 'red', textLink: 'link', textSecondary: 'secondary',
+    } }) },
+    useUnistyles: () => ({ theme: { colors: { header: { tint: 'header' }, textSecondary: 'secondary' } } }),
 }));
-vi.mock('@/components/Item', async () => {
+vi.mock('@/components/StyledText', async () => {
     const ReactModule = await import('react');
-    return { Item: (props: any) => ReactModule.createElement('Item', props) };
+    return { Text: (props: any) => ReactModule.createElement('Text', props, props.children) };
 });
-vi.mock('@/components/ItemGroup', async () => {
+vi.mock('@/components/layout', () => ({ layout: { maxWidth: 960 } }));
+vi.mock('@/constants/Typography', () => ({ Typography: { default: () => ({}) } }));
+vi.mock('./GithubRepositoryPicker', async () => {
     const ReactModule = await import('react');
-    return { ItemGroup: (props: any) => ReactModule.createElement('ItemGroup', props, props.children) };
-});
-vi.mock('@/components/ItemList', async () => {
-    const ReactModule = await import('react');
-    return { ItemList: (props: any) => ReactModule.createElement('ItemList', props, props.children) };
+    return { GithubRepositoryPicker: (props: any) => ReactModule.createElement('GithubRepositoryPicker', props) };
 });
 vi.mock('@/sync/storage', () => ({ useLocalSetting: () => true }));
 vi.mock('./githubIssuesApi', () => ({
-    GithubIssuesError: class GithubIssuesError extends Error {},
+    GithubIssuesError: class GithubIssuesError extends Error { code = 'github_error'; },
+    getGithubIssueRelativeTime: () => ({ unit: 'hour', value: 2 }),
+    getGithubIssuesErrorMessage: (error: Error) => error.message,
     githubIssuesAuthorization: {
         getSnapshot: () => screenState.authorizationSnapshot,
         subscribe: () => () => undefined,
-        start: vi.fn(),
-        cancel: vi.fn(),
-        clear: vi.fn(),
+        start: vi.fn(), cancel: vi.fn(), clear: vi.fn(),
     },
+    githubIssuesRepositoryResolver: { remember: vi.fn() },
     githubIssuesApi: {
         getConnectionState: vi.fn(async () => screenState.connectionState),
         listRepositories: vi.fn(async () => screenState.repositories),
-        listIssues: vi.fn(async () => ({ items: [] })),
+        listIssues: vi.fn(async ({ state }: { state: 'open' | 'closed' }) => {
+            if (screenState.listError) throw screenState.listError;
+            return { items: screenState.issues[state] };
+        }),
         disconnect: vi.fn(async () => undefined),
-        installationUrl: undefined,
+        installationUrl: 'https://github.com/settings/installations/1',
     },
 }));
 
 import GithubIssuesScreen from '@/app/(app)/github-issues/index';
 
 const originalConsoleError = console.error;
-
 beforeAll(() => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...args: unknown[]) => {
@@ -77,66 +97,62 @@ beforeAll(() => {
         originalConsoleError(message, ...args);
     });
 });
-
 afterAll(() => vi.restoreAllMocks());
 
 beforeEach(() => {
-    openExternalUrl.mockClear();
-    screenState.authorizationSnapshot = {
-        status: 'connecting',
-        prompt: {
-            userCode: 'ABCD-EFGH',
-            verificationUri: 'https://github.com/login/device',
-            expiresAt: Date.now() + 60_000,
-        },
+    screenState.authorizationSnapshot = { status: 'idle' };
+    screenState.connectionState = { status: 'connected', account: { login: 'myartings' } };
+    screenState.repositories = [{ id: 1, owner: 'myartings', name: 'happy', fullName: 'myartings/happy', private: false, url: '' }];
+    screenState.listError = null;
+    screenState.issues = {
+        open: [{ number: 241, title: 'Add GitHub Issues page', updatedAt: '', comments: 3, labels: [{ name: 'enhancement', color: 'blue' }] }],
+        closed: [],
     };
-    screenState.connectionState = { status: 'disconnected' };
-    screenState.repositories = [];
+    screenState.params = { owner: 'myartings', repo: 'happy' };
 });
 
-describe('GitHub Issues screen external links', () => {
-    it('opens the Device Flow verification page through the cross-platform external URL adapter', async () => {
+describe('GitHub Issues native list', () => {
+    it('keeps connection management in the Settings-specific mode', async () => {
+        screenState.params = { mode: 'settings' };
         let renderer: ReturnType<typeof create>;
-        await act(async () => {
-            renderer = create(React.createElement(GithubIssuesScreen));
-        });
-
-        const openGithub = renderer!.root.findAllByType('Item' as any)
-            .find((item: { props: { title?: string } }) => item.props.title === 'Open GitHub');
-        expect(openGithub).toBeDefined();
-
-        await act(async () => {
-            await openGithub!.props.onPress();
-        });
-
-        expect(openExternalUrl).toHaveBeenCalledWith('https://github.com/login/device');
+        await act(async () => { renderer = create(React.createElement(GithubIssuesScreen)); });
+        await act(async () => undefined);
+        const text = renderer!.root.findAllByType('Text' as any).map((node: any) => node.props.children).flat().join(' ');
+        expect(text).toContain('Connected as @myartings');
+        expect(text).toContain('Remove from this device');
+        expect(text).not.toContain('Add GitHub Issues page');
     });
-});
-
-describe('GitHub Issues screen desktop layout', () => {
-    it('keeps Issue actions inside the centered content group and uses the visible link color', async () => {
-        screenState.authorizationSnapshot = { status: 'idle' };
-        screenState.connectionState = { status: 'connected', account: { login: 'myartings' } };
-        screenState.repositories = [{
-            id: 1,
-            owner: 'myartings',
-            name: 'happy',
-            fullName: 'myartings/happy',
-            private: false,
-        }];
-
+    it('shows task metadata without a persistent account-management card', async () => {
         let renderer: ReturnType<typeof create>;
-        await act(async () => {
-            renderer = create(React.createElement(GithubIssuesScreen));
-        });
+        await act(async () => { renderer = create(React.createElement(GithubIssuesScreen)); });
+        await act(async () => undefined);
+        const text = renderer!.root.findAllByType('Text' as any).map((node: any) => node.props.children).flat().join(' ');
+        expect(renderer!.root.findByProps({ accessibilityLabel: 'Issue #241: Add GitHub Issues page' })).toBeDefined();
+        expect(text).toContain('Add GitHub Issues page');
+        expect(text).toContain('enhancement');
+        expect(text).not.toContain('Connected as');
+    });
 
-        const newIssue = renderer!.root.findAllByType('Text' as any)
-            .find((item: { props: { children?: string } }) => item.props.children === 'New issue');
-        expect(newIssue).toBeDefined();
+    it('preserves loaded Issues when pull-to-refresh fails', async () => {
+        let renderer: ReturnType<typeof create>;
+        await act(async () => { renderer = create(React.createElement(GithubIssuesScreen)); });
+        await act(async () => undefined);
+        screenState.listError = new Error('offline');
+        const refreshControl = renderer!.root.findByType('ScrollView' as any).props.refreshControl;
+        await act(async () => { await refreshControl.props.onRefresh(); });
+        const text = renderer!.root.findAllByType('Text' as any).map((node: any) => node.props.children).flat().join(' ');
+        expect(renderer!.root.findByProps({ accessibilityLabel: 'Issue #241: Add GitHub Issues page' })).toBeDefined();
+        expect(text).toContain('offline');
+        expect(text).toContain('Retry');
+    });
 
-        let ancestor = newIssue!.parent;
-        while (ancestor && ancestor.type !== 'ItemGroup') ancestor = ancestor.parent;
-        expect(ancestor).not.toBeNull();
-        expect(newIssue!.props.style).toMatchObject({ color: 'cyan' });
+    it('opens the Device Flow verification page through the external URL adapter', async () => {
+        screenState.connectionState = { status: 'disconnected' };
+        screenState.authorizationSnapshot = { status: 'connecting', prompt: { userCode: 'ABCD-EFGH', verificationUri: 'https://github.com/login/device', expiresAt: Date.now() + 60_000 } };
+        let renderer: ReturnType<typeof create>;
+        await act(async () => { renderer = create(React.createElement(GithubIssuesScreen)); });
+        const open = renderer!.root.findByProps({ accessibilityLabel: 'Open GitHub verification' });
+        await act(async () => open.props.onPress());
+        expect(openExternalUrl).toHaveBeenCalledWith('https://github.com/login/device');
     });
 });
