@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
-import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable } from '@/sync/storage';
+import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable, useSettingMutable } from '@/sync/storage';
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
 import { ProjectTodoButton } from './ProjectTodoButton';
 import { shouldShowWorkspaceLabel } from '@/utils/sessionRowDisplayContext';
@@ -23,11 +23,21 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
     const { theme } = useUnistyles();
     const machines = useAllMachines();
     const [collapsedProjects, setCollapsedProjects] = useLocalSettingMutable('collapsedProjects');
+    const [favoriteProjectIds, setFavoriteProjectIds] = useSettingMutable('favoriteProjectIds');
     const collapsed = !!collapsedProjects[project.id];
+    const isFavorite = favoriteProjectIds.includes(project.id);
 
     const toggleCollapsed = React.useCallback(() => {
         setCollapsedProjects({ ...collapsedProjects, [project.id]: !collapsed });
     }, [collapsed, collapsedProjects, project.id, setCollapsedProjects]);
+
+    const toggleFavorite = React.useCallback((event: { stopPropagation?: () => void }) => {
+        event.stopPropagation?.();
+        setFavoriteProjectIds(isFavorite
+            ? favoriteProjectIds.filter((id) => id !== project.id)
+            : [project.id, ...favoriteProjectIds.filter((id) => id !== project.id)]
+        );
+    }, [favoriteProjectIds, isFavorite, project.id, setFavoriteProjectIds]);
 
     const machineName = React.useMemo(() => {
         if (!project.machineId) return null;
@@ -53,6 +63,20 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                         </Text>
                     )}
                 </View>
+                <Pressable
+                    accessibilityLabel={isFavorite ? 'Remove project from favorites' : 'Add project to favorites'}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isFavorite }}
+                    hitSlop={8}
+                    onPress={toggleFavorite}
+                    style={styles.favoriteButton}
+                >
+                    <Ionicons
+                        name={isFavorite ? 'star' : 'star-outline'}
+                        size={16}
+                        color={isFavorite ? theme.colors.textLink : theme.colors.textSecondary}
+                    />
+                </Pressable>
                 <ProjectTodoButton
                     projectKey={`project:${project.id}`}
                 />
@@ -149,6 +173,12 @@ const stylesheet = StyleSheet.create((theme) => ({
         fontSize: 12,
         color: theme.colors.textSecondary,
         ...Typography.default(),
+    },
+    favoriteButton: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 28,
+        height: 28,
     },
     workspace: {
         paddingLeft: 10,

@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
     sortActiveSessionsGlobally: false,
     groupActiveSessionsByDate: false,
     needsAttentionSessionsEnabled: true,
+    pinnedSessionIds: [] as string[],
+    favoriteProjectIds: [] as string[],
 }));
 
 vi.mock('react', () => ({
@@ -22,6 +24,8 @@ vi.mock('@/sync/storage', () => ({
             case 'needsAttentionSessionsEnabled': return mocks.needsAttentionSessionsEnabled;
             case 'sortActiveSessionsGlobally': return mocks.sortActiveSessionsGlobally;
             case 'groupActiveSessionsByDate': return mocks.groupActiveSessionsByDate;
+            case 'pinnedSessionIds': return mocks.pinnedSessionIds;
+            case 'favoriteProjectIds': return mocks.favoriteProjectIds;
             default: throw new Error(`Unexpected setting read: ${key}`);
         }
     },
@@ -87,6 +91,8 @@ beforeEach(() => {
     mocks.sortActiveSessionsGlobally = false;
     mocks.groupActiveSessionsByDate = false;
     mocks.needsAttentionSessionsEnabled = true;
+    mocks.pinnedSessionIds = [];
+    mocks.favoriteProjectIds = [];
 });
 
 describe('buildVisibleSessionListViewData', () => {
@@ -321,6 +327,65 @@ describe('buildVisibleSessionListViewData', () => {
             },
         }]);
     });
+
+    it('orders favorite projects first within their source section', () => {
+        const result = buildVisibleSessionListViewData([
+            { type: 'projects-header', source: 'rig' },
+            project('ordinary-rig', [row('ordinary-rig-session')], 'rig'),
+            project('favorite-rig', [row('favorite-rig-session')], 'rig'),
+            { type: 'projects-header', source: 'happy' },
+            project('ordinary-happy', [row('ordinary-happy-session')], 'happy'),
+            project('favorite-happy', [row('favorite-happy-session')], 'happy'),
+        ], {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            favoriteProjectIds: ['favorite-rig', 'favorite-happy'],
+        })!;
+
+        expect(result.filter((item) => item.type === 'project').map((item) => item.project.id))
+            .toEqual(['favorite-rig', 'ordinary-rig', 'favorite-happy', 'ordinary-happy']);
+        expect(result.filter((item) => item.type === 'projects-header').map((item) => item.source))
+            .toEqual(['rig', 'happy']);
+    });
+
+    it('orders pinned sessions first inside project workspaces and active sections', () => {
+        const result = buildVisibleSessionListViewData([
+            project('p1', [row('ordinary-project'), row('pinned-project')]),
+            { type: 'active-sessions', sessions: [
+                row('ordinary-active', { active: true }),
+                row('pinned-active', { active: true }),
+            ] },
+        ], {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            needsAttentionSessionsEnabled: false,
+            pinnedSessionIds: ['pinned-project', 'pinned-active'],
+        })!;
+
+        expect(projectSessionIds(result)).toEqual(['pinned-project', 'ordinary-project']);
+        expect(result.flatMap((item) => item.type === 'active-sessions'
+            ? item.sessions.map((session) => session.id)
+            : [])).toEqual(['pinned-active', 'ordinary-active']);
+    });
+
+    it('keeps permission-required attention ahead of ordinary pinned attention', () => {
+        const result = buildVisibleSessionListViewData([{
+            type: 'active-sessions',
+            sessions: [
+                row('pinned-unread', { active: true, hasUnread: true, lastMessageSentAt: 300 }),
+                row('permission', { active: true, state: 'permission_required', lastMessageSentAt: 100 }),
+            ],
+        }], {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            pinnedSessionIds: ['pinned-unread'],
+        })!;
+
+        expect(result[0]).toMatchObject({
+            type: 'attention-sessions',
+            sessions: [{ id: 'permission' }, { id: 'pinned-unread' }],
+        });
+    });
 });
 
 describe('useVisibleSessionListViewData', () => {
@@ -337,6 +402,7 @@ describe('useVisibleSessionListViewData', () => {
         mocks.hideArchivedSessions = true;
         mocks.sortActiveSessionsGlobally = true;
         mocks.groupActiveSessionsByDate = true;
+        mocks.pinnedSessionIds = ['live'];
 
         expect(useVisibleSessionListViewData()).toMatchObject([
             { type: 'active-sessions', period: 'today', sessions: [{ id: 'live' }] },

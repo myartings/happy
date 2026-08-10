@@ -22,6 +22,7 @@ export interface NavigatorPlatformLike {
 }
 
 export type SessionActionShortcutId =
+    | 'pin'
     | 'details'
     | 'resume'
     | 'fork'
@@ -42,6 +43,7 @@ export interface ShortcutChord {
 }
 
 export const SESSION_ACTION_SHORTCUTS: Readonly<Record<SessionActionShortcutId, ShortcutChord>> = {
+    pin: { key: 'p', code: 'KeyP', keyLabel: 'P', altKey: true },
     details: { key: 'o', code: 'KeyO', keyLabel: 'O', altKey: true },
     resume: { key: 'r', code: 'KeyR', keyLabel: 'R', altKey: true },
     fork: { key: 'f', code: 'KeyF', keyLabel: 'F', altKey: true },

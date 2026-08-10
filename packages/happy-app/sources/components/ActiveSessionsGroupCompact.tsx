@@ -270,6 +270,8 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
     const enhancedStatusDotsEnabled = useLocalSetting('devEnhancedStatusDotsEnabled');
     const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
+    const pinnedSessionIds = useSetting('pinnedSessionIds');
+    const isPinned = pinnedSessionIds.includes(session.id);
     const displayPolicy = resolveSessionRowDisplayPolicy({
         context: displayContext,
         environmentLabelsEnabled,
@@ -377,6 +379,15 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     >
                         {session.name}
                     </Text>
+                    {isPinned && (
+                        <Ionicons
+                            accessibilityLabel="Pinned session"
+                            name="pin"
+                            size={12}
+                            color={theme.colors.textSecondary}
+                            style={styles.pinnedIcon}
+                        />
+                    )}
                     <SessionShortcutHintBadge
                         sessionId={session.id}
                         style={styles.sessionShortcutBadge}
@@ -592,6 +603,10 @@ const stylesheet = StyleSheet.create((theme) => ({
     sessionShortcutBadge: {
         flexShrink: 0,
         marginLeft: 8,
+    },
+    pinnedIcon: {
+        flexShrink: 0,
+        marginLeft: 6,
     },
     sessionTitleConnected: {
         color: theme.colors.text,

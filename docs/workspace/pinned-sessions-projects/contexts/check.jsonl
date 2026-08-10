@@ -1,0 +1,3 @@
+{"path":"packages/happy-app/sources/sync/settings.spec.ts","reason":"Verify settings defaults and parsing compatibility"}
+{"path":"packages/happy-app/sources/hooks/useVisibleSessionListViewData.test.ts","reason":"Verify pin and favorite ordering with existing list policies"}
+{"path":"docs/specs/pinned-sessions-projects.md","reason":"Acceptance contract for review"}

@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "pinned-sessions-projects",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Run one manual interaction pass in the target Tauri or iOS client before publication",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/pinned-sessions-projects.md",
+      "updated": "2026-08-10T05:23:32+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/pinned-sessions-projects/decisions.md",
+      "updated": "2026-08-10T05:23:32+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/specs/pinned-sessions-projects.md; docs/tasks/pinned-sessions-projects-tasks.md",
+      "updated": "2026-08-10T05:23:32+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/specs/pinned-sessions-projects.md documents forward compatibility and rollback",
+      "updated": "2026-08-10T05:23:32+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "packages/happy-app/sources/sync/settings.ts; packages/happy-app/sources/utils/visibleSessionListViewData.ts; packages/happy-app/sources/hooks/useSessionQuickActions.ts; packages/happy-app/sources/components/ProjectGroup.tsx",
+      "updated": "2026-08-10T05:27:53+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "docs/workspace/pinned-sessions-projects/validation.md records complete automated checks and pending manual target-client interaction",
+      "updated": "2026-08-10T05:29:27+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "docs/workspace/pinned-sessions-projects/finish.md records whole-diff review with no code findings",
+      "updated": "2026-08-10T05:29:27+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/pinned-sessions-projects/finish.md confirms acceptance, rollback, and pre-release follow-up",
+      "updated": "2026-08-10T05:29:27+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-10T05:20:07+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-10T05:23:32+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/pinned-sessions-projects.md"
+    },
+    {
+      "at": "2026-08-10T05:23:32+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/pinned-sessions-projects/decisions.md"
+    },
+    {
+      "at": "2026-08-10T05:23:32+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/pinned-sessions-projects.md; docs/tasks/pinned-sessions-projects-tasks.md"
+    },
+    {
+      "at": "2026-08-10T05:23:32+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/specs/pinned-sessions-projects.md documents forward compatibility and rollback"
+    },
+    {
+      "at": "2026-08-10T05:23:47+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement synced pins, favorites, ordering, and controls"
+    },
+    {
+      "at": "2026-08-10T05:27:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "packages/happy-app/sources/sync/settings.ts; packages/happy-app/sources/utils/visibleSessionListViewData.ts; packages/happy-app/sources/hooks/useSessionQuickActions.ts; packages/happy-app/sources/components/ProjectGroup.tsx"
+    },
+    {
+      "at": "2026-08-10T05:27:53+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run repository checks and review the complete diff"
+    },
+    {
+      "at": "2026-08-10T05:28:37+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "docs/workspace/pinned-sessions-projects/validation.md"
+    },
+    {
+      "at": "2026-08-10T05:29:27+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "docs/workspace/pinned-sessions-projects/validation.md records complete automated checks and pending manual target-client interaction"
+    },
+    {
+      "at": "2026-08-10T05:29:27+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "docs/workspace/pinned-sessions-projects/finish.md records whole-diff review with no code findings"
+    },
+    {
+      "at": "2026-08-10T05:29:27+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize acceptance and archive with commit pending"
+    },
+    {
+      "at": "2026-08-10T05:29:27+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/pinned-sessions-projects/finish.md confirms acceptance, rollback, and pre-release follow-up"
+    },
+    {
+      "at": "2026-08-10T05:29:31+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented synced session pins and project favorites with stable ordering and cross-platform controls; commit: pending; follow-up: Run one manual interaction pass in the target Tauri or iOS client before publication"
+    }
+  ],
+  "updated": "2026-08-10T05:29:31+00:00",
+  "archivedAt": "2026-08-10T05:29:31+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented synced session pins and project favorites with stable ordering and cross-platform controls",
+  "archiveFollowUp": "Run one manual interaction pass in the target Tauri or iOS client before publication"
+}

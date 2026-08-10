@@ -1,0 +1,11 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"packages/happy-app/sources/sync/settings.ts","reason":"Add forward-compatible synced pin and favorite preferences"}
+{"path":"packages/happy-app/sources/hooks/useVisibleSessionListViewData.ts","reason":"Feed preferences into the visible list projection"}
+{"path":"packages/happy-app/sources/utils/visibleSessionListViewData.ts","reason":"Apply deterministic project and session priority ordering"}
+{"path":"packages/happy-app/sources/hooks/useSessionQuickActions.ts","reason":"Expose pin and unpin through shared session actions"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Render pinned state in session rows"}
+{"path":"packages/happy-app/sources/components/ProjectGroup.tsx","reason":"Expose and render project favorite state"}
+{"path":"packages/happy-app/sources/components/SessionActionsNativeMenu.ios.tsx","reason":"Expose pin action in the iOS native context menu"}
+{"path":"packages/happy-app/sources/components/SessionActionsNativeMenu.android.tsx","reason":"Expose pin action in the Android native context menu"}
+{"path":"docs/workspace/pinned-sessions-projects/validation.md","reason":"Evidence ledger for exact check outcomes"}
