@@ -1104,6 +1104,8 @@ export const en = {
 
     githubIssues: {
         title: 'GitHub Issues',
+        panelTitle: 'Issues',
+        selectFromSession: 'Choose an Issue from this Session.',
         disabled: 'GitHub Issues is disabled in Settings → Features.',
         connectTitle: 'Connect GitHub Issues',
         connectionDescription: 'Access only repositories selected for the GitHub App on this device.',
@@ -1125,6 +1127,10 @@ export const en = {
         openIssues: 'Open issues',
         viewAllIssues: 'View all issues',
         unableToLoadIssues: 'Unable to load issues',
+        quickPopover: 'Session Issues quick popover',
+        closeQuickPopover: 'Close Session Issues',
+        refresh: 'Refresh issues',
+        loadMore: 'Load more',
         updatedNow: 'updated now',
         updatedMinutes: ({ count }: { count: number }) => `updated ${count}m ago`,
         updatedHours: ({ count }: { count: number }) => `updated ${count}h ago`,
@@ -1137,6 +1143,7 @@ export const en = {
         updating: 'Updating…',
         noDescription: 'No description.',
         openOnGithub: 'Open on GitHub',
+        issueActions: 'Issue actions',
         deletePermanently: 'Delete permanently',
         deleteConfirmTitle: 'Delete permanently?',
         deleteConfirmMessage: ({ identity }: { identity: string }) => `${identity} will be deleted from GitHub and cannot be recovered.`,

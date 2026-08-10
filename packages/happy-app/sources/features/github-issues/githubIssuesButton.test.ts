@@ -3,7 +3,7 @@ import * as React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { listIssues, push, remember, resolve } = vi.hoisted(() => ({
+const { listIssues, openIssue, push, remember, resolve } = vi.hoisted(() => ({
     listIssues: vi.fn(async () => ({
         items: [{
             number: 42,
@@ -14,6 +14,7 @@ const { listIssues, push, remember, resolve } = vi.hoisted(() => ({
         }],
         nextPage: null,
     })),
+    openIssue: vi.fn(),
     push: vi.fn(),
     remember: vi.fn(),
     resolve: vi.fn(async () => ({
@@ -31,6 +32,7 @@ vi.mock('react-native', async () => {
         Platform: { OS: 'web', select: (values: any) => values.web ?? values.default },
         Pressable: host('Pressable'),
         ScrollView: host('ScrollView'),
+        useWindowDimensions: () => ({ width: 1200, height: 800 }),
         View: host('View'),
     };
 });
@@ -49,7 +51,10 @@ vi.mock('react-native-unistyles', () => ({
                 surface: 'surface',
                 surfaceHigh: 'surface-high',
                 surfacePressed: 'pressed',
+                surfaceSelected: 'selected',
                 text: 'text',
+                textDestructive: 'red',
+                textLink: 'blue',
                 textSecondary: 'gray',
             },
         }),
@@ -72,12 +77,18 @@ vi.mock('@/sync/storage', () => ({ useLocalSetting: () => true }));
 vi.mock('@/text', () => ({
     t: (key: string) => ({
         'githubIssues.newIssue': 'New issue',
+        'githubIssues.noClosedIssues': 'No closed issues',
         'githubIssues.noOpenIssues': 'No open issues',
         'githubIssues.openIssues': 'Open issues',
         'githubIssues.repository': 'Repository',
         'githubIssues.sessionRepository': 'Session repository',
         'githubIssues.unableToLoadIssues': 'Unable to load issues',
         'githubIssues.viewAllIssues': 'View all issues',
+        'githubIssues.quickPopover': 'Session Issues quick popover',
+        'githubIssues.closeQuickPopover': 'Close Session Issues',
+        'githubIssues.refresh': 'Refresh issues',
+        'githubIssues.loadMore': 'Load more',
+        'githubIssues.updatedNow': 'updated now',
     } as Record<string, string>)[key] ?? key,
 }));
 vi.mock('@/sync/ops', () => ({
@@ -89,6 +100,8 @@ vi.mock('./GithubRepositoryPicker', async () => {
     return { GithubRepositoryPicker: (props: any) => ReactModule.createElement('GithubRepositoryPicker', props) };
 });
 vi.mock('./githubIssuesApi', () => ({
+    getGithubIssueRelativeTime: () => ({ unit: 'hour', value: 1 }),
+    getGithubIssuesErrorMessage: (error: unknown) => error instanceof Error ? error.message : 'Unable to load issues',
     githubIssuesApi: { installationUrl: undefined, listIssues },
     githubIssuesRepositoryResolver: { remember, resolve },
 }));
@@ -109,6 +122,7 @@ afterAll(() => vi.restoreAllMocks());
 
 beforeEach(() => {
     push.mockClear();
+    openIssue.mockClear();
     listIssues.mockClear();
     remember.mockClear();
     resolve.mockClear();
@@ -121,13 +135,14 @@ function findIssuesEntry(renderer: ReturnType<typeof create>) {
 }
 
 describe('GitHub Issues Session entry', () => {
-    it('opens a Session context panel without leaving the Session', async () => {
+    it('selects an Issue from the Session quick popover without navigating', async () => {
         let renderer: ReturnType<typeof create>;
         await act(async () => {
             renderer = create(React.createElement(GithubIssuesButton, {
                 showLabel: true,
                 sessionId: 'session-a',
                 cwd: '/work/happy',
+                onOpenIssue: openIssue,
             }));
         });
 
@@ -140,7 +155,7 @@ describe('GitHub Issues Session entry', () => {
         expect(resolve).toHaveBeenCalledWith({ sessionId: 'session-a', path: '/work/happy' });
         expect(push).not.toHaveBeenCalled();
         expect(renderer!.root.findByType('Modal' as any).props.visible).toBe(true);
-        expect(listIssues).toHaveBeenCalledWith({ owner: 'myartings', repo: 'happy', state: 'open' });
+        expect(listIssues).toHaveBeenCalledWith({ owner: 'myartings', repo: 'happy', state: 'open', page: 1 });
         expect(renderer!.root.findAllByType('Text' as any).some(
             (node: any) => node.props.children === 'Keep Session context visible',
         )).toBe(true);
@@ -151,15 +166,12 @@ describe('GitHub Issues Session entry', () => {
         await act(async () => {
             issueRow!.props.onPress();
         });
-        expect(push).toHaveBeenCalledWith({
-            pathname: '/github-issues/[number]',
-            params: {
-                owner: 'myartings',
-                repo: 'happy',
-                number: 42,
-                sourceSessionId: 'session-a',
-            },
+        expect(openIssue).toHaveBeenCalledWith({
+            repository: { owner: 'myartings', repo: 'happy' },
+            issueNumber: 42,
+            mode: 'detail',
         });
+        expect(push).not.toHaveBeenCalled();
     });
 
     it('opens the repository picker instead of navigating when resolution is ambiguous', async () => {
@@ -187,6 +199,27 @@ describe('GitHub Issues Session entry', () => {
         expect(renderer!.root.findByType('GithubRepositoryPicker' as any).props).toMatchObject({
             visible: true,
             reason: 'ambiguous',
+        });
+    });
+
+    it('keeps repository lookup failures inside the Session', async () => {
+        resolve.mockRejectedValueOnce(new Error('lookup failed'));
+        let renderer: ReturnType<typeof create>;
+        await act(async () => {
+            renderer = create(React.createElement(GithubIssuesButton, {
+                sessionId: 'session-a',
+                cwd: '/work/happy',
+            }));
+        });
+
+        await act(async () => {
+            await findIssuesEntry(renderer!).props.onPress();
+        });
+
+        expect(push).not.toHaveBeenCalled();
+        expect(renderer!.root.findByType('GithubRepositoryPicker' as any).props).toMatchObject({
+            visible: true,
+            reason: 'lookup-failed',
         });
     });
 

@@ -32,20 +32,24 @@ import {
 } from './AnimatedOverlay';
 import { MobileGlassSurface } from './MobileGlass';
 import { SideChatQuickPanelControls } from './SideChatQuickPanelControls';
+import { GithubIssuesWorkspacePanel } from '@/features/github-issues/GithubIssuesWorkspacePanel';
+import type { GithubIssuesWorkspaceSelection } from '@/features/github-issues/githubIssuesWorkspace';
+import { getRightWorkspaceTabs } from '@/utils/sideChatQuickPanel';
 
-export type SidebarMode = 'changes' | 'allFiles' | 'sideChat';
-type PickableSidebarMode = Exclude<SidebarMode, 'sideChat'>;
+export type SidebarMode = 'changes' | 'allFiles' | 'sideChat' | 'issues';
+type PickableSidebarMode = Exclude<SidebarMode, 'sideChat' | 'issues'>;
 
 const ALL_PANELS: { key: SidebarMode; icon: keyof typeof Octicons.glyphMap }[] = [
     { key: 'changes', icon: 'git-compare' },
     { key: 'allFiles', icon: 'file-directory' },
     { key: 'sideChat', icon: 'comment-discussion' },
+    { key: 'issues', icon: 'issue-opened' },
 ];
 
 // Panels that are opened directly from the picker. The 'sideChat' panel is not
 // here: it isn't opened empty — it appears when you create a side chat via the
 // dedicated "New side chat" picker action, which forks a new child session.
-const PICKABLE_PANELS = ALL_PANELS.filter((p) => p.key !== 'sideChat') as Array<{
+const PICKABLE_PANELS = ALL_PANELS.filter((p) => p.key !== 'sideChat' && p.key !== 'issues') as Array<{
     key: PickableSidebarMode;
     icon: keyof typeof Octicons.glyphMap;
 }>;
@@ -60,6 +64,7 @@ function panelLabel(panel: SidebarMode): string {
         case 'changes': return t('files.changes');
         case 'allFiles': return t('files.allFiles');
         case 'sideChat': return t('sideChat.panelTitle');
+        case 'issues': return t('githubIssues.panelTitle');
     }
 }
 
@@ -88,6 +93,8 @@ interface FilesSidebarProps {
     quickPanelChangedFilesCount: number;
     quickPanelShowFileActions: boolean;
     onCollapseQuickPanel: () => void;
+    githubIssuesSelection: GithubIssuesWorkspaceSelection | null;
+    onGithubIssuesSelectionChange: (selection: GithubIssuesWorkspaceSelection) => void;
 }
 
 type FileNode<T = GitFileStatus> = {
@@ -230,6 +237,8 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
     quickPanelChangedFilesCount,
     quickPanelShowFileActions,
     onCollapseQuickPanel,
+    githubIssuesSelection,
+    onGithubIssuesSelectionChange,
 }) => {
     const router = useRouter();
     const { theme } = useUnistyles();
@@ -295,6 +304,7 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
         () => PICKABLE_PANELS.filter((panel) => !openPanels.includes(panel.key)),
         [openPanels],
     );
+    const workspaceTabs = React.useMemo(() => getRightWorkspaceTabs(openPanels), [openPanels]);
     const availablePickerActionIds = React.useMemo<SidebarPickerShortcutId[]>(() => [
         ...availablePanels.map((panel) => panel.key),
         'newSideChat',
@@ -424,7 +434,31 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
 
     return (
         <View style={styles.container}>
-            {quickPanelEnabled && activePanel && activePanel !== 'sideChat' ? (
+            {quickPanelEnabled && activePanel && openPanels.includes('issues') ? (
+                <View style={styles.header}>
+                    <View style={styles.chipRow}>
+                        {workspaceTabs.map((key) => (
+                            <PanelChip
+                                key={key}
+                                panel={key}
+                                active={key === activePanel}
+                                onSelect={() => onSelectPanel(key)}
+                                onClose={() => onClosePanel(key)}
+                            />
+                        ))}
+                    </View>
+                    <SideChatQuickPanelControls
+                        activePanel={activePanel}
+                        changedFilesCount={quickPanelChangedFilesCount}
+                        creating={creatingSideChat}
+                        expanded={quickPanelExpanded}
+                        onOpenAllFiles={() => onOpenPanel('allFiles')}
+                        onOpenChanges={() => onOpenPanel('changes')}
+                        onToggle={onCollapseQuickPanel}
+                        showFileActions={quickPanelShowFileActions}
+                    />
+                </View>
+            ) : quickPanelEnabled && activePanel && activePanel !== 'sideChat' ? (
                 <View style={styles.quickHeader}>
                     <View style={styles.quickHeaderTitle}>
                         <Octicons name={panelIcon(activePanel)} size={14} color={theme.colors.textSecondary} />
@@ -479,7 +513,19 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                 </View>
             ) : null}
 
-            {activePanel === 'sideChat' ? (
+            {activePanel === 'issues' ? (
+                githubIssuesSelection ? (
+                    <GithubIssuesWorkspacePanel
+                        parentSessionId={sessionId}
+                        selection={githubIssuesSelection}
+                        onSelectionChange={onGithubIssuesSelectionChange}
+                    />
+                ) : (
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyTitle}>{t('githubIssues.selectFromSession')}</Text>
+                    </View>
+                )
+            ) : activePanel === 'sideChat' ? (
                 <SideChatPanel
                     parentSessionId={sessionId}
                     sideChats={sideChats}
