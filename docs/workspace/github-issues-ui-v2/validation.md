@@ -15,6 +15,7 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | `2026-08-10` | `happy-manager.ps1 update-desktop -DryRun` | passed | The NSIS artifact, installed target, backup retention, process stop, and uninstall-registry rollback plan were resolved without changing the installed app. |
 | `2026-08-10` | `happy-manager.ps1 update-desktop` | passed | The manager stopped the previous process, captured rollback state, installed the feature-branch NSIS artifact, and verified the installed executable SHA-256 against the build artifact. |
 | `2026-08-10` | `happy-manager.ps1 verify-desktop` plus persistent relaunch | passed | Version 0.1.0 launched from `C:\Users\myartings\AppData\Local\Happy (dev)\app.exe`; the smoke process was closed and Happy dev was relaunched for user acceptance. |
+| `2026-08-11` | installed Session Issue popover user acceptance | passed | The repaired build opens the correctly anchored Issue popover promptly from the Session header; the slow spinner and incorrect repository-picker fallback no longer reproduce. |
 | `2026-08-10` | Session-panel revision review | passed | User approved the Codex-style Session quick popover → right-workspace Issues tab model; full-route desktop composition is superseded. |
 | `2026-08-10` | revision `validate-happy-workflow.py`, `test-workflow-core.py`, and `git diff --check` | passed | Selective workflow validation passed, all 14 workflow-core tests passed, and revised specification/task/evidence documents have no whitespace errors. |
 | `2026-08-10` | `git diff --check` | passed | Approved spec, task plan, and Workspace evidence have no whitespace errors. |
@@ -77,7 +78,7 @@ longer product acceptance after approval of the Session-panel revision.
 
 | Criterion | Status | Required evidence |
 | --- | --- | --- |
-| AC1 anchored Session popover | automated, live pending | Callback/anchor interaction tests pass; installed Windows visual acceptance remains. |
+| AC1 anchored Session popover | verified | Callback/anchor interaction tests pass and installed Windows visual acceptance confirmed prompt, correctly anchored opening. |
 | AC2 popover to Issues tab | automated, live pending | Selection/create transitions and single-tab activation pass; installed-window acceptance remains. |
 | AC3 rich paginated list | verified | Pagination, filter, refresh-preservation, metadata, and uncapped-list paths are implemented and covered. |
 | AC4 repository association | verified | Existing resolver coverage plus per-Session selection isolation pass. |
