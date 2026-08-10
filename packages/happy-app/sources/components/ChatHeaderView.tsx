@@ -30,6 +30,8 @@ interface ChatHeaderViewProps {
     extraPathSegment?: string;
     /** Optional content rendered at the right edge of the header (used by file-view / diff overlays). */
     rightSlot?: React.ReactNode;
+    /** On web, pin the right slot to the full header edge instead of the centered title column. */
+    rightSlotPinnedToEdge?: boolean;
     onTitlePress?: () => void;
     onBackPress?: () => void;
     backgroundColor?: string;
@@ -46,6 +48,7 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
     identityLine,
     extraPathSegment,
     rightSlot,
+    rightSlotPinnedToEdge = false,
     onTitlePress,
     onBackPress,
     isConnected = true,
@@ -157,9 +160,14 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
                                 </Text>
                             ) : null}
                         </Pressable>
-                        {rightSlot ? <View style={styles.webRightSlot}>{rightSlot}</View> : null}
+                        {rightSlot && !rightSlotPinnedToEdge ? <View style={styles.webRightSlot}>{rightSlot}</View> : null}
                     </View>
                 </View>
+                {rightSlot && rightSlotPinnedToEdge ? (
+                    <View style={[styles.webPinnedRightSlot, { top: insets.top, height: headerHeight }]}>
+                        {rightSlot}
+                    </View>
+                ) : null}
             </View>
         );
     }
@@ -408,6 +416,14 @@ const styles = StyleSheet.create((theme) => ({
         gap: 8,
         marginLeft: 12,
         flexShrink: 0,
+    },
+    webPinnedRightSlot: {
+        position: 'absolute',
+        right: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 0,
+        zIndex: 1,
     },
     webBackButton: {
         paddingHorizontal: 8,

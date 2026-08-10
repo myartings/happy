@@ -9,6 +9,7 @@ import { sync } from '@/sync/sync';
 import { Modal } from '@/modal';
 import type { Session } from '@/sync/storageTypes';
 import { SessionViewLoaded } from '@/-session/SessionView';
+import { SideChatQuickPanelControls } from './SideChatQuickPanelControls';
 
 /**
  * Right-sidebar "side chat" panel (controlled).
@@ -17,9 +18,9 @@ import { SessionViewLoaded } from '@/-session/SessionView';
  * parent's context inside the model but starts empty in the UI and is flagged
  * `metadata.isSideChat` so it never shows in the top-level session list.
  *
- * A parent can have several side chats, shown here as switchable tabs. Creation
- * is unified into the sidebar panel picker (the top "+"), so this panel has no
- * add button of its own — it only switches between and closes existing chats.
+ * A parent can have several side chats, shown here as switchable tabs. The
+ * official layout creates them from the sidebar panel picker; quick-panel mode
+ * also presents the same create action beside the tabs.
  * Which chat is focused, plus create/close, are owned by the parent so the
  * picker can create-and-focus in one action; this component is presentational.
  *
@@ -35,6 +36,13 @@ export const SideChatPanel = React.memo(function SideChatPanel({
     onCreateSideChat,
     canCreateSideChat,
     creatingSideChat,
+    quickPanelEnabled,
+    quickPanelExpanded,
+    quickPanelChangedFilesCount,
+    quickPanelShowFileActions,
+    onCollapseQuickPanel,
+    onOpenAllFiles,
+    onOpenChanges,
 }: {
     parentSessionId: string;
     sideChats: Session[];
@@ -44,6 +52,13 @@ export const SideChatPanel = React.memo(function SideChatPanel({
     onCreateSideChat: () => void;
     canCreateSideChat: boolean;
     creatingSideChat: boolean;
+    quickPanelEnabled: boolean;
+    quickPanelExpanded: boolean;
+    quickPanelChangedFilesCount: number;
+    quickPanelShowFileActions: boolean;
+    onCollapseQuickPanel: () => void;
+    onOpenAllFiles: () => void;
+    onOpenChanges: () => void;
 }) {
     const activeSession = React.useMemo(() => {
         if (activeSideChatId) {
@@ -64,6 +79,12 @@ export const SideChatPanel = React.memo(function SideChatPanel({
         }
     }, [activeId]);
 
+    const openFullScreen = React.useCallback(() => {
+        if (activeSession) {
+            Modal.show({ component: SideChatModal, props: { sessionId: activeSession.id } });
+        }
+    }, [activeSession]);
+
     if (sideChats.length === 0) {
         return (
             <SideChatEmptyState
@@ -81,9 +102,26 @@ export const SideChatPanel = React.memo(function SideChatPanel({
                 activeId={activeId}
                 onSelect={onSelectSideChat}
                 onClose={onCloseSideChat}
+                onCreate={onCreateSideChat}
+                canCreate={canCreateSideChat}
+                creating={creatingSideChat}
+                quickPanelEnabled={quickPanelEnabled}
+                onExpand={openFullScreen}
+                quickPanelControls={quickPanelEnabled ? (
+                    <SideChatQuickPanelControls
+                        activePanel="sideChat"
+                        changedFilesCount={quickPanelChangedFilesCount}
+                        creating={creatingSideChat}
+                        expanded={quickPanelExpanded}
+                        onOpenAllFiles={onOpenAllFiles}
+                        onOpenChanges={onOpenChanges}
+                        onToggle={onCollapseQuickPanel}
+                        showFileActions={quickPanelShowFileActions}
+                    />
+                ) : null}
             />
             {activeSession && (
-                <SideChatConversation key={activeSession.id} session={activeSession} />
+                <SideChatConversation key={activeSession.id} session={activeSession} showToolbar={!quickPanelEnabled} />
             )}
         </View>
     );
@@ -96,24 +134,38 @@ function sideChatLabel(session: Session, index: number): string {
     return t('sideChat.tabLabel', { index: index + 1 });
 }
 
-/** Horizontal tab strip: one pill per side chat. No add button — creation is
- *  handled by the sidebar panel picker. */
+/** Horizontal tab strip: one pill per side chat, with quick-panel controls when
+ *  the personal UI option is enabled. */
 const SideChatTabs = React.memo(function SideChatTabs({
     sessions,
     activeId,
     onSelect,
     onClose,
+    onCreate,
+    canCreate,
+    creating,
+    quickPanelEnabled,
+    onExpand,
+    quickPanelControls,
 }: {
     sessions: Session[];
     activeId: string | null;
     onSelect: (id: string) => void;
     onClose: (id: string) => void;
+    onCreate: () => void;
+    canCreate: boolean;
+    creating: boolean;
+    quickPanelEnabled: boolean;
+    onExpand: () => void;
+    quickPanelControls: React.ReactNode;
 }) {
+    const { theme } = useUnistyles();
     return (
-        <View style={styles.tabsRow}>
+        <View style={[styles.tabsRow, quickPanelEnabled && styles.quickTabsRow]}>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                style={styles.tabsScrollView}
                 contentContainerStyle={styles.tabsScroll}
             >
                 {sessions.map((session, index) => (
@@ -126,6 +178,37 @@ const SideChatTabs = React.memo(function SideChatTabs({
                     />
                 ))}
             </ScrollView>
+            {quickPanelEnabled ? (
+                <>
+                    <Pressable
+                        accessibilityLabel={t('sideChat.newChat')}
+                        disabled={creating || !canCreate}
+                        onPress={onCreate}
+                        style={({ pressed, hovered }: any) => [
+                            styles.quickHeaderButton,
+                            (pressed || hovered) && styles.quickHeaderButtonHovered,
+                            (creating || !canCreate) && styles.quickHeaderButtonDisabled,
+                        ]}
+                    >
+                        {creating ? (
+                            <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+                        ) : (
+                            <Octicons name="plus" size={18} color={theme.colors.textSecondary} />
+                        )}
+                    </Pressable>
+                    <Pressable
+                        accessibilityLabel={t('sideChat.expand')}
+                        onPress={onExpand}
+                        style={({ pressed, hovered }: any) => [
+                            styles.quickHeaderButton,
+                            (pressed || hovered) && styles.quickHeaderButtonHovered,
+                        ]}
+                    >
+                        <Octicons name="screen-full" size={14} color={theme.colors.textSecondary} />
+                    </Pressable>
+                    {quickPanelControls}
+                </>
+            ) : null}
         </View>
     );
 });
@@ -218,7 +301,13 @@ const SideChatEmptyState = React.memo(function SideChatEmptyState({
 });
 
 /** Focused side chat inside the panel: the real chat body + an expand button. */
-const SideChatConversation = React.memo(function SideChatConversation({ session }: { session: Session }) {
+const SideChatConversation = React.memo(function SideChatConversation({
+    session,
+    showToolbar,
+}: {
+    session: Session;
+    showToolbar: boolean;
+}) {
     const { theme } = useUnistyles();
     const openFullScreen = React.useCallback(() => {
         Modal.show({ component: SideChatModal, props: { sessionId: session.id } });
@@ -226,19 +315,21 @@ const SideChatConversation = React.memo(function SideChatConversation({ session 
 
     return (
         <View style={styles.conversationContainer}>
-            <View style={styles.toolbar}>
-                <Pressable
-                    onPress={openFullScreen}
-                    accessibilityLabel={t('sideChat.expand')}
-                    hitSlop={6}
-                    style={({ pressed, hovered }: any) => [
-                        styles.toolbarButton,
-                        (pressed || hovered) && { backgroundColor: theme.colors.surface },
-                    ]}
-                >
-                    <Octicons name="screen-full" size={13} color={theme.colors.textSecondary} />
-                </Pressable>
-            </View>
+            {showToolbar ? (
+                <View style={styles.toolbar}>
+                    <Pressable
+                        onPress={openFullScreen}
+                        accessibilityLabel={t('sideChat.expand')}
+                        hitSlop={6}
+                        style={({ pressed, hovered }: any) => [
+                            styles.toolbarButton,
+                            (pressed || hovered) && { backgroundColor: theme.colors.surface },
+                        ]}
+                    >
+                        <Octicons name="screen-full" size={13} color={theme.colors.textSecondary} />
+                    </Pressable>
+                </View>
+            ) : null}
             <View style={styles.chatWrap}>
                 <SessionViewLoaded sessionId={session.id} session={session} embedded />
             </View>
@@ -303,6 +394,18 @@ const styles = StyleSheet.create((theme) => ({
         paddingBottom: 6,
         gap: 4,
     },
+    quickTabsRow: {
+        minHeight: 52,
+        paddingLeft: 10,
+        paddingRight: 8,
+        paddingBottom: 0,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: theme.colors.divider,
+    },
+    tabsScrollView: {
+        minWidth: 0,
+        flex: 1,
+    },
     tabsScroll: {
         alignItems: 'center',
         gap: 4,
@@ -340,6 +443,19 @@ const styles = StyleSheet.create((theme) => ({
         borderRadius: 4,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    quickHeaderButton: {
+        width: 34,
+        height: 34,
+        borderRadius: 9,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    quickHeaderButtonHovered: {
+        backgroundColor: theme.colors.surface,
+    },
+    quickHeaderButtonDisabled: {
+        opacity: 0.5,
     },
     emptyContainer: {
         flex: 1,

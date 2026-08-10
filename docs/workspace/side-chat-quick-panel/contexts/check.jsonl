@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/specs/side-chat-quick-panel.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/workspace/side-chat-quick-panel/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/utils/sideChatQuickPanel.test.ts","reason":"Quick-panel state and layout regression coverage"}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Feature-switch default regression coverage"}

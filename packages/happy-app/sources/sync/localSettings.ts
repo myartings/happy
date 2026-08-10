@@ -26,6 +26,7 @@ export const LocalSettingsSchema = z.object({
     devGroupActiveSessionsByDateEnabled: z.boolean().describe('Split globally sorted active sessions into today and earlier activity groups'),
     devShowActiveSessionRuntimeEnabled: z.boolean().describe('Show project, device platform, AI provider, and model details on active session rows'),
     devShowSessionModelEnabled: z.boolean().describe('Show the AI provider icon and name plus the model name and version in session UI'),
+    devSideChatQuickPanelEnabled: z.boolean().describe('Show the Codex-inspired desktop side-chat quick panel'),
     devPersonalDisplaySettingsMigrated: z.boolean().describe('Whether legacy synced personal display preferences were copied to this device'),
     devSessionListSettingsSynced: z.boolean().describe('Whether device-local session list choices were migrated to account settings'),
     // Right file sidebar: which panels the user has opened and which is active.
@@ -72,6 +73,7 @@ export const localSettingsDefaults: LocalSettings = {
     devGroupActiveSessionsByDateEnabled: false,
     devShowActiveSessionRuntimeEnabled: false,
     devShowSessionModelEnabled: true,
+    devSideChatQuickPanelEnabled: true,
     devPersonalDisplaySettingsMigrated: false,
     devSessionListSettingsSynced: false,
     sidebarPanelsOpen: [],

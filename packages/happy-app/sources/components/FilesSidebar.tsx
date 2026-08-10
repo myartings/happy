@@ -31,6 +31,7 @@ import {
     LocalBlurHalo,
 } from './AnimatedOverlay';
 import { MobileGlassSurface } from './MobileGlass';
+import { SideChatQuickPanelControls } from './SideChatQuickPanelControls';
 
 export type SidebarMode = 'changes' | 'allFiles' | 'sideChat';
 type PickableSidebarMode = Exclude<SidebarMode, 'sideChat'>;
@@ -72,8 +73,9 @@ interface FilesSidebarProps {
     onSelectPanel: (panel: SidebarMode) => void;
     onClosePanel: (panel: SidebarMode) => void;
     onAllFilesFilePress?: (filePath: string) => void;
-    // Side chats (rendered inside the 'sideChat' panel). Creation is unified
-    // into this sidebar's panel picker, so there is no separate add button.
+    // Side chats (rendered inside the 'sideChat' panel). The official layout
+    // creates them from the panel picker; quick-panel mode also exposes a
+    // Codex-inspired add action beside the tabs.
     sideChats: Session[];
     activeSideChatId: string | null;
     onSelectSideChat: (id: string) => void;
@@ -81,6 +83,11 @@ interface FilesSidebarProps {
     onCreateSideChat: () => void;
     canCreateSideChat: boolean;
     creatingSideChat: boolean;
+    quickPanelEnabled: boolean;
+    quickPanelExpanded: boolean;
+    quickPanelChangedFilesCount: number;
+    quickPanelShowFileActions: boolean;
+    onCollapseQuickPanel: () => void;
 }
 
 type FileNode<T = GitFileStatus> = {
@@ -218,6 +225,11 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
     onCreateSideChat,
     canCreateSideChat,
     creatingSideChat,
+    quickPanelEnabled,
+    quickPanelExpanded,
+    quickPanelChangedFilesCount,
+    quickPanelShowFileActions,
+    onCollapseQuickPanel,
 }) => {
     const router = useRouter();
     const { theme } = useUnistyles();
@@ -412,42 +424,60 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
 
     return (
         <View style={styles.container}>
-            {/* Open panels as chips + add-panel button */}
-            <View style={styles.header}>
-                <View style={styles.chipRow}>
-                    {openPanels.map((key) => (
-                        <PanelChip
-                            key={key}
-                            panel={key}
-                            active={key === activePanel}
-                            onSelect={() => onSelectPanel(key)}
-                            onClose={() => onClosePanel(key)}
-                        />
-                    ))}
+            {quickPanelEnabled && activePanel && activePanel !== 'sideChat' ? (
+                <View style={styles.quickHeader}>
+                    <View style={styles.quickHeaderTitle}>
+                        <Octicons name={panelIcon(activePanel)} size={14} color={theme.colors.textSecondary} />
+                        <Text style={styles.quickHeaderTitleText} numberOfLines={1}>{panelLabel(activePanel)}</Text>
+                    </View>
+                    <SideChatQuickPanelControls
+                        activePanel={activePanel}
+                        changedFilesCount={quickPanelChangedFilesCount}
+                        creating={creatingSideChat}
+                        expanded={quickPanelExpanded}
+                        onOpenAllFiles={() => onOpenPanel('allFiles')}
+                        onOpenChanges={() => onOpenPanel('changes')}
+                        onToggle={onCollapseQuickPanel}
+                        showFileActions={quickPanelShowFileActions}
+                    />
                 </View>
-                <View style={styles.headerRight}>
-                    {activePanel === 'changes' && hasFiles && gitStatus && (gitStatus.linesAdded > 0 || gitStatus.linesRemoved > 0) ? (
-                        <View style={styles.headerLineChanges}>
-                            {gitStatus.linesAdded > 0 && (
-                                <Text style={styles.headerAdded}>+{gitStatus.linesAdded}</Text>
-                            )}
-                            {gitStatus.linesRemoved > 0 && (
-                                <Text style={styles.headerRemoved}>-{gitStatus.linesRemoved}</Text>
-                            )}
-                        </View>
-                    ) : null}
-                    <Pressable
-                        onPress={() => setAddMenuOpen((v) => !v)}
-                        accessibilityLabel={t('files.addPanel')}
-                        style={({ pressed, hovered }: any) => [
-                            styles.iconButton,
-                            (pressed || hovered || addMenuOpen) && { backgroundColor: theme.colors.surface },
-                        ]}
-                    >
-                        <Octicons name="plus" size={14} color={theme.colors.textSecondary} />
-                    </Pressable>
+            ) : !quickPanelEnabled ? (
+                <View style={styles.header}>
+                    <View style={styles.chipRow}>
+                        {openPanels.map((key) => (
+                            <PanelChip
+                                key={key}
+                                panel={key}
+                                active={key === activePanel}
+                                onSelect={() => onSelectPanel(key)}
+                                onClose={() => onClosePanel(key)}
+                            />
+                        ))}
+                    </View>
+                    <View style={styles.headerRight}>
+                        {activePanel === 'changes' && hasFiles && gitStatus && (gitStatus.linesAdded > 0 || gitStatus.linesRemoved > 0) ? (
+                            <View style={styles.headerLineChanges}>
+                                {gitStatus.linesAdded > 0 && (
+                                    <Text style={styles.headerAdded}>+{gitStatus.linesAdded}</Text>
+                                )}
+                                {gitStatus.linesRemoved > 0 && (
+                                    <Text style={styles.headerRemoved}>-{gitStatus.linesRemoved}</Text>
+                                )}
+                            </View>
+                        ) : null}
+                        <Pressable
+                            onPress={() => setAddMenuOpen((v) => !v)}
+                            accessibilityLabel={t('files.addPanel')}
+                            style={({ pressed, hovered }: any) => [
+                                styles.iconButton,
+                                (pressed || hovered || addMenuOpen) && { backgroundColor: theme.colors.surface },
+                            ]}
+                        >
+                            <Octicons name="plus" size={14} color={theme.colors.textSecondary} />
+                        </Pressable>
+                    </View>
                 </View>
-            </View>
+            ) : null}
 
             {activePanel === 'sideChat' ? (
                 <SideChatPanel
@@ -459,6 +489,13 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                     onCreateSideChat={onCreateSideChat}
                     canCreateSideChat={canCreateSideChat}
                     creatingSideChat={creatingSideChat}
+                    quickPanelEnabled={quickPanelEnabled}
+                    quickPanelExpanded={quickPanelExpanded}
+                    quickPanelChangedFilesCount={quickPanelChangedFilesCount}
+                    quickPanelShowFileActions={quickPanelShowFileActions}
+                    onCollapseQuickPanel={onCollapseQuickPanel}
+                    onOpenAllFiles={() => onOpenPanel('allFiles')}
+                    onOpenChanges={() => onOpenPanel('changes')}
                 />
             ) : activePanel === 'changes' ? (
                 <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
@@ -860,6 +897,31 @@ const styles = StyleSheet.create((theme) => ({
         paddingBottom: 8,
         gap: 8,
         zIndex: 2,
+    },
+    quickHeader: {
+        minHeight: 52,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+        gap: 8,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: theme.colors.divider,
+        zIndex: 2,
+    },
+    quickHeaderTitle: {
+        minWidth: 0,
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 7,
+    },
+    quickHeaderTitleText: {
+        minWidth: 0,
+        flexShrink: 1,
+        color: theme.colors.text,
+        fontSize: 13,
+        ...Typography.default('semiBold'),
     },
     headerRight: {
         flexDirection: 'row',
