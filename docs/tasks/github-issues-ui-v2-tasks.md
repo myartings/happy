@@ -461,6 +461,15 @@ composition. The following slices own the approved Session-panel redesign.
 
 ## Progress
 
+- `2026-08-10`: T9-T12 implementation completed on
+  `fix/github-issues-desktop-session-entry`. The Session header now opens an
+  anchored repository Issue popover; selecting or creating an Issue opens the
+  single per-Session `Issues` right-workspace tab alongside Side Session
+  panels. Embedded list/detail/create/lifecycle/delete/Triage-dispatch flows,
+  mobile sheet composition, per-Session state isolation, and obsolete everyday
+  global navigation removal are implemented. Focused tests, typecheck, the
+  1078-test Happy App suite, workflow checks, and the Windows desktop build
+  passed. Installed-window visual acceptance remains pending.
 - `2026-08-10`: approved Session-panel revision supersedes the everyday
   full-route/sidebar composition. T9-T12 now own the Codex-style quick popover,
   right-workspace Issues tab, embedded workflows, obsolete-navigation removal,
