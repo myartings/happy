@@ -33,6 +33,7 @@ import { sessionAbort, sessionGoalAction, sessionSetAgentModes, spawnSideChat, s
 import { storage, useIsDataReady, useLocalSetting, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
 import { useSession } from '@/sync/storage';
 import { getSessionForkSource } from '@/utils/sessionFork';
+import { isTauri } from '@/utils/isTauri';
 import { useHappyAction } from '@/hooks/useHappyAction';
 import { HappyError } from '@/utils/errors';
 import { Session } from '@/sync/storageTypes';
@@ -81,6 +82,7 @@ import {
 } from '@/sync/rig';
 import { RigActivityBar } from '@/components/RigActivityBar';
 import { getSideChatQuickPanelLayout, getSideChatQuickPanelToggleAction, resolveSideChatQuickPanelActivePanel } from '@/utils/sideChatQuickPanel';
+import { shouldShowGithubIssuesSessionEntry } from '@/features/github-issues/githubIssuesPresentation';
 
 export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
     const sessionId = props.id;
@@ -104,6 +106,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
     const sideChatQuickPanelEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
     const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
+    const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
     const zenMode = useLocalSetting('zenMode');
     const gitStatus = useSessionGitStatus(sessionId);
     const sideChatForkSource = session ? getSessionForkSource(session) : null;
@@ -391,38 +394,55 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                 : undefined,
         };
     }, [session, isDataReady, showSessionModel]);
-    const headerRight = session && deviceType === 'phone' && Platform.OS !== 'web'
+    const runningInTauri = isTauri();
+    const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
+        enabled: githubIssuesEnabled,
+        hasSession: !!session,
+        deviceType,
+        platform: Platform.OS,
+        isTauri: runningInTauri,
+    });
+    const quickPanelHeaderControls = showQuickPanelControls && !showSidebar
         ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <GithubIssuesButton tintColor={theme.colors.header.tint} sessionId={sessionId} cwd={session.metadata?.path} />
-                <Pressable
-                    onPress={() => router.push(`/session/${sessionId}/info`)}
-                    hitSlop={10}
-                >
-                    <Avatar
-                        id={getSessionAvatarId(session)}
-                        size={28}
-                        monochrome={!headerProps.isConnected}
-                        flavor={session.metadata?.flavor}
-                        clientId={session.metadata?.client?.id}
-                    />
-                </Pressable>
+            <SideChatQuickPanelControls
+                activePanel={sidebarPanelActive}
+                changedFilesCount={changedFilesCount}
+                creating={creatingSideChat}
+                expanded={false}
+                onOpenAllFiles={() => openSidebarPanel('allFiles')}
+                onOpenChanges={() => openSidebarPanel('changes')}
+                onToggle={toggleQuickSideChatPanel}
+                showFileActions={showQuickPanelFileActions}
+            />
+        )
+        : null;
+    const headerRight = showGithubIssuesSessionEntry || quickPanelHeaderControls
+        ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <GithubIssuesButton
+                    showLabel={runningInTauri}
+                    tintColor={theme.colors.header.tint}
+                    sessionId={sessionId}
+                    cwd={session?.metadata?.path}
+                />
+                {session && deviceType === 'phone' && Platform.OS !== 'web' ? (
+                    <Pressable
+                        onPress={() => router.push(`/session/${sessionId}/info`)}
+                        hitSlop={10}
+                    >
+                        <Avatar
+                            id={getSessionAvatarId(session)}
+                            size={28}
+                            monochrome={!headerProps.isConnected}
+                            flavor={session.metadata?.flavor}
+                            clientId={session.metadata?.client?.id}
+                        />
+                    </Pressable>
+                ) : null}
+                {quickPanelHeaderControls}
             </View>
         )
-        : showQuickPanelControls && !showSidebar
-            ? (
-                <SideChatQuickPanelControls
-                    activePanel={sidebarPanelActive}
-                    changedFilesCount={changedFilesCount}
-                    creating={creatingSideChat}
-                    expanded={false}
-                    onOpenAllFiles={() => openSidebarPanel('allFiles')}
-                    onOpenChanges={() => openSidebarPanel('changes')}
-                    onToggle={toggleQuickSideChatPanel}
-                    showFileActions={showQuickPanelFileActions}
-                />
-            )
-            : null;
+        : null;
 
     const mainContent = (
         <>

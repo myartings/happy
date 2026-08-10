@@ -12,6 +12,7 @@ import {
     type GithubRepositoryResolution,
 } from '@/features/github-issues/githubIssuesApi';
 import { GithubRepositoryPicker } from '@/features/github-issues/GithubRepositoryPicker';
+import { GithubIssuesSessionPanel } from '@/features/github-issues/GithubIssuesSessionPanel';
 import { isTauri } from '@/utils/isTauri';
 import { openExternalUrl } from '@/utils/openExternalUrl';
 
@@ -26,12 +27,27 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
     const [picker, setPicker] = React.useState<
         Extract<GithubRepositoryResolution, { status: 'picker' }> | null
     >(null);
+    const [contextRepository, setContextRepository] = React.useState<{ owner: string; repo: string } | null>(null);
+    const [contextVisible, setContextVisible] = React.useState(false);
+    const pathSegments = cwd?.split(/[\\/]/).filter(Boolean) ?? [];
+    const contextLabel = contextRepository
+        ? `${contextRepository.owner}/${contextRepository.repo}`
+        : pathSegments[pathSegments.length - 1] ?? 'Repository';
     const openRepository = React.useCallback((owner: string, repo: string) => {
         setPicker(null);
+        if (sessionId) {
+            setContextRepository({ owner, repo });
+            setContextVisible(true);
+            return;
+        }
         router.push({ pathname: '/github-issues', params: { owner, repo, ...(sessionId ? { sourceSessionId: sessionId } : {}) } } as any);
     }, [router, sessionId]);
     const openIssues = React.useCallback(async () => {
         if (resolving) return;
+        if (sessionId && contextRepository) {
+            setContextVisible(true);
+            return;
+        }
         setResolving(true);
         try {
             const resolution = await githubIssuesRepositoryResolver.resolve({ sessionId, path: cwd });
@@ -45,7 +61,7 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
         } finally {
             setResolving(false);
         }
-    }, [cwd, openRepository, resolving, router, sessionId]);
+    }, [contextRepository, cwd, openRepository, resolving, router, sessionId]);
     if (!enabled || (Platform.OS === 'web' && !isTauri())) return null;
     return (
         <>
@@ -60,7 +76,7 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
                 {resolving
                     ? <ActivityIndicator size="small" color={color} />
                     : <Ionicons name="logo-github" size={showLabel ? 17 : 20} color={color} />}
-                {showLabel && <Text style={[styles.label, { color }]}>Issues</Text>}
+                {showLabel && <Text style={[styles.label, { color }]}>{sessionId ? contextLabel : 'Issues'}</Text>}
             </Pressable>
             <GithubRepositoryPicker
                 visible={!!picker}
@@ -86,6 +102,26 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
                 onManageAccess={githubIssuesApi.installationUrl
                     ? () => void openExternalUrl(githubIssuesApi.installationUrl!)
                     : undefined}
+            />
+            <GithubIssuesSessionPanel
+                visible={contextVisible}
+                repository={contextRepository}
+                onClose={() => setContextVisible(false)}
+                onOpenIssue={(issueNumber) => {
+                    if (!contextRepository) return;
+                    setContextVisible(false);
+                    router.push({ pathname: '/github-issues/[number]', params: { owner: contextRepository.owner, repo: contextRepository.repo, number: issueNumber, sourceSessionId: sessionId } } as any);
+                }}
+                onNewIssue={() => {
+                    if (!contextRepository) return;
+                    setContextVisible(false);
+                    router.push({ pathname: '/github-issues/new', params: { owner: contextRepository.owner, repo: contextRepository.repo, sourceSessionId: sessionId } } as any);
+                }}
+                onViewAll={() => {
+                    if (!contextRepository) return;
+                    setContextVisible(false);
+                    router.push({ pathname: '/github-issues', params: { owner: contextRepository.owner, repo: contextRepository.repo, sourceSessionId: sessionId } } as any);
+                }}
             />
         </>
     );

@@ -9,6 +9,7 @@ import {
     getGithubIssueRelativeTime,
     getGithubIssuesErrorMessage,
     reduceGithubIssuesCollectionState,
+    shouldShowGithubIssuesSessionEntry,
 } from './githubIssuesPresentation';
 import { isSameGithubRepository } from './githubRepository';
 
@@ -97,6 +98,16 @@ describe('GitHub repository identity', () => {
 });
 
 describe('GitHub Issue Session dispatch', () => {
+    it('shows the Session Issues entry in Happy Desktop', () => {
+        expect(shouldShowGithubIssuesSessionEntry({
+            enabled: true,
+            hasSession: true,
+            deviceType: 'desktop',
+            platform: 'web',
+            isTauri: true,
+        })).toBe(true);
+    });
+
     it('builds a triage-first task without exposing Issue transport details', () => {
         const task = buildGithubIssueDispatchTask({
             repository: { owner: 'myartings', repo: 'happy' },

@@ -3,7 +3,17 @@ import * as React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { push, remember, resolve } = vi.hoisted(() => ({
+const { listIssues, push, remember, resolve } = vi.hoisted(() => ({
+    listIssues: vi.fn(async () => ({
+        items: [{
+            number: 42,
+            title: 'Keep Session context visible',
+            labels: [],
+            updatedAt: '2026-08-10T12:00:00.000Z',
+            comments: 0,
+        }],
+        nextPage: null,
+    })),
     push: vi.fn(),
     remember: vi.fn(),
     resolve: vi.fn(async () => ({
@@ -17,8 +27,11 @@ vi.mock('react-native', async () => {
     const host = (name: string) => (props: any) => ReactModule.createElement(name, props, props.children);
     return {
         ActivityIndicator: host('ActivityIndicator'),
-        Platform: { OS: 'web' },
+        Modal: host('Modal'),
+        Platform: { OS: 'web', select: (values: any) => values.web ?? values.default },
         Pressable: host('Pressable'),
+        ScrollView: host('ScrollView'),
+        View: host('View'),
     };
 });
 vi.mock('@expo/vector-icons', async () => {
@@ -27,15 +40,46 @@ vi.mock('@expo/vector-icons', async () => {
 });
 vi.mock('expo-router', () => ({ useRouter: () => ({ push }) }));
 vi.mock('react-native-unistyles', () => ({
-    StyleSheet: { create: (styles: any) => styles({ colors: { divider: 'divider', surface: 'surface', surfacePressed: 'pressed' } }) },
-    useUnistyles: () => ({ theme: { colors: { textSecondary: 'gray' } } }),
+    StyleSheet: {
+        hairlineWidth: 1,
+        create: (styles: any) => styles({
+            colors: {
+                button: { primary: { background: 'primary', tint: 'primary-text' } },
+                divider: 'divider',
+                surface: 'surface',
+                surfaceHigh: 'surface-high',
+                surfacePressed: 'pressed',
+                text: 'text',
+                textSecondary: 'gray',
+            },
+        }),
+    },
+    useUnistyles: () => ({
+        theme: {
+            colors: {
+                button: { primary: { background: 'primary', tint: 'primary-text' } },
+                textSecondary: 'gray',
+            },
+        },
+    }),
 }));
 vi.mock('@/components/StyledText', async () => {
     const ReactModule = await import('react');
     return { Text: (props: any) => ReactModule.createElement('Text', props, props.children) };
 });
-vi.mock('@/constants/Typography', () => ({ Typography: { default: () => ({}) } }));
+vi.mock('@/constants/Typography', () => ({ Typography: { default: () => ({}), mono: () => ({}) } }));
 vi.mock('@/sync/storage', () => ({ useLocalSetting: () => true }));
+vi.mock('@/text', () => ({
+    t: (key: string) => ({
+        'githubIssues.newIssue': 'New issue',
+        'githubIssues.noOpenIssues': 'No open issues',
+        'githubIssues.openIssues': 'Open issues',
+        'githubIssues.repository': 'Repository',
+        'githubIssues.sessionRepository': 'Session repository',
+        'githubIssues.unableToLoadIssues': 'Unable to load issues',
+        'githubIssues.viewAllIssues': 'View all issues',
+    } as Record<string, string>)[key] ?? key,
+}));
 vi.mock('@/sync/ops', () => ({
     sessionBash: vi.fn(async () => ({ success: false, stdout: '' })),
 }));
@@ -45,7 +89,7 @@ vi.mock('./GithubRepositoryPicker', async () => {
     return { GithubRepositoryPicker: (props: any) => ReactModule.createElement('GithubRepositoryPicker', props) };
 });
 vi.mock('./githubIssuesApi', () => ({
-    githubIssuesApi: { installationUrl: undefined },
+    githubIssuesApi: { installationUrl: undefined, listIssues },
     githubIssuesRepositoryResolver: { remember, resolve },
 }));
 
@@ -65,28 +109,56 @@ afterAll(() => vi.restoreAllMocks());
 
 beforeEach(() => {
     push.mockClear();
+    listIssues.mockClear();
     remember.mockClear();
     resolve.mockClear();
 });
 
+function findIssuesEntry(renderer: ReturnType<typeof create>) {
+    return renderer.root.findAllByType('Pressable' as any).find(
+        (node: any) => node.props.accessibilityLabel === 'GitHub Issues',
+    )!;
+}
+
 describe('GitHub Issues Session entry', () => {
-    it('delegates repository discovery to the feature resolver', async () => {
+    it('opens a Session context panel without leaving the Session', async () => {
         let renderer: ReturnType<typeof create>;
         await act(async () => {
             renderer = create(React.createElement(GithubIssuesButton, {
+                showLabel: true,
                 sessionId: 'session-a',
                 cwd: '/work/happy',
             }));
         });
 
+        expect(findIssuesEntry(renderer!).findByType('Text' as any).props.children).toBe('happy');
+
         await act(async () => {
-            await renderer!.root.findByType('Pressable' as any).props.onPress();
+            await findIssuesEntry(renderer!).props.onPress();
         });
 
         expect(resolve).toHaveBeenCalledWith({ sessionId: 'session-a', path: '/work/happy' });
+        expect(push).not.toHaveBeenCalled();
+        expect(renderer!.root.findByType('Modal' as any).props.visible).toBe(true);
+        expect(listIssues).toHaveBeenCalledWith({ owner: 'myartings', repo: 'happy', state: 'open' });
+        expect(renderer!.root.findAllByType('Text' as any).some(
+            (node: any) => node.props.children === 'Keep Session context visible',
+        )).toBe(true);
+
+        const issueRow = renderer!.root.findAllByType('Pressable' as any).find(
+            (node: any) => node.props.accessibilityLabel === 'Issue #42: Keep Session context visible',
+        );
+        await act(async () => {
+            issueRow!.props.onPress();
+        });
         expect(push).toHaveBeenCalledWith({
-            pathname: '/github-issues',
-            params: { owner: 'myartings', repo: 'happy', sourceSessionId: 'session-a' },
+            pathname: '/github-issues/[number]',
+            params: {
+                owner: 'myartings',
+                repo: 'happy',
+                number: 42,
+                sourceSessionId: 'session-a',
+            },
         });
     });
 
@@ -108,7 +180,7 @@ describe('GitHub Issues Session entry', () => {
         });
 
         await act(async () => {
-            await renderer!.root.findByType('Pressable' as any).props.onPress();
+            await findIssuesEntry(renderer!).props.onPress();
         });
 
         expect(push).not.toHaveBeenCalled();
@@ -140,7 +212,7 @@ describe('GitHub Issues Session entry', () => {
             renderer = create(React.createElement(GithubIssuesButton));
         });
         await act(async () => {
-            await renderer!.root.findByType('Pressable' as any).props.onPress();
+            await findIssuesEntry(renderer!).props.onPress();
         });
 
         await act(async () => {
