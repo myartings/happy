@@ -56,7 +56,7 @@ export interface GithubRepositoryManualAssociation {
 export type GithubRepositoryResolution =
     | {
         status: 'resolved';
-        source: 'cache' | 'origin' | 'sole-remote' | 'last-repository';
+        source: 'cache' | 'origin' | 'sole-remote' | 'last-repository' | 'path';
         repository: GithubRepository;
         association: GithubRepositoryAssociation | null;
     }
@@ -117,6 +117,41 @@ function findAccessibleRepository(
         { owner: repository.owner, repo: repository.name },
         reference,
     )) ?? null;
+}
+
+function projectNamesFromPath(path: string | null | undefined): string[] {
+    const segments = path?.trim().replace(/\\/g, '/').replace(/\/+$/, '').split('/').filter(Boolean) ?? [];
+    if (segments.length === 0) return [];
+    const names = new Set<string>();
+    const managedWorktreeIndex = segments.findIndex((segment, index) => (
+        segment.toLowerCase() === '.dev'
+        && ['worktree', 'worktrees'].includes(segments[index + 1]?.toLowerCase())
+    ));
+    if (managedWorktreeIndex > 0) names.add(segments[managedWorktreeIndex - 1]);
+    const worktreeDirectoryIndex = segments.findIndex((segment) => (
+        ['.worktree', '.worktrees', 'worktrees'].includes(segment.toLowerCase())
+    ));
+    if (worktreeDirectoryIndex > 0) names.add(segments[worktreeDirectoryIndex - 1]);
+    return [...names];
+}
+
+function findRepositoryFromProjectPath(
+    repositories: readonly GithubRepository[],
+    path: string | null | undefined,
+    lastRepository: GithubRepositoryRef | null,
+): GithubRepository | null {
+    for (const projectName of projectNamesFromPath(path)) {
+        const matches = repositories.filter((repository) => (
+            repository.name.toLowerCase() === projectName.toLowerCase()
+        ));
+        if (matches.length === 1) return matches[0];
+        const lastMatch = matches.find((repository) => isSameGithubRepository(
+            { owner: repository.owner, repo: repository.name },
+            lastRepository,
+        ));
+        if (lastMatch) return lastMatch;
+    }
+    return null;
 }
 
 export function resolveGithubRepositoryAssociation(
@@ -236,6 +271,23 @@ export function createGithubRepositoryEntryResolver(
             const repositories = await dependencies.listRepositories();
             const preferences = dependencies.getPreferences();
             const path = input.path?.trim();
+            const pathRepository = findRepositoryFromProjectPath(
+                repositories,
+                path,
+                preferences.lastRepository,
+            );
+            if (pathRepository) {
+                dependencies.savePreferences({
+                    ...preferences,
+                    lastRepository: { owner: pathRepository.owner, repo: pathRepository.name },
+                });
+                return {
+                    status: 'resolved',
+                    source: 'path',
+                    repository: pathRepository,
+                    association: null,
+                };
+            }
             const remoteLookup = input.sessionId && path
                 ? await dependencies.lookupRemotes({ sessionId: input.sessionId, path })
                 : { status: 'success' as const, output: '' };

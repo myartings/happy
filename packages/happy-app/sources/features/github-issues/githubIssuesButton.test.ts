@@ -135,6 +135,34 @@ function findIssuesEntry(renderer: ReturnType<typeof create>) {
 }
 
 describe('GitHub Issues Session entry', () => {
+    it('opens the anchored loading popover immediately while repository resolution is pending', async () => {
+        let completeResolution!: (value: any) => void;
+        resolve.mockImplementationOnce(() => new Promise((complete) => {
+            completeResolution = complete;
+        }));
+        let renderer: ReturnType<typeof create>;
+        await act(async () => {
+            renderer = create(React.createElement(GithubIssuesButton, {
+                sessionId: 'session-a',
+                cwd: '/work/happy',
+            }));
+        });
+
+        await act(async () => {
+            findIssuesEntry(renderer!).props.onPress();
+        });
+
+        expect(renderer!.root.findByType('Modal' as any).props.visible).toBe(true);
+        expect(findIssuesEntry(renderer!).props.accessibilityState).toMatchObject({ busy: true });
+
+        await act(async () => {
+            completeResolution({
+                status: 'resolved',
+                repository: { owner: 'myartings', name: 'happy' },
+            });
+        });
+    });
+
     it('selects an Issue from the Session quick popover without navigating', async () => {
         let renderer: ReturnType<typeof create>;
         await act(async () => {

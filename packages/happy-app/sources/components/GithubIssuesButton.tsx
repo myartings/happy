@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Platform, Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -61,6 +61,12 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
             setContextVisible(true);
             return;
         }
+        if (sessionId) {
+            buttonRef.current?.measureInWindow?.((x: number, y: number, width: number, height: number) => {
+                setPopoverAnchor({ x, y, width, height });
+            });
+            setContextVisible(true);
+        }
         setResolving(true);
         try {
             const resolution = await githubIssuesRepositoryResolver.resolve({ sessionId, path: cwd });
@@ -68,9 +74,11 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
                 openRepository(resolution.repository.owner, resolution.repository.name);
                 return;
             }
+            setContextVisible(false);
             setPicker(resolution);
         } catch {
             if (sessionId) {
+                setContextVisible(false);
                 setPicker({
                     status: 'picker',
                     reason: 'lookup-failed',
@@ -93,14 +101,11 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
                 ref={buttonRef}
                 accessibilityRole="button"
                 accessibilityLabel="GitHub Issues"
-                accessibilityState={{ busy: resolving, disabled: resolving }}
-                disabled={resolving}
+                accessibilityState={{ busy: resolving }}
                 onPress={() => void openIssues()}
                 style={({ pressed }) => [styles.button, showLabel && styles.labeled, pressed && styles.pressed, style]}
             >
-                {resolving
-                    ? <ActivityIndicator size="small" color={color} />
-                    : <Ionicons name="logo-github" size={showLabel ? 17 : 20} color={color} />}
+                <Ionicons name="logo-github" size={showLabel ? 17 : 20} color={color} />
                 {showLabel && <Text style={[styles.label, { color }]}>{sessionId ? contextLabel : 'Issues'}</Text>}
             </Pressable>
             <GithubRepositoryPicker
@@ -131,6 +136,7 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
             <GithubIssuesQuickPopover
                 visible={contextVisible}
                 repository={contextRepository}
+                resolvingRepository={resolving && !contextRepository}
                 anchor={popoverAnchor}
                 onClose={() => setContextVisible(false)}
                 onOpenIssue={(issueNumber) => {

@@ -1127,6 +1127,7 @@ export const zhHans: TranslationStructure = {
         viewAllIssues: '查看全部 Issue',
         unableToLoadIssues: '无法加载 Issue',
         quickPopover: '会话 Issue 快捷浮窗',
+        detectingRepository: '正在识别当前会话仓库…',
         closeQuickPopover: '关闭会话 Issue',
         refresh: '刷新 Issue',
         loadMore: '加载更多',

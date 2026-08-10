@@ -141,6 +141,32 @@ describe('GitHub repository association resolution', () => {
         }]);
     });
 
+    it('resolves a managed worktree from its project path without waiting for Session shell lookup', async () => {
+        const lookupRemotes = vi.fn(async () => ({ status: 'failed' as const }));
+        const resolver = createGithubRepositoryEntryResolver({
+            listRepositories: async () => [
+                repository(1, 'myartings', 'android-coding-template'),
+                repository(2, 'myartings', 'happy-manager'),
+            ],
+            lookupRemotes,
+            getPreferences: () => ({
+                lastRepository: { owner: 'myartings', repo: 'android-coding-template' },
+                associations: {},
+            }),
+            savePreferences: () => undefined,
+        });
+
+        await expect(resolver.resolve({
+            sessionId: 'session-a',
+            path: 'C:\\Users\\myartings\\workspace\\happy-manager\\.dev\\worktree\\brave-harbor',
+        })).resolves.toMatchObject({
+            status: 'resolved',
+            source: 'path',
+            repository: { fullName: 'myartings/happy-manager' },
+        });
+        expect(lookupRemotes).not.toHaveBeenCalled();
+    });
+
     it('remembers a manual picker choice without creating a Session association', () => {
         const saved: unknown[] = [];
         const resolver = createGithubRepositoryEntryResolver({

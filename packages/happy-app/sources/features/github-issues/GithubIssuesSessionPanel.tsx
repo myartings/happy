@@ -19,6 +19,7 @@ export type GithubIssuesPopoverAnchor = { x: number; y: number; width: number; h
 export interface GithubIssuesSessionPanelProps {
     visible: boolean;
     repository: GithubRepositoryRef | null;
+    resolvingRepository?: boolean;
     anchor?: GithubIssuesPopoverAnchor | null;
     onClose(): void;
     onOpenIssue(issueNumber: number): void;
@@ -104,11 +105,19 @@ export function GithubIssuesQuickPopover(props: GithubIssuesSessionPanelProps) {
                                 {props.repository ? props.repository.repo : t('githubIssues.repository')}
                             </Text>
                         </View>
-                        <Pressable accessibilityRole="button" accessibilityLabel={t('githubIssues.newIssue')} onPress={props.onNewIssue} style={styles.iconButton}>
-                            <Ionicons name="add" size={19} color={theme.colors.textSecondary} />
-                        </Pressable>
+                        {props.repository ? (
+                            <Pressable accessibilityRole="button" accessibilityLabel={t('githubIssues.newIssue')} onPress={props.onNewIssue} style={styles.iconButton}>
+                                <Ionicons name="add" size={19} color={theme.colors.textSecondary} />
+                            </Pressable>
+                        ) : null}
                     </View>
-                    <View style={styles.filters}>
+                    {!props.repository && props.resolvingRepository ? (
+                        <View style={styles.resolvingRepository}>
+                            <ActivityIndicator size="small" />
+                            <Text style={styles.message}>{t('githubIssues.detectingRepository')}</Text>
+                        </View>
+                    ) : null}
+                    {props.repository ? <View style={styles.filters}>
                         {(['open', 'closed'] as const).map((value) => (
                             <Pressable
                                 key={value}
@@ -126,7 +135,7 @@ export function GithubIssuesQuickPopover(props: GithubIssuesSessionPanelProps) {
                         <Pressable accessibilityRole="button" accessibilityLabel={t('githubIssues.refresh')} onPress={() => void load(state)} style={styles.iconButton}>
                             <Ionicons name="refresh" size={16} color={theme.colors.textSecondary} />
                         </Pressable>
-                    </View>
+                    </View> : null}
                     {loading && currentItems.length === 0 ? <ActivityIndicator style={styles.loading} /> : null}
                     {!loading && error ? (
                         <Pressable accessibilityRole="button" onPress={() => void load(state)} style={styles.messageRow}>
@@ -166,10 +175,10 @@ export function GithubIssuesQuickPopover(props: GithubIssuesSessionPanelProps) {
                             ) : null}
                         </ScrollView>
                     ) : null}
-                    <Pressable accessibilityRole="button" onPress={props.onViewAll} style={styles.footer}>
+                    {props.repository ? <Pressable accessibilityRole="button" onPress={props.onViewAll} style={styles.footer}>
                         <Text style={styles.footerText}>{t('githubIssues.viewAllIssues')}</Text>
                         <Ionicons name="chevron-forward" size={15} color={theme.colors.textSecondary} />
-                    </Pressable>
+                    </Pressable> : null}
                 </View>
             </View>
         </Modal>
@@ -206,6 +215,7 @@ const styles = StyleSheet.create((theme) => ({
     filterTextSelected: { color: theme.colors.text },
     filterSpacer: { flex: 1 },
     loading: { marginVertical: 28 },
+    resolvingRepository: { minHeight: 112, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16 },
     messageRow: { minHeight: 96, alignItems: 'center', justifyContent: 'center', padding: 16 },
     message: { color: theme.colors.textSecondary, textAlign: 'center', ...Typography.default() },
     errorText: { color: theme.colors.textDestructive, textAlign: 'center', ...Typography.default() },

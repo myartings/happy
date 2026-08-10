@@ -1128,6 +1128,7 @@ export const en = {
         viewAllIssues: 'View all issues',
         unableToLoadIssues: 'Unable to load issues',
         quickPopover: 'Session Issues quick popover',
+        detectingRepository: 'Detecting Session repository…',
         closeQuickPopover: 'Close Session Issues',
         refresh: 'Refresh issues',
         loadMore: 'Load more',
