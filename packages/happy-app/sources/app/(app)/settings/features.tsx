@@ -103,21 +103,21 @@ export default function FeaturesSettingsScreen() {
                     showChevron={false}
                 />
                 <Item
-                    title="GitHub Issues"
+                    title={t('githubIssues.title')}
                     titleAccessory={<DevFeatureBadge />}
                     subtitle={githubIssuesSupported
-                        ? "Manage selected repositories with a device-local GitHub connection"
-                        : "Available in Happy desktop and mobile"}
+                        ? t('githubIssues.featureDescription')
+                        : t('githubIssues.supportedPlatforms')}
                     icon={<Ionicons name="logo-github" size={29} color="#24292F" />}
                     rightElement={<Switch value={devGithubIssuesEnabled && githubIssuesSupported} onValueChange={setDevGithubIssuesEnabled} disabled={!githubIssuesSupported} />}
                     showChevron={false}
                 />
                 {githubIssuesSupported && devGithubIssuesEnabled && (
                     <Item
-                        title="GitHub Issues connection"
-                        subtitle="Connect, remove this device, or manage repository access"
+                        title={t('githubIssues.connectionSettings')}
+                        subtitle={t('githubIssues.connectionSettingsDescription')}
                         icon={<Ionicons name="key-outline" size={29} color="#5856D6" />}
-                        onPress={() => router.push('/github-issues' as any)}
+                        onPress={() => router.push({ pathname: '/github-issues', params: { mode: 'settings' } } as any)}
                     />
                 )}
                 <Item

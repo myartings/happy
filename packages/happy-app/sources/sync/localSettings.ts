@@ -1,5 +1,15 @@
 import * as z from 'zod';
 
+const GithubRepositoryRefSchema = z.object({
+    owner: z.string(),
+    repo: z.string(),
+});
+
+const GithubRepositoryAssociationSchema = z.object({
+    repository: GithubRepositoryRefSchema,
+    remoteFingerprint: z.string(),
+});
+
 //
 // Schema
 //
@@ -18,6 +28,9 @@ export const LocalSettingsSchema = z.object({
     desktopSessionNotificationsEnabled: z.boolean().describe('Enable local desktop notifications for background session events'),
     devProjectTodosEnabled: z.boolean().describe('Show the personal project todo UI'),
     devGithubIssuesEnabled: z.boolean().describe('Show the personal GitHub Issues UI'),
+    devGithubIssuesLastRepository: GithubRepositoryRefSchema.nullable().describe('Last GitHub Issues repository selected on this device'),
+    devGithubIssuesRepositoryAssociations: z.record(z.string(), GithubRepositoryAssociationSchema).describe('GitHub Issue repository associations keyed by machine and project path'),
+    devGithubIssueDrafts: z.record(z.string(), z.object({ title: z.string(), body: z.string() })).describe('GitHub Issue creation drafts keyed by repository'),
     devNeedsAttentionSessionsEnabled: z.boolean().describe('Show the personal needs-attention session section'),
     devPromptHistoryNavigatorEnabled: z.boolean().describe('Show the personal prompt history navigator'),
     devSessionEnvironmentLabelsEnabled: z.boolean().describe('Show personal branch and worktree labels on session rows'),
@@ -65,6 +78,9 @@ export const localSettingsDefaults: LocalSettings = {
     desktopSessionNotificationsEnabled: true,
     devProjectTodosEnabled: true,
     devGithubIssuesEnabled: false,
+    devGithubIssuesLastRepository: null,
+    devGithubIssuesRepositoryAssociations: {},
+    devGithubIssueDrafts: {},
     devNeedsAttentionSessionsEnabled: true,
     devPromptHistoryNavigatorEnabled: true,
     devSessionEnvironmentLabelsEnabled: true,

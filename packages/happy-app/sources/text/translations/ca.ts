@@ -1,4 +1,4 @@
-import type { TranslationStructure } from '../_default';
+import { en, type TranslationStructure } from '../_default';
 
 /**
  * Catalan plural helper function
@@ -1100,6 +1100,8 @@ export const ca: TranslationStructure = {
         notSupportedTitle: 'Imatges no compatibles',
         notSupportedMessage: 'Aquest agent no admet fitxers adjunts d\'imatge. Les imatges no s\'han enviat.',
     },
+
+    githubIssues: en.githubIssues,
 
     projectTodos: {
         title: 'Tasques del projecte',

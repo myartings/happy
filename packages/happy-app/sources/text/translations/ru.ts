@@ -1,4 +1,4 @@
-import type { TranslationStructure } from '../_default';
+import { en, type TranslationStructure } from '../_default';
 
 /**
  * Russian plural helper function
@@ -1129,6 +1129,8 @@ export const ru: TranslationStructure = {
         notSupportedTitle: 'Изображения не поддерживаются',
         notSupportedMessage: 'Этот агент не поддерживает вложения изображений. Изображения не были отправлены.',
     },
+
+    githubIssues: en.githubIssues,
 
     projectTodos: {
         title: 'Задачи проекта',

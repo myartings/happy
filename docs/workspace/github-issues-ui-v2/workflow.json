@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "github-issues-ui-v2",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Re-run Android live acceptance from a shorter checkout path; investigate unrelated server attachment GET 404 separately.",
+  "riskRequired": true,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User approved the complete Happy-native Session-first wireframes on 2026-08-10; docs/specs/github-issues-ui-v2.md",
+      "updated": "2026-08-09T20:00:18+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D8 resolved in docs/workspace/github-issues-ui-v2/decisions.md",
+      "updated": "2026-08-09T20:00:18+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: docs/workspace/github-issues-ui-v2/decisions.md scoping assessment; docs/tasks/github-issues-ui-v2-tasks.md; execution-plan.md",
+      "updated": "2026-08-09T20:12:34+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/github-issues-ui-v2/decisions.md risk assessment and execution-plan.md stop conditions",
+      "updated": "2026-08-09T20:12:34+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "T1-T7 implemented; 70 focused tests and happy-app typecheck passed; docs/tasks/github-issues-ui-v2-tasks.md",
+      "updated": "2026-08-09T22:12:08+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Happy App 1052 tests, app/server typechecks, workflow core/CI, Windows build/install/launch passed; Android native build blocked by Windows CMake path length and unrelated server attachment test remains red; validation.md",
+      "updated": "2026-08-09T22:12:09+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed for feature flag, browser/profile isolation, Session draft safety, destructive confirmation, and narrow host seams; finish.md",
+      "updated": "2026-08-09T22:12:09+00:00"
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "Windows acceptance complete; Android live acceptance accepted as documented native path-length gap; finish.md and validation.md",
+      "updated": "2026-08-09T22:12:57+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T19:57:45+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T20:00:18+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User approved the complete Happy-native Session-first wireframes on 2026-08-10; docs/specs/github-issues-ui-v2.md"
+    },
+    {
+      "at": "2026-08-09T20:00:18+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D8 resolved in docs/workspace/github-issues-ui-v2/decisions.md"
+    },
+    {
+      "at": "2026-08-09T20:12:34+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/github-issues-ui-v2/decisions.md risk assessment and execution-plan.md stop conditions"
+    },
+    {
+      "at": "2026-08-09T20:12:34+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: docs/workspace/github-issues-ui-v2/decisions.md scoping assessment; docs/tasks/github-issues-ui-v2-tasks.md; execution-plan.md"
+    },
+    {
+      "at": "2026-08-09T20:14:08+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement T1 feature presentation Interface with TDD"
+    },
+    {
+      "at": "2026-08-09T22:12:08+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T7 implemented; 70 focused tests and happy-app typecheck passed; docs/tasks/github-issues-ui-v2-tasks.md"
+    },
+    {
+      "at": "2026-08-09T22:12:08+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final whole-diff checks and record accepted platform gaps"
+    },
+    {
+      "at": "2026-08-09T22:12:09+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Happy App 1052 tests, app/server typechecks, workflow core/CI, Windows build/install/launch passed; Android native build blocked by Windows CMake path length and unrelated server attachment test remains red; validation.md"
+    },
+    {
+      "at": "2026-08-09T22:12:09+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed for feature flag, browser/profile isolation, Session draft safety, destructive confirmation, and narrow host seams; finish.md"
+    },
+    {
+      "at": "2026-08-09T22:12:09+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize accepted gaps and archive-ready evidence"
+    },
+    {
+      "at": "2026-08-09T22:12:57+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "Windows acceptance complete; Android live acceptance accepted as documented native path-length gap; finish.md and validation.md"
+    },
+    {
+      "at": "2026-08-09T22:15:12+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and Windows-verified Happy-native Session-first GitHub Issues UI v2; Android live acceptance accepted as Windows CMake path-length gap.; commit: pending; follow-up: Re-run Android live acceptance from a shorter checkout path; investigate unrelated server attachment GET 404 separately."
+    }
+  ],
+  "updated": "2026-08-09T22:15:12+00:00",
+  "archivedAt": "2026-08-09T22:15:12+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and Windows-verified Happy-native Session-first GitHub Issues UI v2; Android live acceptance accepted as Windows CMake path-length gap.",
+  "archiveFollowUp": "Re-run Android live acceptance from a shorter checkout path; investigate unrelated server attachment GET 404 separately."
+}

@@ -42,6 +42,32 @@ describe('personal development local settings', () => {
         });
     });
 
+    it('keeps GitHub Issue repository choices device-local and backward compatible', () => {
+        expect(localSettingsDefaults).toMatchObject({
+            devGithubIssuesLastRepository: null,
+            devGithubIssuesRepositoryAssociations: {},
+            devGithubIssueDrafts: {},
+        });
+
+        expect(localSettingsParse({
+            devGithubIssuesLastRepository: { owner: 'myartings', repo: 'happy' },
+            devGithubIssuesRepositoryAssociations: {
+                '["machine-a","/work/happy"]': {
+                    repository: { owner: 'myartings', repo: 'happy' },
+                    remoteFingerprint: 'origin:myartings/happy',
+                },
+            },
+        })).toMatchObject({
+            devGithubIssuesLastRepository: { owner: 'myartings', repo: 'happy' },
+            devGithubIssuesRepositoryAssociations: {
+                '["machine-a","/work/happy"]': {
+                    repository: { owner: 'myartings', repo: 'happy' },
+                    remoteFingerprint: 'origin:myartings/happy',
+                },
+            },
+        });
+    });
+
     it('updates independent features without changing the other switches', () => {
         expect(applyLocalSettings(localSettingsDefaults, {
             devPromptHistoryNavigatorEnabled: false,

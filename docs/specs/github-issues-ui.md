@@ -6,8 +6,9 @@ Feature flag: required, default off
 
 > Authentication, credential storage, API transport, server isolation, and
 > rollout details in this original UI specification are superseded by
-> `docs/specs/github-issues-device-flow.md` and ADR 0006. The product scope,
-> navigation model, wireframes, and Issue interactions remain the UI baseline.
+> `docs/specs/github-issues-device-flow.md` and ADR 0006. The approved product
+> scope remains relevant; the screen composition, wireframes, and detailed
+> interactions are superseded by `docs/specs/github-issues-ui-v2.md`.
 
 ## Problem
 

@@ -9,6 +9,7 @@
 | 2026-08-10 | happy-ios-release | pending | Add guarded Happy Personal iOS internal, TestFlight, and EAS Update release paths. | None |
 | 2026-08-10 | personal-eas-environment-isolation | pending | Isolate Happy Personal EAS build profiles from shared production variables | Merge to dev, configure project-scoped personal environment values, and retry internal build |
 | 2026-08-10 | personal-eas-preview-environment | pending | Use plan-compatible preview environment for Personal EAS profiles | Merge to dev, configure project preview variables, and retry internal build |
+| 2026-08-10 | github-issues-ui-v2 | pending | Implemented and Windows-verified Happy-native Session-first GitHub Issues UI v2; Android live acceptance accepted as Windows CMake path-length gap. | Re-run Android live acceptance from a shorter checkout path; investigate unrelated server attachment GET 404 separately. |
 | 2026-08-10 | personal-ota-preview-environment | pending | Align personal OTA with the supported preview EAS environment | Merge PR #31, push a unique Android OTA tag, and monitor the hosted run |
 | 2026-08-10 | personal-ota-pnpm-args | pending | Remove the redundant pnpm separator blocking hosted Android OTA publication | Merge the repair PR, push a new unique Android OTA tag, and monitor publication |
 | 2026-08-10 | worktree-fork-snapshot | pending | Implemented isolated Worktree session forking with exact dirty snapshot inheritance, provider continuation, rollback, and localized UI | Merge into dev and upgrade desktop when requested |

@@ -1,14 +1,19 @@
 import React from 'react';
-import { Platform, Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
 import { useLocalSetting } from '@/sync/storage';
-import { sessionBash } from '@/sync/ops';
-import { parseGithubRepository } from '@/features/github-issues/githubRepository';
+import {
+    githubIssuesApi,
+    githubIssuesRepositoryResolver,
+    type GithubRepositoryResolution,
+} from '@/features/github-issues/githubIssuesApi';
+import { GithubRepositoryPicker } from '@/features/github-issues/GithubRepositoryPicker';
 import { isTauri } from '@/utils/isTauri';
+import { openExternalUrl } from '@/utils/openExternalUrl';
 
 export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintColor, sessionId, cwd }: {
     showLabel?: boolean; style?: StyleProp<ViewStyle>; tintColor?: string; sessionId?: string; cwd?: string;
@@ -17,24 +22,72 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
     const router = useRouter();
     const { theme } = useUnistyles();
     const color = tintColor ?? theme.colors.textSecondary;
+    const [resolving, setResolving] = React.useState(false);
+    const [picker, setPicker] = React.useState<
+        Extract<GithubRepositoryResolution, { status: 'picker' }> | null
+    >(null);
+    const openRepository = React.useCallback((owner: string, repo: string) => {
+        setPicker(null);
+        router.push({ pathname: '/github-issues', params: { owner, repo, ...(sessionId ? { sourceSessionId: sessionId } : {}) } } as any);
+    }, [router, sessionId]);
     const openIssues = React.useCallback(async () => {
-        if (sessionId && cwd) {
-            const result = await sessionBash(sessionId, { command: 'git remote get-url origin', cwd, timeout: 5000 });
-            const repository = result.success ? parseGithubRepository(result.stdout.trim()) : null;
-            if (repository) {
-                router.push({ pathname: '/github-issues', params: repository } as any);
+        if (resolving) return;
+        setResolving(true);
+        try {
+            const resolution = await githubIssuesRepositoryResolver.resolve({ sessionId, path: cwd });
+            if (resolution.status === 'resolved') {
+                openRepository(resolution.repository.owner, resolution.repository.name);
                 return;
             }
+            setPicker(resolution);
+        } catch {
+            router.push('/github-issues' as any);
+        } finally {
+            setResolving(false);
         }
-        router.push('/github-issues' as any);
-    }, [cwd, router, sessionId]);
+    }, [cwd, openRepository, resolving, router, sessionId]);
     if (!enabled || (Platform.OS === 'web' && !isTauri())) return null;
     return (
-        <Pressable accessibilityRole="button" accessibilityLabel="GitHub Issues" onPress={() => void openIssues()}
-            style={({ pressed }) => [styles.button, showLabel && styles.labeled, pressed && styles.pressed, style]}>
-            <Ionicons name="logo-github" size={showLabel ? 17 : 20} color={color} />
-            {showLabel && <Text style={[styles.label, { color }]}>Issues</Text>}
-        </Pressable>
+        <>
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="GitHub Issues"
+                accessibilityState={{ busy: resolving, disabled: resolving }}
+                disabled={resolving}
+                onPress={() => void openIssues()}
+                style={({ pressed }) => [styles.button, showLabel && styles.labeled, pressed && styles.pressed, style]}
+            >
+                {resolving
+                    ? <ActivityIndicator size="small" color={color} />
+                    : <Ionicons name="logo-github" size={showLabel ? 17 : 20} color={color} />}
+                {showLabel && <Text style={[styles.label, { color }]}>Issues</Text>}
+            </Pressable>
+            <GithubRepositoryPicker
+                visible={!!picker}
+                repositories={picker?.repositories ?? []}
+                selectedRepository={picker?.suggestedRepository
+                    ? { owner: picker.suggestedRepository.owner, repo: picker.suggestedRepository.name }
+                    : null}
+                reason={picker?.reason}
+                onClose={() => setPicker(null)}
+                onSelect={(repository) => {
+                    githubIssuesRepositoryResolver.remember(
+                        repository,
+                        picker?.selectionRemoteFingerprint !== null
+                            && picker?.selectionRemoteFingerprint !== undefined
+                            ? {
+                                identity: { sessionId, path: cwd },
+                                remoteFingerprint: picker.selectionRemoteFingerprint,
+                            }
+                            : undefined,
+                    );
+                    openRepository(repository.owner, repository.name);
+                }}
+                onManageAccess={githubIssuesApi.installationUrl
+                    ? () => void openExternalUrl(githubIssuesApi.installationUrl!)
+                    : undefined}
+            />
+        </>
     );
 });
 

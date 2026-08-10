@@ -333,7 +333,7 @@ export default function RootLayout() {
             />
             <Stack.Screen
                 name="github-issues/index"
-                options={{ headerShown: true, headerTitle: 'GitHub Issues', headerBackTitle: t('common.back') }}
+                options={{ headerShown: true, headerTitle: t('githubIssues.title'), headerBackTitle: t('common.back') }}
             />
             <Stack.Screen
                 name="github-issues/[number]"
