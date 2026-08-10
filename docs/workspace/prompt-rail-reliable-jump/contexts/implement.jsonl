@@ -1,0 +1,3 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Owns prompt selection and target-scroll effect cleanup"}
+{"path":"packages/happy-app/sources/utils/webMessageReveal.ts","reason":"Owns cancellable web reveal retries"}

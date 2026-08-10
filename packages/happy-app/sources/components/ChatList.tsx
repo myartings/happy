@@ -18,30 +18,11 @@ import { usesControlledSessionUi } from '@/sync/rig';
 import { createMessageTargetRequest, getMessageTargetNativeId, resolveMessageTargetAction, type MessageTargetRequest } from '@/utils/messageTarget';
 import { SessionPromptHistoryNavigator } from './SessionPromptHistoryNavigator';
 import { resolveVisiblePromptId } from '@/utils/sessionPromptHistory';
+import { revealWebMessage } from '@/utils/webMessageReveal';
 
 const SCROLL_THRESHOLD = 300;
 const DOCK_DETAILS_SHOW_OFFSET = 16;
 const DOCK_DETAILS_HIDE_OFFSET = 48;
-
-function revealWebMessage(messageId: string): void {
-    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-
-    let attempts = 0;
-    const reveal = () => {
-        const target = document.getElementById(getMessageTargetNativeId(messageId));
-        if (target) {
-            // FlatList's web implementation measures and repositions rows for
-            // several frames after a deep history page mounts. A single smooth
-            // scroll is therefore easily displaced by the subsequent layout.
-            // Keep pinning the target briefly with an instant scroll until the
-            // virtualized list has settled.
-            target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
-        }
-        attempts += 1;
-        if (attempts < 30) setTimeout(reveal, 100);
-    };
-    reveal();
-}
 
 export const ChatList = React.memo((props: {
     session: Session;
@@ -407,6 +388,7 @@ const ChatListInternal = React.memo((props: {
         handledTargetRequestRef.current = targetRequestKey;
         setHighlightedMessageId(targetAction.messageId);
         setBottomDockVisibility(false);
+        let cancelWebReveal: (() => void) | null = null;
         const scrollTimer = setTimeout(() => {
             if (Platform.OS !== 'web') {
                 flatListRef.current?.scrollToIndex({
@@ -415,7 +397,9 @@ const ChatListInternal = React.memo((props: {
                     viewPosition: 0.5,
                 });
             }
-            revealWebMessage(targetAction.messageId);
+            if (Platform.OS === 'web') {
+                cancelWebReveal = revealWebMessage(getMessageTargetNativeId(targetAction.messageId));
+            }
         }, 50);
         const highlightTimer = setTimeout(() => {
             setHighlightedMessageId((current) => current === targetAction.messageId ? null : current);
@@ -428,6 +412,7 @@ const ChatListInternal = React.memo((props: {
         return () => {
             clearTimeout(scrollTimer);
             clearTimeout(highlightTimer);
+            cancelWebReveal?.();
         };
     }, [props.sessionId, setBottomDockVisibility, targetAction, targetMessageId, targetRequestKey]);
 
@@ -633,7 +618,7 @@ const ChatListInternal = React.memo((props: {
                             viewPosition: 0.5,
                         });
                         const targetMessageId = targetMessageIdRef.current;
-                        if (targetMessageId) revealWebMessage(targetMessageId);
+                        if (targetMessageId) revealWebMessage(getMessageTargetNativeId(targetMessageId));
                     }, 100);
                 }}
             />
