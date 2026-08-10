@@ -1,0 +1,77 @@
+# EAS uses this file instead of .gitignore when it exists. Keep the common
+# project ignores in sync with .gitignore, then add build-upload exclusions.
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+/ios
+/android
+/packages/happy-app/ios
+/packages/happy-app/android
+
+# Native credentials and generated files
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro and debug output
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Local system and environment files
+.DS_Store
+*.pem
+.env*.local
+.env
+.env.production
+*.tsbuildinfo
+
+# Python workflow tooling
+__pycache__/
+*.py[cod]
+
+# Local agent state and worktrees
+.git
+.baseline
+.claude/settings.local.json
+.claude/*.lock
+.claude/worktrees/
+.plan
+CLAUDE.local.md
+CLAUDE.md
+.claude/CLAUDE.md
+.dev
+
+# Local development environments and scratch data
+.environments/
+environments/data/
+notes/
+docs/notes/
+progress*.txt
+docs/competition/opencode/traces/
+.cdp-scripts/
+happy-workspaces/
+.happy-fully-local/
+.happy-dev/
+.supervibe/
+.context/
+
+# Desktop-only source and generated native artifacts are not inputs to an
+# Expo iOS/Android build.
+/packages/happy-app/src-tauri
+
+# Happy CLI's workspace postinstall consumes its prebuilt archives, so keep
+# tools/archives even though Happy App does not import the CLI package. The
+# locally unpacked copies are generated and can be omitted.
+/packages/happy-cli/tools/unpacked

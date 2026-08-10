@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "eas-archive-ignore",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Commit feature/eas-archive-ignore and open a PR to dev when authorized",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Acceptance criteria recorded in docs/specs/eas-archive-ignore.md",
+      "updated": "2026-08-10T06:59:16+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D4 resolved in decisions.md",
+      "updated": "2026-08-10T06:59:16+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Scope and non-goals recorded; change limited to EAS upload policy and workflow evidence",
+      "updated": "2026-08-10T06:59:16+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Conservative exclusions preserve the pnpm workspace; archive inspection will verify required inputs before finish",
+      "updated": "2026-08-10T06:59:16+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Repository-root .easignore implemented; EAS archive reduced to 138 MB while preserving install inputs",
+      "updated": "2026-08-10T07:03:45+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Archive presence checks, frozen workspace install, Happy Wire build, Happy App typecheck, and workflow tests passed",
+      "updated": "2026-08-10T07:03:45+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: product change limited to upload exclusions; no runtime, dependency, credential, or EAS profile changes",
+      "updated": "2026-08-10T07:04:05+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Acceptance criteria and verification evidence complete; ready for authorized commit and PR",
+      "updated": "2026-08-10T07:04:33+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-10T06:56:42+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-10T06:59:16+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Acceptance criteria recorded in docs/specs/eas-archive-ignore.md"
+    },
+    {
+      "at": "2026-08-10T06:59:16+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 resolved in decisions.md"
+    },
+    {
+      "at": "2026-08-10T06:59:16+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Scope and non-goals recorded; change limited to EAS upload policy and workflow evidence"
+    },
+    {
+      "at": "2026-08-10T06:59:16+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Conservative exclusions preserve the pnpm workspace; archive inspection will verify required inputs before finish"
+    },
+    {
+      "at": "2026-08-10T06:59:31+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Validate exclusion design against repository inputs"
+    },
+    {
+      "at": "2026-08-10T06:59:31+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Run EAS archive inspection and verification"
+    },
+    {
+      "at": "2026-08-10T07:03:45+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Repository-root .easignore implemented; EAS archive reduced to 138 MB while preserving install inputs"
+    },
+    {
+      "at": "2026-08-10T07:03:45+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Review final diff and verification evidence"
+    },
+    {
+      "at": "2026-08-10T07:03:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Archive presence checks, frozen workspace install, Happy Wire build, Happy App typecheck, and workflow tests passed"
+    },
+    {
+      "at": "2026-08-10T07:04:05+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: product change limited to upload exclusions; no runtime, dependency, credential, or EAS profile changes"
+    },
+    {
+      "at": "2026-08-10T07:04:06+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive completed workflow with commit pending"
+    },
+    {
+      "at": "2026-08-10T07:04:33+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Acceptance criteria and verification evidence complete; ready for authorized commit and PR"
+    },
+    {
+      "at": "2026-08-10T07:04:33+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Added and verified conservative EAS archive exclusions; reduced inspected archive from 2.1 GB to 138 MB while clean workspace install and app checks pass; commit: pending; follow-up: Commit feature/eas-archive-ignore and open a PR to dev when authorized"
+    }
+  ],
+  "updated": "2026-08-10T07:04:33+00:00",
+  "archivedAt": "2026-08-10T07:04:33+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Added and verified conservative EAS archive exclusions; reduced inspected archive from 2.1 GB to 138 MB while clean workspace install and app checks pass",
+  "archiveFollowUp": "Commit feature/eas-archive-ignore and open a PR to dev when authorized"
+}
