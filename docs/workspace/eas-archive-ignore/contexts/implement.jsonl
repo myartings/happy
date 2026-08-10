@@ -1,0 +1,6 @@
+{"path":".gitignore","reason":"Baseline ignore behavior that EAS ignore rules must preserve"}
+{"path":".easignore","reason":"Repository-root EAS upload exclusion policy"}
+{"path":"package.json","reason":"Root pnpm install and postinstall behavior"}
+{"path":"packages/happy-app/package.json","reason":"Mobile app dependencies and scripts"}
+{"path":"packages/happy-app/eas.json","reason":"Personal EAS build profile and project root behavior"}
+{"path":"docs/specs/eas-archive-ignore.md","reason":"Approved scope and acceptance criteria"}

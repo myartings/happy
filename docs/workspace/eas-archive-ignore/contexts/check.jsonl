@@ -1,0 +1,4 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":".easignore","reason":"Exclusions under verification"}
+{"path":"docs/specs/eas-archive-ignore.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/workspace/eas-archive-ignore/validation.md","reason":"Evidence ledger for exact check outcomes"}
