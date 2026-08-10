@@ -5,7 +5,114 @@ export interface VisibleSessionListOptions {
     sortActiveSessionsGlobally: boolean;
     groupActiveSessionsByDate?: boolean;
     needsAttentionSessionsEnabled?: boolean;
+    pinnedSessionIds?: readonly string[];
+    favoriteProjectIds?: readonly string[];
     now?: number;
+}
+
+function stablePreferredFirst<T>(items: readonly T[], preferred: (item: T) => boolean): T[] {
+    return items
+        .map((item, index) => ({ item, index }))
+        .sort((left, right) => Number(preferred(right.item)) - Number(preferred(left.item)) || left.index - right.index)
+        .map(({ item }) => item);
+}
+
+function applyPinnedSessionOrder(
+    data: readonly SessionListViewItem[],
+    pinnedSessionIds: readonly string[],
+): SessionListViewItem[] {
+    if (pinnedSessionIds.length === 0) return [...data];
+    const pinned = new Set(pinnedSessionIds);
+    const result: SessionListViewItem[] = [];
+
+    for (let index = 0; index < data.length; index += 1) {
+        const item = data[index];
+        if (item.type === 'project') {
+            result.push({
+                ...item,
+                project: {
+                    ...item.project,
+                    workspaces: item.project.workspaces.map((workspace) => ({
+                        ...workspace,
+                        sessions: stablePreferredFirst(workspace.sessions, (session) => pinned.has(session.id)),
+                    })),
+                },
+            });
+            continue;
+        }
+        if (item.type === 'attention-sessions') {
+            result.push({
+                ...item,
+                sessions: item.sessions
+                    .map((session, originalIndex) => ({ session, originalIndex }))
+                    .sort((left, right) => {
+                        const permissionPriority = Number(right.session.state === 'permission_required')
+                            - Number(left.session.state === 'permission_required');
+                        const pinPriority = Number(pinned.has(right.session.id)) - Number(pinned.has(left.session.id));
+                        return permissionPriority || pinPriority || left.originalIndex - right.originalIndex;
+                    })
+                    .map(({ session }) => session),
+            });
+            continue;
+        }
+        if (item.type === 'active-sessions') {
+            result.push({
+                ...item,
+                sessions: stablePreferredFirst(item.sessions, (session) => pinned.has(session.id)),
+            });
+            continue;
+        }
+        if (item.type === 'session') {
+            const run: Extract<SessionListViewItem, { type: 'session' }>[] = [item];
+            while (data[index + 1]?.type === 'session') {
+                index += 1;
+                run.push(data[index] as Extract<SessionListViewItem, { type: 'session' }>);
+            }
+            result.push(...stablePreferredFirst(run, (entry) => pinned.has(entry.session.id)));
+            continue;
+        }
+        result.push(item);
+    }
+
+    return result;
+}
+
+function applyFavoriteProjectOrder(
+    data: readonly SessionListViewItem[],
+    favoriteProjectIds: readonly string[],
+): SessionListViewItem[] {
+    if (favoriteProjectIds.length === 0) return [...data];
+    const favorites = new Set(favoriteProjectIds);
+    const result: SessionListViewItem[] = [];
+
+    for (let index = 0; index < data.length; index += 1) {
+        const item = data[index];
+        if (item.type !== 'project') {
+            result.push(item);
+            continue;
+        }
+
+        const run: Extract<SessionListViewItem, { type: 'project' }>[] = [item];
+        while (true) {
+            const next = data[index + 1];
+            if (!next || next.type !== 'project' || next.source !== item.source) break;
+            index += 1;
+            run.push(next);
+        }
+        result.push(...stablePreferredFirst(run, (entry) => favorites.has(entry.project.id)));
+    }
+
+    return result;
+}
+
+function applyPreferenceOrder(
+    data: readonly SessionListViewItem[],
+    options: VisibleSessionListOptions,
+): SessionListViewItem[] {
+    return applyFavoriteProjectOrder(
+        applyPinnedSessionOrder(data, options.pinnedSessionIds ?? []),
+        options.favoriteProjectIds ?? [],
+    );
 }
 
 function activityTime(session: SessionRowData): number {
@@ -186,7 +293,7 @@ export function buildVisibleSessionListViewData(
     const prioritize = (items: readonly SessionListViewItem[]) => options.needsAttentionSessionsEnabled === false
         ? [...items]
         : prioritizeAttentionSessions(items);
-    if (!options.sortActiveSessionsGlobally) return prioritize(visibleData);
+    if (!options.sortActiveSessionsGlobally) return applyPreferenceOrder(prioritize(visibleData), options);
 
     const activeSessions: SessionRowData[] = [];
     const remainingItems: SessionListViewItem[] = [];
@@ -222,5 +329,8 @@ export function buildVisibleSessionListViewData(
         activeItems.push({ type: 'active-sessions', sessions: activeSessions });
     }
 
-    return prioritize([...activeItems, ...removeEmptyProjectHeaders(remainingItems)]);
+    return applyPreferenceOrder(
+        prioritize([...activeItems, ...removeEmptyProjectHeaders(remainingItems)]),
+        options,
+    );
 }

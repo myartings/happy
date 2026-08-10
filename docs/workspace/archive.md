@@ -12,3 +12,4 @@
 | 2026-08-10 | personal-ota-preview-environment | pending | Align personal OTA with the supported preview EAS environment | Merge PR #31, push a unique Android OTA tag, and monitor the hosted run |
 | 2026-08-10 | personal-ota-pnpm-args | pending | Remove the redundant pnpm separator blocking hosted Android OTA publication | Merge the repair PR, push a new unique Android OTA tag, and monitor publication |
 | 2026-08-10 | prompt-rail-reliable-jump | pending | Cancel stale prompt-rail web reveal retries so the latest selected tick owns the scroll position. | Manual desktop smoke test before publication or installation. |
+| 2026-08-10 | pinned-sessions-projects | pending | Implemented synced session pins and project favorites with stable ordering and cross-platform controls | Run one manual interaction pass in the target Tauri or iOS client before publication |

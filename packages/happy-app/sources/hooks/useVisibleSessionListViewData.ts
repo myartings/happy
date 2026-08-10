@@ -16,13 +16,17 @@ export function useVisibleSessionListViewData(): SessionListViewItem[] | null {
     const sortActiveSessionsGlobally = useSetting('sortActiveSessionsGlobally');
     const groupActiveSessionsByDate = useSetting('groupActiveSessionsByDate');
     const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
+    const pinnedSessionIds = useSetting('pinnedSessionIds');
+    const favoriteProjectIds = useSetting('favoriteProjectIds');
 
     return React.useMemo(() => buildVisibleSessionListViewData(data, {
         hideArchivedSessions,
         sortActiveSessionsGlobally,
         groupActiveSessionsByDate,
         needsAttentionSessionsEnabled,
-    }), [data, hideArchivedSessions, sortActiveSessionsGlobally, groupActiveSessionsByDate, needsAttentionSessionsEnabled]);
+        pinnedSessionIds,
+        favoriteProjectIds,
+    }), [data, hideArchivedSessions, sortActiveSessionsGlobally, groupActiveSessionsByDate, needsAttentionSessionsEnabled, pinnedSessionIds, favoriteProjectIds]);
 }
 
 /** Whether the unfiltered list contains at least one archived session. */

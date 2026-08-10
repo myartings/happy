@@ -23,8 +23,10 @@ export function SessionActionsNativeMenu({
         canCopySessionMetadata,
         canShowResume,
         copySessionMetadata,
+        isPinned,
         openDetails,
         resumeSession,
+        togglePinned,
     } = useSessionQuickActions(session, {
         onAfterArchive,
         onAfterDelete,
@@ -33,6 +35,9 @@ export function SessionActionsNativeMenu({
     return (
         <DropdownMenu>
             <DropdownMenu.Items>
+                <DropdownMenuItem onClick={togglePinned}>
+                    <DropdownMenuItem.Text>{isPinned ? 'Unpin session' : 'Pin session'}</DropdownMenuItem.Text>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={openDetails}>
                     <DropdownMenuItem.Text>Details</DropdownMenuItem.Text>
                 </DropdownMenuItem>

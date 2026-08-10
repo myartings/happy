@@ -4,7 +4,7 @@ import { useNavigateToSession } from '@/hooks/useNavigateToSession';
 import { Modal } from '@/modal';
 import { machineResumeSession, sessionArchive, sessionKill, sessionSetAgentModes, forkAndSpawn, type ForkSource } from '@/sync/ops';
 import { maybeCleanupWorktree } from '@/hooks/useWorktreeCleanup';
-import { storage, useLocalSetting, useMachine, useSetting } from '@/sync/storage';
+import { storage, useLocalSetting, useMachine, useSetting, useSettingMutable } from '@/sync/storage';
 import { Machine, Session } from '@/sync/storageTypes';
 import { sync } from '@/sync/sync';
 import { resolveMessageModeMeta } from '@/sync/messageMeta';
@@ -123,6 +123,8 @@ export function useSessionQuickActions(
     const machine = useMachine(machineId);
     const devModeEnabled = useLocalSetting('devModeEnabled');
     const expResumeSession = useSetting('expResumeSession');
+    const [pinnedSessionIds, setPinnedSessionIds] = useSettingMutable('pinnedSessionIds');
+    const isPinned = pinnedSessionIds.includes(session.id);
     const resumeAvailability = React.useMemo(
         () => expResumeSession ? getResumeAvailability(session, machine, sessionStatus.isConnected) : { canResume: false, canShowResume: false, subtitle: '', message: '' },
         [machine, session, sessionStatus.isConnected, expResumeSession],
@@ -151,6 +153,13 @@ export function useSessionQuickActions(
     const openDetails = React.useCallback(() => {
         router.push(`/session/${session.id}/info`);
     }, [router, session.id]);
+
+    const togglePinned = React.useCallback(() => {
+        setPinnedSessionIds(isPinned
+            ? pinnedSessionIds.filter((id) => id !== session.id)
+            : [session.id, ...pinnedSessionIds.filter((id) => id !== session.id)]
+        );
+    }, [isPinned, pinnedSessionIds, session.id, setPinnedSessionIds]);
 
     const copySessionMetadata = React.useCallback(() => {
         void (async () => {
@@ -261,6 +270,7 @@ export function useSessionQuickActions(
 
     const actionItems = React.useMemo<SessionActionItem[]>(() => {
         const items: SessionActionItem[] = [
+            { id: 'pin', icon: isPinned ? 'pin' : 'pin-outline', label: isPinned ? 'Unpin session' : 'Pin session', onPress: togglePinned },
             { id: 'details', icon: 'information-circle-outline', label: t('profile.details'), onPress: openDetails },
         ];
 
@@ -289,10 +299,12 @@ export function useSessionQuickActions(
         copySessionMetadataAndLogs,
         forkSource,
         forkSession,
+        isPinned,
         openDetails,
         openDuplicateSheet,
         resumeAvailability.canShowResume,
         resumeSession,
+        togglePinned,
     ]);
 
     const showActionAlert = React.useCallback(() => {
@@ -315,6 +327,7 @@ export function useSessionQuickActions(
         canResume: resumeAvailability.canResume,
         canShowResume: resumeAvailability.canShowResume,
         canFork,
+        isPinned,
         copySessionMetadata,
         copySessionMetadataAndLogs,
         forkSession,
@@ -324,6 +337,7 @@ export function useSessionQuickActions(
         resumeSession,
         resumeSessionSubtitle: resumeAvailability.subtitle,
         resumingSession,
+        togglePinned,
     };
 }
 
