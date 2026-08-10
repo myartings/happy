@@ -11,6 +11,32 @@
 
 ## Dependency batches
 
+### Revision note
+
+The original T1-T8 batches produced reusable Device Flow, repository resolution,
+CRUD, draft, and dispatch foundations. Their desktop full-route composition is
+superseded by the approved T9-T12 Session-panel revision below.
+
+### Batch 5 — Quick surface
+
+1. T9 Session-header anchored Issue popover.
+
+Build on the existing Happy quick-panel overlay primitives. Do not alter the
+right-workspace state model in this batch.
+
+### Batch 6 — Durable Session surface
+
+1. T10 right-workspace `Issues` panel registration and per-Session state.
+2. T11 embedded list/detail/create/dispatch views and mobile sheet adapter.
+
+T10 establishes the panel ownership contract; T11 then moves existing product
+flows behind that contract without changing GitHub transport or permissions.
+
+### Batch 7 — Cleanup and acceptance
+
+1. T12 remove obsolete global/sidebar and centered-Modal composition.
+2. Complete coexistence, isolation, feature-off, Windows, and mobile acceptance.
+
 ### Batch 0 — Approved contracts
 
 - UI v2 spec, task plan, decisions, risk controls, context manifests, and
@@ -52,10 +78,13 @@ It owns the narrow Session/New Session integration review.
 | Shared area | Owner/order |
 | --- | --- |
 | `features/github-issues/**` contracts and fixtures | Batch 1 first; later batches extend without redefining the Interface. |
-| GitHub Issues route files and layout options | T3, then T4, then T5; T6 adds only dispatch integration. |
+| Legacy GitHub Issues route files and layout options | Historical T3-T6 ownership; T11 extracts embeddable views and T12 removes obsolete public entry seams. |
 | Session/New Session drafts | T6 only; Project Todos remains reference/read-only unless an approved shared helper is extracted. |
 | Settings/navigation host seams | T2/T7 with narrow guarded changes. |
 | Translation catalogs | T7 after user-facing copy stabilizes. |
+| Session header and anchored overlay | T9 only; reuse existing quick-panel primitives. |
+| Right-workspace mode/state | T10 first; T11 consumes without redefining ownership. |
+| Issue routes and embeddable views | T11; T12 removes only obsolete public entry seams. |
 
 ## Validation cadence
 

@@ -6,6 +6,8 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 
 | Date | Command | Result | Notes |
 | --- | --- | --- | --- |
+| `2026-08-10` | Session-panel revision review | passed | User approved the Codex-style Session quick popover → right-workspace Issues tab model; full-route desktop composition is superseded. |
+| `2026-08-10` | revision `validate-happy-workflow.py`, `test-workflow-core.py`, and `git diff --check` | passed | Selective workflow validation passed, all 14 workflow-core tests passed, and revised specification/task/evidence documents have no whitespace errors. |
 | `2026-08-10` | `git diff --check` | passed | Approved spec, task plan, and Workspace evidence have no whitespace errors. |
 | `2026-08-10` | `python scripts/validate-happy-workflow.py` | passed | Happy selective workflow adoption is valid. |
 | `2026-08-10` | `python scripts/test-workflow-core.py` | passed | 14 workflow-core tests passed. |
@@ -42,7 +44,11 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | `2026-08-10` | installed-window visual inspection | passed with bounded evidence | Happy dev rendered normally and visibly exposed the Issues entry; automated component tests supply deeper list/detail/create evidence. |
 | `2026-08-10` | Android `assembleRelease` with JDK 17, all ABI and `x86_64` | unavailable | Online emulator and device detected, but Ninja failed on React Native generated paths over Windows' 260-character limit; no APK or mobile live pass claimed. |
 
-## Acceptance coverage
+## Superseded full-route acceptance baseline
+
+The evidence below remains valid for the reusable Device Flow, repository,
+CRUD, draft, lifecycle, and dispatch foundations. Its desktop composition is no
+longer product acceptance after approval of the Session-panel revision.
 
 | Criterion | Status | Evidence |
 | --- | --- | --- |
@@ -57,6 +63,23 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | AC9 complete state model | verified | Focused connection/Device Flow/no-repo/list/detail/form/error tests passed. |
 | AC10 feature/browser isolation | verified | Flag remains default-off, browser exclusion tests and full app regression pass, and official profile API is untouched. |
 | AC11 desktop/mobile live acceptance | accepted gap | Windows build/install/launch passed; Android live acceptance blocked before APK by reproducible Windows CMake path-length failure. |
+
+## Session-panel revision acceptance
+
+| Criterion | Status | Required evidence |
+| --- | --- | --- |
+| AC1 anchored Session popover | pending | Component interaction plus installed Windows visual acceptance |
+| AC2 popover to Issues tab | pending | Selection/create transition tests and installed-window acceptance |
+| AC3 rich paginated list | pending | Pagination, filter, refresh-preservation, and uncapped-list tests |
+| AC4 repository association | reusable, reverify | Existing resolver suite plus per-Session panel-state tests |
+| AC5 embedded detail/lifecycle/delete | pending | Embedded component and live Close/Reopen evidence |
+| AC6 embedded create/drafts | pending | Embedded form/draft tests and live creation evidence |
+| AC7 repository-safe Triage dispatch | reusable, reverify | Existing task tests plus panel-to-composer transition test |
+| AC8 Triage stop/continue | reusable, reverify | Existing task contract and repository workflow acceptance |
+| AC9 panel coexistence/isolation | pending | Side Session coexistence, close, switch, and repository-leak tests |
+| AC10 blocking/error states | pending | Popover/panel/sheet state tests |
+| AC11 feature/browser isolation | pending | Feature-off/browser/full-suite regressions |
+| AC12 desktop/mobile live acceptance | pending | Windows popover → panel flow and available mobile sheet flow |
 
 ## Remaining gaps
 

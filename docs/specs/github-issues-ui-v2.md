@@ -1,17 +1,22 @@
 # Happy GitHub Issues UI v2
 
-Status: Approved for implementation
+Status: Approved for Session-panel reimplementation
 Owner: personal Happy `dev` branch
 Feature flag: `devGithubIssuesEnabled`, default off
 Infrastructure: `github-issues-device-flow.md` and ADR 0006
 
 ## Decision
 
-Redesign GitHub Issues as a small, native Happy task surface rather than a
-GitHub settings page embedded in Happy. The everyday route prioritizes the
-selected repository and its Issues. Connection and repository-access management
-remain available in Settings and appear in the main route only when they block
-use.
+Redesign GitHub Issues as a Session accessory rather than a parallel task
+manager or a GitHub settings page embedded in Happy. The everyday interaction
+has two stages: a Codex-style anchored popover for quickly browsing the current
+Session repository, followed by an `Issues` tab in Happy's existing right-side
+workspace for detail, creation, lifecycle actions, and Agent dispatch.
+
+Connection and repository-access management remain in Settings and appear in
+the Session surfaces only when they block use. Existing full-page routes may
+remain as internal or narrow-screen implementation details, but they are not a
+desktop navigation destination.
 
 This document supersedes the wireframes and screen composition in
 `github-issues-ui.md`. It does not change the approved v1 product scope or the
@@ -22,15 +27,14 @@ Device Flow architecture.
 1. **Task first.** A returning user lands on Issues, not account management.
 2. **Happy native.** Reuse Happy navigation, typography, spacing, surfaces,
    chips, modal sheets, destructive confirmations, and responsive width.
-3. **Context without nesting.** Issues and Sessions remain peer destinations;
-   a session can supply repository context without making Issues its child.
+3. **Session context.** Issues belong to the current Session experience and
+   automatically use its verified repository association.
 4. **Progressive disclosure.** Connection, installation, and permanent deletion
    appear only when relevant.
 5. **Small client.** Keep comments, editing, assignments, Projects, milestones,
    notifications, and full GitHub administration out of scope.
-6. **Isolated implementation.** Host integration stays limited to route
-   registration, feature settings, sidebar/home shortcuts, and the session
-   shortcut.
+6. **Isolated implementation.** Extend the existing quick-popover and right
+   workspace panel seams; keep GitHub behavior inside the feature Module.
 7. **Record or dispatch.** Creating an Issue records durable work. Dispatching
    it to an Agent is a separate explicit action that enters the repository's
    Issue workflow before implementation.
@@ -39,89 +43,96 @@ Device Flow architecture.
 
 | Surface | Entry | Behavior |
 | --- | --- | --- |
-| Phone home | GitHub Issues icon | Opens last repository; Back returns home |
-| Phone session | GitHub Issues icon | Automatically opens the session repository when detectable; Back returns to session |
-| Desktop/tablet | Labeled Issues sidebar row | Opens full-width content route; Sessions stay one click away |
+| Desktop Session | Header Issues control | Opens an anchored repository Issue popover without resizing or navigating away from the Session |
+| Desktop right workspace | `Issues` panel tab | Opens the selected Issue detail or embedded list/create flow alongside the existing Side Session panel tab |
+| Phone Session | Header Issues control | Opens a bottom sheet; selecting an Issue expands to a full-height sheet |
 | Settings > Features | GitHub Issues connection row | Opens connection and repository-access management |
 
-Do not add a bottom tab or a third desktop pane. Do not add an Issues button to
-every session/project row in v2; the session header and desktop sidebar provide
-enough access without making upstream session lists more complex.
+Do not add a bottom tab, desktop navigation-row entry, or standalone everyday
+Issues destination. Do not add an Issues action to every Session/project row.
+The Session header is the only everyday entry; the existing right workspace is
+reused rather than introducing a third desktop pane.
 
-## Screen model
+## Surface model
 
-The feature has four product screens and two blocking states:
+The feature has five Session-owned surfaces and two blocking states:
 
-1. Issue list
-2. Repository picker sheet
-3. Issue detail
-4. New Issue
-5. Disconnected/authorization state
-6. No accessible repository state
+1. Anchored Issue quick popover
+2. Right-workspace `Issues` tab
+3. Embedded Issue detail
+4. Embedded New Issue form
+5. Repository picker sheet
+6. Disconnected/authorization state
+7. No accessible repository state
 
 The connected-account management card is a Settings surface, not part of the
 normal Issue list.
 
-## Issue list
+## Anchored Issue quick popover
 
-### Phone
-
-```text
-┌──────────────────────────────────┐
-│ ‹          GitHub Issues      ＋ │
-├──────────────────────────────────┤
-│ happy ▾                          │
-│ [ Open 12 ] [ Closed 38 ]        │
-│                                  │
-│ ┌──────────────────────────────┐ │
-│ │ #241                         │ │
-│ │ Add GitHub Issues page       │ │
-│ │ enhancement  updated 2h  ◯ 3│ │
-│ └──────────────────────────────┘ │
-│ ┌──────────────────────────────┐ │
-│ │ #238                         │ │
-│ │ Android header regression    │ │
-│ │ bug          updated 1d      │ │
-│ └──────────────────────────────┘ │
-│                                  │
-│          pull to refresh         │
-└──────────────────────────────────┘
-```
-
-- Use the native navigation header. The plus action is icon-only with an
-  accessibility label.
-- The repository selector is a compact pressable row below the header. Show the
-  repository name, not the full account path when space is tight.
-- Open/Closed uses the same rounded chip language as Project Todos. Selection is
-  communicated by surface, text weight, and accessibility state, not color only.
-- Each Issue is one Happy surface card with a generous touch target. Show number,
-  two-line title, up to two labels, relative update time, and comment count.
-- Pull to refresh preserves the current list. Initial loading uses skeleton rows
-  or stable placeholders so navigation does not shift.
-- Empty state stays inside the list area and includes a `New issue` action.
-
-### Desktop/tablet
+The quick popover is the default desktop browsing surface. It is anchored below
+the Session header control and does not resize, obscure, or navigate away from
+the conversation.
 
 ```text
-┌──────────── sidebar ────────────┬─────────────────────────────────┐
-│ + New session                  │ GitHub Issues              ＋   │
-│ Project Todos                  ├─────────────────────────────────┤
-│ Issues                         │ happy ▾    Open 12   Closed 38  │
-│                                │                                 │
-│ Sessions                       │ ┌─────────────────────────────┐ │
-│   Session A                    │ │ #241 Add GitHub Issues…     │ │
-│   Session B                    │ │ enhancement · 2h · 3        │ │
-│                                │ └─────────────────────────────┘ │
-│ Settings                       │                                 │
-└────────────────────────────────┴─────────────────────────────────┘
+Session title                                      [Issues] [Right workspace]
+                                      ┌──────────────────────────────┐
+                                      │ happy                    ＋ │
+                                      │ [ Open 12 ] [ Closed 38 ]   │
+                                      ├──────────────────────────────┤
+                                      │ #241                        │
+                                      │ Add GitHub Issues panel     │
+                                      │ enhancement · 2h · 3       │
+                                      ├──────────────────────────────┤
+                                      │ #238                        │
+                                      │ Fix desktop header          │
+                                      │ bug · 1d                    │
+                                      ├──────────────────────────────┤
+                                      │ View all                    │
+                                      └──────────────────────────────┘
 ```
 
-- Keep the existing persistent sidebar.
-- Center Issue content using Happy's responsive maximum width rather than
-  stretching cards across the full desktop window.
-- Repository selector, state chips, and create action share one compact toolbar.
-- Do not introduce a master-detail split in v2; opening an Issue navigates to the
-  existing full content route and keeps the sidebar visible where supported.
+- Reuse Happy's existing anchored popup, click-away backdrop, radius, shadow,
+  spacing, hover, and keyboard behavior.
+- The compact header shows the automatically associated repository, Open/Closed
+  filters, refresh state, and an icon-only New Issue action.
+- Rows show number, two-line title, up to two labels, relative update time, and
+  comment count. The scrollable list uses pagination; it is not capped at five.
+- Clicking an Issue closes the popover, opens the right workspace, ensures one
+  `Issues` panel tab exists, activates it, and displays that Issue.
+- Clicking New Issue opens the same right-workspace tab directly in create mode.
+- Clicking outside, pressing Escape, or pressing the header control again closes
+  only the popover.
+
+## Right-workspace Issues tab
+
+Issues reuse the same panel manager as Side Sessions, Changes, and All Files.
+They do not create a new application sidebar.
+
+```text
+┌────────────────── Session ─────────────────┬──────── Right workspace ───────┐
+│                                           │ [Side session] [Issues ×]  ＋  │
+│ Conversation                              ├─────────────────────────────────┤
+│                                           │ ‹ happy                   #241 │
+│                                           │                                 │
+│                                           │ Add GitHub Issues panel         │
+│                                           │ Open · enhancement · updated 2h │
+│                                           │                                 │
+│                                           │ Markdown body…                  │
+│                                           │                                 │
+│                                           │ [ Work on this issue ]          │
+│ Composer                                  │ Close issue               ···  │
+└───────────────────────────────────────────┴─────────────────────────────────┘
+```
+
+- `Issues` is one panel-level tab, not one tab per Issue.
+- Selecting another Issue updates the existing Issues tab and its local history.
+- The tab contains an internal stack: list → detail → create. Back moves within
+  that stack and never navigates the main Session.
+- Closing the Issues tab preserves the Session and every Side Session. Reopening
+  restores that Session's last repository, filter, and selected Issue when safe.
+- Switching the parent Session swaps to its own repository-scoped Issues state;
+  state must never leak across unrelated Sessions or repositories.
 
 ## Repository picker
 
@@ -179,7 +190,7 @@ instantaneous. A manually selected repository applies to the current visit; it
 becomes the cached session association only when there is no contradictory
 remote evidence.
 
-## Issue detail
+## Embedded Issue detail
 
 ```text
 ┌──────────────────────────────────┐
@@ -196,6 +207,8 @@ remote evidence.
 └──────────────────────────────────┘
 ```
 
+- The detail renders inside the right-workspace Issues tab on desktop and the
+  full-height Session sheet on phone. It does not replace the main Session.
 - Header title is the Issue number; the full title belongs in content.
 - Metadata includes state, author, relative update time, labels, and comment
   count. Render the body with Happy's existing Markdown renderer.
@@ -209,7 +222,7 @@ remote evidence.
   delete returns to the list. Failures preserve the page and show a normalized
   actionable error.
 
-## New Issue
+## Embedded New Issue
 
 ```text
 ┌──────────────────────────────────┐
@@ -230,14 +243,15 @@ remote evidence.
 └──────────────────────────────────┘
 ```
 
-- Use native header actions. `Create` is disabled until trimmed title is valid
-  and while saving.
+- Open from the quick-popover plus action or from the Issues tab list. Render in
+  the existing Issues tab/sheet rather than navigating the desktop Session.
+- `Create` is disabled until trimmed title is valid and while saving.
 - Repository is inherited and read-only.
 - Preserve title and body after network, permission, or rate-limit errors.
 - If the user cancels with content present, ask whether to discard or keep the
   local draft. Keep one draft per repository on this device.
-- Success replaces the form with the created Issue detail; Back then returns to
-  the originating list/session navigation chain.
+- Success replaces the form with the embedded Issue detail; Back returns to the
+  Issues list inside the same panel/sheet.
 - After creation, show `Done` and `Work on it`. `Done` only records the Issue.
   `Work on it` starts the dispatch flow below; creation alone never starts an
   Agent or Triage.
@@ -261,7 +275,7 @@ The detail screen contains one primary action:
 └──────────────────────────────────┘
 ```
 
-Selecting it opens a small target sheet:
+Selecting it opens a small target confirmation inside the Issues panel/sheet:
 
 ```text
 ┌──────────────────────────────────┐
@@ -277,7 +291,9 @@ Selecting it opens a small target sheet:
 - Otherwise offer active Sessions for the same repository and `Start a new
   session`. Never silently send an Issue to a different repository.
 - Existing Session dispatch appends a structured task to its draft without
-  overwriting user text, then navigates back to that Session for review/send.
+  overwriting user text, then focuses the parent Session composer for
+  review/send. The Issues panel may remain open or collapse according to the
+  existing right-workspace behavior; it must not auto-send.
 - New Session dispatch preselects the project path and prepares the structured
   task while leaving Agent, model, and worktree choices in the normal New
   Session flow.
@@ -355,8 +371,8 @@ Settings > Features owns the persistent connection card:
 - Manage repository access
 - Remove from this device
 
-The Issue list can expose only a small settings shortcut in its repository
-picker or error state.
+The quick popover and Issues tab can expose only a small settings shortcut in
+their repository picker or blocking error state.
 
 ## Error behavior
 
@@ -373,10 +389,13 @@ picker or error state.
 
 ## Responsive and accessibility rules
 
-- Phone: full-width content with 16 px horizontal padding and native safe-area
-  handling.
-- Tablet/web/Tauri: centered content using `layout.maxWidth`; cards do not span
-  the whole window.
+- Wide desktop/Tauri: use the anchored quick popover plus existing resizable
+  right workspace. Do not create a second independent sidebar.
+- Narrow desktop/tablet: the quick popover remains available when it fits; the
+  Issues workspace may use the existing overlay/expanded-panel presentation.
+- Phone: the header control opens a bottom sheet; selecting or creating an Issue
+  expands to a full-height sheet with native safe-area handling. Closing returns
+  to the same Session.
 - Support light/dark themes exclusively through Happy theme tokens.
 - Titles wrap to two lines in lists and freely in detail; metadata yields first.
 - Every icon-only action has a localized accessibility label.
@@ -396,67 +415,76 @@ implementation.
 
 Host seams remain deliberately shallow and additive:
 
-- route registration
 - feature flag and Settings row
-- phone home shortcut
-- phone session shortcut
-- desktop/sidebar shortcut
+- Session header quick-popover control
+- existing right-workspace panel registration and state
+- phone Session sheet adapter
 
 Do not place Git commands, token state, GitHub response parsing, or repository
 mapping persistence directly in those host call sites.
 
 Suggested UI-local pieces:
 
-- `GithubIssuesScreen` — screen composition only
+- `GithubIssuesQuickPopover` — anchored browse/select surface
+- `GithubIssuesPanel` — right-workspace list/detail/create stack
+- `GithubIssuesMobileSheet` — phone adapter over the same feature state
 - `GithubIssueListToolbar` — repository and state controls
 - `GithubIssueRow` — stable list presentation
 - `GithubRepositoryPicker` — selection/search/manage-access sheet
-- `GithubIssueDetailScreen` — detail composition and lifecycle actions
-- `NewGithubIssueScreen` — draft form
+- `GithubIssueDetailView` — embeddable detail composition and lifecycle actions
+- `NewGithubIssueView` — embeddable draft form
 - `GithubIssueDispatchSheet` — current/new Session target selection
 - `GithubIssuesConnectionState` — disconnected/authorization/no-repository states
 
-These are implementation pieces behind the feature route, not new public seams.
+These are implementation pieces behind the feature Module, not new public
+navigation destinations.
 
 ## Delivery slices
 
-1. Restructure list and move persistent connection UI to Settings.
-2. Add repository picker, last-repository persistence, and automatic
-   session-to-repository resolution inside the Module.
-3. Add rich Issue rows, relative time, refresh, and stable empty/error states.
-4. Redesign detail actions, overflow menu, and exact destructive confirmation.
-5. Redesign New Issue navigation and repository-scoped drafts.
-6. Add repository-safe current/new Session dispatch with explicit Triage-first
+1. Add the Codex-style anchored Issue quick popover to the Session header.
+2. Register one `Issues` tab in the existing right-workspace panel manager.
+3. Refactor list/detail/create screens into embeddable feature views shared by
+   desktop panel and mobile sheet.
+4. Preserve repository picker, automatic Session association, rich rows,
+   refresh, pagination, drafts, lifecycle actions, and exact deletion safety.
+5. Add repository-safe current/new Session dispatch with explicit Triage-first
    launch tasks and automatic continuation after an Agent-ready outcome.
-7. Add translations, accessibility, component tests, and mobile acceptance.
+6. Remove the desktop/global Issues navigation entry and obsolete centered
+   Session Modal while retaining Settings connection management.
+7. Add translations, accessibility, component tests, and desktop/mobile live
+   acceptance for popover → panel transitions.
 
 Each slice must keep `devGithubIssuesEnabled=false` behavior unchanged and avoid
 modifying the official Happy GitHub profile flow.
 
 ## Acceptance criteria
 
-1. A connected returning user reaches their last/context repository Issue list
-   without passing account-management UI.
-2. Phone, tablet, and desktop layouts use Happy's navigation, surfaces, width,
-   spacing, theme, and interaction patterns.
-3. List rows show number, title, labels, relative update time, and comment count;
-   pull to refresh preserves content on failure.
+1. A connected desktop user opens the current Session repository Issue list in
+   an anchored popover without navigation or Session resize.
+2. Selecting or creating an Issue closes the popover and opens one `Issues` tab
+   in the existing right workspace alongside Side Session panels.
+3. Popover and embedded list rows show number, title, labels, relative update
+   time, and comment count; refresh preserves content on failure and pagination
+   is not artificially capped at five.
 4. Repository selection is compact, searchable, and remembered locally. A
    session with one accessible GitHub repository opens it automatically; only
    missing, ambiguous, or inaccessible remotes require user selection.
-5. Detail shows required metadata and Markdown; Close/Reopen is primary and
-   permanent delete is capability-gated in overflow with an exact confirmation.
-6. New Issue uses native header actions, prevents duplicate submission, and
-   preserves a repository-scoped draft after failure or user-approved exit.
+5. Embedded detail shows required metadata and Markdown; Close/Reopen is
+   available and permanent delete is capability-gated in overflow with an exact
+   confirmation.
+6. Embedded New Issue prevents duplicate submission and preserves a
+   repository-scoped draft after failure or user-approved exit.
 7. Creating an Issue does not start work. `Work on this issue` targets only a
    matching current/new Session and explicitly invokes repository-required
    Triage before implementation.
 8. Triage pauses for required maintainer decisions, stops on non-Agent outcomes,
    and automatically continues the same Session after a confirmed Agent-ready
    outcome without exposing workflow state in the Issue UI.
-9. Disconnected, no-repository, offline, permission, not-found, rate-limit,
+9. Closing Issues does not close, replace, or reset Side Sessions; switching the
+   parent Session cannot leak repository or selected-Issue state.
+10. Disconnected, no-repository, offline, permission, not-found, rate-limit,
    loading, empty, and retry states follow this specification.
-10. With the feature flag off or in a regular browser, official Happy navigation
+11. With the feature flag off or in a regular browser, official Happy navigation
    and behavior remain unchanged.
-11. Windows and at least one mobile platform pass live list/detail/create/
-   close/reopen acceptance; eligible deletion is verified where available.
+12. Windows passes live popover → Issues-tab → detail/create/dispatch acceptance;
+   at least one mobile platform passes the corresponding sheet flow.

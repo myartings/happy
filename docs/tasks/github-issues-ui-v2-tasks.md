@@ -1,16 +1,17 @@
 # Tasks: Happy GitHub Issues UI v2
 
-Status: implemented with accepted mobile/toolchain gap
+Status: Session-panel reimplementation approved
 Specification: `docs/specs/github-issues-ui-v2.md`
 Workspace: `docs/workspace/github-issues-ui-v2/`
 
 ## Goal
 
-Replace the functional settings-style GitHub Issues screens with the approved
-Happy-native, Session-first experience. Keep Issue creation separate from Agent
+Replace the functional settings-style/full-route GitHub Issues experience with
+the approved Session-owned interaction: a Codex-style anchored quick popover
+for browse/select, followed by one `Issues` tab in the existing right workspace
+for detail/create/lifecycle/dispatch. Keep Issue creation separate from Agent
 dispatch; when dispatch is requested, target only a matching Session, explicitly
-Triage first when the repository requires it, and continue automatically after
-the confirmed Agent-ready outcome.
+Triage first when required, and continue automatically after Agent-ready.
 
 ## Guardrails
 
@@ -22,6 +23,9 @@ the confirmed Agent-ready outcome.
   Projects, assignees, notifications, or realtime synchronization.
 - Do not expose Triage labels, Agent Briefs, Workspace gates, branches,
   worktrees, or validation state in the Issue UI.
+- Do not expose a desktop sidebar/top-level Issues destination or add a new
+  third pane. Reuse the existing Session header popover and right workspace.
+- Keep one Issues panel tab per parent Session, not one tab per Issue.
 - Keep GitHub parsing, repository association, dispatch task construction, and
   error normalization inside the feature Module rather than host call sites.
 - Preserve unrelated dirty files and existing Project Todos behavior.
@@ -285,8 +289,8 @@ T1..T7       ─► T8 integration and live acceptance
 - Localize all new user-facing strings.
 - Add accessibility labels, roles, selected/disabled states, dynamic text
   behavior, minimum touch targets, and non-color-only feedback.
-- Verify centered desktop/tablet width and phone safe-area behavior without a
-  new tab or third pane.
+- Preserve the legacy full-route responsive behavior only where it remains an
+  internal/mobile adapter; do not add a new application-level pane.
 
 ### Allowed files
 
@@ -354,24 +358,114 @@ T1..T7       ─► T8 integration and live acceptance
 - Tauri build/install/launch acceptance on Windows.
 - Recorded mobile/manual evidence.
 
+## Approved reimplementation slices
+
+T1-T8 document the completed reusable foundations and the superseded full-route
+composition. The following slices own the approved Session-panel redesign.
+
+## T9 — Session Issue quick popover
+
+### Scope
+
+- Replace the temporary centered Session Modal and desktop/global Issue entry
+  with an anchored Session-header popover using Happy's existing overlay
+  primitives.
+- Show the verified Session repository, Open/Closed filters, paginated compact
+  rows, refresh state, and New Issue entry.
+- Close on click-away, Escape, or toggle; preserve the Session layout.
+- Selecting an Issue emits a feature-local selection event for the right
+  workspace rather than navigating a full route.
+
+### Acceptance
+
+- Opening the popover never navigates, resizes, or replaces the Session.
+- The list is not capped at five and preserves content on refresh failure.
+- Repository ambiguity/access failures use the existing guarded picker/state.
+- Keyboard, hover, focus, click-away, and accessibility behavior match existing
+  Happy anchored popovers.
+
+## T10 — Right-workspace Issues panel tab
+
+### Scope
+
+- Extend the existing right-workspace panel mode with `issues` behind the
+  GitHub Issues feature flag.
+- Ensure one Issues panel tab per parent Session and coexistence with Side
+  Session, Changes, and All Files panels.
+- Add an internal list → detail → create stack and preserve safe per-Session
+  repository/filter/selection state.
+- Selecting/creating from the quick popover opens and activates this tab.
+
+### Acceptance
+
+- Opening Issues does not create a new application sidebar or third pane.
+- Closing/switching Issues never closes or resets Side Sessions.
+- Selecting another Issue updates the existing Issues tab instead of adding a
+  tab per Issue.
+- Parent-Session switches cannot leak repositories or Issue state.
+
+## T11 — Embed existing Issue workflows
+
+### Scope
+
+- Refactor reusable list, detail, create, connection, and dispatch composition
+  out of full-route screens into feature-local embeddable views.
+- Preserve Close/Reopen, capability-gated delete, Open on GitHub, drafts,
+  Device Flow, repository resolution, and Triage-first dispatch behavior.
+- Focus the current Session composer after draft append without auto-send.
+- Adapt the same state model to a mobile bottom/full-height sheet.
+
+### Acceptance
+
+- No CRUD, destructive-action, repository-safety, draft, or Triage behavior is
+  lost in the composition change.
+- Desktop detail/create/dispatch stay inside the Issues panel.
+- Mobile closes back to the same Session.
+
+## T12 — Remove obsolete navigation and complete acceptance
+
+### Scope
+
+- Remove the desktop/sidebar and home-level everyday Issues entry plus the
+  temporary centered Session Modal.
+- Keep Settings connection management and internal route adapters only where
+  required for mobile/deep-link compatibility.
+- Add transition, panel coexistence, state-isolation, feature-off, and browser
+  regression tests.
+- Build/install Happy dev and perform Windows plus available mobile acceptance.
+
+### Acceptance
+
+- The only everyday Issue entry is the current Session header.
+- Popover → Issues tab → detail/create/dispatch passes end to end.
+- Feature-off and official Happy behavior remain unchanged.
+- The feature branch remains isolated and low-coupling for future upstream
+  merges.
+
 ## Acceptance coverage
 
 | Spec criterion | Owning tasks |
 | --- | --- |
-| AC1 returning list without account UI | T2, T3, T7 |
-| AC2 Happy-native responsive UI | T3, T4, T5, T7 |
-| AC3 rich list and preserved refresh | T1, T3 |
+| AC1 anchored Session popover | T9 |
+| AC2 popover to right-workspace tab | T9, T10 |
+| AC3 rich paginated list and preserved refresh | T1, T3, T9 |
 | AC4 repository selection/association | T1, T2 |
-| AC5 detail/lifecycle/delete | T1, T4 |
-| AC6 creation and drafts | T1, T5 |
+| AC5 embedded detail/lifecycle/delete | T1, T4, T11 |
+| AC6 embedded creation and drafts | T1, T5, T11 |
 | AC7 explicit repository-safe Triage dispatch | T1, T6 |
 | AC8 Triage stop/continue behavior | T6 |
-| AC9 complete state model | T1, T3, T5, T7 |
-| AC10 feature/browser isolation | T1, T7, T8 |
-| AC11 desktop/mobile live acceptance | T8 |
+| AC9 panel coexistence and Session isolation | T10 |
+| AC10 complete blocking/error state model | T1, T3, T5, T7, T11 |
+| AC11 feature/browser isolation | T1, T7, T8, T12 |
+| AC12 desktop/mobile live acceptance | T12 |
 
 ## Progress
 
+- `2026-08-10`: approved Session-panel revision supersedes the everyday
+  full-route/sidebar composition. T9-T12 now own the Codex-style quick popover,
+  right-workspace Issues tab, embedded workflows, obsolete-navigation removal,
+  and new live acceptance. Existing Module, CRUD, Device Flow, repository
+  resolution, and Triage dispatch foundations remain reusable.
 - `2026-08-10`: approved UI v2 specification decomposed into eight planned
   implementation tasks.
 - `2026-08-10`: T1 completed with feature-local controller contracts, preserved
