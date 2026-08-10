@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "side-chat-quick-panel",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Push the feature branch and open a PR targeting dev when authorized.",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/side-chat-quick-panel.md records eight approved acceptance criteria",
+      "updated": "2026-08-09T21:14:28+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/side-chat-quick-panel/decisions.md records the approved Codex-UI/Happy-behavior boundary",
+      "updated": "2026-08-09T21:14:28+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature is limited to Happy app UI, local settings, tests, and workflow evidence",
+      "updated": "2026-08-09T21:14:28+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "No auth, data migration, server, daemon, sync, protocol, or destructive behavior changes",
+      "updated": "2026-08-09T21:14:28+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Feature-gated UI, local setting, state helper, and regression tests are implemented in the isolated worktree",
+      "updated": "2026-08-09T21:31:28+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Typecheck, all 1032 Happy App tests, targeted tests, workflow validation, diff check, release compile, and ad-hoc process smoke passed",
+      "updated": "2026-08-09T21:31:28+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: changes stay in app presentation/local settings/tests/workflow docs and preserve existing Happy side-chat behavior",
+      "updated": "2026-08-09T21:31:28+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Installed branch build passed typecheck, tests, compile/package/install verification, and user-confirmed final right-edge visual inspection",
+      "updated": "2026-08-10T06:20:38+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-09T21:11:45+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-09T21:14:28+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/side-chat-quick-panel.md records eight approved acceptance criteria"
+    },
+    {
+      "at": "2026-08-09T21:14:28+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/side-chat-quick-panel/decisions.md records the approved Codex-UI/Happy-behavior boundary"
+    },
+    {
+      "at": "2026-08-09T21:14:28+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature is limited to Happy app UI, local settings, tests, and workflow evidence"
+    },
+    {
+      "at": "2026-08-09T21:14:28+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "No auth, data migration, server, daemon, sync, protocol, or destructive behavior changes"
+    },
+    {
+      "at": "2026-08-09T21:14:28+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Define the quick-panel state helper and feature-gated component seams"
+    },
+    {
+      "at": "2026-08-09T21:25:01+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Finish UI integration and validate desktop behavior"
+    },
+    {
+      "at": "2026-08-09T21:31:28+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Feature-gated UI, local setting, state helper, and regression tests are implemented in the isolated worktree"
+    },
+    {
+      "at": "2026-08-09T21:31:28+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Install the branch build for final pixel-level comparison"
+    },
+    {
+      "at": "2026-08-09T21:31:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Typecheck, all 1032 Happy App tests, targeted tests, workflow validation, diff check, release compile, and ad-hoc process smoke passed"
+    },
+    {
+      "at": "2026-08-09T21:31:28+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: changes stay in app presentation/local settings/tests/workflow docs and preserve existing Happy side-chat behavior"
+    },
+    {
+      "at": "2026-08-10T06:19:54+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive verified feature and create the authorized branch commit"
+    },
+    {
+      "at": "2026-08-10T06:20:38+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Installed branch build passed typecheck, tests, compile/package/install verification, and user-confirmed final right-edge visual inspection"
+    },
+    {
+      "at": "2026-08-10T06:20:38+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Added a feature-gated Codex-inspired Side Chat quick panel while preserving Happy side-chat behavior, file tools, persistence, and official fallback UI; installed build and final edge placement verified.; commit: pending; follow-up: Push the feature branch and open a PR targeting dev when authorized."
+    }
+  ],
+  "updated": "2026-08-10T06:20:38+00:00",
+  "archivedAt": "2026-08-10T06:20:38+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Added a feature-gated Codex-inspired Side Chat quick panel while preserving Happy side-chat behavior, file tools, persistence, and official fallback UI; installed build and final edge placement verified.",
+  "archiveFollowUp": "Push the feature branch and open a PR targeting dev when authorized."
+}

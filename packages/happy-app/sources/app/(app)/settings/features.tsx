@@ -35,6 +35,7 @@ export default function FeaturesSettingsScreen() {
     const [groupActiveSessionsByDate, setGroupActiveSessionsByDate] = useSettingMutable('groupActiveSessionsByDate');
     const [devShowActiveSessionRuntimeEnabled, setDevShowActiveSessionRuntimeEnabled] = useLocalSettingMutable('devShowActiveSessionRuntimeEnabled');
     const [devShowSessionModelEnabled, setDevShowSessionModelEnabled] = useLocalSettingMutable('devShowSessionModelEnabled');
+    const [devSideChatQuickPanelEnabled, setDevSideChatQuickPanelEnabled] = useLocalSettingMutable('devSideChatQuickPanelEnabled');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -85,6 +86,14 @@ export default function FeaturesSettingsScreen() {
                 title="Personal Development"
                 footer="Device-local feature switches for comparing with the official Happy experience. Turning one off keeps its data."
             >
+                <Item
+                    title="Side Chat Quick Panel"
+                    titleAccessory={<DevFeatureBadge />}
+                    subtitle="Use a Codex-style header toggle and compact right-side chat panel"
+                    icon={<Ionicons name="chatbox-ellipses-outline" size={29} color="#007AFF" />}
+                    rightElement={<Switch value={devSideChatQuickPanelEnabled} onValueChange={setDevSideChatQuickPanelEnabled} />}
+                    showChevron={false}
+                />
                 <Item
                     title="Project Todos"
                     titleAccessory={<DevFeatureBadge />}

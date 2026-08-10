@@ -21,6 +21,7 @@ describe('personal development local settings', () => {
             devGroupActiveSessionsByDateEnabled: false,
             devShowActiveSessionRuntimeEnabled: false,
             devShowSessionModelEnabled: true,
+            devSideChatQuickPanelEnabled: true,
         });
     });
 
@@ -37,6 +38,7 @@ describe('personal development local settings', () => {
             devGroupActiveSessionsByDateEnabled: false,
             devShowActiveSessionRuntimeEnabled: false,
             devShowSessionModelEnabled: true,
+            devSideChatQuickPanelEnabled: true,
         });
     });
 
@@ -53,6 +55,7 @@ describe('personal development local settings', () => {
             devGroupActiveSessionsByDateEnabled: false,
             devShowActiveSessionRuntimeEnabled: false,
             devShowSessionModelEnabled: false,
+            devSideChatQuickPanelEnabled: true,
         });
     });
 
