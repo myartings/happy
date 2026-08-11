@@ -13,9 +13,11 @@ Do not force push for this workflow.
 
 ## Personal Feature Development
 
-Keep `main` clean and tracking `upstream/main`. Personal-only features branch
-from `dev` and merge back through review; upstream-bound work branches from a
-clean `main`.
+Keep the product tree on `main` equivalent to `upstream/main`; only the
+allowlisted personal devtools infrastructure described below may differ.
+Personal-only features branch from `dev` and merge back through review;
+upstream-bound work branches from `upstream/main` or another verified clean
+official base.
 
 Every formal personal feature uses the repository-local lifecycle:
 
@@ -36,3 +38,15 @@ Start -> Plan -> Scope -> Build -> Verify -> Review -> Finish -> Archive
 - Do not run the upstream template's full synchronization manifest in this
   repository. Use `.ai/template-adoption.json` for dry-run-first workflow-core
   updates so Happy-owned rules and skills remain intact.
+
+## Personal Branch Model
+
+- `upstream/main` is the official source baseline.
+- Personal `main` may differ from `upstream/main` only in `devtools/`, `.agents/skills/happy-desktop-update/`, `.agents/skills/happy-ios-release/`, `AGENTS.md`, and `.gitignore`.
+- `dev` is the personal product integration, desktop build, and release branch.
+- Merge official updates into personal `main`, validate the devtools-only delta, then merge `main` into `dev`.
+- Do not use `git reset`, history rewriting, or force pushes to synchronize these branches.
+
+## Happy Devtools
+
+Cross-platform client operations live in `devtools/`; use `devtools/happyctl` on macOS/Linux and `devtools/happyctl.ps1` on Windows. Generated reports, logs, backups, downloaded runtimes, credentials, and machine-local configuration must remain outside tracked source.
