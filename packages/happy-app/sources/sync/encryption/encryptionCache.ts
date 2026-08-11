@@ -1,10 +1,6 @@
 import { AgentState, Metadata, MachineMetadata } from '../storageTypes';
 import { DecryptedMessage } from '../storageTypes';
-
-interface CacheEntry<T> {
-    data: T;
-    accessTime: number;
-}
+import { LruMap } from './lruMap';
 
 /**
  * In-memory cache for decrypted session data to avoid expensive re-decryption
@@ -12,12 +8,6 @@ interface CacheEntry<T> {
  * Uses messageId as key for messages (immutable)
  */
 export class EncryptionCache {
-    private agentStateCache = new Map<string, CacheEntry<AgentState>>();
-    private metadataCache = new Map<string, CacheEntry<Metadata>>();
-    private messageCache = new Map<string, CacheEntry<DecryptedMessage>>();
-    private machineMetadataCache = new Map<string, CacheEntry<MachineMetadata>>();
-    private daemonStateCache = new Map<string, CacheEntry<any>>();
-    
     // Configuration
     private readonly maxAgentStates = 1000;
     private readonly maxMetadata = 1000;
@@ -25,17 +15,18 @@ export class EncryptionCache {
     private readonly maxMachineMetadata = 500;
     private readonly maxDaemonStates = 500;
 
+    private agentStateCache = new LruMap<string, AgentState>(this.maxAgentStates);
+    private metadataCache = new LruMap<string, Metadata>(this.maxMetadata);
+    private messageCache = new LruMap<string, DecryptedMessage>(this.maxMessages);
+    private machineMetadataCache = new LruMap<string, MachineMetadata>(this.maxMachineMetadata);
+    private daemonStateCache = new LruMap<string, any>(this.maxDaemonStates);
+
     /**
      * Get cached agent state for a session
      */
     getCachedAgentState(sessionId: string, version: number): AgentState | null {
         const key = `${sessionId}:${version}`;
-        const entry = this.agentStateCache.get(key);
-        if (entry) {
-            entry.accessTime = Date.now();
-            return entry.data;
-        }
-        return null;
+        return this.agentStateCache.get(key) ?? null;
     }
 
     /**
@@ -43,13 +34,7 @@ export class EncryptionCache {
      */
     setCachedAgentState(sessionId: string, version: number, data: AgentState): void {
         const key = `${sessionId}:${version}`;
-        this.agentStateCache.set(key, {
-            data,
-            accessTime: Date.now()
-        });
-        
-        // Evict if over limit
-        this.evictOldest(this.agentStateCache, this.maxAgentStates);
+        this.agentStateCache.set(key, data);
     }
 
     /**
@@ -57,12 +42,7 @@ export class EncryptionCache {
      */
     getCachedMetadata(sessionId: string, version: number): Metadata | null {
         const key = `${sessionId}:${version}`;
-        const entry = this.metadataCache.get(key);
-        if (entry) {
-            entry.accessTime = Date.now();
-            return entry.data;
-        }
-        return null;
+        return this.metadataCache.get(key) ?? null;
     }
 
     /**
@@ -70,38 +50,21 @@ export class EncryptionCache {
      */
     setCachedMetadata(sessionId: string, version: number, data: Metadata): void {
         const key = `${sessionId}:${version}`;
-        this.metadataCache.set(key, {
-            data,
-            accessTime: Date.now()
-        });
-        
-        // Evict if over limit
-        this.evictOldest(this.metadataCache, this.maxMetadata);
+        this.metadataCache.set(key, data);
     }
 
     /**
      * Get cached decrypted message
      */
     getCachedMessage(messageId: string): DecryptedMessage | null {
-        const entry = this.messageCache.get(messageId);
-        if (entry) {
-            entry.accessTime = Date.now();
-            return entry.data;
-        }
-        return null;
+        return this.messageCache.get(messageId) ?? null;
     }
 
     /**
      * Cache decrypted message
      */
     setCachedMessage(messageId: string, data: DecryptedMessage): void {
-        this.messageCache.set(messageId, {
-            data,
-            accessTime: Date.now()
-        });
-        
-        // Evict if over limit
-        this.evictOldest(this.messageCache, this.maxMessages);
+        this.messageCache.set(messageId, data);
     }
 
     /**
@@ -109,12 +72,7 @@ export class EncryptionCache {
      */
     getCachedMachineMetadata(machineId: string, version: number): MachineMetadata | null {
         const key = `${machineId}:${version}`;
-        const entry = this.machineMetadataCache.get(key);
-        if (entry) {
-            entry.accessTime = Date.now();
-            return entry.data;
-        }
-        return null;
+        return this.machineMetadataCache.get(key) ?? null;
     }
 
     /**
@@ -122,13 +80,7 @@ export class EncryptionCache {
      */
     setCachedMachineMetadata(machineId: string, version: number, data: MachineMetadata): void {
         const key = `${machineId}:${version}`;
-        this.machineMetadataCache.set(key, {
-            data,
-            accessTime: Date.now()
-        });
-        
-        // Evict if over limit
-        this.evictOldest(this.machineMetadataCache, this.maxMachineMetadata);
+        this.machineMetadataCache.set(key, data);
     }
 
     /**
@@ -136,12 +88,7 @@ export class EncryptionCache {
      */
     getCachedDaemonState(machineId: string, version: number): any | undefined {
         const key = `${machineId}:${version}`;
-        const entry = this.daemonStateCache.get(key);
-        if (entry) {
-            entry.accessTime = Date.now();
-            return entry.data;
-        }
-        return undefined;
+        return this.daemonStateCache.get(key);
     }
 
     /**
@@ -149,13 +96,7 @@ export class EncryptionCache {
      */
     setCachedDaemonState(machineId: string, version: number, data: any): void {
         const key = `${machineId}:${version}`;
-        this.daemonStateCache.set(key, {
-            data,
-            accessTime: Date.now()
-        });
-        
-        // Evict if over limit
-        this.evictOldest(this.daemonStateCache, this.maxDaemonStates);
+        this.daemonStateCache.set(key, data);
     }
 
     /**
@@ -222,27 +163,4 @@ export class EncryptionCache {
         };
     }
 
-    /**
-     * Evict oldest entries when cache exceeds limit (LRU eviction)
-     */
-    private evictOldest<T>(cache: Map<string, CacheEntry<T>>, maxSize: number): void {
-        if (cache.size <= maxSize) {
-            return;
-        }
-
-        // Find oldest entry by access time
-        let oldestKey: string | null = null;
-        let oldestTime = Infinity;
-        
-        for (const [key, entry] of cache.entries()) {
-            if (entry.accessTime < oldestTime) {
-                oldestTime = entry.accessTime;
-                oldestKey = key;
-            }
-        }
-        
-        if (oldestKey) {
-            cache.delete(oldestKey);
-        }
-    }
 }

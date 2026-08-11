@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/client-performance-hotspots/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/client-performance-hotspots.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/tasks/client-performance-hotspots-tasks.md","reason":"Completion checklist"}
+{"path":"packages/happy-app/sources/utils/messageTarget.test.ts","reason":"Prompt target regression coverage"}
+{"path":"packages/happy-app/sources/sync/encryption/encryptionCache.ts","reason":"LRU implementation and adjacent test target"}
+{"path":"packages/happy-app/package.json","reason":"App verification command definitions"}

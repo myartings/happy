@@ -11,8 +11,19 @@ export type MessageTargetRequest = {
     createdAt?: number;
     revision: number;
     requestKey: string;
-    renderAll: boolean;
 };
+
+export const MAX_MESSAGE_TARGET_SCROLL_RETRIES = 3;
+
+export function getNextMessageTargetScrollRetry(
+    activeRequestKey: string | null,
+    failedRequestKey: string | null,
+    completedAttempts: number,
+): number | null {
+    if (!activeRequestKey || activeRequestKey !== failedRequestKey) return null;
+    if (completedAttempts >= MAX_MESSAGE_TARGET_SCROLL_RETRIES) return null;
+    return completedAttempts + 1;
+}
 
 export function createMessageTargetRequest(
     messageId: string,
@@ -27,7 +38,6 @@ export function createMessageTargetRequest(
         ...(createdAt !== undefined ? { createdAt } : {}),
         revision,
         requestKey: `prompt:${revision}`,
-        renderAll: true,
     };
 }
 

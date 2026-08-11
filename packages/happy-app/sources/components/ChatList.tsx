@@ -15,7 +15,7 @@ import { Octicons } from '@expo/vector-icons';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { resolveControlMode } from '@/sync/controlHandoff';
 import { usesControlledSessionUi } from '@/sync/rig';
-import { createMessageTargetRequest, getMessageTargetNativeId, resolveMessageTargetAction, type MessageTargetRequest } from '@/utils/messageTarget';
+import { createMessageTargetRequest, getMessageTargetNativeId, getNextMessageTargetScrollRetry, resolveMessageTargetAction, type MessageTargetRequest } from '@/utils/messageTarget';
 import { SessionPromptHistoryNavigator } from './SessionPromptHistoryNavigator';
 import { resolveVisiblePromptId } from '@/utils/sessionPromptHistory';
 import { revealWebMessage } from '@/utils/webMessageReveal';
@@ -108,6 +108,10 @@ const ChatListInternal = React.memo((props: {
     const handledTargetRequestRef = React.useRef<string | null>(null);
     const targetIndexRef = React.useRef<number | null>(null);
     const targetMessageIdRef = React.useRef<string | null>(null);
+    const targetRequestKeyRef = React.useRef<string | null>(null);
+    const targetScrollRetryAttemptsRef = React.useRef(0);
+    const targetScrollRetryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const webRevealCleanupRef = React.useRef<(() => void) | null>(null);
     const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
     const [localMessageTarget, setLocalMessageTarget] = React.useState<MessageTargetRequest | null>(null);
     const [activePromptId, setActivePromptId] = React.useState<string | null>(null);
@@ -166,7 +170,6 @@ const ChatListInternal = React.memo((props: {
         ? `route:${props.targetMessageId}:${props.targetMessageLocalId ?? ''}:${props.targetMessageCreatedAt ?? ''}`
         : null;
     const targetRequestKey = localMessageTarget?.requestKey ?? routeTargetKey;
-    const renderAllForTarget = localMessageTarget ? localMessageTarget.renderAll : !!props.targetMessageId;
     const targetAction = React.useMemo(
         () => resolveMessageTargetAction(
             displayItems.map((item) => ({
@@ -184,6 +187,7 @@ const ChatListInternal = React.memo((props: {
     );
     targetIndexRef.current = targetAction.type === 'scroll' ? targetAction.index : null;
     targetMessageIdRef.current = targetAction.type === 'scroll' ? targetAction.messageId : null;
+    targetRequestKeyRef.current = targetRequestKey;
 
     // Tracks which groups are explicitly collapsed. Groups start collapsed;
     // pending approval groups are the only ones we auto-expand.
@@ -367,6 +371,21 @@ const ChatListInternal = React.memo((props: {
         handledTargetRequestRef.current = null;
     }, [routeTargetKey]);
 
+    const cancelTargetScrollRetry = React.useCallback(() => {
+        if (targetScrollRetryTimerRef.current !== null) {
+            clearTimeout(targetScrollRetryTimerRef.current);
+            targetScrollRetryTimerRef.current = null;
+        }
+        webRevealCleanupRef.current?.();
+        webRevealCleanupRef.current = null;
+        targetScrollRetryAttemptsRef.current = 0;
+    }, []);
+
+    React.useEffect(() => {
+        cancelTargetScrollRetry();
+        return cancelTargetScrollRetry;
+    }, [cancelTargetScrollRetry, props.sessionId, targetRequestKey]);
+
     React.useEffect(() => {
         if (!targetMessageId || !targetRequestKey || handledTargetRequestRef.current === targetRequestKey) return;
 
@@ -376,9 +395,6 @@ const ChatListInternal = React.memo((props: {
         }
         if (targetAction.type === 'not-found' && targetRequestKey.startsWith('prompt:')) {
             handledTargetRequestRef.current = targetRequestKey;
-            setLocalMessageTarget((current) => current?.requestKey === targetRequestKey
-                ? { ...current, renderAll: false }
-                : current);
             return;
         }
         if (targetAction.type !== 'scroll') {
@@ -390,29 +406,30 @@ const ChatListInternal = React.memo((props: {
         setBottomDockVisibility(false);
         let cancelWebReveal: (() => void) | null = null;
         const scrollTimer = setTimeout(() => {
-            if (Platform.OS !== 'web') {
-                flatListRef.current?.scrollToIndex({
-                    index: targetAction.index,
-                    animated: true,
-                    viewPosition: 0.5,
-                });
-            }
+            // Rendering the entire history made the target DOM node available on web,
+            // but defeated virtualization. Drive the virtual list to the target on every
+            // platform first; the web reveal loop then performs the final centering once
+            // React Native Web mounts the requested row.
+            flatListRef.current?.scrollToIndex({
+                index: targetAction.index,
+                animated: true,
+                viewPosition: 0.5,
+            });
             if (Platform.OS === 'web') {
                 cancelWebReveal = revealWebMessage(getMessageTargetNativeId(targetAction.messageId));
+                webRevealCleanupRef.current = cancelWebReveal;
             }
         }, 50);
         const highlightTimer = setTimeout(() => {
             setHighlightedMessageId((current) => current === targetAction.messageId ? null : current);
-            if (targetRequestKey.startsWith('prompt:')) {
-                setLocalMessageTarget((current) => current?.requestKey === targetRequestKey
-                    ? { ...current, renderAll: false }
-                    : current);
-            }
         }, 3000);
         return () => {
             clearTimeout(scrollTimer);
             clearTimeout(highlightTimer);
             cancelWebReveal?.();
+            if (webRevealCleanupRef.current === cancelWebReveal) {
+                webRevealCleanupRef.current = null;
+            }
         };
     }, [props.sessionId, setBottomDockVisibility, targetAction, targetMessageId, targetRequestKey]);
 
@@ -553,13 +570,12 @@ const ChatListInternal = React.memo((props: {
                 ref={flatListRef}
                 data={displayItems}
                 inverted={true}
-                initialNumToRender={renderAllForTarget ? 500 : 10}
-                maxToRenderPerBatch={renderAllForTarget ? 500 : 10}
-                updateCellsBatchingPeriod={renderAllForTarget ? 0 : 50}
-                windowSize={renderAllForTarget ? 101 : 21}
-                removeClippedSubviews={renderAllForTarget ? false : undefined}
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                updateCellsBatchingPeriod={50}
+                windowSize={21}
                 keyExtractor={keyExtractor}
-                maintainVisibleContentPosition={renderAllForTarget ? undefined : {
+                maintainVisibleContentPosition={{
                     // Anchor on the second-newest message (index 1), not the
                     // newest. The newest slot (index 0) gets a brand-new item
                     // each agent token, which would otherwise destabilise the
@@ -606,19 +622,34 @@ const ChatListInternal = React.memo((props: {
                 onEndReachedThreshold={0.5}
                 onScrollToIndexFailed={(info) => {
                     const targetIndex = targetIndexRef.current;
-                    if (targetIndex === null) return;
+                    const failedRequestKey = targetRequestKeyRef.current;
+                    const nextAttempt = getNextMessageTargetScrollRetry(
+                        targetRequestKeyRef.current,
+                        failedRequestKey,
+                        targetScrollRetryAttemptsRef.current,
+                    );
+                    if (targetIndex === null || nextAttempt === null) return;
+                    targetScrollRetryAttemptsRef.current = nextAttempt;
                     flatListRef.current?.scrollToOffset({
                         offset: Math.max(0, info.averageItemLength * targetIndex),
                         animated: false,
                     });
-                    setTimeout(() => {
+                    if (targetScrollRetryTimerRef.current !== null) {
+                        clearTimeout(targetScrollRetryTimerRef.current);
+                    }
+                    targetScrollRetryTimerRef.current = setTimeout(() => {
+                        targetScrollRetryTimerRef.current = null;
+                        if (targetRequestKeyRef.current !== failedRequestKey) return;
                         flatListRef.current?.scrollToIndex({
                             index: targetIndex,
                             animated: true,
                             viewPosition: 0.5,
                         });
                         const targetMessageId = targetMessageIdRef.current;
-                        if (targetMessageId) revealWebMessage(getMessageTargetNativeId(targetMessageId));
+                        if (targetMessageId && Platform.OS === 'web') {
+                            webRevealCleanupRef.current?.();
+                            webRevealCleanupRef.current = revealWebMessage(getMessageTargetNativeId(targetMessageId));
+                        }
                     }, 100);
                 }}
             />
@@ -626,6 +657,7 @@ const ChatListInternal = React.memo((props: {
                 <SessionPromptHistoryNavigator
                     sessionId={props.sessionId}
                     loadedMessages={props.messages}
+                    hasMoreOlder={props.hasMoreOlder}
                     activePromptId={activePromptId}
                     bottomContentInset={props.bottomContentInset}
                     onSelectPrompt={handleSelectPrompt}

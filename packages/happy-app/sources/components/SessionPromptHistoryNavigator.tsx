@@ -30,11 +30,13 @@ type PromptHistoryState = {
     fetched: PromptHistoryItem[];
     hasMore: boolean;
     nextBeforeSeq: number | null;
+    started: boolean;
 };
 
 export const SessionPromptHistoryNavigator = React.memo(function SessionPromptHistoryNavigator(props: {
     sessionId: string;
     loadedMessages: readonly Message[];
+    hasMoreOlder: boolean;
     activePromptId: string | null;
     bottomContentInset?: number;
     onSelectPrompt: (messageId: string, localId?: string | null, createdAt?: number) => void;
@@ -46,63 +48,56 @@ export const SessionPromptHistoryNavigator = React.memo(function SessionPromptHi
         fetched: [],
         hasMore: false,
         nextBeforeSeq: null,
+        started: false,
     });
     const [isLoading, setIsLoading] = React.useState(false);
     const [loadFailed, setLoadFailed] = React.useState(false);
     const [mobileOpen, setMobileOpen] = React.useState(false);
-    const [reloadRevision, setReloadRevision] = React.useState(0);
     const requestGenerationRef = React.useRef(0);
 
     React.useEffect(() => {
         const generation = requestGenerationRef.current + 1;
         requestGenerationRef.current = generation;
-        setHistory({ fetched: [], hasMore: false, nextBeforeSeq: null });
+        setHistory({ fetched: [], hasMore: false, nextBeforeSeq: null, started: false });
         setLoadFailed(false);
-        setIsLoading(true);
-
-        void sync.loadUserPromptsPage(props.sessionId).then((page) => {
-            if (requestGenerationRef.current !== generation) return;
-            setHistory({
-                fetched: page.items,
-                hasMore: page.hasMore,
-                nextBeforeSeq: page.nextBeforeSeq,
-            });
-        }).catch(() => {
-            if (requestGenerationRef.current === generation) setLoadFailed(true);
-        }).finally(() => {
-            if (requestGenerationRef.current === generation) setIsLoading(false);
-        });
+        setIsLoading(false);
 
         return () => {
             if (requestGenerationRef.current === generation) {
                 requestGenerationRef.current += 1;
             }
         };
-    }, [props.sessionId, reloadRevision]);
+    }, [props.sessionId]);
 
     const prompts = React.useMemo(() => mergeSessionPromptHistory(
         props.sessionId,
         history.fetched,
         props.loadedMessages,
     ), [history.fetched, props.loadedMessages, props.sessionId]);
+    const hasMore = history.started ? history.hasMore : props.hasMoreOlder;
 
     const loadEarlier = React.useCallback(async () => {
-        if (isLoading || !history.hasMore || history.nextBeforeSeq === null) return;
+        if (isLoading || !hasMore) return;
         const generation = requestGenerationRef.current;
         setIsLoading(true);
         setLoadFailed(false);
         try {
             let pagination: { cursor: number | null; hasMore: boolean } = {
-                cursor: history.nextBeforeSeq,
-                hasMore: history.hasMore,
+                cursor: history.started ? history.nextBeforeSeq : null,
+                hasMore,
             };
+            let canUseDefaultCursor = !history.started;
             const additional: PromptHistoryItem[] = [];
 
             // Tool-heavy turns can fill a raw-message page without containing
             // a user message. Walk a few pages so one tap usually reveals data.
             for (let pageCount = 0; pageCount < 4; pageCount += 1) {
-                if (!pagination.hasMore || pagination.cursor === null) break;
-                const page = await sync.loadUserPromptsPage(props.sessionId, pagination.cursor);
+                if (!pagination.hasMore || (pagination.cursor === null && !canUseDefaultCursor)) break;
+                const page = await sync.loadUserPromptsPage(
+                    props.sessionId,
+                    pagination.cursor ?? undefined,
+                );
+                canUseDefaultCursor = false;
                 additional.push(...page.items);
                 pagination = { hasMore: page.hasMore, cursor: page.nextBeforeSeq };
                 if (page.items.length > 0) break;
@@ -112,21 +107,18 @@ export const SessionPromptHistoryNavigator = React.memo(function SessionPromptHi
                 fetched: [...current.fetched, ...additional],
                 hasMore: pagination.hasMore,
                 nextBeforeSeq: pagination.cursor,
+                started: true,
             }));
         } catch {
             if (requestGenerationRef.current === generation) setLoadFailed(true);
         } finally {
             if (requestGenerationRef.current === generation) setIsLoading(false);
         }
-    }, [history.hasMore, history.nextBeforeSeq, isLoading, props.sessionId]);
+    }, [hasMore, history.nextBeforeSeq, history.started, isLoading, props.sessionId]);
 
     const retryLoad = React.useCallback(() => {
-        if (history.hasMore && history.nextBeforeSeq !== null) {
-            void loadEarlier();
-            return;
-        }
-        setReloadRevision((revision) => revision + 1);
-    }, [history.hasMore, history.nextBeforeSeq, loadEarlier]);
+        void loadEarlier();
+    }, [loadEarlier]);
 
     const selectPrompt = React.useCallback((prompt: PromptHistoryItem) => {
         setMobileOpen(false);
@@ -137,14 +129,14 @@ export const SessionPromptHistoryNavigator = React.memo(function SessionPromptHi
         );
     }, [props.onSelectPrompt]);
 
-    if (prompts.length === 0 && !isLoading) return null;
+    if (prompts.length === 0 && !hasMore && !isLoading && !loadFailed) return null;
 
     if (Platform.OS === 'web' && viewportWidth >= 700) {
         return (
             <DesktopPromptRail
                 prompts={prompts}
                 activePromptId={props.activePromptId}
-                hasMore={history.hasMore}
+                hasMore={hasMore}
                 isLoading={isLoading}
                 loadFailed={loadFailed}
                 onLoadEarlier={loadEarlier}
@@ -226,7 +218,7 @@ export const SessionPromptHistoryNavigator = React.memo(function SessionPromptHi
                                     <Text style={styles.mobilePromptText} numberOfLines={3}>{item.text}</Text>
                                 </Pressable>
                             )}
-                            ListFooterComponent={history.hasMore || isLoading || loadFailed ? (
+                            ListFooterComponent={hasMore || isLoading || loadFailed ? (
                                 <Pressable
                                     accessibilityRole="button"
                                     disabled={isLoading}
@@ -300,6 +292,12 @@ const DesktopPromptRail = React.memo(function DesktopPromptRail(props: {
         onKeyDown: (event: any) => {
             if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown' && event.key !== 'Enter') return;
             event.preventDefault();
+            if (props.prompts.length === 0) {
+                if (event.key === 'ArrowUp' && props.hasMore && !props.isLoading) {
+                    props.onLoadEarlier();
+                }
+                return;
+            }
             const current = hoveredIndex ?? effectiveActiveIndex;
             if (event.key === 'Enter') {
                 props.onSelect(props.prompts[current]);

@@ -8,6 +8,15 @@ type SelectSessionMessageCacheEvictionsOptions = {
     maxRetained: number;
 };
 
+/** Return the sessions that are mounted and should be refreshed after a socket reconnect. */
+export function selectVisibleSessionIds(
+    visibleSessionRefCounts: ReadonlyMap<string, number>,
+): string[] {
+    return Array.from(visibleSessionRefCounts.entries())
+        .filter(([, refCount]) => refCount > 0)
+        .map(([sessionId]) => sessionId);
+}
+
 /**
  * Select the least-recently-used, unprotected session message caches to evict.
  *

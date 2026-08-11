@@ -1,0 +1,9 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/client-performance-hotspots.md","reason":"Accepted behavior and boundaries"}
+{"path":"docs/tasks/client-performance-hotspots-tasks.md","reason":"Implementation and verification checklist"}
+{"path":"packages/happy-app/sources/components/SessionPromptHistoryNavigator.tsx","reason":"Prompt history loading policy"}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Chat virtualization and prompt target navigation"}
+{"path":"packages/happy-app/sources/utils/messageTarget.ts","reason":"Prompt target request contract"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Prompt paging and visible-session refresh APIs"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Session visibility and reconnect ownership"}
+{"path":"packages/happy-app/sources/sync/encryption/encryptionCache.ts","reason":"Encryption cache LRU implementation"}
