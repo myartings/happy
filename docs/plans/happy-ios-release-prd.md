@@ -1,7 +1,7 @@
 # Happy Personal iOS Release
 
 Status: Accepted for implementation
-Owner: personal Happy `dev` branch
+Owner: personal Happy `main` branch
 
 ## Problem
 
@@ -32,7 +32,7 @@ local report without recording credentials.
 - Treat private IPA hosting as optional artifact mirroring. EAS Internal
   Distribution remains the first installation path.
 - Keep binary release and EAS Update as separate commands and reports.
-- Require actual releases from clean `dev`; allow dry-run from a feature branch
+- Require actual releases from clean `main`; allow dry-run from a feature branch
   so implementation can be verified before merge.
 
 ## Risk controls

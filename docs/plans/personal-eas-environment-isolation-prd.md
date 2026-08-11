@@ -1,7 +1,7 @@
 # Personal EAS Environment Isolation
 
 Status: Accepted for implementation
-Owner: personal Happy `dev` branch
+Owner: personal Happy `main` branch
 
 ## Problem
 

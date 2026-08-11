@@ -18,7 +18,7 @@ The maintenance goal is stronger than merely making the current route work:
 - Happy's official account, sync, and GitHub profile behavior must remain
   unchanged.
 - The personal feature should stay isolated enough to merge future upstream
-  changes into `dev` with small, obvious host seams.
+  changes into personal `main` with small, obvious host seams.
 - No GitHub App private key or client secret may be shipped in a client.
 - Access must remain limited to Metadata read and Issues read/write on
   repositories selected during GitHub App installation.

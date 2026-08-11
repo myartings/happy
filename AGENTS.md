@@ -13,11 +13,10 @@ Do not force push for this workflow.
 
 ## Personal Feature Development
 
-Keep the product tree on `main` equivalent to `upstream/main`; only the
-allowlisted personal devtools infrastructure described below may differ.
-Personal-only features branch from `dev` and merge back through review;
-upstream-bound work branches from `upstream/main` or another verified clean
-official base.
+Use `main` as the default personal integration branch. Personal-only features
+branch from `main` and merge back through review. Upstream-bound work branches
+directly from `upstream/main`; do not base upstream contributions on `official`
+or personal `main`.
 
 Every formal personal feature uses the repository-local lifecycle:
 
