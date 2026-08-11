@@ -242,7 +242,30 @@ export function resolveGithubRepositoryAssociation(
 export function createGithubRepositoryEntryResolver(
     dependencies: GithubRepositoryEntryResolverDependencies,
 ) {
+    const localResolutions = new Map<string, GithubRepositoryRef>();
+    const localKey = (input: GithubRepositoryEntryInput): string | null => {
+        const sessionId = input.sessionId?.trim();
+        const path = input.path?.trim().replace(/\\/g, '/').replace(/\/+$/, '');
+        return sessionId && path ? JSON.stringify([sessionId, path]) : null;
+    };
+    const rememberLocal = (input: GithubRepositoryEntryInput, repository: GithubRepositoryRef): void => {
+        const key = localKey(input);
+        if (key) localResolutions.set(key, repository);
+    };
+
     return {
+        resolveLocal(input: GithubRepositoryEntryInput): GithubRepositoryRef | null {
+            const key = localKey(input);
+            const cached = key ? localResolutions.get(key) : null;
+            if (cached) return cached;
+
+            const lastRepository = dependencies.getPreferences().lastRepository;
+            if (!lastRepository) return null;
+            const matchesManagedProjectPath = projectNamesFromPath(input.path).some((projectName) => (
+                projectName.toLowerCase() === lastRepository.repo.toLowerCase()
+            ));
+            return matchesManagedProjectPath ? lastRepository : null;
+        },
         remember(repository: GithubRepository, manualAssociation?: GithubRepositoryManualAssociation): void {
             const preferences = dependencies.getPreferences();
             const associations = { ...preferences.associations };
@@ -266,6 +289,9 @@ export function createGithubRepositoryEntryResolver(
                 lastRepository: { owner: repository.owner, repo: repository.name },
                 associations,
             });
+            if (manualAssociation) {
+                rememberLocal(manualAssociation.identity, { owner: repository.owner, repo: repository.name });
+            }
         },
         async resolve(input: GithubRepositoryEntryInput): Promise<GithubRepositoryResolution> {
             const repositories = await dependencies.listRepositories();
@@ -277,6 +303,7 @@ export function createGithubRepositoryEntryResolver(
                 preferences.lastRepository,
             );
             if (pathRepository) {
+                rememberLocal(input, { owner: pathRepository.owner, repo: pathRepository.name });
                 dependencies.savePreferences({
                     ...preferences,
                     lastRepository: { owner: pathRepository.owner, repo: pathRepository.name },
@@ -307,6 +334,7 @@ export function createGithubRepositoryEntryResolver(
             const associationKey = createGithubRepositoryAssociationKey(identity);
 
             if (resolution.status === 'resolved') {
+                rememberLocal(input, { owner: resolution.repository.owner, repo: resolution.repository.name });
                 const associations = { ...preferences.associations };
                 if (associationKey && resolution.association) {
                     associations[associationKey] = resolution.association;

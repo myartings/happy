@@ -3,7 +3,7 @@ import * as React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { listIssues, openIssue, push, remember, resolve } = vi.hoisted(() => ({
+const { listIssues, openIssue, push, remember, resolve, resolveLocal } = vi.hoisted(() => ({
     listIssues: vi.fn(async () => ({
         items: [{
             number: 42,
@@ -17,6 +17,7 @@ const { listIssues, openIssue, push, remember, resolve } = vi.hoisted(() => ({
     openIssue: vi.fn(),
     push: vi.fn(),
     remember: vi.fn(),
+    resolveLocal: vi.fn(() => null as { owner: string; repo: string } | null),
     resolve: vi.fn(async () => ({
         status: 'resolved' as const,
         repository: { owner: 'myartings', name: 'happy' },
@@ -103,7 +104,7 @@ vi.mock('./githubIssuesApi', () => ({
     getGithubIssueRelativeTime: () => ({ unit: 'hour', value: 1 }),
     getGithubIssuesErrorMessage: (error: unknown) => error instanceof Error ? error.message : 'Unable to load issues',
     githubIssuesApi: { installationUrl: undefined, listIssues },
-    githubIssuesRepositoryResolver: { remember, resolve },
+    githubIssuesRepositoryResolver: { remember, resolve, resolveLocal },
 }));
 
 import { GithubIssuesButton } from '@/components/GithubIssuesButton';
@@ -126,6 +127,8 @@ beforeEach(() => {
     listIssues.mockClear();
     remember.mockClear();
     resolve.mockClear();
+    resolveLocal.mockReset();
+    resolveLocal.mockReturnValue(null);
 });
 
 function findIssuesEntry(renderer: ReturnType<typeof create>) {
@@ -135,6 +138,30 @@ function findIssuesEntry(renderer: ReturnType<typeof create>) {
 }
 
 describe('GitHub Issues Session entry', () => {
+    it('reopens a locally confirmed Session repository without querying again', async () => {
+        resolveLocal.mockReturnValueOnce({ owner: 'myartings', repo: 'happy-manager' });
+        let renderer: ReturnType<typeof create>;
+        await act(async () => {
+            renderer = create(React.createElement(GithubIssuesButton, {
+                sessionId: 'session-a',
+                cwd: 'C:\\workspace\\happy-manager\\.dev\\worktree\\brave-harbor',
+            }));
+        });
+
+        await act(async () => {
+            findIssuesEntry(renderer!).props.onPress();
+        });
+
+        expect(resolve).not.toHaveBeenCalled();
+        expect(renderer!.root.findByType('Modal' as any).props.visible).toBe(true);
+        expect(listIssues).toHaveBeenCalledWith({
+            owner: 'myartings',
+            repo: 'happy-manager',
+            state: 'open',
+            page: 1,
+        });
+    });
+
     it('opens the anchored loading popover immediately while repository resolution is pending', async () => {
         let completeResolution!: (value: any) => void;
         resolve.mockImplementationOnce(() => new Promise((complete) => {

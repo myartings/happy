@@ -62,6 +62,13 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
             return;
         }
         if (sessionId) {
+            const localRepository = githubIssuesRepositoryResolver.resolveLocal({ sessionId, path: cwd });
+            if (localRepository) {
+                openRepository(localRepository.owner, localRepository.repo);
+                return;
+            }
+        }
+        if (sessionId) {
             buttonRef.current?.measureInWindow?.((x: number, y: number, width: number, height: number) => {
                 setPopoverAnchor({ x, y, width, height });
             });

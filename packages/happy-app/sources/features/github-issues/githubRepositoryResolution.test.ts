@@ -167,6 +167,25 @@ describe('GitHub repository association resolution', () => {
         expect(lookupRemotes).not.toHaveBeenCalled();
     });
 
+    it('reuses the last confirmed managed-worktree repository synchronously', () => {
+        const listRepositories = vi.fn(async () => [repository(1, 'myartings', 'happy-manager')]);
+        const resolver = createGithubRepositoryEntryResolver({
+            listRepositories,
+            lookupRemotes: async () => ({ status: 'failed' }),
+            getPreferences: () => ({
+                lastRepository: { owner: 'myartings', repo: 'happy-manager' },
+                associations: {},
+            }),
+            savePreferences: () => undefined,
+        });
+
+        expect(resolver.resolveLocal({
+            sessionId: 'session-a',
+            path: 'C:\\workspace\\happy-manager\\.dev\\worktree\\brave-harbor',
+        })).toEqual({ owner: 'myartings', repo: 'happy-manager' });
+        expect(listRepositories).not.toHaveBeenCalled();
+    });
+
     it('remembers a manual picker choice without creating a Session association', () => {
         const saved: unknown[] = [];
         const resolver = createGithubRepositoryEntryResolver({
