@@ -13,6 +13,7 @@ const baseLayoutInput = {
     canUseSideChat: true,
     featureEnabled: true,
     fileDiffsSidebarEnabled: false,
+    pickerOpen: false,
     platformSupported: true,
     windowWidth: 1400,
     zenMode: false,
@@ -32,6 +33,13 @@ describe('getSideChatQuickPanelLayout', () => {
         expect(getSideChatQuickPanelLayout({
             ...baseLayoutInput,
             activePanel: 'sideChat',
+        }).showSidebar).toBe(true);
+    });
+
+    it('shows the official picker when explicitly opened without an active panel', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            pickerOpen: true,
         }).showSidebar).toBe(true);
     });
 
@@ -95,8 +103,8 @@ describe('getSideChatQuickPanelToggleAction', () => {
         expect(getSideChatQuickPanelToggleAction({ expanded: false, sideChatCount: 2 })).toBe('open');
     });
 
-    it('creates a side chat only when none exists', () => {
-        expect(getSideChatQuickPanelToggleAction({ expanded: false, sideChatCount: 0 })).toBe('create');
+    it('opens the picker instead of creating a side chat when none exists', () => {
+        expect(getSideChatQuickPanelToggleAction({ expanded: false, sideChatCount: 0 })).toBe('pick');
     });
 });
 

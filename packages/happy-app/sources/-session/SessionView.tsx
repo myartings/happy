@@ -120,12 +120,18 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         () => getGithubIssuesWorkspaceSelection(sessionId),
     );
     const [mobileGithubIssuesVisible, setMobileGithubIssuesVisible] = React.useState(false);
+    const [quickPanelPickerOpen, setQuickPanelPickerOpen] = React.useState(false);
 
     React.useEffect(() => {
         setHeaderBackdropVisible(false);
         setGithubIssuesSelection(getGithubIssuesWorkspaceSelection(sessionId));
         setMobileGithubIssuesVisible(false);
+        setQuickPanelPickerOpen(false);
     }, [sessionId]);
+
+    React.useEffect(() => {
+        if (!sideChatQuickPanelEnabled) setQuickPanelPickerOpen(false);
+    }, [sideChatQuickPanelEnabled]);
 
     // Sidebar panels are user-managed and persisted in local settings so the
     // layout (which panels are open + which is active) survives reloads and
@@ -161,6 +167,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         canUseSideChat: !!sideChatForkSource,
         featureEnabled: sideChatQuickPanelEnabled,
         fileDiffsSidebarEnabled,
+        pickerOpen: quickPanelPickerOpen,
         platformSupported: isRunningOnMac() || Platform.OS === 'web',
         windowWidth,
         zenMode,
@@ -189,6 +196,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     }));
 
     const openSidebarPanel = React.useCallback((panel: SidebarMode) => {
+        setQuickPanelPickerOpen(false);
         const cur = storage.getState().localSettings.sidebarPanelsOpen as SidebarMode[];
         const open = cur.includes(panel) ? cur : [...cur, panel];
         storage.getState().applyLocalSettings({ sidebarPanelsOpen: open, sidebarPanelActive: panel });
@@ -203,6 +211,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         else openSidebarPanel('issues');
     }, [deviceType, openSidebarPanel, updateGithubIssuesSelection]);
     const collapseSidebar = React.useCallback(() => {
+        setQuickPanelPickerOpen(false);
         storage.getState().applyLocalSettings({ sidebarPanelActive: null });
     }, []);
     const selectSidebarPanel = React.useCallback((panel: SidebarMode) => {
@@ -289,9 +298,9 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         } else if (action === 'open') {
             openSidebarPanel('sideChat');
         } else {
-            createSideChat();
+            setQuickPanelPickerOpen(true);
         }
-    }, [collapseSidebar, createSideChat, openSidebarPanel, showSidebar, sideChats.length]);
+    }, [collapseSidebar, openSidebarPanel, showSidebar, sideChats.length]);
 
     const changedFilesCount = gitStatus
         ? gitStatus.modifiedCount + gitStatus.untrackedCount + gitStatus.stagedCount
@@ -432,13 +441,13 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         platform: Platform.OS,
         isTauri: runningInTauri,
     });
-    const quickPanelHeaderControls = showQuickPanelControls && !showSidebar
+    const quickPanelHeaderControls = showQuickPanelControls && (!showSidebar || quickPanelPickerOpen)
         ? (
             <SideChatQuickPanelControls
                 activePanel={sidebarPanelActive}
                 changedFilesCount={changedFilesCount}
                 creating={creatingSideChat}
-                expanded={false}
+                expanded={showSidebar}
                 onOpenAllFiles={() => openSidebarPanel('allFiles')}
                 onOpenChanges={() => openSidebarPanel('changes')}
                 onToggle={toggleQuickSideChatPanel}
@@ -553,7 +562,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                         identityLine={headerProps.identityLine}
                         extraPathSegment={fileViewPath ?? undefined}
                         rightSlot={(diffViewOpen || !!fileViewPath) ? headerRightSlot : headerRight}
-                        rightSlotPinnedToEdge={showQuickPanelControls && !showSidebar && !diffViewOpen && !fileViewPath}
+                        rightSlotPinnedToEdge={!!quickPanelHeaderControls && !diffViewOpen && !fileViewPath}
                         onTitlePress={session ? () => router.push(`/session/${sessionId}/info`) : undefined}
                         onBackPress={() => router.back()}
                     />

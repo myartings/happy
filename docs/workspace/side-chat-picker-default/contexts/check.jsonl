@@ -1,0 +1,3 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/side-chat-picker-default/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/utils/sideChatQuickPanel.test.ts","reason":"Regression coverage for picker-first opening behavior"}

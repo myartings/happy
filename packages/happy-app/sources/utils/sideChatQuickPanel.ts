@@ -26,6 +26,7 @@ export type SideChatQuickPanelLayoutInput = {
     canUseSideChat: boolean;
     featureEnabled: boolean;
     fileDiffsSidebarEnabled: boolean;
+    pickerOpen: boolean;
     platformSupported: boolean;
     windowWidth: number;
     zenMode: boolean;
@@ -55,16 +56,18 @@ export function getSideChatQuickPanelLayout(input: SideChatQuickPanelLayoutInput
         canShowSidebar,
         showFileActions: wideDesktop && input.canUseFiles,
         showQuickControls: wideDesktop && input.canUseSideChat && !input.zenMode,
-        showSidebar: canShowSidebar && !input.zenMode && input.activePanel !== null,
+        showSidebar: canShowSidebar
+            && !input.zenMode
+            && (input.activePanel !== null || input.pickerOpen),
     };
 }
 
-export type SideChatQuickPanelToggleAction = 'collapse' | 'create' | 'open';
+export type SideChatQuickPanelToggleAction = 'collapse' | 'open' | 'pick';
 
 export function getSideChatQuickPanelToggleAction(input: {
     expanded: boolean;
     sideChatCount: number;
 }): SideChatQuickPanelToggleAction {
     if (input.expanded) return 'collapse';
-    return input.sideChatCount > 0 ? 'open' : 'create';
+    return input.sideChatCount > 0 ? 'open' : 'pick';
 }
