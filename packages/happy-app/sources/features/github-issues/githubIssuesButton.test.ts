@@ -3,7 +3,11 @@ import * as React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { listIssues, openIssue, push, remember, resolve, resolveLocal } = vi.hoisted(() => ({
+const { getConnectionState, listIssues, openIssue, push, remember, resolve, resolveLocal } = vi.hoisted(() => ({
+    getConnectionState: vi.fn(async () => ({
+        status: 'connected' as const,
+        account: { id: 1, login: 'myartings', avatarUrl: '' },
+    })),
     listIssues: vi.fn(async () => ({
         items: [{
             number: 42,
@@ -103,7 +107,7 @@ vi.mock('./GithubRepositoryPicker', async () => {
 vi.mock('./githubIssuesApi', () => ({
     getGithubIssueRelativeTime: () => ({ unit: 'hour', value: 1 }),
     getGithubIssuesErrorMessage: (error: unknown) => error instanceof Error ? error.message : 'Unable to load issues',
-    githubIssuesApi: { installationUrl: undefined, listIssues },
+    githubIssuesApi: { getConnectionState, installationUrl: undefined, listIssues },
     githubIssuesRepositoryResolver: { remember, resolve, resolveLocal },
 }));
 
@@ -122,6 +126,11 @@ beforeAll(() => {
 afterAll(() => vi.restoreAllMocks());
 
 beforeEach(() => {
+    getConnectionState.mockReset();
+    getConnectionState.mockResolvedValue({
+        status: 'connected',
+        account: { id: 1, login: 'myartings', avatarUrl: '' },
+    });
     push.mockClear();
     openIssue.mockClear();
     listIssues.mockClear();
@@ -138,6 +147,73 @@ function findIssuesEntry(renderer: ReturnType<typeof create>) {
 }
 
 describe('GitHub Issues Session entry', () => {
+    it('opens connection management instead of the repository picker when disconnected', async () => {
+        getConnectionState.mockResolvedValueOnce({ status: 'disconnected' } as any);
+        let renderer: ReturnType<typeof create>;
+        await act(async () => {
+            renderer = create(React.createElement(GithubIssuesButton, {
+                sessionId: 'session-a',
+                cwd: '/work/happy',
+            }));
+        });
+
+        await act(async () => {
+            await findIssuesEntry(renderer!).props.onPress();
+        });
+
+        expect(resolve).not.toHaveBeenCalled();
+        expect(push).toHaveBeenCalledWith({
+            pathname: '/github-issues',
+            params: { mode: 'settings', sourceSessionId: 'session-a' },
+        });
+        expect(renderer!.root.findByType('GithubRepositoryPicker' as any).props.visible).toBe(false);
+    });
+
+    it('opens connection management when the Issues client is unavailable', async () => {
+        getConnectionState.mockRejectedValueOnce(new Error('GitHub Issues is not configured'));
+        let renderer: ReturnType<typeof create>;
+        await act(async () => {
+            renderer = create(React.createElement(GithubIssuesButton, {
+                sessionId: 'session-a',
+                cwd: '/work/happy',
+            }));
+        });
+
+        await act(async () => {
+            await findIssuesEntry(renderer!).props.onPress();
+        });
+
+        expect(resolve).not.toHaveBeenCalled();
+        expect(push).toHaveBeenCalledWith({
+            pathname: '/github-issues',
+            params: { mode: 'settings', sourceSessionId: 'session-a' },
+        });
+        expect(renderer!.root.findByType('GithubRepositoryPicker' as any).props.visible).toBe(false);
+    });
+
+    it('opens connection management when repository discovery requires reauthorization', async () => {
+        resolve.mockRejectedValueOnce(Object.assign(new Error('Reconnect GitHub Issues'), {
+            code: 'reauthorization_required',
+        }));
+        let renderer: ReturnType<typeof create>;
+        await act(async () => {
+            renderer = create(React.createElement(GithubIssuesButton, {
+                sessionId: 'session-a',
+                cwd: '/work/happy',
+            }));
+        });
+
+        await act(async () => {
+            await findIssuesEntry(renderer!).props.onPress();
+        });
+
+        expect(push).toHaveBeenCalledWith({
+            pathname: '/github-issues',
+            params: { mode: 'settings', sourceSessionId: 'session-a' },
+        });
+        expect(renderer!.root.findByType('GithubRepositoryPicker' as any).props.visible).toBe(false);
+    });
+
     it('reopens a locally confirmed Session repository without querying again', async () => {
         resolveLocal.mockReturnValueOnce({ owner: 'myartings', repo: 'happy-manager' });
         let renderer: ReturnType<typeof create>;

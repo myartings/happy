@@ -1,0 +1,4 @@
+{"path":"docs/specs/github-issues-missing-config-entry.md","reason":"Accepted regression behavior and scope"}
+{"path":"docs/specs/github-issues-ui-v2.md","reason":"Parent connection and repository-picker behavior"}
+{"path":"packages/happy-app/sources/components/GithubIssuesButton.tsx","reason":"Session header entry and repository-resolution boundary"}
+{"path":"packages/happy-app/sources/features/github-issues/githubIssuesButton.test.ts","reason":"Focused Session entry regression coverage"}

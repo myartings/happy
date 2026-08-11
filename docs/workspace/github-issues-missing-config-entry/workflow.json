@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "github-issues-missing-config-entry",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Configure the public GitHub App identifiers on macOS, then publish/build/install only when explicitly authorized.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User reported the incorrect Select repository dialog; docs/specs/github-issues-missing-config-entry.md captures the expected recovery behavior.",
+      "updated": "2026-08-11T08:52:39+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D3 accepted in docs/workspace/github-issues-missing-config-entry/decisions.md.",
+      "updated": "2026-08-11T08:52:39+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Narrow client entry boundary, focused tests, and Manager build validation only; docs/specs/github-issues-missing-config-entry.md.",
+      "updated": "2026-08-11T08:52:39+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Low-risk presentation and build preflight correction; no auth, token, permissions, or GitHub mutations.",
+      "updated": "2026-08-11T08:52:39+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Connection-state routing and Manager guard implemented; 69 focused tests and happy-app typecheck passed.",
+      "updated": "2026-08-11T08:58:00+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "69 GitHub Issues tests, app typecheck, Manager syntax, iOS smoke, build guard probe, and whitespace checks passed; validation.md.",
+      "updated": "2026-08-11T08:58:01+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: no auth, credential, permission, CRUD, server, or official-profile changes; finish.md.",
+      "updated": "2026-08-11T08:58:01+00:00"
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "Implementation verified; local client rebuild/install and macOS public App configuration remain explicit follow-ups.",
+      "updated": "2026-08-11T08:58:01+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-11T08:48:20+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-11T08:52:39+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User reported the incorrect Select repository dialog; docs/specs/github-issues-missing-config-entry.md captures the expected recovery behavior."
+    },
+    {
+      "at": "2026-08-11T08:52:39+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D3 accepted in docs/workspace/github-issues-missing-config-entry/decisions.md."
+    },
+    {
+      "at": "2026-08-11T08:52:39+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Narrow client entry boundary, focused tests, and Manager build validation only; docs/specs/github-issues-missing-config-entry.md."
+    },
+    {
+      "at": "2026-08-11T08:52:39+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Low-risk presentation and build preflight correction; no auth, token, permissions, or GitHub mutations."
+    },
+    {
+      "at": "2026-08-11T08:52:39+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add failing connection-state tests, implement routing, then add Manager build guard"
+    },
+    {
+      "at": "2026-08-11T08:58:00+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Connection-state routing and Manager guard implemented; 69 focused tests and happy-app typecheck passed."
+    },
+    {
+      "at": "2026-08-11T08:58:00+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Review whole diff and record final validation"
+    },
+    {
+      "at": "2026-08-11T08:58:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "69 GitHub Issues tests, app typecheck, Manager syntax, iOS smoke, build guard probe, and whitespace checks passed; validation.md."
+    },
+    {
+      "at": "2026-08-11T08:58:01+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: no auth, credential, permission, CRUD, server, or official-profile changes; finish.md."
+    },
+    {
+      "at": "2026-08-11T08:58:01+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive local implementation with commit pending; installation remains unauthorized"
+    },
+    {
+      "at": "2026-08-11T08:58:01+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "Implementation verified; local client rebuild/install and macOS public App configuration remain explicit follow-ups."
+    },
+    {
+      "at": "2026-08-11T08:58:07+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Corrected Session GitHub Issues unavailable-state routing and added fail-closed macOS/Linux Manager build configuration validation.; commit: pending; follow-up: Configure the public GitHub App identifiers on macOS, then publish/build/install only when explicitly authorized."
+    }
+  ],
+  "updated": "2026-08-11T08:58:07+00:00",
+  "archivedAt": "2026-08-11T08:58:07+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Corrected Session GitHub Issues unavailable-state routing and added fail-closed macOS/Linux Manager build configuration validation.",
+  "archiveFollowUp": "Configure the public GitHub App identifiers on macOS, then publish/build/install only when explicitly authorized."
+}

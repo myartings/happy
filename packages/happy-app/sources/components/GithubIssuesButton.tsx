@@ -55,18 +55,19 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
         }
         router.push({ pathname: '/github-issues', params: { owner, repo, ...(sessionId ? { sourceSessionId: sessionId } : {}) } } as any);
     }, [router, sessionId]);
+    const openConnectionManagement = React.useCallback(() => {
+        setContextVisible(false);
+        setPicker(null);
+        router.push({
+            pathname: '/github-issues',
+            params: { mode: 'settings', ...(sessionId ? { sourceSessionId: sessionId } : {}) },
+        } as any);
+    }, [router, sessionId]);
     const openIssues = React.useCallback(async () => {
         if (resolving) return;
         if (sessionId && contextRepository) {
             setContextVisible(true);
             return;
-        }
-        if (sessionId) {
-            const localRepository = githubIssuesRepositoryResolver.resolveLocal({ sessionId, path: cwd });
-            if (localRepository) {
-                openRepository(localRepository.owner, localRepository.repo);
-                return;
-            }
         }
         if (sessionId) {
             buttonRef.current?.measureInWindow?.((x: number, y: number, width: number, height: number) => {
@@ -75,7 +76,21 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
             setContextVisible(true);
         }
         setResolving(true);
+        let connectionReady = false;
         try {
+            const connection = await githubIssuesApi.getConnectionState();
+            if (connection.status !== 'connected') {
+                openConnectionManagement();
+                return;
+            }
+            connectionReady = true;
+            if (sessionId) {
+                const localRepository = githubIssuesRepositoryResolver.resolveLocal({ sessionId, path: cwd });
+                if (localRepository) {
+                    openRepository(localRepository.owner, localRepository.repo);
+                    return;
+                }
+            }
             const resolution = await githubIssuesRepositoryResolver.resolve({ sessionId, path: cwd });
             if (resolution.status === 'resolved') {
                 openRepository(resolution.repository.owner, resolution.repository.name);
@@ -83,7 +98,20 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
             }
             setContextVisible(false);
             setPicker(resolution);
-        } catch {
+        } catch (error) {
+            const errorCode = error && typeof error === 'object' && 'code' in error
+                ? String(error.code)
+                : null;
+            if (!connectionReady || [
+                'not_configured',
+                'not_connected',
+                'reauthorization_required',
+                'secure_storage_unavailable',
+                'unsupported_platform',
+            ].includes(errorCode ?? '')) {
+                openConnectionManagement();
+                return;
+            }
             if (sessionId) {
                 setContextVisible(false);
                 setPicker({
@@ -100,7 +128,7 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
         } finally {
             setResolving(false);
         }
-    }, [contextRepository, cwd, openRepository, resolving, router, sessionId]);
+    }, [contextRepository, cwd, openConnectionManagement, openRepository, resolving, router, sessionId]);
     if (!enabled || (Platform.OS === 'web' && !isTauri())) return null;
     return (
         <>
