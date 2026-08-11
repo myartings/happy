@@ -1,0 +1,4 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Owns quick-sidebar visibility and session creation wiring"}
+{"path":"packages/happy-app/sources/components/FilesSidebar.tsx","reason":"Owns the existing official sidebar picker to reuse"}
+{"path":"packages/happy-app/sources/utils/sideChatQuickPanel.ts","reason":"Owns testable quick-panel layout and toggle decisions"}
