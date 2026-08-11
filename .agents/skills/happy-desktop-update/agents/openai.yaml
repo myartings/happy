@@ -1,0 +1,4 @@
+interface:
+  display_name: "Happy Desktop Update"
+  short_description: "Update Happy Desktop from the personal dev branch"
+  default_prompt: "Use $happy-desktop-update to sync official Happy into my personal dev branch, then build, install, and verify the Desktop client."

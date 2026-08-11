@@ -1,0 +1,20 @@
+{
+  "$schema": "../../happy/node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Happy (official baseline)",
+  "identifier": "com.slopus.happy.official-baseline",
+  "app": {
+    "windows": [
+      {
+        "title": "Happy (official baseline)",
+        "width": 1680,
+        "height": 1050,
+        "titleBarStyle": "Overlay",
+        "trafficLightPosition": {
+          "x": 22,
+          "y": 22
+        },
+        "hiddenTitle": true
+      }
+    ]
+  }
+}

@@ -78,3 +78,7 @@ happy-workspaces/
 .supervibe/
 
 .context/
+
+# Happy personal devtools local configuration
+/devtools/config.env
+/devtools/config.windows.ps1
