@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/constants/Typography';
 import { ShortcutHintBadge, useShortcutHints } from './ShortcutHints';
 import { ProjectTodoButton } from './ProjectTodoButton';
-import { GithubIssuesButton } from './GithubIssuesButton';
 import { useHasArchivedSessions } from '@/hooks/useVisibleSessionListViewData';
 
 const stylesheet = StyleSheet.create((theme) => ({
@@ -152,7 +151,6 @@ export const SidebarView = React.memo(() => {
             </View>
 
             <ProjectTodoButton showLabel style={styles.projectTodosButton} />
-            <GithubIssuesButton showLabel style={styles.projectTodosButton} />
 
             {realtimeStatus !== 'disconnected' && (
                 <VoiceAssistantStatusBar variant="sidebar" />

@@ -68,6 +68,16 @@ describe('personal development local settings', () => {
         });
     });
 
+    it('persists the Issues right-workspace tab alongside Side Session', () => {
+        expect(localSettingsParse({
+            sidebarPanelsOpen: ['sideChat', 'issues'],
+            sidebarPanelActive: 'issues',
+        })).toMatchObject({
+            sidebarPanelsOpen: ['sideChat', 'issues'],
+            sidebarPanelActive: 'issues',
+        });
+    });
+
     it('updates independent features without changing the other switches', () => {
         expect(applyLocalSettings(localSettingsDefaults, {
             devPromptHistoryNavigatorEnabled: false,

@@ -31,6 +31,21 @@ export type GithubIssueRelativeTime =
 
 export type GithubIssueDispatchWorkflow = 'triage-first' | 'repository-rules';
 
+export interface GithubIssuesSessionEntryContext {
+    enabled: boolean;
+    hasSession: boolean;
+    deviceType: 'phone' | 'tablet' | 'desktop';
+    platform: string;
+    isTauri: boolean;
+}
+
+export function shouldShowGithubIssuesSessionEntry(
+    context: GithubIssuesSessionEntryContext,
+): boolean {
+    if (!context.enabled || !context.hasSession) return false;
+    return context.isTauri || (context.deviceType === 'phone' && context.platform !== 'web');
+}
+
 export interface GithubIssueDispatchTaskInput {
     repository: GithubRepositoryRef;
     issue: Pick<GithubIssue, 'number' | 'title' | 'url'>;

@@ -33,6 +33,7 @@ import { sessionAbort, sessionGoalAction, sessionSetAgentModes, spawnSideChat, s
 import { storage, useIsDataReady, useLocalSetting, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
 import { useSession } from '@/sync/storage';
 import { getSessionForkSource } from '@/utils/sessionFork';
+import { isTauri } from '@/utils/isTauri';
 import { useHappyAction } from '@/hooks/useHappyAction';
 import { HappyError } from '@/utils/errors';
 import { Session } from '@/sync/storageTypes';
@@ -58,7 +59,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import { useMemo } from 'react';
-import { ActivityIndicator, Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Modal as NativeModal, Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -81,6 +82,13 @@ import {
 } from '@/sync/rig';
 import { RigActivityBar } from '@/components/RigActivityBar';
 import { getSideChatQuickPanelLayout, getSideChatQuickPanelToggleAction, resolveSideChatQuickPanelActivePanel } from '@/utils/sideChatQuickPanel';
+import { shouldShowGithubIssuesSessionEntry } from '@/features/github-issues/githubIssuesPresentation';
+import {
+    getGithubIssuesWorkspaceSelection,
+    rememberGithubIssuesWorkspaceSelection,
+    type GithubIssuesWorkspaceSelection,
+} from '@/features/github-issues/githubIssuesWorkspace';
+import { GithubIssuesWorkspacePanel } from '@/features/github-issues/GithubIssuesWorkspacePanel';
 
 export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
     const sessionId = props.id;
@@ -104,20 +112,36 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
     const sideChatQuickPanelEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
     const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
+    const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
     const zenMode = useLocalSetting('zenMode');
     const gitStatus = useSessionGitStatus(sessionId);
     const sideChatForkSource = session ? getSessionForkSource(session) : null;
     const [headerBackdropVisible, setHeaderBackdropVisible] = React.useState(false);
+    const [githubIssuesSelection, setGithubIssuesSelection] = React.useState<GithubIssuesWorkspaceSelection | null>(
+        () => getGithubIssuesWorkspaceSelection(sessionId),
+    );
+    const [mobileGithubIssuesVisible, setMobileGithubIssuesVisible] = React.useState(false);
 
     React.useEffect(() => {
         setHeaderBackdropVisible(false);
+        setGithubIssuesSelection(getGithubIssuesWorkspaceSelection(sessionId));
+        setMobileGithubIssuesVisible(false);
     }, [sessionId]);
 
     // Sidebar panels are user-managed and persisted in local settings so the
     // layout (which panels are open + which is active) survives reloads and
     // long absences. State is device-local, shared across sessions.
-    const sidebarPanelsOpen = useLocalSetting('sidebarPanelsOpen') as SidebarMode[];
-    const sidebarPanelActiveRaw = useLocalSetting('sidebarPanelActive') as SidebarMode | null;
+    const persistedSidebarPanelsOpen = useLocalSetting('sidebarPanelsOpen') as SidebarMode[];
+    const persistedSidebarPanelActive = useLocalSetting('sidebarPanelActive') as SidebarMode | null;
+    const sidebarPanelsOpen = React.useMemo(
+        () => githubIssuesEnabled
+            ? persistedSidebarPanelsOpen
+            : persistedSidebarPanelsOpen.filter((panel) => panel !== 'issues'),
+        [githubIssuesEnabled, persistedSidebarPanelsOpen],
+    );
+    const sidebarPanelActiveRaw = !githubIssuesEnabled && persistedSidebarPanelActive === 'issues'
+        ? null
+        : persistedSidebarPanelActive;
     // Guard against an inconsistent persisted value: the active panel must be
     // one of the open panels, otherwise fall back to the last opened (or none).
     const sidebarPanelActive = React.useMemo<SidebarMode | null>(() => {
@@ -134,6 +158,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const sidebarLayout = getSideChatQuickPanelLayout({
         activePanel: sidebarPanelActive,
         canUseFiles,
+        canUseGithubIssues: githubIssuesEnabled,
         canUseSideChat: !!sideChatForkSource,
         featureEnabled: sideChatQuickPanelEnabled,
         fileDiffsSidebarEnabled,
@@ -169,6 +194,15 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         const open = cur.includes(panel) ? cur : [...cur, panel];
         storage.getState().applyLocalSettings({ sidebarPanelsOpen: open, sidebarPanelActive: panel });
     }, []);
+    const updateGithubIssuesSelection = React.useCallback((selection: GithubIssuesWorkspaceSelection) => {
+        rememberGithubIssuesWorkspaceSelection(sessionId, selection);
+        setGithubIssuesSelection(selection);
+    }, [sessionId]);
+    const openGithubIssuesWorkspace = React.useCallback((selection: GithubIssuesWorkspaceSelection) => {
+        updateGithubIssuesSelection(selection);
+        if (deviceType === 'phone') setMobileGithubIssuesVisible(true);
+        else openSidebarPanel('issues');
+    }, [deviceType, openSidebarPanel, updateGithubIssuesSelection]);
     const collapseSidebar = React.useCallback(() => {
         storage.getState().applyLocalSettings({ sidebarPanelActive: null });
     }, []);
@@ -391,38 +425,57 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                 : undefined,
         };
     }, [session, isDataReady, showSessionModel]);
-    const headerRight = session && deviceType === 'phone' && Platform.OS !== 'web'
+    const runningInTauri = isTauri();
+    const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
+        enabled: githubIssuesEnabled,
+        hasSession: !!session,
+        deviceType,
+        platform: Platform.OS,
+        isTauri: runningInTauri,
+    });
+    const quickPanelHeaderControls = showQuickPanelControls && !showSidebar
         ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <GithubIssuesButton tintColor={theme.colors.header.tint} sessionId={sessionId} cwd={session.metadata?.path} />
-                <Pressable
-                    onPress={() => router.push(`/session/${sessionId}/info`)}
-                    hitSlop={10}
-                >
-                    <Avatar
-                        id={getSessionAvatarId(session)}
-                        size={28}
-                        monochrome={!headerProps.isConnected}
-                        flavor={session.metadata?.flavor}
-                        clientId={session.metadata?.client?.id}
-                    />
-                </Pressable>
+            <SideChatQuickPanelControls
+                activePanel={sidebarPanelActive}
+                changedFilesCount={changedFilesCount}
+                creating={creatingSideChat}
+                expanded={false}
+                onOpenAllFiles={() => openSidebarPanel('allFiles')}
+                onOpenChanges={() => openSidebarPanel('changes')}
+                onToggle={toggleQuickSideChatPanel}
+                showFileActions={showQuickPanelFileActions}
+            />
+        )
+        : null;
+    const headerRight = showGithubIssuesSessionEntry || quickPanelHeaderControls
+        ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <GithubIssuesButton
+                    tintColor={theme.colors.header.tint}
+                    sessionId={sessionId}
+                    cwd={session?.metadata?.path}
+                    onOpenIssue={openGithubIssuesWorkspace}
+                    onNewIssue={openGithubIssuesWorkspace}
+                    onViewAll={openGithubIssuesWorkspace}
+                />
+                {session && deviceType === 'phone' && Platform.OS !== 'web' ? (
+                    <Pressable
+                        onPress={() => router.push(`/session/${sessionId}/info`)}
+                        hitSlop={10}
+                    >
+                        <Avatar
+                            id={getSessionAvatarId(session)}
+                            size={28}
+                            monochrome={!headerProps.isConnected}
+                            flavor={session.metadata?.flavor}
+                            clientId={session.metadata?.client?.id}
+                        />
+                    </Pressable>
+                ) : null}
+                {quickPanelHeaderControls}
             </View>
         )
-        : showQuickPanelControls && !showSidebar
-            ? (
-                <SideChatQuickPanelControls
-                    activePanel={sidebarPanelActive}
-                    changedFilesCount={changedFilesCount}
-                    creating={creatingSideChat}
-                    expanded={false}
-                    onOpenAllFiles={() => openSidebarPanel('allFiles')}
-                    onOpenChanges={() => openSidebarPanel('changes')}
-                    onToggle={toggleQuickSideChatPanel}
-                    showFileActions={showQuickPanelFileActions}
-                />
-            )
-            : null;
+        : null;
 
     const mainContent = (
         <>
@@ -511,6 +564,26 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                     )}
                 </View>
             )}
+            {deviceType === 'phone' && githubIssuesSelection ? (
+                <NativeModal
+                    visible={mobileGithubIssuesVisible}
+                    animationType="slide"
+                    onRequestClose={() => setMobileGithubIssuesVisible(false)}
+                >
+                    <View style={{ flex: 1, paddingTop: safeArea.top, backgroundColor: theme.colors.groupped.background }}>
+                        <View style={{ minHeight: 46, alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 10 }}>
+                            <Pressable accessibilityRole="button" accessibilityLabel={t('githubIssues.closeQuickPopover')} onPress={() => setMobileGithubIssuesVisible(false)} hitSlop={8}>
+                                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+                            </Pressable>
+                        </View>
+                        <GithubIssuesWorkspacePanel
+                            parentSessionId={sessionId}
+                            selection={githubIssuesSelection}
+                            onSelectionChange={updateGithubIssuesSelection}
+                        />
+                    </View>
+                </NativeModal>
+            ) : null}
         </>
     );
 
@@ -598,6 +671,8 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                         quickPanelChangedFilesCount={changedFilesCount}
                         quickPanelShowFileActions={showQuickPanelFileActions}
                         onCollapseQuickPanel={collapseSidebar}
+                        githubIssuesSelection={githubIssuesSelection}
+                        onGithubIssuesSelectionChange={updateGithubIssuesSelection}
                     />
                 </View>
             </Animated.View>

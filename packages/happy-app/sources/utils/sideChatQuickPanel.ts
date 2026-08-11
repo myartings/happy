@@ -1,5 +1,9 @@
 export const SIDE_CHAT_QUICK_PANEL_MIN_WINDOW_WIDTH = 1100;
-export type SideChatQuickPanelMode = 'changes' | 'allFiles' | 'sideChat';
+export type SideChatQuickPanelMode = 'changes' | 'allFiles' | 'sideChat' | 'issues';
+
+export function getRightWorkspaceTabs(openPanels: SideChatQuickPanelMode[]): SideChatQuickPanelMode[] {
+    return openPanels.filter((panel, index) => openPanels.indexOf(panel) === index);
+}
 
 export function resolveSideChatQuickPanelActivePanel(input: {
     featureEnabled: boolean;
@@ -18,6 +22,7 @@ export function resolveSideChatQuickPanelActivePanel(input: {
 export type SideChatQuickPanelLayoutInput = {
     activePanel: SideChatQuickPanelMode | null;
     canUseFiles: boolean;
+    canUseGithubIssues: boolean;
     canUseSideChat: boolean;
     featureEnabled: boolean;
     fileDiffsSidebarEnabled: boolean;
@@ -31,19 +36,21 @@ export function getSideChatQuickPanelLayout(input: SideChatQuickPanelLayoutInput
         && input.windowWidth >= SIDE_CHAT_QUICK_PANEL_MIN_WINDOW_WIDTH;
 
     if (!input.featureEnabled) {
-        const canShowSidebar = wideDesktop
-            && input.fileDiffsSidebarEnabled
-            && input.canUseFiles;
+        const issuesSelected = input.activePanel === 'issues' && input.canUseGithubIssues;
+        const canShowSidebar = wideDesktop && (
+            issuesSelected
+            || (input.fileDiffsSidebarEnabled && input.canUseFiles)
+        );
         return {
             canShowSidebar,
             showFileActions: false,
             showQuickControls: false,
-            showSidebar: canShowSidebar && !input.zenMode,
+            showSidebar: canShowSidebar && !input.zenMode && (issuesSelected || input.fileDiffsSidebarEnabled),
         };
     }
 
     const canShowSidebar = wideDesktop
-        && (input.canUseSideChat || input.canUseFiles);
+        && (input.canUseSideChat || input.canUseFiles || input.canUseGithubIssues);
     return {
         canShowSidebar,
         showFileActions: wideDesktop && input.canUseFiles,

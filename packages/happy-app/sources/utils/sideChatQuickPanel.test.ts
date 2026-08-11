@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
     getSideChatQuickPanelLayout,
     getSideChatQuickPanelToggleAction,
+    getRightWorkspaceTabs,
     resolveSideChatQuickPanelActivePanel,
 } from './sideChatQuickPanel';
 
 const baseLayoutInput = {
     activePanel: null,
     canUseFiles: true,
+    canUseGithubIssues: true,
     canUseSideChat: true,
     featureEnabled: true,
     fileDiffsSidebarEnabled: false,
@@ -31,6 +33,18 @@ describe('getSideChatQuickPanelLayout', () => {
             ...baseLayoutInput,
             activePanel: 'sideChat',
         }).showSidebar).toBe(true);
+    });
+
+    it('opens the Issues workspace even when files and Side Session are unavailable', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            activePanel: 'issues',
+            canUseFiles: false,
+            canUseSideChat: false,
+        })).toMatchObject({
+            canShowSidebar: true,
+            showSidebar: true,
+        });
     });
 
     it('restores the official always-visible sidebar behavior when disabled', () => {
@@ -101,5 +115,24 @@ describe('resolveSideChatQuickPanelActivePanel', () => {
             openPanels: ['changes', 'sideChat'],
             storedActivePanel: null,
         })).toBe('sideChat');
+    });
+});
+
+describe('getRightWorkspaceTabs', () => {
+    it('keeps one Issues tab beside Side Session without duplicating either', () => {
+        expect(getRightWorkspaceTabs(['sideChat', 'issues', 'issues', 'sideChat'])).toEqual(['sideChat', 'issues']);
+    });
+
+    it('keeps a selected Issues workspace usable when Side Session quick mode is disabled', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            activePanel: 'issues',
+            canUseFiles: false,
+            canUseSideChat: false,
+            featureEnabled: false,
+        })).toMatchObject({
+            canShowSidebar: true,
+            showSidebar: true,
+        });
     });
 });

@@ -2,21 +2,24 @@
 
 | ID | Question | Status | Decision/evidence |
 | --- | --- | --- | --- |
-| D1 | Product hierarchy | resolved | Session is primary; Issues are a lightweight recording and Agent-dispatch surface. |
-| D2 | Navigation | resolved | Top-level route remains isolated, with phone Session/home and desktop sidebar shortcuts; no bottom tab or third pane. |
+| D1 | Product hierarchy | resolved | Session is primary; Issues are a Session-owned lightweight recording and Agent-dispatch accessory. |
+| D2 | Navigation | resolved | The old top-level/sidebar decision is superseded. The Session header opens a Codex-style anchored Issue popover; selecting/creating opens one `Issues` tab in the existing right workspace alongside Side Sessions. Phone uses a Session bottom/full-height sheet. |
 | D3 | Repository association | resolved | Automatically resolve an accessible Session GitHub remote; show the picker only for missing, ambiguous, inaccessible, or failed resolution. |
 | D4 | Creation behavior | resolved | Creating records an Issue only; `Work on it` is a separate explicit action. |
 | D5 | Dispatch targets | resolved | Current/active matching Sessions or a correctly scoped new Session; never a known different repository. |
 | D6 | Triage boundary | resolved | Dispatch explicitly invokes repository-required Triage; maintain required maintainer decisions, then continue automatically after the confirmed Agent-ready outcome. |
 | D7 | Workflow visibility | resolved | Do not expose Triage labels, Agent Briefs, Workspace gates, branches, worktrees, or verification state in Issue UI. |
 | D8 | Infrastructure | resolved | Preserve Device Flow, device-local credentials, direct GitHub transport, feature flag, and official-profile isolation. |
+| D9 | Panel multiplicity | resolved | Keep one Issues panel tab per parent Session, not one tab per Issue; selecting another Issue updates that tab's internal stack/history. |
+| D10 | Quick versus durable surface | resolved | The popover is browse/select/create-entry only. Detail, lifecycle actions, creation, and dispatch live in the durable Issues panel/sheet. |
 
 ## Scoping assessment
 
 Result: `ready`.
 
-- Intensity: Feature. The change spans one feature Module and narrow Session,
-  route, Settings, and navigation seams, with cross-platform UI acceptance.
+- Intensity: Feature. The reimplementation spans one feature Module and narrow
+  Session-header, right-workspace panel, Settings, and mobile-sheet seams, with
+  cross-platform UI acceptance.
 - Contract: approved `docs/specs/github-issues-ui-v2.md` plus the eight-slice
   `docs/tasks/github-issues-ui-v2-tasks.md` plan.
 - Decisions: D1-D8 are resolved; no material product decision is open.
@@ -26,9 +29,10 @@ Result: `ready`.
 - Execution: one implementation owner on branch
   `myartings/github-issues-ui-v2`; no writer subagents or concurrent edits.
   Follow the serial batches in `execution-plan.md`.
-- Allowed scope: GitHub Issues feature files/routes/tests, narrowly required
-  Session/New Session draft integration, feature Settings, navigation entries,
-  local settings, and translations named by the task plan.
+- Allowed scope: GitHub Issues feature files/views/tests, narrowly required
+  Session/New Session draft integration, Session quick-popover control,
+  right-workspace panel registration, feature Settings, local settings, and
+  translations named by the task plan.
 - Blocked scope: official GitHub profile behavior, server Issue routes,
   credential permissions/storage design, browser support, Session protocol,
   protected native project directories, and unrelated Project Todos behavior.

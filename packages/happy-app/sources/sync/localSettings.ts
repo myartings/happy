@@ -44,8 +44,8 @@ export const LocalSettingsSchema = z.object({
     devSessionListSettingsSynced: z.boolean().describe('Whether device-local session list choices were migrated to account settings'),
     // Right file sidebar: which panels the user has opened and which is active.
     // Persisted so the layout survives reloads and long absences.
-    sidebarPanelsOpen: z.array(z.enum(['changes', 'allFiles', 'sideChat'])).describe('Open right-sidebar panels, in tab order'),
-    sidebarPanelActive: z.enum(['changes', 'allFiles', 'sideChat']).nullable().describe('Currently active right-sidebar panel (null shows the picker)'),
+    sidebarPanelsOpen: z.array(z.enum(['changes', 'allFiles', 'sideChat', 'issues'])).describe('Open right-sidebar panels, in tab order'),
+    sidebarPanelActive: z.enum(['changes', 'allFiles', 'sideChat', 'issues']).nullable().describe('Currently active right-sidebar panel (null shows the picker)'),
     // CLI version acknowledgments - keyed by machineId
     acknowledgedCliVersions: z.record(z.string(), z.string()).describe('Acknowledged CLI versions per machine'),
     // Collapsed Rig projects in the session list - keyed by project id

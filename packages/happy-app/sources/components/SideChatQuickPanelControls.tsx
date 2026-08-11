@@ -30,7 +30,7 @@ export const SideChatQuickPanelControls = React.memo(function SideChatQuickPanel
     onToggle,
     showFileActions,
 }: {
-    activePanel: 'changes' | 'allFiles' | 'sideChat' | null;
+    activePanel: 'changes' | 'allFiles' | 'sideChat' | 'issues' | null;
     changedFilesCount?: number;
     creating: boolean;
     expanded: boolean;

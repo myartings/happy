@@ -6,6 +6,18 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 
 | Date | Command | Result | Notes |
 | --- | --- | --- | --- |
+| `2026-08-10` | Session-panel T9-T12 focused RED/GREEN cycles | passed | Callback-based popover selection, guarded repository fallback, per-Session workspace isolation, Issues-panel availability, persisted panel schema, tab deduplication, and quick-mode independence were each covered by focused failures before implementation passed. |
+| `2026-08-10` | focused Session-panel `vitest` run | passed | 14 files and 87 tests passed for GitHub Issues, right-workspace integration, and local settings. |
+| `2026-08-10` | `pnpm --filter happy-app typecheck` | passed | Anchored popover, right-workspace panel, mobile sheet, and Session integration compile without TypeScript errors. |
+| `2026-08-10` | `pnpm --filter happy-app exec vitest run` | passed | 109 files and 1078 Happy App tests passed after the Session-panel revision. |
+| `2026-08-10` | Session-panel workflow validation/core and `git diff --check` | passed | Selective workflow validation passed, all 14 workflow-core tests passed, and implementation changes have no whitespace errors. |
+| `2026-08-10` | `happy-manager.ps1 build-desktop` | passed | Expo/Tauri production build produced verified MSI and NSIS artifacts for commit `33a4be64`. |
+| `2026-08-10` | `happy-manager.ps1 update-desktop -DryRun` | passed | The NSIS artifact, installed target, backup retention, process stop, and uninstall-registry rollback plan were resolved without changing the installed app. |
+| `2026-08-10` | `happy-manager.ps1 update-desktop` | passed | The manager stopped the previous process, captured rollback state, installed the feature-branch NSIS artifact, and verified the installed executable SHA-256 against the build artifact. |
+| `2026-08-10` | `happy-manager.ps1 verify-desktop` plus persistent relaunch | passed | Version 0.1.0 launched from `C:\Users\myartings\AppData\Local\Happy (dev)\app.exe`; the smoke process was closed and Happy dev was relaunched for user acceptance. |
+| `2026-08-11` | installed Session Issue popover user acceptance | passed | The repaired build opens the correctly anchored Issue popover promptly from the Session header; the slow spinner and incorrect repository-picker fallback no longer reproduce. |
+| `2026-08-10` | Session-panel revision review | passed | User approved the Codex-style Session quick popover → right-workspace Issues tab model; full-route desktop composition is superseded. |
+| `2026-08-10` | revision `validate-happy-workflow.py`, `test-workflow-core.py`, and `git diff --check` | passed | Selective workflow validation passed, all 14 workflow-core tests passed, and revised specification/task/evidence documents have no whitespace errors. |
 | `2026-08-10` | `git diff --check` | passed | Approved spec, task plan, and Workspace evidence have no whitespace errors. |
 | `2026-08-10` | `python scripts/validate-happy-workflow.py` | passed | Happy selective workflow adoption is valid. |
 | `2026-08-10` | `python scripts/test-workflow-core.py` | passed | 14 workflow-core tests passed. |
@@ -42,7 +54,11 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | `2026-08-10` | installed-window visual inspection | passed with bounded evidence | Happy dev rendered normally and visibly exposed the Issues entry; automated component tests supply deeper list/detail/create evidence. |
 | `2026-08-10` | Android `assembleRelease` with JDK 17, all ABI and `x86_64` | unavailable | Online emulator and device detected, but Ninja failed on React Native generated paths over Windows' 260-character limit; no APK or mobile live pass claimed. |
 
-## Acceptance coverage
+## Superseded full-route acceptance baseline
+
+The evidence below remains valid for the reusable Device Flow, repository,
+CRUD, draft, lifecycle, and dispatch foundations. Its desktop composition is no
+longer product acceptance after approval of the Session-panel revision.
 
 | Criterion | Status | Evidence |
 | --- | --- | --- |
@@ -58,10 +74,30 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | AC10 feature/browser isolation | verified | Flag remains default-off, browser exclusion tests and full app regression pass, and official profile API is untouched. |
 | AC11 desktop/mobile live acceptance | accepted gap | Windows build/install/launch passed; Android live acceptance blocked before APK by reproducible Windows CMake path-length failure. |
 
+## Session-panel revision acceptance
+
+| Criterion | Status | Required evidence |
+| --- | --- | --- |
+| AC1 anchored Session popover | verified | Callback/anchor interaction tests pass and installed Windows visual acceptance confirmed prompt, correctly anchored opening. |
+| AC2 popover to Issues tab | automated, live pending | Selection/create transitions and single-tab activation pass; installed-window acceptance remains. |
+| AC3 rich paginated list | verified | Pagination, filter, refresh-preservation, metadata, and uncapped-list paths are implemented and covered. |
+| AC4 repository association | verified | Existing resolver coverage plus per-Session selection isolation pass. |
+| AC5 embedded detail/lifecycle/delete | automated, live pending | Embedded controller/client coverage passes; live Close/Reopen/Delete remains. |
+| AC6 embedded create/drafts | automated, live pending | Embedded form and repository-scoped draft behavior pass; live creation remains. |
+| AC7 repository-safe Triage dispatch | verified | Existing task contracts and panel dispatch composition preserve explicit repository-safe draft append. |
+| AC8 Triage stop/continue | verified | The Triage-first task contract preserves the repository workflow checkpoint. |
+| AC9 panel coexistence/isolation | verified | Side Session coexistence, one-tab deduplication, close/switch behavior, and per-Session repository isolation pass. |
+| AC10 blocking/error states | verified | Guarded picker, lookup failure, empty/error, and unavailable states are covered. |
+| AC11 feature/browser isolation | verified | Feature-off sanitation and the 1078-test Happy App regression suite pass. |
+| AC12 desktop/mobile live acceptance | pending | Windows popover → panel flow and available mobile sheet flow |
+
 ## Remaining gaps
 
 - Android live acceptance remains an accepted gap until the native project is
   built from a shorter Windows path or the affected CMake/Ninja path handling is
   fixed.
+- The Session-panel Windows artifact is installed and automated launch
+  verification passed. Visual confirmation of the anchored popover and Issues
+  workspace tab in the running client remains pending user acceptance.
 - The unrelated Happy Server local attachment-download test remains red on this
   Windows checkout (404 versus expected 200); no server files changed.
