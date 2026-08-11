@@ -1,0 +1,2006 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  SOURCE_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$SOURCE_DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+HAPPY_REPO="${HAPPY_REPO:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+
+OS_NAME="$(uname -s)"
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.nvm/versions/node/v22.22.1/bin:$PATH"
+
+case "$OS_NAME" in
+  Darwin)
+    HAPPY_DEVTOOLS_STATE_DIR="${HAPPY_DEVTOOLS_STATE_DIR:-$HOME/Library/Application Support/Happy Devtools}"
+    HAPPY_APP_NAME="${HAPPY_APP_NAME:-Happy (dev).app}"
+    HAPPY_APP_BUNDLE_ID="${HAPPY_APP_BUNDLE_ID:-com.slopus.happy.dev}"
+    HAPPY_INSTALL_DIR="${HAPPY_INSTALL_DIR:-/Applications}"
+    ;;
+  Linux)
+    HAPPY_DEVTOOLS_STATE_DIR="${HAPPY_DEVTOOLS_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/happy-devtools}"
+    HAPPY_APP_NAME="${HAPPY_APP_NAME:-Happy (dev)}"
+    HAPPY_APP_BUNDLE_ID="${HAPPY_APP_BUNDLE_ID:-com.slopus.happy.dev}"
+    HAPPY_INSTALL_DIR="${HAPPY_INSTALL_DIR:-$HOME/.local/share/applications}"
+    ;;
+  *)
+    HAPPY_DEVTOOLS_STATE_DIR="${HAPPY_DEVTOOLS_STATE_DIR:-$HOME/.local/state/happy-devtools}"
+    HAPPY_APP_NAME="${HAPPY_APP_NAME:-Happy (dev).app}"
+    HAPPY_APP_BUNDLE_ID="${HAPPY_APP_BUNDLE_ID:-com.slopus.happy.dev}"
+    HAPPY_INSTALL_DIR="${HAPPY_INSTALL_DIR:-/Applications}"
+    ;;
+esac
+
+HAPPY_TAURI_CONFIG="${HAPPY_TAURI_CONFIG:-src-tauri/tauri.dev.conf.json}"
+if [[ "$OS_NAME" == "Linux" ]]; then
+  HAPPY_PNPM_CMD="${HAPPY_PNPM_CMD:-corepack pnpm@10.11.0}"
+  HAPPY_LINUX_BUNDLES="${HAPPY_LINUX_BUNDLES:-deb,rpm}"
+else
+  HAPPY_PNPM_CMD="${HAPPY_PNPM_CMD:-pnpm}"
+fi
+HAPPY_DEVTOOLS_REFRESH_LABEL="${HAPPY_DEVTOOLS_REFRESH_LABEL:-com.myartings.happyctl.refresh}"
+HAPPY_DEVTOOLS_REFRESH_TIME="${HAPPY_DEVTOOLS_REFRESH_TIME:-09:00}"
+HAPPY_DEVTOOLS_KEEP_BACKUPS="${HAPPY_DEVTOOLS_KEEP_BACKUPS:-3}"
+HAPPY_DEVTOOLS_BASE_BRANCH="${HAPPY_DEVTOOLS_BASE_BRANCH:-main}"
+HAPPY_DEVTOOLS_BASE_UPSTREAM="${HAPPY_DEVTOOLS_BASE_UPSTREAM:-upstream/main}"
+HAPPY_DEVTOOLS_PATCH_BRANCHES="${HAPPY_DEVTOOLS_PATCH_BRANCHES:-dev}"
+HAPPY_DEVTOOLS_FINAL_BRANCH="${HAPPY_DEVTOOLS_FINAL_BRANCH:-dev}"
+
+HAPPY_DEVTOOLS_CONFIG="${HAPPY_DEVTOOLS_CONFIG:-$HAPPY_DEVTOOLS_STATE_DIR/config.env}"
+if [[ ! -f "$HAPPY_DEVTOOLS_CONFIG" && -f "$SCRIPT_DIR/config.env" ]]; then
+  HAPPY_DEVTOOLS_CONFIG="$SCRIPT_DIR/config.env"
+fi
+if [[ ! -f "$HAPPY_DEVTOOLS_CONFIG" ]]; then
+  case "$OS_NAME" in
+    Darwin) LEGACY_DEVTOOLS_CONFIG="/Users/myartings/workspace/happy-manager/config.env" ;;
+    Linux) LEGACY_DEVTOOLS_CONFIG="/home/myartings/workspace/happy-manager/config.env" ;;
+    *) LEGACY_DEVTOOLS_CONFIG="" ;;
+  esac
+  [[ -n "$LEGACY_DEVTOOLS_CONFIG" && -f "$LEGACY_DEVTOOLS_CONFIG" ]] && HAPPY_DEVTOOLS_CONFIG="$LEGACY_DEVTOOLS_CONFIG"
+fi
+if [[ -f "$HAPPY_DEVTOOLS_CONFIG" ]]; then
+  # shellcheck disable=SC1091
+  source "$HAPPY_DEVTOOLS_CONFIG"
+fi
+HAPPY_DEVTOOLS_BACKUP_DIR="${HAPPY_DEVTOOLS_BACKUP_DIR:-$HAPPY_DEVTOOLS_STATE_DIR/backups}"
+HAPPY_DEVTOOLS_LOG_DIR="${HAPPY_DEVTOOLS_LOG_DIR:-$HAPPY_DEVTOOLS_STATE_DIR/logs}"
+HAPPY_DEVTOOLS_REPORT_DIR="${HAPPY_DEVTOOLS_REPORT_DIR:-$HAPPY_DEVTOOLS_STATE_DIR/reports}"
+
+HAPPY_IOS_APP_DIR="${HAPPY_IOS_APP_DIR:-$HAPPY_REPO/packages/happy-app}"
+HAPPY_IOS_EAS_CLI_VERSION="${HAPPY_IOS_EAS_CLI_VERSION:-21.7.0}"
+HAPPY_IOS_APP_ENV="${HAPPY_IOS_APP_ENV:-personal}"
+HAPPY_IOS_INTERNAL_PROFILE="${HAPPY_IOS_INTERNAL_PROFILE:-personal}"
+HAPPY_IOS_STORE_PROFILE="${HAPPY_IOS_STORE_PROFILE:-personal-store}"
+HAPPY_IOS_CHANNEL="${HAPPY_IOS_CHANNEL:-personal}"
+HAPPY_IOS_EAS_ENVIRONMENT="${HAPPY_IOS_EAS_ENVIRONMENT:-preview}"
+
+INSTALL_APP="$HAPPY_INSTALL_DIR/$HAPPY_APP_NAME"
+TAURI_TARGET_DIR="$HAPPY_REPO/packages/happy-app/src-tauri/target/release"
+BUILD_APP="$TAURI_TARGET_DIR/bundle/macos/$HAPPY_APP_NAME"
+LINUX_EXECUTABLE="$TAURI_TARGET_DIR/app"
+LINUX_INSTALLED_EXECUTABLE="${LINUX_INSTALLED_EXECUTABLE:-/usr/bin/app}"
+LINUX_PACKAGE_NAME="${LINUX_PACKAGE_NAME:-happy-dev}"
+HAPPY_LINUX_LAUNCH_TIMEOUT="${HAPPY_LINUX_LAUNCH_TIMEOUT:-20}"
+LOG_FILE="$HAPPY_DEVTOOLS_LOG_DIR/happyctl.log"
+LAUNCH_AGENT_PLIST="$HOME/Library/LaunchAgents/$HAPPY_DEVTOOLS_REFRESH_LABEL.plist"
+
+log() {
+  mkdir -p "$HAPPY_DEVTOOLS_LOG_DIR"
+  printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG_FILE"
+}
+
+run() {
+  log "+ $*"
+  "$@"
+}
+
+report_value() {
+  local value="${1:-}"
+  if [[ -z "$value" ]]; then
+    printf 'n/a'
+  else
+    printf '%s' "$value" | tr '\n' ' '
+  fi
+}
+
+write_update_report() {
+  local kind="$1"
+  shift
+  mkdir -p "$HAPPY_DEVTOOLS_REPORT_DIR"
+  local stamp path
+  stamp="$(date '+%Y%m%d-%H%M%S')"
+  path="$HAPPY_DEVTOOLS_REPORT_DIR/$stamp-$kind.md"
+  {
+    echo "# Happy Devtools Update Report"
+    echo
+    echo "- Generated: $(date '+%Y-%m-%d %H:%M:%S %z')"
+    echo "- Kind: $kind"
+    while [[ "$#" -gt 0 ]]; do
+      local key="$1"
+      local value="${2:-}"
+      echo "- $key: $(report_value "$value")"
+      shift 2
+    done
+  } >"$path"
+  log "Update report: $path" >/dev/null
+  echo "Update report: $path"
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  devtools/happyctl doctor
+  devtools/happyctl status
+  devtools/happyctl check-upstream
+  devtools/happyctl sync-dev [--dry-run]
+  devtools/happyctl sync-patch-stack [--dry-run]  # compatibility alias
+  devtools/happyctl update-cli
+  devtools/happyctl build-desktop
+  devtools/happyctl artifacts
+  devtools/happyctl update-desktop [--dry-run] [--launch-smoke]
+  devtools/happyctl refresh-desktop [--dry-run] [--force] [--keep-backups N] [--launch-smoke]
+  devtools/happyctl verify-desktop [--launch]
+  devtools/happyctl update-all
+  devtools/happyctl launch-desktop
+  devtools/happyctl rollback-desktop [backup.app]
+  devtools/happyctl install-refresh-task [HH:MM]
+  devtools/happyctl refresh-task-status
+  devtools/happyctl uninstall-refresh-task
+  devtools/happyctl ios-doctor
+  devtools/happyctl ios-build-internal [--dry-run]
+  devtools/happyctl ios-build-testflight [--dry-run]
+  devtools/happyctl ios-submit-testflight --build-id ID [--dry-run]
+  devtools/happyctl ios-publish-update --message TEXT [--dry-run]
+  devtools/happyctl ios-release-status
+
+Environment/config:
+  Copy config.example.env to config.env for local overrides.
+EOF
+}
+
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Missing command: $1" >&2
+    exit 1
+  fi
+}
+
+check_cmd() {
+  if command -v "$1" >/dev/null 2>&1; then
+    printf 'ok   %-14s %s\n' "$1" "$(command -v "$1")"
+  else
+    printf 'miss %-14s %s\n' "$1" "not found"
+    return 1
+  fi
+}
+
+check_pkg_config() {
+  local pkg="$1"
+  if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists "$pkg"; then
+    printf 'ok   %-30s %s\n' "$pkg" "$(pkg-config --modversion "$pkg")"
+  else
+    printf 'miss %-30s %s\n' "$pkg" "pkg-config package not found"
+    return 1
+  fi
+}
+
+run_pnpm() {
+  log "+ $HAPPY_PNPM_CMD $*"
+  # shellcheck disable=SC2086
+  $HAPPY_PNPM_CMD "$@"
+}
+
+ios_require_macos() {
+  if [[ "$OS_NAME" != "Darwin" ]]; then
+    echo "Happy iOS release commands require macOS with Xcode." >&2
+    return 1
+  fi
+}
+
+ios_eas_display_command() {
+  printf 'cd %q && APP_ENV=%q NODE_ENV=production EXPO_NO_METRO_WORKSPACE_ROOT=1' "$HAPPY_IOS_APP_DIR" "$HAPPY_IOS_APP_ENV"
+  if [[ -n "${EXPO_OWNER:-}" ]]; then
+    printf ' EXPO_OWNER=<configured>'
+  else
+    printf ' EXPO_OWNER=<missing>'
+  fi
+  if [[ -n "${EXPO_PUBLIC_EAS_PROJECT_ID:-}" ]]; then
+    printf ' EXPO_PUBLIC_EAS_PROJECT_ID=<configured>'
+  else
+    printf ' EXPO_PUBLIC_EAS_PROJECT_ID=<missing>'
+  fi
+  printf ' %q dlx %q' "$HAPPY_PNPM_CMD" "eas-cli@$HAPPY_IOS_EAS_CLI_VERSION"
+  printf ' %q' "$@"
+  printf '\n'
+}
+
+ios_run_eas() {
+  log "+ $(ios_eas_display_command "$@")"
+  (
+    cd "$HAPPY_IOS_APP_DIR"
+    APP_ENV="$HAPPY_IOS_APP_ENV" \
+      NODE_ENV=production \
+      EXPO_NO_METRO_WORKSPACE_ROOT=1 \
+      EXPO_OWNER="${EXPO_OWNER:-}" \
+      EXPO_PUBLIC_EAS_PROJECT_ID="${EXPO_PUBLIC_EAS_PROJECT_ID:-}" \
+      APP_STORE_CONNECT_API_KEY_PATH="${APP_STORE_CONNECT_API_KEY_PATH:-}" \
+      APP_STORE_CONNECT_API_KEY_ID="${APP_STORE_CONNECT_API_KEY_ID:-}" \
+      APP_STORE_CONNECT_API_ISSUER_ID="${APP_STORE_CONNECT_API_ISSUER_ID:-}" \
+      APP_STORE_CONNECT_APP_ID="${APP_STORE_CONNECT_APP_ID:-}" \
+      APPLE_DEVELOPMENT_TEAM="${APPLE_DEVELOPMENT_TEAM:-}" \
+      $HAPPY_PNPM_CMD dlx "eas-cli@$HAPPY_IOS_EAS_CLI_VERSION" "$@"
+  )
+}
+
+ios_validate_eas_profiles() {
+  node - "$HAPPY_IOS_APP_DIR/eas.json" "$HAPPY_IOS_INTERNAL_PROFILE" "$HAPPY_IOS_STORE_PROFILE" "$HAPPY_IOS_CHANNEL" <<'NODE'
+const fs = require('node:fs');
+const [path, internalName, storeName, channel] = process.argv.slice(2);
+const value = JSON.parse(fs.readFileSync(path, 'utf8'));
+const internal = value.build?.[internalName];
+const store = value.build?.[storeName];
+const submit = value.submit?.[storeName];
+const failures = [];
+if (!internal || internal.distribution !== 'internal' || internal.channel !== channel || internal.env?.APP_ENV !== 'personal') failures.push(`build.${internalName}`);
+if (!store || store.distribution !== 'store' || store.channel !== channel || store.env?.APP_ENV !== 'personal') failures.push(`build.${storeName}`);
+const expectedSubmit = {
+  ascApiKeyPath: '$APP_STORE_CONNECT_API_KEY_PATH',
+  ascApiKeyId: '$APP_STORE_CONNECT_API_KEY_ID',
+  ascApiKeyIssuerId: '$APP_STORE_CONNECT_API_ISSUER_ID',
+  ascAppId: '$APP_STORE_CONNECT_APP_ID',
+  appleTeamId: '$APPLE_DEVELOPMENT_TEAM',
+};
+if (!submit || !submit.ios) failures.push(`submit.${storeName}`);
+for (const [key, expected] of Object.entries(expectedSubmit)) {
+  if (submit?.ios?.[key] !== expected) failures.push(`submit.${storeName}.ios.${key} must use ${expected}`);
+}
+if (failures.length) {
+  console.error(`Invalid personal EAS profiles: ${failures.join(', ')}`);
+  process.exit(1);
+}
+NODE
+}
+
+ios_validate_expo_identity() {
+  local owner project_id config_json
+  owner="${EXPO_OWNER:-validation-owner}"
+  project_id="${EXPO_PUBLIC_EAS_PROJECT_ID:-00000000-0000-4000-8000-000000000000}"
+  config_json="$(
+    APP_ENV="$HAPPY_IOS_APP_ENV" \
+      NODE_ENV=production \
+      EXPO_NO_METRO_WORKSPACE_ROOT=1 \
+      EXPO_OWNER="$owner" \
+      EXPO_PUBLIC_EAS_PROJECT_ID="$project_id" \
+      $HAPPY_PNPM_CMD -C "$HAPPY_IOS_APP_DIR" exec expo config --type public --json
+  )"
+  PERSONAL_CONFIG_JSON="$config_json" node - "$project_id" <<'NODE'
+const expectedProjectId = process.argv[2];
+const config = JSON.parse(process.env.PERSONAL_CONFIG_JSON);
+const ats = config.ios?.infoPlist?.NSAppTransportSecurity;
+const checks = [
+  ['name', config.name, 'Happy Personal'],
+  ['slug', config.slug, 'happy-personal'],
+  ['scheme', config.scheme, 'happy-personal'],
+  ['ios.bundleIdentifier', config.ios?.bundleIdentifier, 'com.myartings.happy'],
+  ['runtimeVersion.policy', config.runtimeVersion?.policy, 'appVersion'],
+  ['extra.eas.projectId', config.extra?.eas?.projectId, expectedProjectId],
+  ['ATS.NSAllowsLocalNetworking', ats?.NSAllowsLocalNetworking, true],
+  ['ATS.NSAllowsArbitraryLoads', ats?.NSAllowsArbitraryLoads, undefined],
+];
+const failures = checks.filter(([, actual, expected]) => actual !== expected);
+if (failures.length) {
+  for (const [name, actual, expected] of failures) console.error(`${name}: expected ${String(expected)}, got ${String(actual)}`);
+  process.exit(1);
+}
+NODE
+}
+
+ios_validate_local_configuration() {
+  local failed=0
+  ios_require_macos || failed=1
+  ensure_repo
+  if [[ -d "$HAPPY_IOS_APP_DIR" ]]; then
+    printf 'ok   %-24s %s\n' "Happy iOS app" "$HAPPY_IOS_APP_DIR"
+  else
+    printf 'miss %-24s %s\n' "Happy iOS app" "$HAPPY_IOS_APP_DIR"
+    failed=1
+  fi
+  check_cmd node || failed=1
+  if ! $HAPPY_PNPM_CMD --version >/dev/null 2>&1; then
+    printf 'miss %-24s %s\n' "pnpm" "$HAPPY_PNPM_CMD failed"
+    failed=1
+  else
+    printf 'ok   %-24s %s\n' "pnpm" "$($HAPPY_PNPM_CMD --version 2>/dev/null | head -n 1)"
+  fi
+  check_cmd xcodebuild || failed=1
+  if ios_validate_eas_profiles; then
+    printf 'ok   %-24s %s\n' "EAS profiles" "$HAPPY_IOS_INTERNAL_PROFILE / $HAPPY_IOS_STORE_PROFILE"
+  else
+    failed=1
+  fi
+  if ios_validate_expo_identity; then
+    printf 'ok   %-24s %s\n' "Personal identity" "Happy Personal / com.myartings.happy"
+  else
+    failed=1
+  fi
+  if [[ -n "${EXPO_OWNER:-}" ]]; then
+    printf 'ok   %-24s %s\n' "EXPO_OWNER" "configured"
+  else
+    printf 'miss %-24s %s\n' "EXPO_OWNER" "set it in config.env"
+    failed=1
+  fi
+  if [[ -n "${EXPO_PUBLIC_EAS_PROJECT_ID:-}" ]]; then
+    printf 'ok   %-24s %s\n' "EAS project ID" "configured"
+  else
+    printf 'miss %-24s %s\n' "EAS project ID" "set EXPO_PUBLIC_EAS_PROJECT_ID in config.env"
+    failed=1
+  fi
+  if [[ -n "${APP_STORE_CONNECT_APP_ID:-}" && -n "${APPLE_DEVELOPMENT_TEAM:-}" && -f "${APP_STORE_CONNECT_API_KEY_PATH:-}" ]]; then
+    printf 'ok   %-24s %s\n' "TestFlight config" "configured"
+  else
+    printf 'info %-24s %s\n' "TestFlight config" "optional until first TestFlight submission"
+  fi
+  return "$failed"
+}
+
+ios_require_release_ready() {
+  ios_validate_local_configuration
+  ensure_clean_repo
+  local branch
+  branch="$(git -C "$HAPPY_REPO" branch --show-current)"
+  if [[ "$branch" != "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
+    echo "Happy iOS releases must run from $HAPPY_DEVTOOLS_FINAL_BRANCH; current branch is $branch." >&2
+    return 1
+  fi
+  ios_run_eas whoami >/dev/null
+}
+
+ios_require_submit_configuration() {
+  local name
+  for name in APP_STORE_CONNECT_API_KEY_PATH APP_STORE_CONNECT_API_KEY_ID \
+    APP_STORE_CONNECT_API_ISSUER_ID APP_STORE_CONNECT_APP_ID APPLE_DEVELOPMENT_TEAM; do
+    if [[ -z "${!name:-}" ]]; then
+      echo "Missing $name in untracked config.env or the environment." >&2
+      return 1
+    fi
+  done
+  if [[ ! -f "$APP_STORE_CONNECT_API_KEY_PATH" ]]; then
+    echo "App Store Connect API key file not found at the configured path." >&2
+    return 1
+  fi
+}
+
+ios_doctor() {
+  local failed=0 branch dirty
+  echo "Checking Happy Personal iOS release prerequisites..."
+  ios_validate_local_configuration || failed=1
+  branch="$(git -C "$HAPPY_REPO" branch --show-current 2>/dev/null || true)"
+  dirty="$(git -C "$HAPPY_REPO" status --porcelain 2>/dev/null || true)"
+  if [[ "$branch" == "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
+    printf 'ok   %-24s %s\n' "Release branch" "$branch"
+  else
+    printf 'warn %-24s %s\n' "Release branch" "current=$branch; release requires $HAPPY_DEVTOOLS_FINAL_BRANCH"
+  fi
+  if [[ -z "$dirty" ]]; then
+    printf 'ok   %-24s %s\n' "Happy worktree" "clean"
+  else
+    printf 'warn %-24s %s\n' "Happy worktree" "dirty; release will refuse"
+  fi
+  if ios_run_eas whoami >/dev/null 2>&1; then
+    printf 'ok   %-24s %s\n' "EAS login" "authenticated"
+  else
+    printf 'miss %-24s %s\n' "EAS login" "run eas login for the personal Expo account"
+    failed=1
+  fi
+  return "$failed"
+}
+
+ios_parse_dry_run() {
+  case "${1:-}" in
+    "") echo 0 ;;
+    --dry-run|-n) echo 1 ;;
+    *) echo "Unknown option: $1" >&2; return 1 ;;
+  esac
+}
+
+ios_release_action() {
+  local kind="$1" profile="$2" dry_run="$3"
+  shift 3
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "Happy Personal iOS $kind dry run"
+    echo "Happy repo: $HAPPY_REPO"
+    echo "Current branch: $(git -C "$HAPPY_REPO" branch --show-current 2>/dev/null || echo unknown)"
+    echo "Required release branch: $HAPPY_DEVTOOLS_FINAL_BRANCH"
+    echo "Profile: $profile"
+    ios_validate_eas_profiles
+    ios_validate_expo_identity
+    ios_eas_display_command "$@"
+    echo "No cloud build, submission, update, or report was created."
+    return
+  fi
+  ios_require_release_ready
+  ios_run_eas "$@"
+  write_update_report "ios-$kind" \
+    "Happy commit" "$(git -C "$HAPPY_REPO" rev-parse HEAD)" \
+    "EAS profile" "$profile" \
+    "iOS channel" "$HAPPY_IOS_CHANNEL" \
+    "Status" "command completed"
+}
+
+ios_build_internal() {
+  local dry_run
+  dry_run="$(ios_parse_dry_run "${1:-}")"
+  ios_release_action "build-internal" "$HAPPY_IOS_INTERNAL_PROFILE" "$dry_run" \
+    build --profile "$HAPPY_IOS_INTERNAL_PROFILE" --platform ios
+}
+
+ios_build_testflight() {
+  local dry_run
+  dry_run="$(ios_parse_dry_run "${1:-}")"
+  ios_release_action "build-testflight" "$HAPPY_IOS_STORE_PROFILE" "$dry_run" \
+    build --profile "$HAPPY_IOS_STORE_PROFILE" --platform ios
+}
+
+ios_submit_testflight() {
+  local dry_run=0 build_id=""
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --build-id)
+        shift
+        build_id="${1:-}"
+        ;;
+      *) echo "Unknown ios-submit-testflight option: $1" >&2; return 1 ;;
+    esac
+    shift
+  done
+  if [[ -z "$build_id" ]]; then
+    echo "ios-submit-testflight requires --build-id ID from ios-release-status." >&2
+    return 1
+  fi
+  if [[ ! "$build_id" =~ ^[A-Za-z0-9-]+$ ]]; then
+    echo "Invalid EAS build ID." >&2
+    return 1
+  fi
+  if [[ "$dry_run" -eq 0 ]]; then
+    ios_require_submit_configuration
+  fi
+  ios_release_action "submit-testflight" "$HAPPY_IOS_STORE_PROFILE" "$dry_run" \
+    submit --profile "$HAPPY_IOS_STORE_PROFILE" --platform ios --id "$build_id"
+}
+
+ios_publish_update() {
+  local dry_run=0 message=""
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --message|-m)
+        shift
+        message="${1:-}"
+        ;;
+      *) echo "Unknown ios-publish-update option: $1" >&2; return 1 ;;
+    esac
+    shift
+  done
+  if [[ -z "$message" ]]; then
+    echo "ios-publish-update requires --message TEXT." >&2
+    return 1
+  fi
+  ios_release_action "publish-update" "$HAPPY_IOS_CHANNEL" "$dry_run" \
+    update --channel "$HAPPY_IOS_CHANNEL" --environment "$HAPPY_IOS_EAS_ENVIRONMENT" \
+    --platform ios --message "$message"
+}
+
+ios_release_status() {
+  ios_require_macos
+  ios_validate_local_configuration
+  ios_run_eas whoami >/dev/null
+  echo "Recent Happy Personal iOS builds"
+  ios_run_eas build:list --platform ios --channel "$HAPPY_IOS_CHANNEL" --limit 10
+  echo
+  echo "Recent Happy Personal iOS submissions"
+  ios_run_eas submit:list --platform ios --limit 10
+}
+
+happy_cli_path() {
+  command -v happy 2>/dev/null || true
+}
+
+happy_cli_version_without_exec() {
+  local happy_path npm_root package_json version
+  happy_path="$(happy_cli_path)"
+  if [[ -z "$happy_path" ]]; then
+    echo "happy not found"
+    return
+  fi
+
+  if command -v npm >/dev/null 2>&1; then
+    npm_root="$(npm root -g 2>/dev/null || true)"
+    package_json="$npm_root/happy/package.json"
+    if [[ -f "$package_json" ]] && command -v node >/dev/null 2>&1; then
+      version="$(node -e 'const fs=require("fs"); const p=process.argv[1]; console.log(JSON.parse(fs.readFileSync(p,"utf8")).version || "unknown")' "$package_json" 2>/dev/null || true)"
+      if [[ -n "$version" ]]; then
+        echo "happy@$version"
+        return
+      fi
+    fi
+
+    version="$(npm list -g --depth=0 happy 2>/dev/null | sed -n 's/.*happy@\\([^[:space:]]*\\).*/happy@\\1/p' | head -n 1)"
+    if [[ -n "$version" ]]; then
+      echo "$version"
+      return
+    fi
+  fi
+
+  echo "happy installed at $happy_path; version unknown without executing CLI"
+}
+
+install_js_dependencies() {
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    log "+ npm_config_jobs=1 $HAPPY_PNPM_CMD -C $HAPPY_REPO install --child-concurrency=1 --network-concurrency=4"
+    # shellcheck disable=SC2086
+    npm_config_jobs=1 $HAPPY_PNPM_CMD -C "$HAPPY_REPO" install --child-concurrency=1 --network-concurrency=4
+  else
+    run_pnpm -C "$HAPPY_REPO" install
+  fi
+}
+
+linux_only_build_notice() {
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    echo "Linux support is currently build verification only. update/install/refresh task commands are intentionally disabled." >&2
+    exit 1
+  fi
+}
+
+ensure_repo() {
+  if ! git -C "$HAPPY_REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Happy repo not found: $HAPPY_REPO" >&2
+    exit 1
+  fi
+}
+
+current_happy_commit() {
+  git -C "$HAPPY_REPO" rev-parse --short HEAD
+}
+
+ensure_clean_repo() {
+  local dirty
+  dirty="$(git -C "$HAPPY_REPO" status --porcelain)"
+  if [[ -n "$dirty" ]]; then
+    echo "Happy repo has local changes. Refusing to update:" >&2
+    printf '%s\n' "$dirty" >&2
+    echo "Commit/stash/revert those changes first, or run inside the repo manually." >&2
+    exit 1
+  fi
+}
+
+git_ref_exists() {
+  git -C "$HAPPY_REPO" rev-parse --verify --quiet "$1^{commit}" >/dev/null
+}
+
+is_devtools_path() {
+  case "$1" in
+    devtools/*|.agents/skills/happy-desktop-update/*|.agents/skills/happy-ios-release/*|AGENTS.md|.gitignore)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+assert_official_product_equivalence() {
+  local upstream_ref="${1:-$HAPPY_DEVTOOLS_BASE_UPSTREAM}" path invalid=()
+  if ! git_ref_exists "$upstream_ref"; then
+    echo "Happy official upstream ref not found: $upstream_ref" >&2
+    return 1
+  fi
+  if ! git -C "$HAPPY_REPO" merge-base --is-ancestor "$upstream_ref" HEAD; then
+    echo "Personal main does not contain the current official commit: $upstream_ref" >&2
+    return 1
+  fi
+  while IFS= read -r path; do
+    [[ -z "$path" ]] && continue
+    is_devtools_path "$path" || invalid+=("$path")
+  done < <(git -C "$HAPPY_REPO" diff --name-only "$upstream_ref"..HEAD)
+  if [[ "${#invalid[@]}" -gt 0 ]]; then
+    echo "Personal main changes product/build inputs outside the devtools allowlist:" >&2
+    printf '  %s\n' "${invalid[@]}" >&2
+    return 1
+  fi
+}
+
+validate_patch_stack() {
+  local branches=()
+  # shellcheck disable=SC2206
+  branches=($HAPPY_DEVTOOLS_PATCH_BRANCHES)
+
+  if [[ "${#branches[@]}" -eq 0 ]]; then
+    echo "HAPPY_DEVTOOLS_PATCH_BRANCHES must contain at least one branch." >&2
+    return 1
+  fi
+  if [[ "${branches[${#branches[@]}-1]}" != "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
+    echo "Final integration branch must be the last branch in HAPPY_DEVTOOLS_PATCH_BRANCHES." >&2
+    echo "Expected last branch: $HAPPY_DEVTOOLS_FINAL_BRANCH" >&2
+    return 1
+  fi
+  if ! git_ref_exists "$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+    echo "Happy base branch not found: $HAPPY_DEVTOOLS_BASE_BRANCH" >&2
+    return 1
+  fi
+  if ! git_ref_exists "$HAPPY_DEVTOOLS_BASE_UPSTREAM"; then
+    echo "Happy official upstream ref not found: $HAPPY_DEVTOOLS_BASE_UPSTREAM" >&2
+    return 1
+  fi
+
+  local branch
+  for branch in "${branches[@]}"; do
+    if ! git_ref_exists "$branch"; then
+      echo "Happy integration branch not found: $branch" >&2
+      return 1
+    fi
+  done
+}
+
+fetch_patch_stack_remotes() {
+  log "+ git -C $HAPPY_REPO fetch --prune --tags upstream" >/dev/null
+  git -C "$HAPPY_REPO" fetch --prune --tags upstream >&2
+  log "+ git -C $HAPPY_REPO fetch --prune --tags origin" >/dev/null
+  git -C "$HAPPY_REPO" fetch --prune --tags origin >&2
+}
+
+happy_patch_stack_state() {
+  local fetch="${1:-}"
+  ensure_repo
+  ensure_clean_repo
+
+  if [[ "$fetch" == "fetch" ]]; then
+    fetch_patch_stack_remotes
+  fi
+  validate_patch_stack
+
+  local base_counts final_counts base_ahead base_behind final_ahead final_behind
+  local branch_remote_delta=0 branches=() branch remote_ref branch_counts branch_ahead branch_behind
+  base_counts="$(git -C "$HAPPY_REPO" rev-list --left-right --count "$HAPPY_DEVTOOLS_BASE_BRANCH...$HAPPY_DEVTOOLS_BASE_UPSTREAM")"
+  base_ahead="${base_counts%%[[:space:]]*}"
+  base_behind="${base_counts##*[[:space:]]}"
+  final_counts="$(git -C "$HAPPY_REPO" rev-list --left-right --count "$HAPPY_DEVTOOLS_FINAL_BRANCH...$HAPPY_DEVTOOLS_BASE_UPSTREAM")"
+  final_ahead="${final_counts%%[[:space:]]*}"
+  final_behind="${final_counts##*[[:space:]]}"
+
+  # shellcheck disable=SC2206
+  branches=($HAPPY_DEVTOOLS_PATCH_BRANCHES)
+  for branch in "${branches[@]}"; do
+    remote_ref="origin/$branch"
+    if git_ref_exists "$remote_ref"; then
+      branch_counts="$(git -C "$HAPPY_REPO" rev-list --left-right --count "$branch...$remote_ref")"
+      branch_ahead="${branch_counts%%[[:space:]]*}"
+      branch_behind="${branch_counts##*[[:space:]]}"
+    else
+      branch_ahead=1
+      branch_behind=0
+    fi
+    branch_remote_delta=$((branch_remote_delta + branch_ahead + branch_behind))
+  done
+
+  printf '%s|%s|%s|%s|%s\n' \
+    "$base_ahead" "$base_behind" "$final_ahead" "$final_behind" "$branch_remote_delta"
+}
+
+show_patch_stack_state() {
+  local state="$1"
+  local base_ahead base_behind final_ahead final_behind branch_remote_delta
+  IFS='|' read -r base_ahead base_behind final_ahead final_behind branch_remote_delta <<<"$state"
+
+  echo "Happy personal integration branch"
+  echo "Official:      $HAPPY_DEVTOOLS_BASE_UPSTREAM"
+  echo "Base branch:   $HAPPY_DEVTOOLS_BASE_BRANCH"
+  echo "Integration:   $HAPPY_DEVTOOLS_PATCH_BRANCHES"
+  echo "Build branch:  $HAPPY_DEVTOOLS_FINAL_BRANCH"
+  echo "Base ahead:    $base_ahead"
+  echo "Base behind:   $base_behind"
+  echo "Final ahead:   $final_ahead"
+  echo "Final behind:  $final_behind"
+  echo "Personal branch/remote commit delta: $branch_remote_delta"
+}
+
+abort_patch_stack_merge() {
+  if git -C "$HAPPY_REPO" rev-parse --verify --quiet MERGE_HEAD >/dev/null; then
+    git -C "$HAPPY_REPO" merge --abort >/dev/null 2>&1 || true
+  fi
+}
+
+sync_patch_stack_locally() {
+  ensure_repo
+  ensure_clean_repo
+  validate_patch_stack
+
+  local original_branch parent branch remote_ref branches=()
+  original_branch="$(git -C "$HAPPY_REPO" branch --show-current)"
+  if [[ -z "$original_branch" ]]; then
+    echo "Happy repo is in detached HEAD state; refusing automatic dev integration sync." >&2
+    return 1
+  fi
+
+  if ! run git -C "$HAPPY_REPO" switch "$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+    return 1
+  fi
+  if git_ref_exists "origin/$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+    if ! run git -C "$HAPPY_REPO" merge --ff-only "origin/$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+      run git -C "$HAPPY_REPO" switch "$original_branch" || true
+      return 1
+    fi
+  fi
+  if ! run git -C "$HAPPY_REPO" merge --no-edit "$HAPPY_DEVTOOLS_BASE_UPSTREAM"; then
+    run git -C "$HAPPY_REPO" switch "$original_branch" || true
+    return 1
+  fi
+  assert_official_product_equivalence || {
+    run git -C "$HAPPY_REPO" switch "$original_branch" || true
+    return 1
+  }
+
+  parent="$HAPPY_DEVTOOLS_BASE_BRANCH"
+  # shellcheck disable=SC2206
+  branches=($HAPPY_DEVTOOLS_PATCH_BRANCHES)
+  for branch in "${branches[@]}"; do
+    if ! run git -C "$HAPPY_REPO" switch "$branch"; then
+      run git -C "$HAPPY_REPO" switch "$original_branch" || true
+      return 1
+    fi
+
+    remote_ref="origin/$branch"
+    if git_ref_exists "$remote_ref"; then
+      if ! run git -C "$HAPPY_REPO" merge --ff-only "$remote_ref"; then
+        echo "$branch has diverged from $remote_ref; refusing automatic reconciliation." >&2
+        run git -C "$HAPPY_REPO" switch "$original_branch" || true
+        return 1
+      fi
+    fi
+
+    if ! run git -C "$HAPPY_REPO" merge --no-edit "$parent"; then
+      echo "Patch-stack merge conflict while merging $parent into $branch." >&2
+      abort_patch_stack_merge
+      run git -C "$HAPPY_REPO" switch "$original_branch" || true
+      return 1
+    fi
+    parent="$branch"
+  done
+
+  if [[ "$parent" != "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
+    echo "Patch-stack configuration did not finish on $HAPPY_DEVTOOLS_FINAL_BRANCH." >&2
+    run git -C "$HAPPY_REPO" switch "$original_branch" || true
+    return 1
+  fi
+}
+
+push_patch_stack() {
+  local branches=() branch
+  if ! run git -C "$HAPPY_REPO" push origin "$HAPPY_DEVTOOLS_BASE_BRANCH:$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+    return 1
+  fi
+  # shellcheck disable=SC2206
+  branches=($HAPPY_DEVTOOLS_PATCH_BRANCHES)
+  for branch in "${branches[@]}"; do
+    if ! run git -C "$HAPPY_REPO" push --set-upstream origin "$branch:$branch"; then
+      return 1
+    fi
+  done
+}
+
+sync_patch_stack_command() {
+  local dry_run=0
+  case "${1:-}" in
+    "") ;;
+    --dry-run|-n) dry_run=1 ;;
+    *)
+      echo "Unknown sync-patch-stack option: $1" >&2
+      return 1
+      ;;
+  esac
+
+  ensure_repo
+  ensure_clean_repo
+  validate_patch_stack
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "Happy dev integration sync dry run"
+    echo "Would fetch upstream and origin, then update:"
+    echo "  $HAPPY_DEVTOOLS_BASE_UPSTREAM -> $HAPPY_DEVTOOLS_BASE_BRANCH -> $HAPPY_DEVTOOLS_PATCH_BRANCHES"
+    echo "Would push personal main and the personal dev branch to origin."
+    echo "No changes made."
+    return
+  fi
+
+  local state
+  state="$(happy_patch_stack_state fetch)"
+  show_patch_stack_state "$state"
+  sync_patch_stack_locally
+  push_patch_stack
+  echo "Dev integration synchronized. Final build branch: $HAPPY_DEVTOOLS_FINAL_BRANCH"
+}
+
+happy_upstream_ref() {
+  local upstream
+  upstream="$(git -C "$HAPPY_REPO" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+  if [[ -n "$upstream" ]]; then
+    printf '%s\n' "$upstream"
+    return
+  fi
+
+  if git -C "$HAPPY_REPO" rev-parse --verify --quiet origin/main >/dev/null; then
+    printf '%s\n' "origin/main"
+    return
+  fi
+}
+
+happy_upstream_state() {
+  local fetch="${1:-}"
+  ensure_repo
+  ensure_clean_repo
+
+  if [[ "$fetch" == "fetch" ]]; then
+    log "+ git -C $HAPPY_REPO fetch --prune" >/dev/null
+    git -C "$HAPPY_REPO" fetch --prune >&2
+  fi
+
+  local upstream local_commit remote_commit counts ahead behind
+  upstream="$(happy_upstream_ref)"
+  if [[ -z "$upstream" ]]; then
+    echo "Could not determine Happy repo upstream. Configure branch upstream or origin/main." >&2
+    exit 1
+  fi
+
+  local_commit="$(git -C "$HAPPY_REPO" rev-parse HEAD)"
+  remote_commit="$(git -C "$HAPPY_REPO" rev-parse "$upstream")"
+  counts="$(git -C "$HAPPY_REPO" rev-list --left-right --count "HEAD...$upstream")"
+  ahead="${counts%%[[:space:]]*}"
+  behind="${counts##*[[:space:]]}"
+
+  printf '%s|%s|%s|%s|%s\n' "$upstream" "$local_commit" "$remote_commit" "$ahead" "$behind"
+}
+
+show_upstream_state() {
+  local state="$1"
+  local upstream local_commit remote_commit ahead behind
+  IFS='|' read -r upstream local_commit remote_commit ahead behind <<<"$state"
+
+  echo "Happy upstream"
+  echo "Repo:      $HAPPY_REPO"
+  echo "Upstream:  $upstream"
+  echo "Local:     $local_commit"
+  echo "Remote:    $remote_commit"
+  echo "Ahead:     $ahead"
+  echo "Behind:    $behind"
+  if [[ "$ahead" -gt 0 && "$behind" -gt 0 ]]; then
+    echo "Status:    diverged"
+  elif [[ "$behind" -gt 0 ]]; then
+    echo "Status:    update available"
+  else
+    echo "Status:    up to date"
+  fi
+}
+
+check_upstream() {
+  local state ahead behind
+  state="$(happy_upstream_state fetch)"
+  show_upstream_state "$state"
+  IFS='|' read -r _ _ _ ahead behind <<<"$state"
+  if [[ "$ahead" -gt 0 && "$behind" -gt 0 ]]; then
+    exit 2
+  fi
+}
+
+status() {
+  ensure_repo
+  echo "OS:            $OS_NAME"
+  echo "Happy devtools: $SCRIPT_DIR"
+  echo "Happy repo:     $HAPPY_REPO"
+  echo "Repo commit:    $(current_happy_commit)"
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    echo "Linux exe:      $LINUX_EXECUTABLE"
+    echo "Bundle dir:     $TAURI_TARGET_DIR/bundle"
+  else
+    echo "Install app:    $INSTALL_APP"
+    echo "Build app:      $BUILD_APP"
+  fi
+  echo "Report dir:     $HAPPY_DEVTOOLS_REPORT_DIR"
+  echo "Refresh task:   $HAPPY_DEVTOOLS_REFRESH_LABEL"
+  echo
+
+  local happy_path
+  happy_path="$(happy_cli_path)"
+  if [[ -n "$happy_path" ]]; then
+    echo "Happy CLI:      $happy_path"
+    echo "Happy CLI ver:  $(happy_cli_version_without_exec)"
+  else
+    echo "Happy CLI:      not found"
+  fi
+
+  echo
+  command -v node >/dev/null 2>&1 && echo "Node:           $(node --version)"
+  echo "pnpm cmd:       $HAPPY_PNPM_CMD"
+  [[ "$OS_NAME" == "Linux" ]] && echo "Linux bundles:  $HAPPY_LINUX_BUNDLES"
+  # shellcheck disable=SC2086
+  $HAPPY_PNPM_CMD --version >/dev/null 2>&1 && echo "pnpm:           $($HAPPY_PNPM_CMD --version 2>/dev/null | head -n 1)"
+  command -v cargo >/dev/null 2>&1 && echo "Cargo:          $(cargo --version)"
+  command -v rustup >/dev/null 2>&1 && echo "rustup:         $(rustup --version 2>/dev/null | head -n 1)"
+  command -v rustc >/dev/null 2>&1 && echo "rustc:          $(rustc --version)"
+  command -v xcode-select >/dev/null 2>&1 && echo "Xcode CLT:      $(xcode-select -p)"
+
+  echo
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    artifacts
+  elif [[ -d "$INSTALL_APP" ]]; then
+    echo "Installed app exists."
+  else
+    echo "Installed app not found."
+  fi
+}
+
+doctor() {
+  local failed=0
+  echo "Checking local Happy manager prerequisites..."
+  check_cmd git || failed=1
+  check_cmd npm || failed=1
+  check_cmd node || failed=1
+  if ! $HAPPY_PNPM_CMD --version >/dev/null 2>&1; then
+    printf 'miss %-14s %s\n' "pnpm" "$HAPPY_PNPM_CMD failed"
+    failed=1
+  else
+    printf 'ok   %-14s %s\n' "pnpm" "$($HAPPY_PNPM_CMD --version 2>/dev/null | head -n 1)"
+  fi
+  check_cmd cargo || failed=1
+  check_cmd rustc || failed=1
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    check_cmd rustup || failed=1
+  elif command -v rustup >/dev/null 2>&1; then
+    printf 'ok   %-14s %s\n' "rustup" "$(rustup --version | head -n 1)"
+  else
+    printf 'info %-14s %s\n' "rustup" "not found; using cargo/rustc directly"
+  fi
+
+  if [[ "$OS_NAME" == "Darwin" ]]; then
+    check_cmd osascript || failed=1
+    check_cmd ditto || failed=1
+    check_cmd open || failed=1
+    check_cmd plutil || failed=1
+    check_cmd launchctl || failed=1
+    check_cmd xcode-select || failed=1
+  elif [[ "$OS_NAME" == "Linux" ]]; then
+    check_cmd pkg-config || failed=1
+    check_cmd gcc || failed=1
+    check_cmd g++ || failed=1
+    check_cmd make || failed=1
+    check_cmd patchelf || failed=1
+    check_cmd desktop-file-validate || failed=1
+    check_cmd fusermount || check_cmd fusermount3 || true
+    check_cmd dpkg || true
+    check_cmd rpmbuild || true
+
+    echo
+    echo "Linux Tauri pkg-config dependencies:"
+    check_pkg_config webkit2gtk-4.1 || check_pkg_config webkit2gtk-4.0 || failed=1
+    check_pkg_config javascriptcoregtk-4.1 || check_pkg_config javascriptcoregtk-4.0 || failed=1
+    check_pkg_config gtk+-3.0 || failed=1
+    check_pkg_config ayatana-appindicator3-0.1 || check_pkg_config appindicator3-0.1 || failed=1
+    check_pkg_config librsvg-2.0 || failed=1
+    check_pkg_config openssl || failed=1
+    echo
+    echo "Suggested Debian/Ubuntu packages if missing:"
+    echo "  pkg-config patchelf libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev"
+    echo "Rust toolchain is also required: rustup + stable rustc/cargo."
+  fi
+
+  echo
+  if [[ -d "$HAPPY_REPO/.git" ]]; then
+    echo "ok   Happy repo     $HAPPY_REPO"
+  else
+    echo "miss Happy repo     $HAPPY_REPO"
+    failed=1
+  fi
+
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    echo "info Linux supports build verification and Debian .deb update. refresh task, rollback, and autostart are not implemented."
+  elif [[ -d "$INSTALL_APP" ]]; then
+    echo "ok   Installed app  $INSTALL_APP"
+  else
+    echo "warn Installed app  not found at $INSTALL_APP"
+  fi
+
+  echo
+  status
+
+  if [[ "$failed" -ne 0 ]]; then
+    echo
+    echo "Doctor found missing required prerequisites." >&2
+    exit 1
+  fi
+}
+
+update_cli() {
+  linux_only_build_notice
+  require_cmd npm
+  log "Updating Happy CLI from npm global package"
+  log "Before: $(happy_cli_version_without_exec)"
+  run npm install -g happy@latest
+  log "After: $(happy_cli_version_without_exec)"
+}
+
+require_github_issues_build_configuration() {
+  local name
+  for name in EXPO_PUBLIC_HAPPY_GITHUB_ISSUES_CLIENT_ID EXPO_PUBLIC_HAPPY_GITHUB_ISSUES_APP_SLUG; do
+    if [[ -z "${!name:-}" ]]; then
+      echo "Missing $name in untracked config.env or the environment." >&2
+      return 1
+    fi
+  done
+}
+
+pull_repo() {
+  ensure_repo
+  ensure_clean_repo
+  log "Updating Happy repo at $HAPPY_REPO"
+  log "Before commit: $(current_happy_commit)"
+  run git -C "$HAPPY_REPO" fetch --prune --tags origin
+  run git -C "$HAPPY_REPO" pull --ff-only
+  log "After commit: $(current_happy_commit)"
+}
+
+pull_repo_if_needed() {
+  local state="$1"
+  local ahead behind
+  IFS='|' read -r _ _ _ ahead behind <<<"$state"
+  if [[ "$ahead" -gt 0 && "$behind" -gt 0 ]]; then
+    echo "Happy repo diverged from upstream; refusing automatic refresh." >&2
+    exit 1
+  fi
+  if [[ "$behind" -eq 0 ]]; then
+    return 1
+  fi
+  run git -C "$HAPPY_REPO" pull --ff-only
+  return 0
+}
+
+build_desktop() {
+  if ! $HAPPY_PNPM_CMD --version >/dev/null 2>&1; then
+    echo "Missing or failing pnpm command: $HAPPY_PNPM_CMD" >&2
+    exit 1
+  fi
+  require_cmd cargo
+  ensure_repo
+  require_github_issues_build_configuration
+  log "Installing JS dependencies"
+  install_js_dependencies
+  log "Building Happy Desktop app bundle"
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    log "+ CARGO_BUILD_JOBS=1 RUSTFLAGS=-C link-arg=-Wl,--threads=1 $HAPPY_PNPM_CMD -C $HAPPY_REPO --filter happy-app exec tauri build --config $HAPPY_TAURI_CONFIG --bundles $HAPPY_LINUX_BUNDLES"
+    # shellcheck disable=SC2086
+    CARGO_BUILD_JOBS=1 RUSTFLAGS="-C link-arg=-Wl,--threads=1" \
+      $HAPPY_PNPM_CMD -C "$HAPPY_REPO" --filter happy-app exec tauri build --config "$HAPPY_TAURI_CONFIG" --bundles "$HAPPY_LINUX_BUNDLES"
+    artifacts
+  else
+    run_pnpm -C "$HAPPY_REPO" --filter happy-app exec tauri build --config "$HAPPY_TAURI_CONFIG" --bundles app --no-sign
+    if [[ ! -d "$BUILD_APP" ]]; then
+      echo "Build completed but app bundle was not found: $BUILD_APP" >&2
+      exit 1
+    fi
+    log "Built app: $BUILD_APP"
+  fi
+}
+
+artifacts() {
+  echo "Happy Desktop artifacts"
+  echo "Target dir: $TAURI_TARGET_DIR"
+  if [[ -x "$LINUX_EXECUTABLE" ]]; then
+    echo "exe:       $LINUX_EXECUTABLE"
+  else
+    echo "exe:       not found at $LINUX_EXECUTABLE"
+  fi
+  for dir in \
+    "$TAURI_TARGET_DIR/bundle/appimage" \
+    "$TAURI_TARGET_DIR/bundle/deb" \
+    "$TAURI_TARGET_DIR/bundle/rpm" \
+    "$TAURI_TARGET_DIR/bundle/macos" \
+    "$TAURI_TARGET_DIR/bundle/msi" \
+    "$TAURI_TARGET_DIR/bundle/nsis"; do
+    if [[ -d "$dir" ]]; then
+      echo "bundle:    $dir"
+      find "$dir" -maxdepth 1 -type f -print | sort
+    fi
+  done
+}
+
+latest_linux_deb() {
+  find "$TAURI_TARGET_DIR/bundle/deb" -maxdepth 1 -type f -name '*.deb' -print 2>/dev/null | sort -r | head -n 1
+}
+
+linux_deb_field() {
+  local deb_path="$1"
+  local field="$2"
+  dpkg-deb -f "$deb_path" "$field" 2>/dev/null || true
+}
+
+linux_deb_installed_version() {
+  local package_name="$1"
+  dpkg-query -W -f='${Version}' "$package_name" 2>/dev/null || true
+}
+
+linux_verify_deb_install() {
+  local package_name="$1"
+  local expected_version="$2"
+  local installed_executable="$3"
+  local desktop_entry="$4"
+  local installed_status installed_version
+
+  installed_status="$(dpkg-query -W -f='${Status}' "$package_name" 2>/dev/null || true)"
+  if [[ "$installed_status" != "install ok installed" ]]; then
+    echo "Package is not installed cleanly: ${installed_status:-not found}" >&2
+    exit 1
+  fi
+
+  installed_version="$(linux_deb_installed_version "$package_name")"
+  if [[ -n "$expected_version" && "$installed_version" != "$expected_version" ]]; then
+    echo "Unexpected installed version: ${installed_version:-not found}; expected $expected_version" >&2
+    exit 1
+  fi
+
+  if [[ ! -x "$installed_executable" ]]; then
+    echo "Installed executable not found or not executable: $installed_executable" >&2
+    exit 1
+  fi
+
+  if [[ ! -f "$desktop_entry" ]]; then
+    echo "Desktop entry not found: $desktop_entry" >&2
+    exit 1
+  fi
+
+  desktop-file-validate "$desktop_entry"
+  echo "ok   package:       $package_name $installed_version"
+  echo "ok   executable:    $installed_executable"
+  echo "ok   desktop entry: $desktop_entry"
+}
+
+linux_launch_smoke() {
+  local executable="$1"
+  local timeout_seconds="$HAPPY_LINUX_LAUNCH_TIMEOUT"
+  if [[ ! "$timeout_seconds" =~ ^[0-9]+$ || "$timeout_seconds" -eq 0 ]]; then
+    echo "HAPPY_LINUX_LAUNCH_TIMEOUT must be a positive integer, got: $timeout_seconds" >&2
+    exit 1
+  fi
+  if [[ ! -x "$executable" ]]; then
+    echo "Launch smoke executable not found or not executable: $executable" >&2
+    exit 1
+  fi
+  require_cmd timeout
+
+  local output_file rc
+  output_file="$(mktemp "${TMPDIR:-/tmp}/happy-linux-launch.XXXXXX.log")"
+  set +e
+  timeout "${timeout_seconds}s" "$executable" >"$output_file" 2>&1
+  rc=$?
+  set -e
+
+  if [[ "$rc" -eq 124 ]]; then
+    echo "ok   launch smoke:  $executable stayed running for ${timeout_seconds}s"
+    rm -f "$output_file"
+    return
+  fi
+  if [[ "$rc" -eq 0 ]]; then
+    echo "ok   launch smoke:  $executable exited successfully before ${timeout_seconds}s"
+    rm -f "$output_file"
+    return
+  fi
+
+  echo "Launch smoke failed with exit code $rc. Last output:" >&2
+  tail -n 40 "$output_file" >&2 || true
+  rm -f "$output_file"
+  exit "$rc"
+}
+
+linux_update_desktop() {
+  local dry_run=0 launch_smoke=0
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --launch-smoke) launch_smoke=1 ;;
+      *)
+        echo "Unknown update-desktop option on Linux: $1" >&2
+        exit 1
+        ;;
+    esac
+    shift
+  done
+
+  require_cmd dpkg-deb
+  require_cmd dpkg-query
+  require_cmd apt
+  require_cmd desktop-file-validate
+  if [[ "$dry_run" -ne 1 ]]; then
+    require_cmd sudo
+  fi
+
+  local deb_path package_name package_version package_arch package_depends installed_version desktop_entry installed_executable
+  deb_path="$(latest_linux_deb)"
+  if [[ -z "$deb_path" || ! -f "$deb_path" ]]; then
+    echo "Linux .deb artifact not found. Run build-desktop first." >&2
+    echo "Expected dir: $TAURI_TARGET_DIR/bundle/deb" >&2
+    exit 1
+  fi
+
+  package_name="$(linux_deb_field "$deb_path" Package)"
+  package_version="$(linux_deb_field "$deb_path" Version)"
+  package_arch="$(linux_deb_field "$deb_path" Architecture)"
+  package_depends="$(linux_deb_field "$deb_path" Depends)"
+  installed_version="$(linux_deb_installed_version "$package_name")"
+  installed_executable="$LINUX_INSTALLED_EXECUTABLE"
+  desktop_entry="/usr/share/applications/$HAPPY_APP_NAME.desktop"
+
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "Linux .deb desktop update dry run"
+  else
+    echo "Linux .deb desktop update"
+  fi
+  echo "Deb artifact:       $deb_path"
+  echo "Package:            ${package_name:-unknown}"
+  echo "Version:            ${package_version:-unknown}"
+  echo "Architecture:       ${package_arch:-unknown}"
+  echo "Depends:            ${package_depends:-unknown}"
+  if [[ -n "$installed_version" ]]; then
+    echo "Installed version:  $installed_version"
+  else
+    echo "Installed version:  not installed"
+  fi
+  echo
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "Would install with:"
+    printf '  sudo apt install %q\n' "$deb_path"
+  else
+    echo "Installing with apt..."
+    run sudo apt install "$deb_path"
+  fi
+  echo
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "Would verify after install:"
+    echo "  dpkg-query -W -f='\${Package} \${Version} \${Status}\\n' ${package_name:-happy-dev}"
+    echo "  test -x $installed_executable"
+    echo "  test -f '$desktop_entry'"
+    echo "  desktop-file-validate '$desktop_entry'"
+    if [[ "$launch_smoke" -eq 1 ]]; then
+      echo "  timeout ${HAPPY_LINUX_LAUNCH_TIMEOUT}s $installed_executable"
+    fi
+  else
+    echo "Verifying installed package..."
+    linux_verify_deb_install "${package_name:-happy-dev}" "$package_version" "$installed_executable" "$desktop_entry"
+    if [[ "$launch_smoke" -eq 1 ]]; then
+      linux_launch_smoke "$installed_executable"
+    fi
+  fi
+  echo
+  echo "User data policy:"
+  echo "  Do not remove or rewrite app data under the user's home directory."
+  echo
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "No changes made."
+  else
+    echo "Linux .deb desktop update completed."
+  fi
+}
+
+linux_refresh_desktop() {
+  local dry_run=0 force=0 launch_smoke=0
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --force|-f) force=1 ;;
+      --launch-smoke) launch_smoke=1 ;;
+      *)
+        echo "Unknown refresh-desktop option on Linux: $1" >&2
+        exit 1
+        ;;
+    esac
+    shift
+  done
+
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "Linux Debian desktop refresh dry run"
+    echo "Would fetch official and personal remotes, then update this integration chain:"
+    echo "  $HAPPY_DEVTOOLS_BASE_UPSTREAM -> $HAPPY_DEVTOOLS_BASE_BRANCH -> $HAPPY_DEVTOOLS_PATCH_BRANCHES"
+    echo "Would always build from: $HAPPY_DEVTOOLS_FINAL_BRANCH"
+    if [[ "$force" -eq 1 ]]; then
+      echo "Force: would rebuild and reinstall dev even without source changes."
+    fi
+    echo "Would run doctor, sync main into dev, build .deb/.rpm, run update-desktop dry-run, install .deb, verify, and write a report."
+    [[ "$launch_smoke" -eq 1 ]] && echo "Would also run launch smoke verification."
+    echo "No branch, push, build, install, package, or report changes made."
+    return
+  fi
+
+  local started_at status error_message upstream has_update pulled built installed verified pushed launch_smoke_status
+  local before_commit before_cli before_desktop after_commit after_cli after_desktop duration deb_path
+  local state base_ahead base_behind final_ahead final_behind branch_remote_delta needs_sync final_before_sync
+  started_at="$(date +%s)"
+  status="failed"
+  error_message=""
+  upstream="$HAPPY_DEVTOOLS_BASE_UPSTREAM"
+  has_update="n/a"
+  pulled="false"
+  built="false"
+  installed="false"
+  verified="false"
+  pushed="false"
+  launch_smoke_status="skipped"
+  before_commit="$(current_happy_commit 2>/dev/null || echo "repo not found")"
+  before_cli="$(happy_cli_version_without_exec)"
+  before_desktop="$(linux_deb_installed_version "$LINUX_PACKAGE_NAME")"
+  before_desktop="${before_desktop:-not installed}"
+
+  local rc=0
+  set +e
+  log "Starting Linux Happy Desktop refresh"
+  (doctor)
+  rc=$?
+
+  if [[ "$rc" -eq 0 ]]; then
+    state="$(happy_patch_stack_state fetch)"
+    rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+      show_patch_stack_state "$state"
+      IFS='|' read -r base_ahead base_behind final_ahead final_behind branch_remote_delta <<<"$state"
+      if [[ "$base_ahead" -gt 0 ]]; then
+        echo "$HAPPY_DEVTOOLS_BASE_BRANCH contains commits outside $HAPPY_DEVTOOLS_BASE_UPSTREAM; refusing automatic refresh." >&2
+        rc=1
+      fi
+    fi
+
+    if [[ "$rc" -eq 0 ]]; then
+      has_update="false"
+      needs_sync=0
+      if [[ "$base_behind" -gt 0 || "$final_behind" -gt 0 || "$branch_remote_delta" -gt 0 ]]; then
+        has_update="true"
+        needs_sync=1
+      fi
+      if [[ "$needs_sync" -eq 0 && "$force" -eq 0 ]]; then
+        status="skipped-no-upstream-update"
+        log "Happy dev integration is already synchronized; skipping Linux desktop build/update. Use --force to rebuild anyway."
+        echo "Official main and personal dev are already synchronized. Skipping Linux desktop refresh."
+      else
+        final_before_sync="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
+        sync_patch_stack_locally
+        rc=$?
+        if [[ "$rc" -eq 0 ]]; then
+          pulled="true"
+          after_commit="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
+          if [[ "$after_commit" == "$final_before_sync" && "$force" -eq 0 ]]; then
+            push_patch_stack
+            rc=$?
+            if [[ "$rc" -eq 0 ]]; then
+              pushed="true"
+              status="synced-no-desktop-change"
+              log "Updated/published main and dev; final Linux desktop source did not change, so build/install is not needed."
+            fi
+          fi
+        fi
+      fi
+    fi
+  fi
+
+  if [[ "$rc" -eq 0 && "$force" -ne 0 && "$status" != "synced-no-desktop-change" ]]; then
+    has_update="force"
+  fi
+
+  if [[ "$rc" -eq 0 && "$status" != "skipped-no-upstream-update" && "$status" != "synced-no-desktop-change" ]]; then
+    (build_desktop)
+    rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+      built="true"
+      push_patch_stack
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      pushed="true"
+      (linux_update_desktop --dry-run)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      (linux_update_desktop)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      installed="true"
+      if [[ "$launch_smoke" -eq 1 ]]; then
+        (linux_verify_desktop --launch)
+      else
+        (linux_verify_desktop)
+      fi
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      verified="true"
+      if [[ "$launch_smoke" -eq 1 ]]; then
+        launch_smoke_status="passed"
+      fi
+      status="success"
+      log "Linux Happy Desktop refresh completed"
+    fi
+  fi
+  set -e
+
+  if [[ "$rc" -ne 0 ]]; then
+    status="failed"
+    error_message="refresh failed with exit code $rc"
+  fi
+
+  after_commit="$(current_happy_commit 2>/dev/null || echo "repo not found")"
+  after_cli="$(happy_cli_version_without_exec)"
+  after_desktop="$(linux_deb_installed_version "$LINUX_PACKAGE_NAME")"
+  after_desktop="${after_desktop:-not installed}"
+  deb_path="$(latest_linux_deb)"
+  duration="$(( $(date +%s) - started_at ))"
+  write_update_report "linux-refresh-desktop" \
+    "Status" "$status" \
+    "Error" "$error_message" \
+    "Force" "$force" \
+    "Upstream" "$upstream" \
+    "Final branch ahead" "${final_ahead:-n/a}" \
+    "Final branch behind" "${final_behind:-n/a}" \
+    "Personal branch/remote delta" "${branch_remote_delta:-n/a}" \
+    "Update available" "$has_update" \
+    "Synced dev integration" "$pulled" \
+    "Pushed dev integration" "$pushed" \
+    "Built desktop" "$built" \
+    "Installed desktop" "$installed" \
+    "Verified desktop" "$verified" \
+    "Launch smoke" "$launch_smoke_status" \
+    "Happy commit before" "$before_commit" \
+    "Happy commit after" "$after_commit" \
+    "CLI version before" "$before_cli" \
+    "CLI version after" "$after_cli" \
+    "Desktop version before" "$before_desktop" \
+    "Desktop version after" "$after_desktop" \
+    "Deb artifact" "$deb_path" \
+    "Install package" "$LINUX_PACKAGE_NAME" \
+    "Installed executable" "$LINUX_INSTALLED_EXECUTABLE" \
+    "Duration seconds" "$duration" >/dev/null
+
+  if [[ "$rc" -ne 0 ]]; then
+    exit "$rc"
+  fi
+}
+
+linux_verify_desktop() {
+  local launch=0
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --launch) launch=1 ;;
+      *)
+        echo "Unknown verify-desktop option on Linux: $1" >&2
+        exit 1
+        ;;
+    esac
+    shift
+  done
+
+  require_cmd dpkg-query
+  require_cmd desktop-file-validate
+
+  local deb_path package_name expected_version desktop_entry
+  deb_path="$(latest_linux_deb)"
+  if [[ -n "$deb_path" && -f "$deb_path" ]]; then
+    require_cmd dpkg-deb
+    package_name="$(linux_deb_field "$deb_path" Package)"
+    expected_version="$(linux_deb_field "$deb_path" Version)"
+  fi
+  package_name="${package_name:-$LINUX_PACKAGE_NAME}"
+  desktop_entry="/usr/share/applications/$HAPPY_APP_NAME.desktop"
+
+  linux_verify_deb_install "$package_name" "$expected_version" "$LINUX_INSTALLED_EXECUTABLE" "$desktop_entry"
+  if [[ "$launch" -eq 1 ]]; then
+    linux_launch_smoke "$LINUX_INSTALLED_EXECUTABLE"
+  fi
+}
+
+quit_desktop() {
+  log "Quitting Happy Desktop if running"
+  osascript -e "tell application id \"$HAPPY_APP_BUNDLE_ID\" to quit" >/dev/null 2>&1 || true
+  sleep 2
+}
+
+backup_installed_app() {
+  if [[ ! -d "$INSTALL_APP" ]]; then
+    log "No installed app to back up"
+    return
+  fi
+
+  mkdir -p "$HAPPY_DEVTOOLS_BACKUP_DIR"
+  local stamp backup_path
+  stamp="$(date '+%Y%m%d-%H%M%S')"
+  backup_path="$HAPPY_DEVTOOLS_BACKUP_DIR/${HAPPY_APP_NAME%.app}-$stamp.app"
+  log "Backing up installed app to $backup_path"
+  run ditto "$INSTALL_APP" "$backup_path"
+}
+
+desktop_backup_paths() {
+  find "$HAPPY_DEVTOOLS_BACKUP_DIR" -maxdepth 1 -type d -name "${HAPPY_APP_NAME%.app}-*.app" -print 2>/dev/null | sort -r
+}
+
+sign_installed_desktop() {
+  if [[ "$OS_NAME" != "Darwin" ]]; then
+    return
+  fi
+  check_cmd codesign
+  log "Ad-hoc signing app with identifier $HAPPY_APP_BUNDLE_ID"
+  run codesign --force --deep --sign - --identifier "$HAPPY_APP_BUNDLE_ID" "$INSTALL_APP"
+}
+
+remove_old_desktop_backups() {
+  local keep="$1"
+  if [[ ! "$keep" =~ ^[0-9]+$ ]]; then
+    echo "Keep backups must be a non-negative integer, got: $keep" >&2
+    exit 1
+  fi
+  if [[ ! -d "$HAPPY_DEVTOOLS_BACKUP_DIR" ]]; then
+    return
+  fi
+
+  local index=0 backup_path backup_root
+  backup_root="$(cd "$HAPPY_DEVTOOLS_BACKUP_DIR" && pwd)"
+  while IFS= read -r backup_path; do
+    if [[ "$index" -lt "$keep" ]]; then
+      index=$((index + 1))
+      continue
+    fi
+
+    local full_path
+    full_path="$(cd "$(dirname "$backup_path")" && pwd)/$(basename "$backup_path")"
+    if [[ "$full_path" != "$backup_root"/* ]]; then
+      echo "Refusing to remove backup outside backup root: $full_path" >&2
+      exit 1
+    fi
+
+    log "Removing old desktop backup: $full_path"
+    rm -rf "$full_path"
+    index=$((index + 1))
+  done < <(desktop_backup_paths)
+}
+
+show_backup_retention_preview() {
+  local keep="$1"
+  echo "Backup dir:    $HAPPY_DEVTOOLS_BACKUP_DIR"
+  echo "Keep backups:  $keep"
+  if [[ ! -d "$HAPPY_DEVTOOLS_BACKUP_DIR" ]]; then
+    echo "Existing backups: 0"
+    echo "Backups to remove after success: none"
+    return
+  fi
+
+  local index=0 remove_count=0 backup_path
+  while IFS= read -r backup_path; do
+    if [[ "$index" -ge "$keep" ]]; then
+      if [[ "$remove_count" -eq 0 ]]; then
+        echo "Backups that would be removed after success:"
+      fi
+      echo "  $backup_path"
+      remove_count=$((remove_count + 1))
+    fi
+    index=$((index + 1))
+  done < <(desktop_backup_paths)
+
+  echo "Existing backups: $index"
+  if [[ "$remove_count" -eq 0 ]]; then
+    echo "Backups to remove after success: none"
+  fi
+}
+
+install_desktop() {
+  linux_only_build_notice
+  if [[ ! -d "$BUILD_APP" ]]; then
+    echo "Built app not found. Run build-desktop first: $BUILD_APP" >&2
+    exit 1
+  fi
+
+  quit_desktop
+  backup_installed_app
+  log "Installing app to $INSTALL_APP"
+  rm -rf "$INSTALL_APP"
+  run ditto "$BUILD_APP" "$INSTALL_APP"
+  sign_installed_desktop
+}
+
+launch_desktop() {
+  linux_only_build_notice
+  if [[ ! -d "$INSTALL_APP" ]]; then
+    echo "Installed app not found: $INSTALL_APP" >&2
+    exit 1
+  fi
+  log "Launching $INSTALL_APP"
+  run open "$INSTALL_APP"
+}
+
+verify_desktop() {
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    linux_verify_desktop "$@"
+    return
+  fi
+  if [[ "$#" -gt 0 ]]; then
+    echo "Unknown verify-desktop option on $OS_NAME: $1" >&2
+    exit 1
+  fi
+  linux_only_build_notice
+  if [[ ! -d "$INSTALL_APP" ]]; then
+    echo "Installed app not found: $INSTALL_APP" >&2
+    exit 1
+  fi
+
+  local info_plist bundle_id
+  info_plist="$INSTALL_APP/Contents/Info.plist"
+  if [[ ! -f "$info_plist" ]]; then
+    echo "Installed app Info.plist not found: $info_plist" >&2
+    exit 1
+  fi
+
+  bundle_id="$(defaults read "$info_plist" CFBundleIdentifier 2>/dev/null || true)"
+  if [[ "$bundle_id" != "$HAPPY_APP_BUNDLE_ID" ]]; then
+    echo "Unexpected bundle id: ${bundle_id:-not found}; expected $HAPPY_APP_BUNDLE_ID" >&2
+    exit 1
+  fi
+
+  if [[ "$OS_NAME" == "Darwin" ]]; then
+    local signing_id
+    signing_id="$(codesign -dv "$INSTALL_APP" 2>&1 | awk -F= '/^Identifier=/{print $2; exit}')"
+    if [[ "$signing_id" != "$HAPPY_APP_BUNDLE_ID" ]]; then
+      echo "Unexpected codesign identifier: ${signing_id:-not found}; expected $HAPPY_APP_BUNDLE_ID" >&2
+      exit 1
+    fi
+    echo "ok   codesign id:   $signing_id"
+  fi
+
+  echo "ok   installed app: $INSTALL_APP"
+  echo "ok   bundle id:     $bundle_id"
+}
+
+latest_backup_app() {
+  desktop_backup_paths | head -n 1
+}
+
+rollback_desktop() {
+  linux_only_build_notice
+  local backup_app="${1:-}"
+  if [[ -z "$backup_app" ]]; then
+    backup_app="$(latest_backup_app)"
+  fi
+
+  if [[ -z "$backup_app" || ! -d "$backup_app" ]]; then
+    echo "No desktop backup found in $HAPPY_DEVTOOLS_BACKUP_DIR" >&2
+    exit 1
+  fi
+
+  quit_desktop
+  log "Rolling back desktop app from $backup_app"
+  rm -rf "$INSTALL_APP"
+  run ditto "$backup_app" "$INSTALL_APP"
+  launch_desktop
+}
+
+update_desktop() {
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    linux_update_desktop "$@"
+    return
+  fi
+  if [[ "$#" -gt 0 ]]; then
+    echo "Unknown update-desktop option on $OS_NAME: $1" >&2
+    exit 1
+  fi
+  linux_only_build_notice
+  pull_repo
+  build_desktop
+  install_desktop
+  remove_old_desktop_backups "$HAPPY_DEVTOOLS_KEEP_BACKUPS"
+  launch_desktop
+}
+
+update_all() {
+  linux_only_build_notice
+  update_cli
+  update_desktop
+}
+
+refresh_desktop() {
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    linux_refresh_desktop "$@"
+    return
+  fi
+  linux_only_build_notice
+  local dry_run=0 force=0 keep_backups="$HAPPY_DEVTOOLS_KEEP_BACKUPS"
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --force|-f) force=1 ;;
+      --keep-backups)
+        if [[ -z "${2:-}" ]]; then
+          echo "--keep-backups requires a value" >&2
+          exit 1
+        fi
+        keep_backups="$2"
+        shift
+        ;;
+      --keep-backups=*)
+        keep_backups="${1#*=}"
+        ;;
+      *)
+        echo "Unknown refresh-desktop option: $1" >&2
+        exit 1
+        ;;
+    esac
+    shift
+  done
+  if [[ ! "$keep_backups" =~ ^[0-9]+$ ]]; then
+    echo "Keep backups must be a non-negative integer, got: $keep_backups" >&2
+    exit 1
+  fi
+
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "macOS desktop refresh dry run"
+    echo "Would fetch official and personal remotes, then update this integration chain:"
+    echo "  $HAPPY_DEVTOOLS_BASE_UPSTREAM -> $HAPPY_DEVTOOLS_BASE_BRANCH -> $HAPPY_DEVTOOLS_PATCH_BRANCHES"
+    echo "Would always build from: $HAPPY_DEVTOOLS_FINAL_BRANCH"
+    echo "After a conflict-free merge it would build .app, push synchronized main and dev, install, verify, launch, and write a report."
+    echo "A dirty worktree, diverged main/remote branch, merge conflict, build failure, or push failure stops before replacing the installed app."
+    if [[ "$force" -eq 1 ]]; then
+      echo "Force: would rebuild and reinstall dev even without source changes."
+    fi
+    show_backup_retention_preview "$keep_backups"
+    echo "No changes made."
+    return
+  fi
+
+  local started_at status error_message state upstream ahead behind has_update pulled built installed verified pushed
+  local before_commit before_cli before_desktop after_commit after_cli duration
+  local base_ahead base_behind final_ahead final_behind branch_remote_delta needs_sync final_before_sync
+  started_at="$(date +%s)"
+  status="failed"
+  error_message=""
+  upstream="n/a"
+  ahead="n/a"
+  behind="n/a"
+  has_update="n/a"
+  pulled="false"
+  built="false"
+  installed="false"
+  verified="false"
+  pushed="false"
+  before_commit="$(current_happy_commit 2>/dev/null || echo "repo not found")"
+  before_cli="$(happy_cli_version_without_exec)"
+  before_desktop="$(defaults read "$INSTALL_APP/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "not installed")"
+
+  local rc=0
+  set +e
+  log "Starting macOS Happy Desktop refresh"
+  (doctor)
+  rc=$?
+
+  if [[ "$rc" -eq 0 ]]; then
+    state="$(happy_patch_stack_state fetch)"
+    rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+      show_patch_stack_state "$state"
+      IFS='|' read -r base_ahead base_behind final_ahead final_behind branch_remote_delta <<<"$state"
+      upstream="$HAPPY_DEVTOOLS_BASE_UPSTREAM"
+      ahead="$final_ahead"
+      behind="$final_behind"
+      if [[ "$base_ahead" -gt 0 ]]; then
+        echo "$HAPPY_DEVTOOLS_BASE_BRANCH contains commits outside $HAPPY_DEVTOOLS_BASE_UPSTREAM; refusing automatic refresh." >&2
+        rc=1
+      fi
+    fi
+
+    if [[ "$rc" -eq 0 ]]; then
+      has_update="false"
+      needs_sync=0
+      if [[ "$base_behind" -gt 0 || "$final_behind" -gt 0 || "$branch_remote_delta" -gt 0 ]]; then
+        has_update="true"
+        needs_sync=1
+      fi
+      if [[ "$needs_sync" -eq 0 && "$force" -eq 0 ]]; then
+        status="skipped-no-upstream-update"
+        log "Happy dev integration is already synchronized; skipping desktop build/update. Use --force to rebuild anyway."
+        echo "Official main and personal dev are already synchronized. Skipping desktop refresh."
+      else
+        final_before_sync="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
+        sync_patch_stack_locally
+        rc=$?
+        if [[ "$rc" -eq 0 ]]; then
+          pulled="true"
+          after_commit="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
+          if [[ "$after_commit" == "$final_before_sync" && "$force" -eq 0 ]]; then
+            push_patch_stack
+            rc=$?
+            if [[ "$rc" -eq 0 ]]; then
+              pushed="true"
+              status="synced-no-desktop-change"
+              log "Updated/published main and dev; final desktop source did not change, so build/install is not needed."
+            fi
+          fi
+        fi
+      fi
+    fi
+  fi
+
+  if [[ "$rc" -eq 0 && "$status" != "skipped-no-upstream-update" && "$status" != "synced-no-desktop-change" ]]; then
+    (build_desktop)
+    rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+      built="true"
+      push_patch_stack
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      pushed="true"
+      (install_desktop)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      installed="true"
+      remove_old_desktop_backups "$keep_backups"
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      (verify_desktop)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      verified="true"
+      (launch_desktop)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      status="success"
+      log "macOS Happy Desktop refresh completed"
+    fi
+  fi
+  set -e
+
+  if [[ "$rc" -ne 0 ]]; then
+    status="failed"
+    error_message="refresh failed with exit code $rc"
+  fi
+
+  after_commit="$(current_happy_commit 2>/dev/null || echo "repo not found")"
+  after_cli="$(happy_cli_version_without_exec)"
+  duration="$(( $(date +%s) - started_at ))"
+  write_update_report "refresh-desktop" \
+    "Status" "$status" \
+    "Error" "$error_message" \
+    "Force" "$force" \
+    "Upstream" "$upstream" \
+    "Ahead" "$ahead" \
+    "Behind" "$behind" \
+    "Update available" "$has_update" \
+    "Pulled upstream" "$pulled" \
+    "Pushed main and dev" "$pushed" \
+    "Built desktop" "$built" \
+    "Installed desktop" "$installed" \
+    "Verified desktop" "$verified" \
+    "Happy commit before" "$before_commit" \
+    "Happy commit after" "$after_commit" \
+    "CLI version before" "$before_cli" \
+    "CLI version after" "$after_cli" \
+    "Desktop version before" "$before_desktop" \
+    "Install app" "$INSTALL_APP" \
+    "Keep backups" "$keep_backups" \
+    "Duration seconds" "$duration" >/dev/null
+
+  if [[ "$rc" -ne 0 ]]; then
+    exit "$rc"
+  fi
+}
+
+install_refresh_task() {
+  linux_only_build_notice
+  local task_time="${1:-$HAPPY_DEVTOOLS_REFRESH_TIME}"
+  if [[ ! "$task_time" =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+    echo "Task time must be HH:MM, got: $task_time" >&2
+    exit 1
+  fi
+
+  local hour minute
+  hour="${task_time%%:*}"
+  minute="${task_time##*:}"
+  if (( 10#$hour > 23 || 10#$minute > 59 )); then
+    echo "Task time must be valid HH:MM, got: $task_time" >&2
+    exit 1
+  fi
+
+  mkdir -p "$(dirname "$LAUNCH_AGENT_PLIST")"
+  mkdir -p "$HAPPY_DEVTOOLS_LOG_DIR"
+  cat >"$LAUNCH_AGENT_PLIST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$HAPPY_DEVTOOLS_REFRESH_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$SCRIPT_DIR/happyctl</string>
+    <string>refresh-desktop</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>$HAPPY_REPO</string>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>$((10#$hour))</integer>
+    <key>Minute</key>
+    <integer>$((10#$minute))</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>$HAPPY_DEVTOOLS_LOG_DIR/happyctl-refresh.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HAPPY_DEVTOOLS_LOG_DIR/happyctl-refresh.err.log</string>
+</dict>
+</plist>
+EOF
+
+  plutil -lint "$LAUNCH_AGENT_PLIST" >/dev/null
+  launchctl bootout "gui/$(id -u)" "$LAUNCH_AGENT_PLIST" >/dev/null 2>&1 || true
+  launchctl bootstrap "gui/$(id -u)" "$LAUNCH_AGENT_PLIST"
+  launchctl enable "gui/$(id -u)/$HAPPY_DEVTOOLS_REFRESH_LABEL" >/dev/null 2>&1 || true
+  echo "Installed refresh task: $HAPPY_DEVTOOLS_REFRESH_LABEL at $task_time"
+  echo "Plist: $LAUNCH_AGENT_PLIST"
+}
+
+refresh_task_status() {
+  linux_only_build_notice
+  echo "Refresh task label: $HAPPY_DEVTOOLS_REFRESH_LABEL"
+  echo "Plist: $LAUNCH_AGENT_PLIST"
+  if [[ -f "$LAUNCH_AGENT_PLIST" ]]; then
+    echo "Plist exists."
+    plutil -lint "$LAUNCH_AGENT_PLIST"
+  else
+    echo "Plist not installed."
+  fi
+  launchctl print "gui/$(id -u)/$HAPPY_DEVTOOLS_REFRESH_LABEL" 2>/dev/null || echo "LaunchAgent is not loaded."
+}
+
+uninstall_refresh_task() {
+  linux_only_build_notice
+  launchctl bootout "gui/$(id -u)" "$LAUNCH_AGENT_PLIST" >/dev/null 2>&1 || true
+  if [[ -f "$LAUNCH_AGENT_PLIST" ]]; then
+    rm -f "$LAUNCH_AGENT_PLIST"
+  fi
+  echo "Removed refresh task: $HAPPY_DEVTOOLS_REFRESH_LABEL"
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  doctor) doctor ;;
+  status) status ;;
+  check-upstream) check_upstream ;;
+  sync-dev|sync-patch-stack) shift; sync_patch_stack_command "${1:-}" ;;
+  update-cli) update_cli ;;
+  build-desktop) build_desktop ;;
+  artifacts) artifacts ;;
+  update-desktop) shift; update_desktop "$@" ;;
+  refresh-desktop) shift; refresh_desktop "$@" ;;
+  verify-desktop) shift; verify_desktop "$@" ;;
+  update-all) update_all ;;
+  launch-desktop) launch_desktop ;;
+  rollback-desktop) shift; rollback_desktop "${1:-}" ;;
+  install-refresh-task) shift; install_refresh_task "${1:-}" ;;
+  refresh-task-status) refresh_task_status ;;
+  uninstall-refresh-task) uninstall_refresh_task ;;
+  ios-doctor) ios_doctor ;;
+  ios-build-internal) shift; ios_build_internal "${1:-}" ;;
+  ios-build-testflight) shift; ios_build_testflight "${1:-}" ;;
+  ios-submit-testflight) shift; ios_submit_testflight "$@" ;;
+  ios-publish-update) shift; ios_publish_update "$@" ;;
+  ios-release-status) ios_release_status ;;
+  ""|-h|--help|help) usage ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac

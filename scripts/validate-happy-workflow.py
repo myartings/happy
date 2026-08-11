@@ -83,7 +83,8 @@ def main() -> int:
     try:
         instructions = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         for phrase in (
-            "Keep `main` clean and tracking `upstream/main`.",
+            "Keep the product tree on `main` equivalent to `upstream/main`",
+            "Personal `main` may differ from `upstream/main` only in `devtools/`",
             "Do not run the upstream template's full synchronization manifest",
         ):
             if phrase not in instructions:

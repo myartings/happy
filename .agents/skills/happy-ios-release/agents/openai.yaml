@@ -1,0 +1,4 @@
+interface:
+  display_name: "Happy iOS Release"
+  short_description: "Build, submit, and update Happy Personal on iOS"
+  default_prompt: "Use $happy-ios-release to safely preview or run a Happy Personal iOS release."
