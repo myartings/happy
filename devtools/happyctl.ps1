@@ -74,8 +74,8 @@ $WindowsUninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstal
 $WindowsRefreshTaskName = "Happy Devtools Desktop Refresh"
 $LastDesktopUpdateResult = $null
 $OfficialBaseRef = if ($env:HAPPY_OFFICIAL_BASE_REF) { $env:HAPPY_OFFICIAL_BASE_REF } else { "upstream/main" }
+$OfficialBranch = if ($env:HAPPY_OFFICIAL_BRANCH) { $env:HAPPY_OFFICIAL_BRANCH } else { "official" }
 $PersonalMainBranch = if ($env:HAPPY_PERSONAL_MAIN_BRANCH) { $env:HAPPY_PERSONAL_MAIN_BRANCH } else { "main" }
-$DevBranch = if ($env:HAPPY_DEV_BRANCH) { $env:HAPPY_DEV_BRANCH } else { "dev" }
 $CodexDefaultModel = if ($env:HAPPY_CODEX_DEFAULT_MODEL) { $env:HAPPY_CODEX_DEFAULT_MODEL } else { "gpt-5.6-sol" }
 $LastPatchStackChanged = $false
 $LastPatchStackCommit = ""
@@ -336,12 +336,12 @@ function Assert-OfficialProductEquivalence {
     }
     & git -C $HappyRepo merge-base --is-ancestor $UpstreamRef HEAD
     if ($LASTEXITCODE -ne 0) {
-        throw "Personal main does not contain the current official commit: $UpstreamRef"
+        throw "Official branch does not contain the current official commit: $UpstreamRef"
     }
     $invalid = @(& git -C $HappyRepo diff --name-only "$UpstreamRef..HEAD" |
         Where-Object { $_ -and -not (Test-DevtoolsPath $_) })
     if ($invalid.Count -gt 0) {
-        throw "Personal main changes product/build inputs outside the devtools allowlist: $($invalid -join ', ')"
+        throw "Official branch changes product/build inputs outside the devtools allowlist: $($invalid -join ', ')"
     }
 }
 
@@ -377,7 +377,7 @@ function Sync-CurrentBranchFromOrigin {
     $ahead = [int]$counts[0]
     $behind = [int]$counts[1]
     if ($ahead -gt 0 -and $behind -gt 0) {
-        throw "Happy branch $Branch diverged from $originRef; refusing automatic dev integration sync. Resolve the local branch divergence before running refresh-desktop."
+        throw "Happy branch $Branch diverged from $originRef; refusing automatic personal-main sync. Resolve the divergence before running refresh-desktop."
     }
     if ($behind -gt 0) {
         Invoke-HappyGit -Arguments @("merge", "--ff-only", $originRef)
@@ -403,22 +403,22 @@ function Show-PersonalPatchStackPlan {
     }
     Assert-HappyRepoClean
 
-    Write-Section "Happy personal dev integration"
+    Write-Section "Happy official-to-personal integration"
     Write-Host "Repo:          $HappyRepo"
     Write-Host "Official base: $OfficialBaseRef"
-    Write-Host "Personal main: $PersonalMainBranch"
-    Write-Host "Dev branch:    $DevBranch"
+    Write-Host "Official branch: $OfficialBranch"
+    Write-Host "Personal main:   $PersonalMainBranch"
     Write-Host ""
     Write-Host "Would run:"
     Write-Host "  git fetch --prune upstream"
     Write-Host "  git fetch --prune origin"
-    Write-Host "  git switch $PersonalMainBranch"
-    Write-Host "  verify main differs from $OfficialBaseRef only in devtools infrastructure"
+    Write-Host "  git switch $OfficialBranch"
+    Write-Host "  verify $OfficialBranch differs from $OfficialBaseRef only in devtools infrastructure"
     Write-Host "  git merge --no-edit $OfficialBaseRef"
+    Write-Host "  git push origin $OfficialBranch"
+    Write-Host "  git switch $PersonalMainBranch"
+    Write-Host "  git merge --no-edit $OfficialBranch"
     Write-Host "  git push origin $PersonalMainBranch"
-    Write-Host "  git switch $DevBranch"
-    Write-Host "  git merge --no-edit $PersonalMainBranch"
-    Write-Host "  git push origin $DevBranch"
     Write-Host "  verify Codex default model remains $CodexDefaultModel"
 }
 
@@ -429,11 +429,11 @@ function Sync-PersonalPatchStack {
     Assert-HappyRepoClean
 
     $beforeFinal = ""
-    $beforeOutput = & git -C $HappyRepo rev-parse $DevBranch 2>$null
+    $beforeOutput = & git -C $HappyRepo rev-parse $PersonalMainBranch 2>$null
     if ($LASTEXITCODE -eq 0 -and $beforeOutput) {
         $beforeFinal = $beforeOutput.Trim()
     } else {
-        $beforeOutput = & git -C $HappyRepo rev-parse "origin/$DevBranch" 2>$null
+        $beforeOutput = & git -C $HappyRepo rev-parse "origin/$PersonalMainBranch" 2>$null
         if ($LASTEXITCODE -eq 0 -and $beforeOutput) {
             $beforeFinal = $beforeOutput.Trim()
         }
@@ -445,17 +445,17 @@ function Sync-PersonalPatchStack {
         throw "Official Happy base ref not found after fetch: $OfficialBaseRef"
     }
 
-    Ensure-HappyLocalBranch -Branch $PersonalMainBranch -FallbackRef $OfficialBaseRef
-    Sync-CurrentBranchFromOrigin -Branch $PersonalMainBranch
+    Ensure-HappyLocalBranch -Branch $OfficialBranch -FallbackRef $OfficialBaseRef
+    Sync-CurrentBranchFromOrigin -Branch $OfficialBranch
     Invoke-HappyGit -Arguments @("merge", "--no-edit", $OfficialBaseRef)
     Assert-OfficialProductEquivalence
-    Invoke-HappyGit -Arguments @("push", "origin", $PersonalMainBranch)
+    Invoke-HappyGit -Arguments @("push", "origin", $OfficialBranch)
 
-    Ensure-HappyLocalBranch -Branch $DevBranch -FallbackRef $PersonalMainBranch
-    Sync-CurrentBranchFromOrigin -Branch $DevBranch
-    Invoke-HappyGit -Arguments @("merge", "--no-edit", $PersonalMainBranch)
+    Ensure-HappyLocalBranch -Branch $PersonalMainBranch -FallbackRef $OfficialBranch
+    Sync-CurrentBranchFromOrigin -Branch $PersonalMainBranch
+    Invoke-HappyGit -Arguments @("merge", "--no-edit", $OfficialBranch)
     Assert-PersonalPatches
-    Invoke-HappyGit -Arguments @("push", "origin", $DevBranch)
+    Invoke-HappyGit -Arguments @("push", "origin", $PersonalMainBranch)
 
     $afterFinal = (& git -C $HappyRepo rev-parse HEAD).Trim()
     $script:LastPatchStackCommit = $afterFinal
@@ -477,8 +477,8 @@ function Sync-OfficialBaselineSource {
         throw "Official Happy base ref not found after fetch: $OfficialBaseRef"
     }
 
-    Ensure-HappyLocalBranch -Branch $PersonalMainBranch -FallbackRef $OfficialBaseRef
-    Sync-CurrentBranchFromOrigin -Branch $PersonalMainBranch
+    Ensure-HappyLocalBranch -Branch $OfficialBranch -FallbackRef $OfficialBaseRef
+    Sync-CurrentBranchFromOrigin -Branch $OfficialBranch
     Invoke-HappyGit -Arguments @("merge", "--no-edit", $OfficialBaseRef)
     Assert-OfficialProductEquivalence
 }
@@ -486,8 +486,8 @@ function Sync-OfficialBaselineSource {
 function Assert-OfficialBaselineSource {
     Assert-HappyRepoClean
     $branch = Get-HappyCurrentBranch
-    if ($branch -ne $PersonalMainBranch) {
-        throw "Official baseline must be built from $PersonalMainBranch, current branch is $branch. Run refresh-official-baseline."
+    if ($branch -ne $OfficialBranch) {
+        throw "Official baseline must be built from $OfficialBranch, current branch is $branch. Run refresh-official-baseline."
     }
     if (-not (Test-GitRef $OfficialBaseRef)) {
         throw "Official Happy base ref not found: $OfficialBaseRef"
@@ -1209,9 +1209,9 @@ Windows defaults:
   Task time:    $TaskTime
 
 Notes:
-  refresh-desktop syncs official main into personal dev and skips build/update when dev is unchanged.
-  -Force rebuilds and reinstalls from personal dev.
-  refresh-official-baseline builds product-equivalent personal main as a separately installed comparison client.
+  refresh-desktop syncs upstream/main into official, then official into personal main.
+  -Force rebuilds and reinstalls from personal main.
+  refresh-official-baseline builds the product-equivalent official branch as a separately installed comparison client.
   Official baseline identity: Happy (official baseline) / com.slopus.happy.official-baseline.
   update-desktop installs the latest verified NSIS artifact with /S.
   update-cli reapplies the Happy CLI Codex default model patch after npm upgrade.
@@ -1607,9 +1607,9 @@ function Invoke-RefreshDesktop {
         Write-Section "Windows desktop refresh dry run"
         Show-PersonalPatchStackPlan
         if ($Force) {
-            Write-Host "Would run forced refresh: doctor, sync main into dev, build dev, update-desktop dry-run, update-desktop, verify-desktop."
+            Write-Host "Would run forced refresh: doctor, sync official into main, build main, update-desktop dry-run, update-desktop, verify-desktop."
         } else {
-            Write-Host "Would run: doctor, sync main into dev, skip if dev is unchanged, build-desktop, update-desktop dry-run, update-desktop, verify-desktop."
+            Write-Host "Would run: doctor, sync official into main, skip if main is unchanged, build-desktop, update-desktop dry-run, update-desktop, verify-desktop."
         }
         Write-Host "No branch, push, build, install, package, or report changes made."
         return
@@ -1618,7 +1618,7 @@ function Invoke-RefreshDesktop {
     $startedAt = Get-Date
     $status = "failed"
     $errorMessage = ""
-    $patchStack = "$OfficialBaseRef -> $PersonalMainBranch -> $DevBranch"
+    $patchStack = "$OfficialBaseRef -> $OfficialBranch -> $PersonalMainBranch"
     $finalPatchCommit = "n/a"
     $hasUpdate = "n/a"
     $pulled = $false
@@ -1646,15 +1646,15 @@ function Invoke-RefreshDesktop {
 
         if ((-not $Force) -and (-not $script:LastPatchStackChanged)) {
             $status = "skipped-no-final-branch-change"
-            Write-Log "Happy dev is unchanged; skipping desktop build/update. Use -Force to rebuild anyway."
-            Write-Host "No dev branch change found. Skipping Windows desktop refresh. Use -Force to rebuild anyway."
+            Write-Log "Happy personal main is unchanged; skipping desktop build/update. Use -Force to rebuild anyway."
+            Write-Host "No main branch change found. Skipping Windows desktop refresh. Use -Force to rebuild anyway."
             return
         }
 
         if ($Force) {
             $status = "forced"
             $hasUpdate = "force"
-            Write-Log "Force enabled: rebuilding dev."
+            Write-Log "Force enabled: rebuilding personal main."
         }
 
         Invoke-BuildDesktop
@@ -1695,11 +1695,11 @@ function Invoke-RefreshDesktop {
             Error = $errorMessage
             Force = [bool]$Force
             "Integration chain" = $patchStack
-            "Final build branch" = $DevBranch
-            "Dev commit" = $finalPatchCommit
-            "Dev changed" = $script:LastPatchStackChanged
+            "Final build branch" = $PersonalMainBranch
+            "Main commit" = $finalPatchCommit
+            "Main changed" = $script:LastPatchStackChanged
             "Update available" = $hasUpdate
-            "Synced dev integration" = $pulled
+            "Synced personal main" = $pulled
             "Built desktop" = $built
             "Installed desktop" = $installed
             "Verified desktop" = $verified
@@ -1728,12 +1728,12 @@ function Invoke-RefreshOfficialBaseline {
         Assert-HappyRepoClean
         Write-Section "Windows official baseline refresh dry run"
         Write-Host "Source:        $OfficialBaseRef"
-        Write-Host "Local branch:  $PersonalMainBranch"
+        Write-Host "Local branch:  $OfficialBranch"
         Write-Host "App name:      $WindowsAppName"
         Write-Host "Tauri config:  $TauriConfigPath"
         Write-Host "Install dir:   $WindowsInstallDir"
-        Write-Host "Would fetch upstream, merge it into personal main, validate product-source equivalence, build the isolated baseline, install it, and verify launch."
-        Write-Host "The personal Happy (dev) installation and dev branch would not be replaced."
+        Write-Host "Would fetch upstream, merge it into official, validate product-source equivalence, build the isolated baseline, install it, and verify launch."
+        Write-Host "The personal Happy (dev) installation and main branch would not be replaced."
         Write-Host "No branch, build, install, package, or report changes made."
         return
     }
@@ -1747,7 +1747,7 @@ function Invoke-RefreshOfficialBaseline {
     }
 
     $officialCommit = "n/a"
-    $personalMainCommit = "n/a"
+    $officialBranchCommit = "n/a"
     $built = $false
     $installed = $false
     $verified = $false
@@ -1763,7 +1763,7 @@ function Invoke-RefreshOfficialBaseline {
         Sync-OfficialBaselineSource
         Assert-OfficialBaselineSource
         $officialCommit = (& git -C $HappyRepo rev-parse $OfficialBaseRef).Trim()
-        $personalMainCommit = (& git -C $HappyRepo rev-parse HEAD).Trim()
+        $officialBranchCommit = (& git -C $HappyRepo rev-parse HEAD).Trim()
 
         Invoke-BuildDesktop
         $built = $true
@@ -1799,7 +1799,7 @@ function Invoke-RefreshOfficialBaseline {
         }
 
         $currentBranch = Get-HappyCurrentBranch
-        if ($currentBranch -eq $PersonalMainBranch) {
+        if ($currentBranch -eq $OfficialBranch) {
             Restore-OfficialBaselineBuildSideEffects
         } else {
             Refresh-HappyIndexIfContentUnchanged
@@ -1817,8 +1817,8 @@ function Invoke-RefreshOfficialBaseline {
             Error = $errorMessage
             "Source ref" = $OfficialBaseRef
             "Official commit" = $officialCommit
-            "Personal main commit" = $personalMainCommit
-            "Product source equivalence" = if ($personalMainCommit -ne "n/a") { "verified" } else { "not verified" }
+            "Official branch commit" = $officialBranchCommit
+            "Product source equivalence" = if ($officialBranchCommit -ne "n/a") { "verified" } else { "not verified" }
             "Dependency mode" = $script:OfficialBaselineDependencyMode
             "Original branch restored" = $originalBranch
             "Built baseline" = $built

@@ -7,10 +7,10 @@ This directory owns personal Happy operations: update, build, install, backup, r
 ## Branch invariants
 
 - `upstream` is fetch-only; its push URL must remain disabled.
-- Personal `main` contains `upstream/main` plus devtools infrastructure only.
-- `dev` contains personal product features and is the desktop build/release branch.
-- `happyctl` must reject an official-baseline build when personal `main` differs from `upstream/main` outside the explicit devtools allowlist.
-- New official commits are merged into personal `main`; `main` is then merged into `dev`. Do not reset or rewrite either branch.
+- `official` contains `upstream/main` plus devtools infrastructure only.
+- `main` contains personal product features and is the default desktop build/release branch.
+- `happyctl` must reject an official-baseline build when `official` differs from `upstream/main` outside the explicit devtools allowlist.
+- New official commits are merged into `official`; `official` is then merged into `main`. Do not reset or rewrite either branch.
 
 ## State and secrets
 
@@ -25,7 +25,7 @@ This directory owns personal Happy operations: update, build, install, backup, r
 devtools/happyctl status
 devtools/happyctl doctor
 devtools/happyctl check-upstream
-devtools/happyctl sync-dev --dry-run
+devtools/happyctl sync-main --dry-run
 devtools/happyctl refresh-desktop --dry-run
 ```
 

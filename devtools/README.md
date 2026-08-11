@@ -22,12 +22,12 @@ devtools/happyctl refresh-desktop
 ## Branch model
 
 ```text
-upstream/main -> personal main (devtools-only delta) -> dev (personal product features)
+upstream/main -> official (devtools-only delta) -> main (personal product features)
 ```
 
-Personal `main` contains the official product tree plus allowlisted infrastructure only: `devtools/`, the two Happy operation skills, `AGENTS.md`, and `.gitignore`. `happyctl` verifies that `main` contains the current `upstream/main` and has no product/build-input differences before using it for the isolated official baseline client.
+`official` contains the official product tree plus allowlisted infrastructure only: `devtools/`, the two Happy operation skills, `AGENTS.md`, and `.gitignore`. `happyctl` verifies that `official` contains the current `upstream/main` and has no product/build-input differences before using it for the isolated official baseline client.
 
-`refresh-desktop` merges new official commits into personal `main`, verifies that invariant, merges `main` into `dev`, builds `dev`, then installs and verifies the personal desktop client. It stops on dirty state, divergence, conflicts, build failures, or verification failures.
+`refresh-desktop` merges new official commits into `official`, verifies that invariant, merges `official` into personal `main`, builds `main`, then installs and verifies the personal desktop client. It stops on dirty state, divergence, conflicts, build failures, or verification failures.
 
 ## Local state
 
