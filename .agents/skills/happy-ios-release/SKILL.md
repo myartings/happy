@@ -14,7 +14,7 @@ XcodeGen `deploy-ota` workflow for this Expo app.
 - Start with `devtools/happyctl ios-doctor` for readiness questions.
 - Preview every requested mutation with its `--dry-run` form first.
 - Run a real build, submission, or update only when the user explicitly asks.
-- Real releases require a clean Happy `dev` checkout and authenticated personal
+- Real releases require a clean Happy `main` checkout and authenticated personal
   EAS account.
 - Never select `production`, `development-store`, or `preview-store`; those are
   official Happy profiles.

@@ -1,7 +1,7 @@
 ---
 name: happy-desktop-update
-description: Update myartings' Happy Desktop from official upstream through the personal dev integration branch, preserving all personal features and the gpt-5.6-sol Codex default-model customization. Use when the user says “更新 Happy 到最新”, “升级 Happy 到最新版”, “更新一下 Happy”, or an equivalent Happy Desktop update request. Do not use for a CLI-only update.
-version: 0.2.0
+description: Update myartings' Happy Desktop from official upstream through the official tracking branch into the personal main integration branch, preserving all personal features and the gpt-5.6-sol Codex default-model customization. Use when the user says “更新 Happy 到最新”, “升级 Happy 到最新版”, “更新一下 Happy”, or an equivalent Happy Desktop update request. Do not use for a CLI-only update.
+version: 0.3.0
 author: myartings
 license: MIT
 metadata:
@@ -48,18 +48,18 @@ cd C:\Users\myartings\workspace\happy
 .\devtools\happyctl.ps1 refresh-desktop
 ```
 
-5. Let `refresh-desktop` own the complete operation. Do not substitute `update-desktop`, do not build directly from Happy `main`, and do not manually repeat its Git or installation steps unless `refresh-desktop` fails and the user asks to repair the manager flow.
+5. Let `refresh-desktop` own the complete operation. Do not substitute `update-desktop` or manually repeat its Git, build, or installation steps unless `refresh-desktop` fails and the user asks to repair the manager flow.
 6. On success, verify and report the final source branch or commit, the installed Desktop result, and whether the final source was unchanged and therefore skipped.
 
 The intended source chain is platform-independent:
 
 ```text
 upstream/main
+  -> official
   -> main
-  -> dev
 ```
 
-It always packages `dev`, which contains all current personal changes:
+It always packages personal `main`, which contains all current personal changes:
 
 - Desktop session notifications.
 - WebContent memory recovery after sleep, screen-off, or network loss.
@@ -73,11 +73,11 @@ packages/happy-cli/src/codex/runCodex.ts
 packages/happy-app/sources/sync/agentDefaults.ts
 ```
 
-Do not rebuild from plain `main`, because it does not contain these personal
-changes. Existing sessions may retain an explicitly selected model; the
-customization controls the default for new sessions and the daemon fallback.
+Do not rebuild from `official`, because it intentionally contains no personal
+product changes. Existing sessions may retain an explicitly selected model;
+the customization controls the default for new sessions and the daemon fallback.
 
-If the manager on the current platform does not synchronize and package `dev`,
+If the manager on the current platform does not synchronize and package `main`,
 stop and report that the manager flow does not preserve the personal integration
 branch on that platform.
 
@@ -86,12 +86,12 @@ branch on that platform.
 - macOS: `refresh-desktop` builds the `.app`, backs up the installed app, replaces it, verifies it, and launches it.
 - Windows: `refresh-desktop` builds the NSIS installer, runs update-desktop dry-run, installs the verified NSIS artifact, validates the install, and verifies launch/process behavior.
 - Linux: `refresh-desktop` builds the Debian artifact, runs update-desktop dry-run, installs the `.deb` with `apt`, and verifies the installed package. Use `--launch-smoke` only when the user asked for launch verification.
-- Platform differences only affect artifact format and installation mechanics. They do not change the requirement to build the same personal `dev` branch.
+- Platform differences only affect artifact format and installation mechanics. They do not change the requirement to build the same personal `main` branch.
 
 ## Failure Handling
 
-- If the manager reports a dirty Happy worktree, `main` or `dev` divergence, merge conflict, build failure, push failure, or verification failure, stop and report the exact failed stage.
-- Do not discard changes, reset branches, force-push, bypass verification, or fall back to building from `main`.
+- If the manager reports a dirty Happy worktree, `official` or `main` divergence, merge conflict, build failure, push failure, or verification failure, stop and report the exact failed stage.
+- Do not discard changes, reset branches, force-push, bypass verification, or fall back to building from `official`.
 - Rely on the manager's installed-app backup behavior. Do not remove backups manually.
 - Do not claim success unless the manager command exits successfully.
 - After a successful update, check the Happy source for both Codex default model locations and report if either is not `gpt-5.6-sol`.

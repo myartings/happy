@@ -44,10 +44,10 @@ fi
 HAPPY_DEVTOOLS_REFRESH_LABEL="${HAPPY_DEVTOOLS_REFRESH_LABEL:-com.myartings.happyctl.refresh}"
 HAPPY_DEVTOOLS_REFRESH_TIME="${HAPPY_DEVTOOLS_REFRESH_TIME:-09:00}"
 HAPPY_DEVTOOLS_KEEP_BACKUPS="${HAPPY_DEVTOOLS_KEEP_BACKUPS:-3}"
-HAPPY_DEVTOOLS_BASE_BRANCH="${HAPPY_DEVTOOLS_BASE_BRANCH:-main}"
+HAPPY_DEVTOOLS_BASE_BRANCH="${HAPPY_DEVTOOLS_BASE_BRANCH:-official}"
 HAPPY_DEVTOOLS_BASE_UPSTREAM="${HAPPY_DEVTOOLS_BASE_UPSTREAM:-upstream/main}"
-HAPPY_DEVTOOLS_PATCH_BRANCHES="${HAPPY_DEVTOOLS_PATCH_BRANCHES:-dev}"
-HAPPY_DEVTOOLS_FINAL_BRANCH="${HAPPY_DEVTOOLS_FINAL_BRANCH:-dev}"
+HAPPY_DEVTOOLS_PATCH_BRANCHES="${HAPPY_DEVTOOLS_PATCH_BRANCHES:-main}"
+HAPPY_DEVTOOLS_FINAL_BRANCH="${HAPPY_DEVTOOLS_FINAL_BRANCH:-main}"
 
 HAPPY_DEVTOOLS_CONFIG="${HAPPY_DEVTOOLS_CONFIG:-$HAPPY_DEVTOOLS_STATE_DIR/config.env}"
 if [[ ! -f "$HAPPY_DEVTOOLS_CONFIG" && -f "$SCRIPT_DIR/config.env" ]]; then
@@ -135,7 +135,8 @@ Usage:
   devtools/happyctl doctor
   devtools/happyctl status
   devtools/happyctl check-upstream
-  devtools/happyctl sync-dev [--dry-run]
+  devtools/happyctl sync-main [--dry-run]
+  devtools/happyctl sync-dev [--dry-run]  # compatibility alias
   devtools/happyctl sync-patch-stack [--dry-run]  # compatibility alias
   devtools/happyctl update-cli
   devtools/happyctl build-desktop
@@ -593,21 +594,21 @@ is_devtools_path() {
 }
 
 assert_official_product_equivalence() {
-  local upstream_ref="${1:-$HAPPY_DEVTOOLS_BASE_UPSTREAM}" path invalid=()
+  local upstream_ref="${1:-$HAPPY_DEVTOOLS_BASE_UPSTREAM}" candidate_ref="${2:-HEAD}" path invalid=()
   if ! git_ref_exists "$upstream_ref"; then
     echo "Happy official upstream ref not found: $upstream_ref" >&2
     return 1
   fi
-  if ! git -C "$HAPPY_REPO" merge-base --is-ancestor "$upstream_ref" HEAD; then
-    echo "Personal main does not contain the current official commit: $upstream_ref" >&2
+  if ! git -C "$HAPPY_REPO" merge-base --is-ancestor "$upstream_ref" "$candidate_ref"; then
+    echo "Official branch does not contain the current official commit: $upstream_ref" >&2
     return 1
   fi
   while IFS= read -r path; do
     [[ -z "$path" ]] && continue
     is_devtools_path "$path" || invalid+=("$path")
-  done < <(git -C "$HAPPY_REPO" diff --name-only "$upstream_ref"..HEAD)
+  done < <(git -C "$HAPPY_REPO" diff --name-only "$upstream_ref".."$candidate_ref")
   if [[ "${#invalid[@]}" -gt 0 ]]; then
-    echo "Personal main changes product/build inputs outside the devtools allowlist:" >&2
+    echo "Official branch changes product/build inputs outside the devtools allowlist:" >&2
     printf '  %s\n' "${invalid[@]}" >&2
     return 1
   fi
@@ -695,7 +696,7 @@ show_patch_stack_state() {
   local base_ahead base_behind final_ahead final_behind branch_remote_delta
   IFS='|' read -r base_ahead base_behind final_ahead final_behind branch_remote_delta <<<"$state"
 
-  echo "Happy personal integration branch"
+  echo "Happy official-to-personal integration"
   echo "Official:      $HAPPY_DEVTOOLS_BASE_UPSTREAM"
   echo "Base branch:   $HAPPY_DEVTOOLS_BASE_BRANCH"
   echo "Integration:   $HAPPY_DEVTOOLS_PATCH_BRANCHES"
@@ -721,7 +722,7 @@ sync_patch_stack_locally() {
   local original_branch parent branch remote_ref branches=()
   original_branch="$(git -C "$HAPPY_REPO" branch --show-current)"
   if [[ -z "$original_branch" ]]; then
-    echo "Happy repo is in detached HEAD state; refusing automatic dev integration sync." >&2
+    echo "Happy repo is in detached HEAD state; refusing automatic personal-main sync." >&2
     return 1
   fi
 
@@ -806,10 +807,10 @@ sync_patch_stack_command() {
   ensure_clean_repo
   validate_patch_stack
   if [[ "$dry_run" -eq 1 ]]; then
-    echo "Happy dev integration sync dry run"
+    echo "Happy official-to-personal sync dry run"
     echo "Would fetch upstream and origin, then update:"
     echo "  $HAPPY_DEVTOOLS_BASE_UPSTREAM -> $HAPPY_DEVTOOLS_BASE_BRANCH -> $HAPPY_DEVTOOLS_PATCH_BRANCHES"
-    echo "Would push personal main and the personal dev branch to origin."
+    echo "Would push official and personal main to origin."
     echo "No changes made."
     return
   fi
@@ -819,7 +820,7 @@ sync_patch_stack_command() {
   show_patch_stack_state "$state"
   sync_patch_stack_locally
   push_patch_stack
-  echo "Dev integration synchronized. Final build branch: $HAPPY_DEVTOOLS_FINAL_BRANCH"
+  echo "Personal main synchronized. Final build branch: $HAPPY_DEVTOOLS_FINAL_BRANCH"
 }
 
 happy_upstream_ref() {
@@ -1310,9 +1311,9 @@ linux_refresh_desktop() {
     echo "  $HAPPY_DEVTOOLS_BASE_UPSTREAM -> $HAPPY_DEVTOOLS_BASE_BRANCH -> $HAPPY_DEVTOOLS_PATCH_BRANCHES"
     echo "Would always build from: $HAPPY_DEVTOOLS_FINAL_BRANCH"
     if [[ "$force" -eq 1 ]]; then
-      echo "Force: would rebuild and reinstall dev even without source changes."
+      echo "Force: would rebuild and reinstall main even without source changes."
     fi
-    echo "Would run doctor, sync main into dev, build .deb/.rpm, run update-desktop dry-run, install .deb, verify, and write a report."
+    echo "Would run doctor, sync official into main, build .deb/.rpm, run update-desktop dry-run, install .deb, verify, and write a report."
     [[ "$launch_smoke" -eq 1 ]] && echo "Would also run launch smoke verification."
     echo "No branch, push, build, install, package, or report changes made."
     return
@@ -1349,10 +1350,7 @@ linux_refresh_desktop() {
     if [[ "$rc" -eq 0 ]]; then
       show_patch_stack_state "$state"
       IFS='|' read -r base_ahead base_behind final_ahead final_behind branch_remote_delta <<<"$state"
-      if [[ "$base_ahead" -gt 0 ]]; then
-        echo "$HAPPY_DEVTOOLS_BASE_BRANCH contains commits outside $HAPPY_DEVTOOLS_BASE_UPSTREAM; refusing automatic refresh." >&2
-        rc=1
-      fi
+      assert_official_product_equivalence "$HAPPY_DEVTOOLS_BASE_UPSTREAM" "$HAPPY_DEVTOOLS_BASE_BRANCH" || rc=1
     fi
 
     if [[ "$rc" -eq 0 ]]; then
@@ -1364,8 +1362,8 @@ linux_refresh_desktop() {
       fi
       if [[ "$needs_sync" -eq 0 && "$force" -eq 0 ]]; then
         status="skipped-no-upstream-update"
-        log "Happy dev integration is already synchronized; skipping Linux desktop build/update. Use --force to rebuild anyway."
-        echo "Official main and personal dev are already synchronized. Skipping Linux desktop refresh."
+        log "Happy personal main is already synchronized; skipping Linux desktop build/update. Use --force to rebuild anyway."
+        echo "Official and personal main are already synchronized. Skipping Linux desktop refresh."
       else
         final_before_sync="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
         sync_patch_stack_locally
@@ -1379,7 +1377,7 @@ linux_refresh_desktop() {
             if [[ "$rc" -eq 0 ]]; then
               pushed="true"
               status="synced-no-desktop-change"
-              log "Updated/published main and dev; final Linux desktop source did not change, so build/install is not needed."
+              log "Updated/published official and main; final Linux desktop source did not change, so build/install is not needed."
             fi
           fi
         fi
@@ -1448,8 +1446,8 @@ linux_refresh_desktop() {
     "Final branch behind" "${final_behind:-n/a}" \
     "Personal branch/remote delta" "${branch_remote_delta:-n/a}" \
     "Update available" "$has_update" \
-    "Synced dev integration" "$pulled" \
-    "Pushed dev integration" "$pushed" \
+    "Synced personal main" "$pulled" \
+    "Pushed official and main" "$pushed" \
     "Built desktop" "$built" \
     "Installed desktop" "$installed" \
     "Verified desktop" "$verified" \
@@ -1746,10 +1744,10 @@ refresh_desktop() {
     echo "Would fetch official and personal remotes, then update this integration chain:"
     echo "  $HAPPY_DEVTOOLS_BASE_UPSTREAM -> $HAPPY_DEVTOOLS_BASE_BRANCH -> $HAPPY_DEVTOOLS_PATCH_BRANCHES"
     echo "Would always build from: $HAPPY_DEVTOOLS_FINAL_BRANCH"
-    echo "After a conflict-free merge it would build .app, push synchronized main and dev, install, verify, launch, and write a report."
-    echo "A dirty worktree, diverged main/remote branch, merge conflict, build failure, or push failure stops before replacing the installed app."
+    echo "After a conflict-free merge it would build .app, push synchronized official and main, install, verify, launch, and write a report."
+    echo "A dirty worktree, diverged official/main branch, merge conflict, build failure, or push failure stops before replacing the installed app."
     if [[ "$force" -eq 1 ]]; then
-      echo "Force: would rebuild and reinstall dev even without source changes."
+      echo "Force: would rebuild and reinstall main even without source changes."
     fi
     show_backup_retention_preview "$keep_backups"
     echo "No changes made."
@@ -1790,10 +1788,7 @@ refresh_desktop() {
       upstream="$HAPPY_DEVTOOLS_BASE_UPSTREAM"
       ahead="$final_ahead"
       behind="$final_behind"
-      if [[ "$base_ahead" -gt 0 ]]; then
-        echo "$HAPPY_DEVTOOLS_BASE_BRANCH contains commits outside $HAPPY_DEVTOOLS_BASE_UPSTREAM; refusing automatic refresh." >&2
-        rc=1
-      fi
+      assert_official_product_equivalence "$HAPPY_DEVTOOLS_BASE_UPSTREAM" "$HAPPY_DEVTOOLS_BASE_BRANCH" || rc=1
     fi
 
     if [[ "$rc" -eq 0 ]]; then
@@ -1805,8 +1800,8 @@ refresh_desktop() {
       fi
       if [[ "$needs_sync" -eq 0 && "$force" -eq 0 ]]; then
         status="skipped-no-upstream-update"
-        log "Happy dev integration is already synchronized; skipping desktop build/update. Use --force to rebuild anyway."
-        echo "Official main and personal dev are already synchronized. Skipping desktop refresh."
+        log "Happy personal main is already synchronized; skipping desktop build/update. Use --force to rebuild anyway."
+        echo "Official and personal main are already synchronized. Skipping desktop refresh."
       else
         final_before_sync="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
         sync_patch_stack_locally
@@ -1820,7 +1815,7 @@ refresh_desktop() {
             if [[ "$rc" -eq 0 ]]; then
               pushed="true"
               status="synced-no-desktop-change"
-              log "Updated/published main and dev; final desktop source did not change, so build/install is not needed."
+              log "Updated/published official and main; final desktop source did not change, so build/install is not needed."
             fi
           fi
         fi
@@ -1879,7 +1874,7 @@ refresh_desktop() {
     "Behind" "$behind" \
     "Update available" "$has_update" \
     "Pulled upstream" "$pulled" \
-    "Pushed main and dev" "$pushed" \
+    "Pushed official and main" "$pushed" \
     "Built desktop" "$built" \
     "Installed desktop" "$installed" \
     "Verified desktop" "$verified" \
@@ -1979,7 +1974,7 @@ case "$cmd" in
   doctor) doctor ;;
   status) status ;;
   check-upstream) check_upstream ;;
-  sync-dev|sync-patch-stack) shift; sync_patch_stack_command "${1:-}" ;;
+  sync-main|sync-dev|sync-patch-stack) shift; sync_patch_stack_command "${1:-}" ;;
   update-cli) update_cli ;;
   build-desktop) build_desktop ;;
   artifacts) artifacts ;;

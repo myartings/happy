@@ -14,9 +14,10 @@ Do not force push for this workflow.
 ## Personal Branch Model
 
 - `upstream/main` is the official source baseline.
-- Personal `main` may differ from `upstream/main` only in `devtools/`, `.agents/skills/happy-desktop-update/`, `.agents/skills/happy-ios-release/`, `AGENTS.md`, and `.gitignore`.
-- `dev` is the personal product integration, desktop build, and release branch.
-- Merge official updates into personal `main`, validate the devtools-only delta, then merge `main` into `dev`.
+- `official` may differ from `upstream/main` only in `devtools/`, `.agents/skills/happy-desktop-update/`, `.agents/skills/happy-ios-release/`, `AGENTS.md`, and `.gitignore`.
+- `main` is the default personal product integration, desktop build, and release branch.
+- Merge official updates into `official`, validate the devtools-only delta, then merge `official` into `main`.
+- Personal features branch from `main`. Upstream-bound work branches directly from `upstream/main`, never from `official`.
 - Do not use `git reset`, history rewriting, or force pushes to synchronize these branches.
 
 ## Happy Devtools

@@ -12,7 +12,7 @@ Expected behavior:
 
 - Treat the request as authorization for the complete macOS Desktop update.
 - Run `/Users/myartings/workspace/happy/devtools/happyctl refresh-desktop`.
-- Synchronize official `main` into personal `dev` and build only from `dev`.
+- Synchronize `upstream/main` through `official` into personal `main` and build only from personal `main`.
 - Preserve the `gpt-5.6-sol` daemon fallback and Happy Desktop new-session
   default together with the notification and WebContent recovery fixes.
 - Report the final result without asking for another installation confirmation.
@@ -27,8 +27,8 @@ User:
 
 Expected behavior:
 
-- Use the same full `main -> dev` Desktop workflow.
-- Do not substitute a direct pull or build from `main`.
+- Use the same full `upstream/main -> official -> main` Desktop workflow.
+- Do not substitute a direct pull or build from `official`.
 
 ## Example 3: CLI-Only Boundary
 
@@ -40,7 +40,7 @@ User:
 
 Expected behavior:
 
-- Do not run the Desktop `main -> dev` workflow.
+- Do not run the Desktop `upstream/main -> official -> main` workflow.
 - Use the manager's CLI update path after identifying the installed CLI source.
 
 ## Example 4: Merge Conflict
