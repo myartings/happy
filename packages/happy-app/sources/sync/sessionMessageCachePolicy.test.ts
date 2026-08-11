@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
+    selectVisibleSessionIds,
     selectSessionMessageCacheEvictions,
 } from './sessionMessageCachePolicy';
 
@@ -58,5 +59,16 @@ describe('selectSessionMessageCacheEvictions', () => {
         });
 
         expect(evictions).toEqual([]);
+    });
+});
+
+describe('selectVisibleSessionIds', () => {
+    it('returns only sessions with an active visibility reference', () => {
+        expect(selectVisibleSessionIds(new Map([
+            ['primary', 1],
+            ['side-chat', 2],
+            ['hidden', 0],
+            ['invalid', -1],
+        ]))).toEqual(['primary', 'side-chat']);
     });
 });

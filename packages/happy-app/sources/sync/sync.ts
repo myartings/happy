@@ -70,6 +70,7 @@ import {
     MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
     selectSessionMessageCacheEvictions,
+    selectVisibleSessionIds,
 } from './sessionMessageCachePolicy';
 import type { AttachmentPreview, UploadedAttachment } from './attachmentTypes';
 import { requestAttachmentUpload, uploadEncryptedBlob } from './apiAttachments';
@@ -115,7 +116,7 @@ type SendMessageOptions = {
 
 class Sync {
     private static readonly BACKGROUND_SEND_TIMEOUT_MS = 30_000;
-    private static readonly PROMPT_HISTORY_PAGE_SIZE = 500;
+    private static readonly PROMPT_HISTORY_PAGE_SIZE = 100;
     encryption!: Encryption;
     serverID!: string;
     anonID!: string;
@@ -2192,7 +2193,10 @@ class Sync {
             return { items: [], hasMore: false, nextBeforeSeq: null };
         }
 
-        const cursor = beforeSeq ?? SEQ_BACKWARD_INITIAL_SENTINEL;
+        // Prompt navigation starts with the messages already in the normal
+        // session cache. Its first history page should continue before that
+        // retained window instead of downloading the latest page again.
+        const cursor = beforeSeq ?? this.sessionOldestSeq.get(sessionId) ?? SEQ_BACKWARD_INITIAL_SENTINEL;
 
         const response = await apiSocket.request(
             `/v3/sessions/${sessionId}/messages?before_seq=${cursor}&limit=${Sync.PROMPT_HISTORY_PAGE_SIZE}`
@@ -2396,9 +2400,13 @@ class Sync {
             this.friendsSync.invalidate();
             this.friendRequestsSync.invalidate();
             this.feedSync.invalidate();
-            // Messages are fetched lazily per-session via onSessionVisible (called by SessionView
-            // when realtimeStatus changes). Session metadata + agentState (including permission
-            // requests) are already refreshed by sessionsSync.invalidate() above.
+            // Refresh only messages for sessions that are currently mounted. Git status and
+            // voice focus are visibility concerns and must not be repeated on reconnect.
+            for (const sessionId of selectVisibleSessionIds(this.visibleSessionRefCounts)) {
+                this.refreshSessionMessageCache(sessionId, 'socket-reconnected');
+            }
+            // Session metadata + agentState (including permission requests) are already
+            // refreshed by sessionsSync.invalidate() above.
             for (const sync of this.sendSync.values()) {
                 sync.invalidate();
             }

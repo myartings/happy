@@ -28,7 +28,6 @@ import { useImagePicker } from '@/hooks/useImagePicker';
 import { Modal } from '@/modal';
 import { voiceHooks } from '@/realtime/hooks/voiceHooks';
 import { getCurrentVoiceConversationId, getCurrentVoiceSessionDurationSeconds, startRealtimeSession, stopRealtimeSession } from '@/realtime/RealtimeSession';
-import { gitStatusSync } from '@/sync/gitStatusSync';
 import { sessionAbort, sessionGoalAction, sessionSetAgentModes, spawnSideChat, sessionKill, sessionArchive } from '@/sync/ops';
 import { storage, useIsDataReady, useLocalSetting, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
 import { useSession } from '@/sync/storage';
@@ -1093,7 +1092,8 @@ export function SessionViewLoaded({
         isMicActive: realtimeStatus === 'connected' || realtimeStatus === 'connecting'
     }), [handleMicrophonePress, realtimeStatus]);
 
-    // Trigger session visibility and initialize git status sync
+    // Register session visibility once per mount. Socket reconnect message refreshes are
+    // handled inside Sync without repeating Git status or voice-focus work.
     React.useLayoutEffect(() => {
 
         // Trigger session sync
@@ -1106,9 +1106,6 @@ export function SessionViewLoaded({
             sync.setCurrentViewingSession(sessionId);
         }
 
-        // Initialize git status sync for this session
-        gitStatusSync.getSync(sessionId).invalidate();
-
         return () => {
             if (!embedded) {
                 // Clear viewing session on unmount before pruning so the session
@@ -1120,7 +1117,7 @@ export function SessionViewLoaded({
             }
             sync.onSessionHidden(sessionId);
         };
-    }, [sessionId, realtimeStatus, embedded]);
+    }, [sessionId, embedded]);
 
     let content = (
         <>
