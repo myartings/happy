@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "happyctl-refresh-guards",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Integrate devtools-only fix into personal main and dev, then force-refresh macOS Desktop",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/tasks/happyctl-refresh-guards-tasks.md",
+      "updated": "2026-08-12T01:33:50+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/happyctl-refresh-guards/decisions.md",
+      "updated": "2026-08-12T01:33:50+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Scope limited to devtools/happyctl, focused shell smoke coverage, and workflow evidence; local-only immediate release blocker",
+      "updated": "2026-08-12T01:33:50+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Local devtools validation/control-flow fix; no credentials, product authentication, user data, deployment target, or destructive behavior changes",
+      "updated": "2026-08-12T01:33:50+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "devtools/happyctl; devtools/tests/happyctl-refresh-guards-smoke.sh; RED/GREEN receipts in validation.md",
+      "updated": "2026-08-12T01:36:25+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "docs/workspace/happyctl-refresh-guards/validation.md; focused smoke, shell syntax, iOS smoke, workflow validation/core/CI all pass",
+      "updated": "2026-08-12T01:36:25+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: existing allowlist remains authoritative; both macOS/Linux paths fixed; no credential, auth, product, or Windows changes",
+      "updated": "2026-08-12T01:36:25+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Focused regression and neighboring/workflow checks pass; whole diff reviewed; main integration and forced Desktop refresh are immediate follow-up",
+      "updated": "2026-08-12T01:36:34+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T01:33:07+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T01:33:50+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/tasks/happyctl-refresh-guards-tasks.md"
+    },
+    {
+      "at": "2026-08-12T01:33:50+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/happyctl-refresh-guards/decisions.md"
+    },
+    {
+      "at": "2026-08-12T01:33:50+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Local devtools validation/control-flow fix; no credentials, product authentication, user data, deployment target, or destructive behavior changes"
+    },
+    {
+      "at": "2026-08-12T01:33:50+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Scope limited to devtools/happyctl, focused shell smoke coverage, and workflow evidence; local-only immediate release blocker"
+    },
+    {
+      "at": "2026-08-12T01:33:50+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add focused RED tests, implement refresh guards, and run targeted smoke checks"
+    },
+    {
+      "at": "2026-08-12T01:36:25+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "devtools/happyctl; devtools/tests/happyctl-refresh-guards-smoke.sh; RED/GREEN receipts in validation.md"
+    },
+    {
+      "at": "2026-08-12T01:36:25+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify focused guards, neighboring devtools behavior, workflow checks, and whole diff"
+    },
+    {
+      "at": "2026-08-12T01:36:25+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "docs/workspace/happyctl-refresh-guards/validation.md; focused smoke, shell syntax, iOS smoke, workflow validation/core/CI all pass"
+    },
+    {
+      "at": "2026-08-12T01:36:25+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: existing allowlist remains authoritative; both macOS/Linux paths fixed; no credential, auth, product, or Windows changes"
+    },
+    {
+      "at": "2026-08-12T01:36:34+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive the validated happyctl refresh guard fix with commit pending"
+    },
+    {
+      "at": "2026-08-12T01:36:34+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Focused regression and neighboring/workflow checks pass; whole diff reviewed; main integration and forced Desktop refresh are immediate follow-up"
+    },
+    {
+      "at": "2026-08-12T01:36:34+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Fixed Happy Desktop refresh branch and GitHub Issues configuration guards; commit: pending; follow-up: Integrate devtools-only fix into personal main and dev, then force-refresh macOS Desktop"
+    }
+  ],
+  "updated": "2026-08-12T01:36:34+00:00",
+  "archivedAt": "2026-08-12T01:36:34+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Fixed Happy Desktop refresh branch and GitHub Issues configuration guards",
+  "archiveFollowUp": "Integrate devtools-only fix into personal main and dev, then force-refresh macOS Desktop"
+}
