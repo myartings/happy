@@ -60,14 +60,16 @@ export type GithubRepositoryResolution =
         repository: GithubRepository;
         association: GithubRepositoryAssociation | null;
     }
-    | {
+    | ({
         status: 'picker';
-        reason: 'lookup-failed' | 'ambiguous' | 'inaccessible' | 'no-remote';
         repositories: readonly GithubRepository[];
         suggestedRepository: GithubRepository | null;
         selectionRemoteFingerprint: string | null;
         association: null;
-    };
+    } & (
+        | { reason: 'inaccessible'; detectedRepository: GithubRepositoryRef }
+        | { reason: 'lookup-failed' | 'ambiguous' | 'no-remote'; detectedRepository?: null }
+    ));
 
 interface GithubRemoteRepository {
     name: string;
@@ -197,6 +199,7 @@ export function resolveGithubRepositoryAssociation(
             return {
                 status: 'picker',
                 reason: 'inaccessible',
+                detectedRepository: detected,
                 repositories: input.repositories,
                 suggestedRepository,
                 selectionRemoteFingerprint: null,

@@ -1116,6 +1116,8 @@ export const zhHans: TranslationStructure = {
         chooseRepositoriesDescription: '为 Happy 的 GitHub App 选择仓库，然后返回刷新。',
         manageAccess: '管理访问权限',
         manageRepositoryAccess: '管理仓库访问权限',
+        repositoryAccessRequired: '需要仓库访问权限',
+        repositoryUnavailable: ({ repository }: { repository: string }) => `GitHub App 尚未获得 ${repository} 的访问权限。`,
         open: '打开',
         closed: '已关闭',
         retry: '重试',

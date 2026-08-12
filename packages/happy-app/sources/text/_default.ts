@@ -1117,6 +1117,8 @@ export const en = {
         chooseRepositoriesDescription: "Select repositories for Happy's GitHub App, then return and refresh.",
         manageAccess: 'Manage access',
         manageRepositoryAccess: 'Manage repository access',
+        repositoryAccessRequired: 'Repository access required',
+        repositoryUnavailable: ({ repository }: { repository: string }) => `${repository} is not available to the GitHub App.`,
         open: 'Open',
         closed: 'Closed',
         retry: 'Retry',

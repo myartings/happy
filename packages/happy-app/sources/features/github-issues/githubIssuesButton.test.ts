@@ -333,6 +333,41 @@ describe('GitHub Issues Session entry', () => {
         });
     });
 
+    it('opens repository-specific access management instead of offering substitutes when inaccessible', async () => {
+        resolve.mockResolvedValueOnce({
+            status: 'picker',
+            reason: 'inaccessible',
+            repositories: [{ id: 1, owner: 'myartings', name: 'happy', fullName: 'myartings/happy' }],
+            suggestedRepository: null,
+            detectedRepository: { owner: 'private', repo: 'widget' },
+            selectionRemoteFingerprint: null,
+            association: null,
+        } as any);
+        let renderer: ReturnType<typeof create>;
+        await act(async () => {
+            renderer = create(React.createElement(GithubIssuesButton, {
+                sessionId: 'session-a',
+                cwd: '/work/widget',
+            }));
+        });
+
+        await act(async () => {
+            await findIssuesEntry(renderer!).props.onPress();
+        });
+
+        expect(push).toHaveBeenCalledWith({
+            pathname: '/github-issues',
+            params: {
+                mode: 'settings',
+                access: 'repository',
+                owner: 'private',
+                repo: 'widget',
+                sourceSessionId: 'session-a',
+            },
+        });
+        expect(renderer!.root.findByType('GithubRepositoryPicker' as any).props.visible).toBe(false);
+    });
+
     it('keeps repository lookup failures inside the Session', async () => {
         resolve.mockRejectedValueOnce(new Error('lookup failed'));
         let renderer: ReturnType<typeof create>;
