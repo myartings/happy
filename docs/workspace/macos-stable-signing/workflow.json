@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "macos-stable-signing",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Integrate into personal main/dev, revalidate and remove the exact stale GitHub Issues credential, force-refresh macOS client, verify signature, and launch",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/tasks/macos-stable-signing-tasks.md: stable eligible signing, pre-install verification, strict installed verification, and exact recoverable credential reset",
+      "updated": "2026-08-12T01:46:04+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/macos-stable-signing/decisions.md: identity priority, pre-install signing, and targeted credential reset resolved",
+      "updated": "2026-08-12T01:46:04+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope limited to macOS happyctl signing/install verification, focused shell smoke, workflow evidence, and one exact recoverable credential; local-only immediate repair",
+      "updated": "2026-08-12T01:46:04+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared with controls in decisions.md: valid-identity precondition, sign-before-replace, strict verification, backup rollback, exact metadata revalidation, no secret read",
+      "updated": "2026-08-12T01:46:04+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "devtools/happyctl, config example, and focused RED/GREEN smoke: stable eligible identity selection, sign-before-replace, strict verification, and fail-closed control flow",
+      "updated": "2026-08-12T01:52:16+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-12T01:54:33+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed with no blocking finding: eligible least-privilege identity selection, certificate-backed signature, entitlements, explicit failure propagation, platform scope, rollback, and credential boundaries verified",
+      "updated": "2026-08-12T01:56:07+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records summary, exact verification, whole-diff review, rollback, learning disposition, and authorized operational follow-up; all tooling acceptance rows verified",
+      "updated": "2026-08-12T01:56:07+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T01:44:12+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T01:46:04+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/tasks/macos-stable-signing-tasks.md: stable eligible signing, pre-install verification, strict installed verification, and exact recoverable credential reset"
+    },
+    {
+      "at": "2026-08-12T01:46:04+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/macos-stable-signing/decisions.md: identity priority, pre-install signing, and targeted credential reset resolved"
+    },
+    {
+      "at": "2026-08-12T01:46:04+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared with controls in decisions.md: valid-identity precondition, sign-before-replace, strict verification, backup rollback, exact metadata revalidation, no secret read"
+    },
+    {
+      "at": "2026-08-12T01:46:04+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope limited to macOS happyctl signing/install verification, focused shell smoke, workflow evidence, and one exact recoverable credential; local-only immediate repair"
+    },
+    {
+      "at": "2026-08-12T01:46:19+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED macOS signing smoke, implement stable signing and strict verification, then run focused checks"
+    },
+    {
+      "at": "2026-08-12T01:52:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "devtools/happyctl, config example, and focused RED/GREEN smoke: stable eligible identity selection, sign-before-replace, strict verification, and fail-closed control flow"
+    },
+    {
+      "at": "2026-08-12T01:52:16+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run focused and adjacent checks, audit whole diff, verify real Apple-signed artifact, and prepare staged workflow CI"
+    },
+    {
+      "at": "2026-08-12T01:52:47+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-12T01:54:33+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-12T01:56:07+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed with no blocking finding: eligible least-privilege identity selection, certificate-backed signature, entitlements, explicit failure propagation, platform scope, rollback, and credential boundaries verified"
+    },
+    {
+      "at": "2026-08-12T01:56:07+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize tooling evidence, archive with commit pending, pass staged CI, then integrate and perform authorized macOS credential/install follow-up"
+    },
+    {
+      "at": "2026-08-12T01:56:07+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records summary, exact verification, whole-diff review, rollback, learning disposition, and authorized operational follow-up; all tooling acceptance rows verified"
+    },
+    {
+      "at": "2026-08-12T01:56:07+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Replaced ad-hoc Happy Desktop signing with fail-closed stable Apple identity signing; commit: pending; follow-up: Integrate into personal main/dev, revalidate and remove the exact stale GitHub Issues credential, force-refresh macOS client, verify signature, and launch"
+    }
+  ],
+  "updated": "2026-08-12T01:56:07+00:00",
+  "archivedAt": "2026-08-12T01:56:07+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Replaced ad-hoc Happy Desktop signing with fail-closed stable Apple identity signing",
+  "archiveFollowUp": "Integrate into personal main/dev, revalidate and remove the exact stale GitHub Issues credential, force-refresh macOS client, verify signature, and launch"
+}
