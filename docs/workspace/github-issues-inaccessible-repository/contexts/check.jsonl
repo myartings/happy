@@ -1,0 +1,9 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/tasks/github-issues-inaccessible-repository-tasks.md","reason":"Acceptance criteria to verify"}
+{"path":"packages/happy-app/sources/features/github-issues/githubRepositoryResolution.ts","reason":"Review repository identity preservation and other reason compatibility"}
+{"path":"packages/happy-app/sources/components/GithubIssuesButton.tsx","reason":"Review inaccessible routing and picker exclusion"}
+{"path":"packages/happy-app/sources/app/(app)/github-issues/index.tsx","reason":"Review user-controlled access management presentation"}
+{"path":"packages/happy-app/sources/features/github-issues/githubRepositoryResolution.test.ts","reason":"Resolver behavior evidence"}
+{"path":"packages/happy-app/sources/features/github-issues/githubIssuesButton.test.ts","reason":"Session route behavior evidence"}
+{"path":"packages/happy-app/sources/features/github-issues/githubIssuesScreen.test.ts","reason":"Access-state presentation evidence"}
+{"path":"docs/workspace/github-issues-inaccessible-repository/validation.md","reason":"Evidence ledger for exact check outcomes"}

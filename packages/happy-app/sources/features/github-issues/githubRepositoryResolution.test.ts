@@ -298,4 +298,21 @@ describe('GitHub repository association resolution', () => {
             lastRepository: null,
         })).toMatchObject({ status: 'picker', reason });
     });
+
+    it('preserves the detected repository when the GitHub App cannot access it', () => {
+        expect(resolveGithubRepositoryAssociation({
+            identity: { machineId: 'machine-a', path: '/work/widget' },
+            remoteLookup: {
+                status: 'success',
+                output: 'origin\thttps://github.com/private/widget.git (fetch)',
+            },
+            repositories: [repository(1, 'acme', 'widget')],
+            cachedAssociations: {},
+            lastRepository: null,
+        })).toMatchObject({
+            status: 'picker',
+            reason: 'inaccessible',
+            detectedRepository: { owner: 'private', repo: 'widget' },
+        });
+    });
 });

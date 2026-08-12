@@ -55,12 +55,20 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
         }
         router.push({ pathname: '/github-issues', params: { owner, repo, ...(sessionId ? { sourceSessionId: sessionId } : {}) } } as any);
     }, [router, sessionId]);
-    const openConnectionManagement = React.useCallback(() => {
+    const openConnectionManagement = React.useCallback((repository?: { owner: string; repo: string }) => {
         setContextVisible(false);
         setPicker(null);
         router.push({
             pathname: '/github-issues',
-            params: { mode: 'settings', ...(sessionId ? { sourceSessionId: sessionId } : {}) },
+            params: {
+                mode: 'settings',
+                ...(repository ? {
+                    access: 'repository',
+                    owner: repository.owner,
+                    repo: repository.repo,
+                } : {}),
+                ...(sessionId ? { sourceSessionId: sessionId } : {}),
+            },
         } as any);
     }, [router, sessionId]);
     const openIssues = React.useCallback(async () => {
@@ -94,6 +102,10 @@ export const GithubIssuesButton = React.memo(({ showLabel = false, style, tintCo
             const resolution = await githubIssuesRepositoryResolver.resolve({ sessionId, path: cwd });
             if (resolution.status === 'resolved') {
                 openRepository(resolution.repository.owner, resolution.repository.name);
+                return;
+            }
+            if (resolution.reason === 'inaccessible') {
+                openConnectionManagement(resolution.detectedRepository);
                 return;
             }
             setContextVisible(false);

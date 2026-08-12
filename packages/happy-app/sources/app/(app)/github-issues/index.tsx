@@ -35,7 +35,7 @@ function relativeTime(updatedAt: string): string {
 }
 
 export default function GithubIssuesScreen() {
-    const requested = useLocalSearchParams<{ owner?: string; repo?: string; sourceSessionId?: string; mode?: string }>();
+    const requested = useLocalSearchParams<{ owner?: string; repo?: string; sourceSessionId?: string; mode?: string; access?: string }>();
     const enabled = useLocalSetting('devGithubIssuesEnabled');
     const router = useRouter();
     const { theme } = useUnistyles();
@@ -138,6 +138,12 @@ export default function GithubIssuesScreen() {
 
     if (!enabled) return <View style={styles.center}><Text style={styles.secondary}>{t('githubIssues.disabled')}</Text></View>;
     const prompt: DeviceVerificationPrompt | null = authorization.status === 'connecting' ? authorization.prompt : null;
+    const inaccessibleRepository = requested.mode === 'settings'
+        && requested.access === 'repository'
+        && requested.owner
+        && requested.repo
+        ? `${requested.owner}/${requested.repo}`
+        : null;
 
     return (
         <View style={styles.page}>
@@ -176,10 +182,19 @@ export default function GithubIssuesScreen() {
             ) : requested.mode === 'settings' ? (
                 <ScrollView contentContainerStyle={styles.content}>
                     <View style={styles.settingsCard}>
-                        <Text style={styles.blockTitle}>{t('githubIssues.connectedAs', { login: connection.account.login })}</Text>
-                        <Text style={styles.secondary}>{t('githubIssues.credentialStored')}</Text>
+                        {inaccessibleRepository ? (
+                            <>
+                                <Text style={styles.blockTitle}>{t('githubIssues.repositoryAccessRequired')}</Text>
+                                <Text style={styles.secondary}>{t('githubIssues.repositoryUnavailable', { repository: inaccessibleRepository })}</Text>
+                            </>
+                        ) : (
+                            <>
+                                <Text style={styles.blockTitle}>{t('githubIssues.connectedAs', { login: connection.account.login })}</Text>
+                                <Text style={styles.secondary}>{t('githubIssues.credentialStored')}</Text>
+                            </>
+                        )}
                         {githubIssuesApi.installationUrl && <Pressable style={styles.settingsRow} onPress={() => void openExternalUrl(githubIssuesApi.installationUrl!)}><Text style={styles.link}>{t('githubIssues.manageRepositoryAccess')}</Text></Pressable>}
-                        <Pressable style={styles.settingsRow} onPress={() => void disconnect()}><Text style={styles.deleteText}>{t('githubIssues.removeDevice')}</Text></Pressable>
+                        {!inaccessibleRepository && <Pressable style={styles.settingsRow} onPress={() => void disconnect()}><Text style={styles.deleteText}>{t('githubIssues.removeDevice')}</Text></Pressable>}
                     </View>
                 </ScrollView>
             ) : repositories.length === 0 && !loading ? (

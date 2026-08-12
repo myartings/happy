@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "github-issues-inaccessible-repository",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Merge into personal dev, force-refresh macOS client, and verify iOSTemplate access state without substitute picker",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/tasks/github-issues-inaccessible-repository-tasks.md: preserve detected identity, no substitute picker, repository-specific management, explicit user navigation only, other reasons unchanged",
+      "updated": "2026-08-12T02:06:51+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md resolves Session binding, inaccessible routing, and retained picker reasons",
+      "updated": "2026-08-12T02:06:51+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope limited to resolver result, Session routing, connection-management copy, translations, focused tests, workflow evidence, and authorized personal macOS rebuild; local-only immediate acceptance correction",
+      "updated": "2026-08-12T02:06:51+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared with controls in decisions.md: no token/access mutation, public repository identity only, user-initiated external navigation, focused compatibility tests, reversible client rollout",
+      "updated": "2026-08-12T02:06:51+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Resolver preserves detected repository; Session inaccessible path routes to repository-specific management; screen copy and explicit navigation boundary implemented; RED/GREEN receipts in validation.md",
+      "updated": "2026-08-12T02:09:16+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-12T02:09:40+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: inaccessible-only routing, local repository identity, explicit external navigation, no credential or permission mutation, other picker and connection paths preserved; full app tests and typecheck pass",
+      "updated": "2026-08-12T02:10:50+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md contains summary, exact verification, whole-diff review, rollback, learning disposition, and authorized runtime follow-up; all code-slice acceptance criteria verified",
+      "updated": "2026-08-12T02:10:50+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T02:05:40+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T02:06:51+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/tasks/github-issues-inaccessible-repository-tasks.md: preserve detected identity, no substitute picker, repository-specific management, explicit user navigation only, other reasons unchanged"
+    },
+    {
+      "at": "2026-08-12T02:06:51+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md resolves Session binding, inaccessible routing, and retained picker reasons"
+    },
+    {
+      "at": "2026-08-12T02:06:51+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared with controls in decisions.md: no token/access mutation, public repository identity only, user-initiated external navigation, focused compatibility tests, reversible client rollout"
+    },
+    {
+      "at": "2026-08-12T02:06:51+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope limited to resolver result, Session routing, connection-management copy, translations, focused tests, workflow evidence, and authorized personal macOS rebuild; local-only immediate acceptance correction"
+    },
+    {
+      "at": "2026-08-12T02:06:52+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED resolver, Session routing, and management presentation tests; implement the smallest inaccessible-only path"
+    },
+    {
+      "at": "2026-08-12T02:09:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Resolver preserves detected repository; Session inaccessible path routes to repository-specific management; screen copy and explicit navigation boundary implemented; RED/GREEN receipts in validation.md"
+    },
+    {
+      "at": "2026-08-12T02:09:16+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run full Happy App tests, typecheck, repository workflow checks, whole-diff review, and staged CI"
+    },
+    {
+      "at": "2026-08-12T02:09:40+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-12T02:10:50+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: inaccessible-only routing, local repository identity, explicit external navigation, no credential or permission mutation, other picker and connection paths preserved; full app tests and typecheck pass"
+    },
+    {
+      "at": "2026-08-12T02:10:50+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize evidence, archive with commit pending, pass staged CI, integrate into dev, rebuild, and verify the live Session access state"
+    },
+    {
+      "at": "2026-08-12T02:10:50+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md contains summary, exact verification, whole-diff review, rollback, learning disposition, and authorized runtime follow-up; all code-slice acceptance criteria verified"
+    },
+    {
+      "at": "2026-08-12T02:10:51+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Route inaccessible Session repositories to repository-specific GitHub App access management; commit: pending; follow-up: Merge into personal dev, force-refresh macOS client, and verify iOSTemplate access state without substitute picker"
+    }
+  ],
+  "updated": "2026-08-12T02:10:51+00:00",
+  "archivedAt": "2026-08-12T02:10:51+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Route inaccessible Session repositories to repository-specific GitHub App access management",
+  "archiveFollowUp": "Merge into personal dev, force-refresh macOS client, and verify iOSTemplate access state without substitute picker"
+}
