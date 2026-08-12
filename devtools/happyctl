@@ -1535,13 +1535,81 @@ desktop_backup_paths() {
   find "$HAPPY_DEVTOOLS_BACKUP_DIR" -maxdepth 1 -type d -name "${HAPPY_APP_NAME%.app}-*.app" -print 2>/dev/null | sort -r
 }
 
-sign_installed_desktop() {
-  if [[ "$OS_NAME" != "Darwin" ]]; then
+macos_valid_signing_identities() {
+  security find-identity -v -p codesigning
+}
+
+resolve_macos_signing_identity() {
+  local identities eligible configured identity
+  identities="$(macos_valid_signing_identities)" || {
+    echo "Unable to inspect valid macOS code-signing identities." >&2
+    return 1
+  }
+
+  eligible="$({
+    printf '%s\n' "$identities" | sed -n 's/^[[:space:]]*[0-9][0-9]*) [0-9A-Fa-f]* "\(Apple Development:.*\)"$/\1/p'
+    printf '%s\n' "$identities" | sed -n 's/^[[:space:]]*[0-9][0-9]*) [0-9A-Fa-f]* "\(Developer ID Application:.*\)"$/\1/p'
+  })"
+
+  configured="${HAPPY_MACOS_SIGNING_IDENTITY:-}"
+  if [[ -n "$configured" ]]; then
+    if ! printf '%s\n' "$eligible" | grep -Fx -- "$configured" >/dev/null; then
+      echo "Configured macOS signing identity is not an eligible valid identity: $configured" >&2
+      return 1
+    fi
+    printf '%s\n' "$configured"
     return
   fi
-  check_cmd codesign
-  log "Ad-hoc signing app with identifier $HAPPY_APP_BUNDLE_ID"
-  run codesign --force --deep --sign - --identifier "$HAPPY_APP_BUNDLE_ID" "$INSTALL_APP"
+
+  identity="$(printf '%s\n' "$identities" | sed -n 's/^[[:space:]]*[0-9][0-9]*) [0-9A-Fa-f]* "\(Apple Development:.*\)"$/\1/p' | head -n 1)"
+  if [[ -z "$identity" ]]; then
+    identity="$(printf '%s\n' "$identities" | sed -n 's/^[[:space:]]*[0-9][0-9]*) [0-9A-Fa-f]* "\(Developer ID Application:.*\)"$/\1/p' | head -n 1)"
+  fi
+  if [[ -z "$identity" ]]; then
+    echo "No valid Developer ID Application or Apple Development signing identity found; refusing ad-hoc signing." >&2
+    return 1
+  fi
+  printf '%s\n' "$identity"
+}
+
+verify_stable_desktop_signature() {
+  local app_path="$1" details team_id
+  codesign --verify --deep --strict "$app_path" || {
+    echo "Strict code-signature verification failed: $app_path" >&2
+    return 1
+  }
+  details="$(codesign -dv --verbose=4 "$app_path" 2>&1)" || {
+    echo "Unable to inspect code signature: $app_path" >&2
+    return 1
+  }
+  if printf '%s\n' "$details" | grep -F 'Signature=adhoc' >/dev/null; then
+    echo "Ad-hoc code signature is not allowed for Happy Desktop refresh." >&2
+    return 1
+  fi
+  team_id="$(printf '%s\n' "$details" | awk -F= '/^TeamIdentifier=/{print $2; exit}')"
+  if [[ -z "$team_id" || "$team_id" == "not set" ]]; then
+    echo "Stable Happy Desktop signature has no Team Identifier." >&2
+    return 1
+  fi
+}
+
+sign_desktop_app() {
+  local app_path="$1" identity entitlements
+  check_cmd codesign || return 1
+  check_cmd security || return 1
+  identity="$(resolve_macos_signing_identity)" || return 1
+  entitlements="$HAPPY_REPO/packages/happy-app/src-tauri/entitlements.plist"
+  if [[ ! -f "$entitlements" ]]; then
+    echo "macOS entitlements file not found: $entitlements" >&2
+    return 1
+  fi
+  log "Signing app with stable identity: $identity"
+  run codesign --force --options runtime --timestamp=none \
+    --entitlements "$entitlements" \
+    --sign "$identity" \
+    --identifier "$HAPPY_APP_BUNDLE_ID" \
+    "$app_path" || return 1
+  verify_stable_desktop_signature "$app_path" || return 1
 }
 
 remove_old_desktop_backups() {
@@ -1610,12 +1678,14 @@ install_desktop() {
     exit 1
   fi
 
-  quit_desktop
-  backup_installed_app
+  if [[ "$OS_NAME" == "Darwin" ]]; then
+    sign_desktop_app "$BUILD_APP" || return 1
+  fi
+  quit_desktop || return 1
+  backup_installed_app || return 1
   log "Installing app to $INSTALL_APP"
-  rm -rf "$INSTALL_APP"
-  run ditto "$BUILD_APP" "$INSTALL_APP"
-  sign_installed_desktop
+  rm -rf "$INSTALL_APP" || return 1
+  run ditto "$BUILD_APP" "$INSTALL_APP" || return 1
 }
 
 launch_desktop() {
@@ -1664,6 +1734,8 @@ verify_desktop() {
       exit 1
     fi
     echo "ok   codesign id:   $signing_id"
+    verify_stable_desktop_signature "$INSTALL_APP" || return 1
+    echo "ok   stable signing: verified"
   fi
 
   echo "ok   installed app: $INSTALL_APP"

@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"devtools/happyctl","reason":"Review macOS signing, pre-install ordering, and verification behavior"}
+{"path":"devtools/tests/happyctl-macos-signing-smoke.sh","reason":"Focused regression evidence"}
+{"path":"docs/tasks/macos-stable-signing-tasks.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/workspace/macos-stable-signing/validation.md","reason":"Evidence ledger for exact check outcomes"}
