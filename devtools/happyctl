@@ -593,24 +593,34 @@ is_devtools_path() {
 }
 
 assert_official_product_equivalence() {
-  local upstream_ref="${1:-$HAPPY_DEVTOOLS_BASE_UPSTREAM}" path invalid=()
+  local upstream_ref="${1:-$HAPPY_DEVTOOLS_BASE_UPSTREAM}"
+  local candidate_ref="${2:-HEAD}" path invalid=()
   if ! git_ref_exists "$upstream_ref"; then
     echo "Happy official upstream ref not found: $upstream_ref" >&2
     return 1
   fi
-  if ! git -C "$HAPPY_REPO" merge-base --is-ancestor "$upstream_ref" HEAD; then
-    echo "Personal main does not contain the current official commit: $upstream_ref" >&2
+  if ! git_ref_exists "$candidate_ref"; then
+    echo "Happy candidate ref not found: $candidate_ref" >&2
+    return 1
+  fi
+  if ! git -C "$HAPPY_REPO" merge-base --is-ancestor "$upstream_ref" "$candidate_ref"; then
+    echo "$candidate_ref does not contain the current official commit: $upstream_ref" >&2
     return 1
   fi
   while IFS= read -r path; do
     [[ -z "$path" ]] && continue
     is_devtools_path "$path" || invalid+=("$path")
-  done < <(git -C "$HAPPY_REPO" diff --name-only "$upstream_ref"..HEAD)
+  done < <(git -C "$HAPPY_REPO" diff --name-only "$upstream_ref".."$candidate_ref")
   if [[ "${#invalid[@]}" -gt 0 ]]; then
     echo "Personal main changes product/build inputs outside the devtools allowlist:" >&2
     printf '  %s\n' "${invalid[@]}" >&2
     return 1
   fi
+}
+
+validate_base_branch_for_refresh() {
+  assert_official_product_equivalence \
+    "$HAPPY_DEVTOOLS_BASE_UPSTREAM" "$HAPPY_DEVTOOLS_BASE_BRANCH"
 }
 
 validate_patch_stack() {
@@ -1071,7 +1081,7 @@ build_desktop() {
   fi
   require_cmd cargo
   ensure_repo
-  require_github_issues_build_configuration
+  require_github_issues_build_configuration || return 1
   log "Installing JS dependencies"
   install_js_dependencies
   log "Building Happy Desktop app bundle"
@@ -1349,8 +1359,7 @@ linux_refresh_desktop() {
     if [[ "$rc" -eq 0 ]]; then
       show_patch_stack_state "$state"
       IFS='|' read -r base_ahead base_behind final_ahead final_behind branch_remote_delta <<<"$state"
-      if [[ "$base_ahead" -gt 0 ]]; then
-        echo "$HAPPY_DEVTOOLS_BASE_BRANCH contains commits outside $HAPPY_DEVTOOLS_BASE_UPSTREAM; refusing automatic refresh." >&2
+      if ! validate_base_branch_for_refresh; then
         rc=1
       fi
     fi
@@ -1790,8 +1799,7 @@ refresh_desktop() {
       upstream="$HAPPY_DEVTOOLS_BASE_UPSTREAM"
       ahead="$final_ahead"
       behind="$final_behind"
-      if [[ "$base_ahead" -gt 0 ]]; then
-        echo "$HAPPY_DEVTOOLS_BASE_BRANCH contains commits outside $HAPPY_DEVTOOLS_BASE_UPSTREAM; refusing automatic refresh." >&2
+      if ! validate_base_branch_for_refresh; then
         rc=1
       fi
     fi
