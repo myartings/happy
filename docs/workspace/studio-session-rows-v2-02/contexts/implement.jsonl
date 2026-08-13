@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/design/studio-implementation-slice-v2-02.md","reason":"User-approved implementation and stop boundary"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Existing desktop-only Studio resolver and feature-owned row-style seam"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Compact active and grouped session-row renderer"}
+{"path":"packages/happy-app/sources/components/ProjectGroup.tsx","reason":"Project/workspace row container and CompactSessionRow caller"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Legacy history session-row renderer and all sidebar row composition"}

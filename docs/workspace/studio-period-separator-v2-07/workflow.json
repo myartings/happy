@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-period-separator-v2-07",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Propose exactly one v2-08 visible improvement and await approval before implementation.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly approved the single-item contract in docs/design/studio-implementation-slice-v2-07.md on 2026-08-13.",
+      "updated": "2026-08-13T03:54:14+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "Durable decisions D1-D6 resolve source, treatment, runtime boundary, behavior preservation, and risk.",
+      "updated": "2026-08-13T03:54:14+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: one accepted Studio-only group-shell metric, one existing activation seam, resolver TDD, complete Happy App checks, installed-client visual acceptance; no tracker needed for the immediate local loop.",
+      "updated": "2026-08-13T03:54:14+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Presentation-only Studio group-shell change; no .ai/project.json risk trigger, protected path, external mutation, or release action applies.",
+      "updated": "2026-08-13T03:54:14+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD RED failed only on the absent Studio false / Default true group-shell boundary metric; GREEN passed 13 focused tests. Minimal implementation adds one resolver property and suppresses the existing group-card web shadow at both active-session rendering seams; typecheck and diff check pass.",
+      "updated": "2026-08-13T03:56:16+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures",
+      "updated": "2026-08-13T03:56:52+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blockers: one Studio-only resolver metric is consumed by both existing active-session group-shell paths; Default/non-Tauri remain true; only border/shadow presentation changes, with no layout, data, selection, navigation, scrolling, menu, or archive changes.",
+      "updated": "2026-08-13T04:06:41+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records TDD, 8 configured checks with 0 failures, executable hash parity, validated before/after lossless visual evidence, rollback path, whole-diff review with no blockers, and explicit user acceptance ('通过').",
+      "updated": "2026-08-13T04:06:41+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T03:50:49+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T03:54:14+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly approved the single-item contract in docs/design/studio-implementation-slice-v2-07.md on 2026-08-13."
+    },
+    {
+      "at": "2026-08-13T03:54:14+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "Durable decisions D1-D6 resolve source, treatment, runtime boundary, behavior preservation, and risk."
+    },
+    {
+      "at": "2026-08-13T03:54:14+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Presentation-only Studio group-shell change; no .ai/project.json risk trigger, protected path, external mutation, or release action applies."
+    },
+    {
+      "at": "2026-08-13T03:54:14+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: one accepted Studio-only group-shell metric, one existing activation seam, resolver TDD, complete Happy App checks, installed-client visual acceptance; no tracker needed for the immediate local loop."
+    },
+    {
+      "at": "2026-08-13T03:54:33+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add one failing resolver assertion, implement only the Studio group-shell boundary suppression, then verify."
+    },
+    {
+      "at": "2026-08-13T03:56:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD RED failed only on the absent Studio false / Default true group-shell boundary metric; GREEN passed 13 focused tests. Minimal implementation adds one resolver property and suppresses the existing group-card web shadow at both active-session rendering seams; typecheck and diff check pass."
+    },
+    {
+      "at": "2026-08-13T03:56:16+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete applicable checks, build/install the Studio desktop bundle, capture lossless evidence, and await user acceptance."
+    },
+    {
+      "at": "2026-08-13T03:56:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T04:06:41+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blockers: one Studio-only resolver metric is consumed by both existing active-session group-shell paths; Default/non-Tauri remain true; only border/shadow presentation changes, with no layout, data, selection, navigation, scrolling, menu, or archive changes."
+    },
+    {
+      "at": "2026-08-13T04:06:41+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "User explicitly accepted the installed v2-07 screenshot; moving the verified and reviewed slice to finish."
+    },
+    {
+      "at": "2026-08-13T04:06:41+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records TDD, 8 configured checks with 0 failures, executable hash parity, validated before/after lossless visual evidence, rollback path, whole-diff review with no blockers, and explicit user acceptance ('通过')."
+    },
+    {
+      "at": "2026-08-13T04:06:41+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Completed and user-accepted the Studio-only v2-07 whitespace-only active-period separation slice.; commit: pending; follow-up: Propose exactly one v2-08 visible improvement and await approval before implementation."
+    }
+  ],
+  "updated": "2026-08-13T04:06:41+00:00",
+  "archivedAt": "2026-08-13T04:06:41+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Completed and user-accepted the Studio-only v2-07 whitespace-only active-period separation slice.",
+  "archiveFollowUp": "Propose exactly one v2-08 visible improvement and await approval before implementation."
+}

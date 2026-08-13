@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-period-separator-v2-07/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/design/studio-implementation-slice-v2-07.md","reason":"Acceptance criteria for verification."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Verify Studio-only resolution and default preservation."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.test.ts","reason":"Verify deterministic resolver coverage."}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Verify bounded activation and behavior preservation."}
+{"path":"docs/workspace/studio-period-separator-v2-07/validation.md","reason":"Exact machine and visual evidence ledger."}

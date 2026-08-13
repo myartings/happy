@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-session-alignment-v2-06",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Propose exactly one v2-07 visible improvement and await approval before implementation.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly approved docs/design/studio-implementation-slice-v2-06.md on 2026-08-13",
+      "updated": "2026-08-13T03:22:57+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md resolves exact 24-to-16 alignment equation, all metadata variants, runtime boundary, behavior preservation, and risk",
+      "updated": "2026-08-13T03:22:57+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: extend Studio session-row metrics, one compact-row activation seam, and two optional metadata style props; targeted resolver TDD then complete Happy App family; immediate local human acceptance loop needs no tracker",
+      "updated": "2026-08-13T03:22:57+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only packaged-desktop conditional styling; no auth, protocol, migration, sync, protected path, deployment, or destructive action",
+      "updated": "2026-08-13T03:22:57+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD Studio alignment metrics and optional compact-row metadata seams implemented; 13 targeted tests, typecheck, diff check, caller/alignment audits, and 1109 complete Happy App tests pass",
+      "updated": "2026-08-13T03:25:03+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures",
+      "updated": "2026-08-13T03:38:03+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blockers: Studio-only 10pt status slot, 6pt indicator gap, and 16pt metadata inset are applied consistently to environment, runtime/provider, and identity branches; optional contentInset defaults preserve the existing 24pt non-Studio behavior; no interaction, data, row height, or session-status semantics changed; caller audit is bounded to ActiveSessionsGroupCompact.",
+      "updated": "2026-08-13T03:39:47+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records successful configured checks, executable hash parity, validated lossless installed-app evidence, whole-diff review with no blockers, rollback paths, and explicit user acceptance ('通过').",
+      "updated": "2026-08-13T03:40:32+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T03:22:04+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T03:22:57+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly approved docs/design/studio-implementation-slice-v2-06.md on 2026-08-13"
+    },
+    {
+      "at": "2026-08-13T03:22:57+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md resolves exact 24-to-16 alignment equation, all metadata variants, runtime boundary, behavior preservation, and risk"
+    },
+    {
+      "at": "2026-08-13T03:22:57+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only packaged-desktop conditional styling; no auth, protocol, migration, sync, protected path, deployment, or destructive action"
+    },
+    {
+      "at": "2026-08-13T03:22:57+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: extend Studio session-row metrics, one compact-row activation seam, and two optional metadata style props; targeted resolver TDD then complete Happy App family; immediate local human acceptance loop needs no tracker"
+    },
+    {
+      "at": "2026-08-13T03:22:57+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD Studio session alignment metrics, wire optional metadata seams, verify, build/install/capture, and stop for user acceptance"
+    },
+    {
+      "at": "2026-08-13T03:25:03+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD Studio alignment metrics and optional compact-row metadata seams implemented; 13 targeted tests, typecheck, diff check, caller/alignment audits, and 1109 complete Happy App tests pass"
+    },
+    {
+      "at": "2026-08-13T03:25:03+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Review bounded diff, build/ad-hoc-sign/install/capture Studio preview, and stop for explicit user acceptance"
+    },
+    {
+      "at": "2026-08-13T03:38:03+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T03:39:47+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blockers: Studio-only 10pt status slot, 6pt indicator gap, and 16pt metadata inset are applied consistently to environment, runtime/provider, and identity branches; optional contentInset defaults preserve the existing 24pt non-Studio behavior; no interaction, data, row height, or session-status semantics changed; caller audit is bounded to ActiveSessionsGroupCompact."
+    },
+    {
+      "at": "2026-08-13T03:39:48+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "User explicitly accepted the installed v2-06 screenshot; moving the verified and reviewed slice to finish."
+    },
+    {
+      "at": "2026-08-13T03:40:32+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records successful configured checks, executable hash parity, validated lossless installed-app evidence, whole-diff review with no blockers, rollback paths, and explicit user acceptance ('通过')."
+    },
+    {
+      "at": "2026-08-13T03:40:32+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Completed and user-accepted the Studio-only v2-06 session status/title/metadata alignment slice.; commit: pending; follow-up: Propose exactly one v2-07 visible improvement and await approval before implementation."
+    }
+  ],
+  "updated": "2026-08-13T03:40:32+00:00",
+  "archivedAt": "2026-08-13T03:40:32+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Completed and user-accepted the Studio-only v2-06 session status/title/metadata alignment slice.",
+  "archiveFollowUp": "Propose exactly one v2-07 visible improvement and await approval before implementation."
+}

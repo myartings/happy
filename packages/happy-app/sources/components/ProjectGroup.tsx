@@ -8,17 +8,19 @@ import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettin
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
 import { ProjectTodoButton } from './ProjectTodoButton';
 import { shouldShowWorkspaceLabel } from '@/utils/sessionRowDisplayContext';
+import type { DesktopSessionRowStyle } from '@/features/studio-visual-style/studioVisualStyle';
 
 interface ProjectGroupProps {
     project: ProjectGroupData;
     selectedSessionId?: string;
+    sessionRowStyle: DesktopSessionRowStyle;
 }
 
 /**
  * One project and its sessions. Rig supplies native workspace identity; Happy
  * CLI sessions derive primary/worktree workspaces from their managed paths.
  */
-export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectGroupProps) => {
+export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRowStyle }: ProjectGroupProps) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const machines = useAllMachines();
@@ -45,8 +47,18 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
         return machine?.metadata?.displayName || machine?.metadata?.host || null;
     }, [machines, project.machineId]);
     return (
-        <View style={styles.container}>
-            <Pressable style={styles.header} onPress={toggleCollapsed} hitSlop={8}>
+        <View style={[
+            styles.container,
+            sessionRowStyle.visualStyle === 'studio' && styles.containerStudio,
+        ]}>
+            <Pressable
+                style={[
+                    styles.header,
+                    sessionRowStyle.visualStyle === 'studio' && styles.headerStudio,
+                ]}
+                onPress={toggleCollapsed}
+                hitSlop={8}
+            >
                 <Ionicons
                     name={collapsed ? 'chevron-forward' : 'chevron-down'}
                     size={16}
@@ -95,17 +107,19 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId }: ProjectG
                     })}
                     showTopBorder={workspaceIndex > 0}
                     selectedSessionId={selectedSessionId}
+                    sessionRowStyle={sessionRowStyle}
                 />
             ))}
         </View>
     );
 });
 
-const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, selectedSessionId }: {
+const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, selectedSessionId, sessionRowStyle }: {
     workspace: ProjectWorkspaceGroup;
     showLabel: boolean;
     showTopBorder: boolean;
     selectedSessionId?: string;
+    sessionRowStyle: DesktopSessionRowStyle;
 }) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
@@ -130,6 +144,7 @@ const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, sele
                     selected={session.id === selectedSessionId}
                     showBorder={showTopBorder || index > 0}
                     displayContext="workspace"
+                    sessionRowStyle={sessionRowStyle}
                 />
             ))}
         </View>
@@ -144,12 +159,23 @@ const stylesheet = StyleSheet.create((theme) => ({
         borderRadius: 12,
         overflow: 'hidden',
     },
+    containerStudio: {
+        backgroundColor: 'transparent',
+        marginHorizontal: 0,
+        borderRadius: 0,
+        overflow: 'visible',
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,
         paddingVertical: 10,
         gap: 6,
+    },
+    headerStudio: {
+        marginHorizontal: 8,
+        borderRadius: 12,
+        backgroundColor: theme.colors.surface,
     },
     chevron: {
         width: 16,

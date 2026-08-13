@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-sidebar-frame-v2-01",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly approved docs/design/studio-implementation-slice-v2-01.md; accepted visual source docs/design/studio-main-window-v2.png",
+      "updated": "2026-08-12T14:30:30+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-sidebar-frame-v2-01/decisions.md resolves host seams, persistence, review activation, responsive width, runtime boundary, and risk",
+      "updated": "2026-08-12T14:30:30+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: Studio-owned resolver/test plus narrow SidebarNavigator, SidebarView, and device-local settings seams; packaged-desktop-only; no tracker needed for immediate local visual acceptance",
+      "updated": "2026-08-12T14:30:30+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "UI-only device-local preference and styling; no auth, protocol, synced data, migration, deployment, destructive operation, or protected mobile path",
+      "updated": "2026-08-12T14:30:30+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD resolver and device-local persistence implemented; SidebarNavigator/SidebarView narrow seams apply only the approved sidebar frame; 16 targeted tests and happy-app typecheck pass",
+      "updated": "2026-08-12T14:38:11+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "112 Happy App test files / 1101 tests and typecheck pass; rebuilt ad-hoc-signed Studio preview installed/running; user explicitly accepted visible result; macOS automated capture unavailable and recorded as an accepted gap",
+      "updated": "2026-08-12T14:50:15+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Bounded semantic review found and fixed duplicate divider ownership; final diff preserves desktop-only activation, Default behavior, session rows, navigation, and a single outer divider; no blocking findings remain",
+      "updated": "2026-08-12T14:50:16+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records user acceptance, complete tests/typecheck, bounded whole-diff review, local signing limitation, rollback, and one-slice follow-up",
+      "updated": "2026-08-12T14:51:41+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T14:28:28+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T14:30:30+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly approved docs/design/studio-implementation-slice-v2-01.md; accepted visual source docs/design/studio-main-window-v2.png"
+    },
+    {
+      "at": "2026-08-12T14:30:30+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-sidebar-frame-v2-01/decisions.md resolves host seams, persistence, review activation, responsive width, runtime boundary, and risk"
+    },
+    {
+      "at": "2026-08-12T14:30:30+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: Studio-owned resolver/test plus narrow SidebarNavigator, SidebarView, and device-local settings seams; packaged-desktop-only; no tracker needed for immediate local visual acceptance"
+    },
+    {
+      "at": "2026-08-12T14:30:30+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "UI-only device-local preference and styling; no auth, protocol, synced data, migration, deployment, destructive operation, or protected mobile path"
+    },
+    {
+      "at": "2026-08-12T14:31:36+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD Studio desktop-only resolver, wire sidebar frame seams, verify, build Happy (dev), and capture for human acceptance"
+    },
+    {
+      "at": "2026-08-12T14:38:11+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD resolver and device-local persistence implemented; SidebarNavigator/SidebarView narrow seams apply only the approved sidebar frame; 16 targeted tests and happy-app typecheck pass"
+    },
+    {
+      "at": "2026-08-12T14:38:11+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Build/install Happy (dev) with Studio preview, capture 1470x870 window, verify diff, and stop for human visual acceptance"
+    },
+    {
+      "at": "2026-08-12T14:50:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "112 Happy App test files / 1101 tests and typecheck pass; rebuilt ad-hoc-signed Studio preview installed/running; user explicitly accepted visible result; macOS automated capture unavailable and recorded as an accepted gap"
+    },
+    {
+      "at": "2026-08-12T14:50:16+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Bounded semantic review found and fixed duplicate divider ownership; final diff preserves desktop-only activation, Default behavior, session rows, navigation, and a single outer divider; no blocking findings remain"
+    },
+    {
+      "at": "2026-08-12T14:50:16+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Run finish audit and archive the user-accepted v2 slice 01 before proposing slice 02"
+    },
+    {
+      "at": "2026-08-12T14:51:41+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records user acceptance, complete tests/typecheck, bounded whole-diff review, local signing limitation, rollback, and one-slice follow-up"
+    },
+    {
+      "at": "2026-08-12T14:51:41+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "User-accepted Studio desktop sidebar frame v2-01; 112 files/1101 tests and typecheck pass; local review bundle ad-hoc signed and installed; automated screenshot gap explicitly accepted; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-12T14:51:41+00:00",
+  "archivedAt": "2026-08-12T14:51:41+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "User-accepted Studio desktop sidebar frame v2-01; 112 files/1101 tests and typecheck pass; local review bundle ad-hoc signed and installed; automated screenshot gap explicitly accepted",
+  "archiveFollowUp": "None"
+}

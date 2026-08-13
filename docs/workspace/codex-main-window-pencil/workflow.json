@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "slug": "codex-main-window-pencil",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Await explicit user approval of docs/design/studio-implementation-slice-01.md before creating a new implementation workflow",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly accepted docs/design/studio-main-window-v1.png by replying 通过 on 2026-08-12",
+      "updated": "2026-08-12T08:45:12+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-main-window-pencil/decisions.md resolves reference, scope, tracker, and no-code boundaries",
+      "updated": "2026-08-12T08:28:00+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope limited to docs/design/system adoption, Pencil Brief, studio-main-window-v1.pen/png, and workflow evidence; local-only design review",
+      "updated": "2026-08-12T08:28:00+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Design-doc and versioned Pencil artifact only; no product code, auth, protocol, data, deployment, or destructive operations",
+      "updated": "2026-08-12T08:28:00+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Created and user accepted docs/design/studio-main-window-v1.pen/png; no product code changed",
+      "updated": "2026-08-12T08:45:57+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "ios-coding-template Pencil strict validator passed; PNG is 1470x870; Pencil snapshot reported no layout problems; git diff --check passed",
+      "updated": "2026-08-12T08:45:12+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole bounded design diff reviewed with no blocking findings; product and protected mobile paths unchanged",
+      "updated": "2026-08-12T08:45:12+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records validation, explicit user acceptance, rollback, whole-diff review, and single-slice follow-up",
+      "updated": "2026-08-12T08:45:57+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T08:25:21+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T08:28:00+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted the validated Codex Desktop design extraction and explicitly requested the Happy Pencil design; contract: docs/design/codex-main-window-pencil-brief.md"
+    },
+    {
+      "at": "2026-08-12T08:28:00+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-main-window-pencil/decisions.md resolves reference, scope, tracker, and no-code boundaries"
+    },
+    {
+      "at": "2026-08-12T08:28:00+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Design-doc and versioned Pencil artifact only; no product code, auth, protocol, data, deployment, or destructive operations"
+    },
+    {
+      "at": "2026-08-12T08:28:00+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope limited to docs/design/system adoption, Pencil Brief, studio-main-window-v1.pen/png, and workflow evidence; local-only design review"
+    },
+    {
+      "at": "2026-08-12T08:28:22+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Create studio-main-window-v1.pen/png and stop for user visual acceptance"
+    },
+    {
+      "at": "2026-08-12T08:45:12+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly accepted docs/design/studio-main-window-v1.png by replying 通过 on 2026-08-12"
+    },
+    {
+      "at": "2026-08-12T08:45:12+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Created docs/design/studio-main-window-v1.pen and sibling PNG plus adoption/brief documentation; no product code changed"
+    },
+    {
+      "at": "2026-08-12T08:45:12+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "ios-coding-template Pencil strict validator passed; PNG is 1470x870; Pencil snapshot reported no layout problems; git diff --check passed"
+    },
+    {
+      "at": "2026-08-12T08:45:12+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole bounded design diff reviewed with no blocking findings; product and protected mobile paths unchanged"
+    },
+    {
+      "at": "2026-08-12T08:45:57+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Design artifact completed and accepted; advance through lifecycle without modifying product code"
+    },
+    {
+      "at": "2026-08-12T08:45:57+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Created and user accepted docs/design/studio-main-window-v1.pen/png; no product code changed"
+    },
+    {
+      "at": "2026-08-12T08:45:57+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify Pencil artifact, whole design diff, and explicit visual acceptance"
+    },
+    {
+      "at": "2026-08-12T08:45:57+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive accepted design workflow; next action is user approval of exactly one sidebar-frame implementation proposal"
+    },
+    {
+      "at": "2026-08-12T08:45:57+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records validation, explicit user acceptance, rollback, whole-diff review, and single-slice follow-up"
+    },
+    {
+      "at": "2026-08-12T08:46:05+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Accepted Codex-led Happy Studio main-window Pencil design with validated 1470x870 artifact; no product code changed; commit: pending; follow-up: Await explicit user approval of docs/design/studio-implementation-slice-01.md before creating a new implementation workflow"
+    }
+  ],
+  "updated": "2026-08-12T08:46:05+00:00",
+  "archivedAt": "2026-08-12T08:46:05+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Accepted Codex-led Happy Studio main-window Pencil design with validated 1470x870 artifact; no product code changed",
+  "archiveFollowUp": "Await explicit user approval of docs/design/studio-implementation-slice-01.md before creating a new implementation workflow"
+}

@@ -1,0 +1,6 @@
+{"path":"docs/design/studio-implementation-slice-v2-01.md","reason":"User-approved implementation boundary"}
+{"path":"docs/design/studio-main-window-v2.png","reason":"Accepted visual target"}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"Existing desktop drawer width and boundary host seam"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Existing sidebar Region surface host seam"}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Device-local visual-style persistence schema"}
+{"path":"packages/happy-app/sources/features","reason":"Existing feature-module boundary for the new Studio-owned resolver and test"}

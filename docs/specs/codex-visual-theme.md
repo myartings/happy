@@ -1,27 +1,35 @@
-# Happy Codex Visual Theme and Layering Specification
+# Happy Studio Desktop Visual Specification
 
 ## Status
 
-- Stage: visual hierarchy specification accepted; product implementation deferred
-- Reference: current Codex Desktop light appearance on macOS and Windows
-- Product target: Happy personal clients, beginning with Desktop/Web
+- Stage: Codex-led Pencil design in progress; product implementation blocked on human acceptance
+- Primary reference: current Codex Desktop main conversation, light appearance
+- Supporting reference: Otty Desktop only for restrained, low-noise visual character
+- Product target: packaged Happy Desktop on macOS and Windows only
 - Change class: optional visual style; no product-function or macro-layout change
-- Evidence confidence: high for light core surfaces and Windows popovers;
-  incomplete for dark appearance, modal treatment, and interaction motion
+- Evidence confidence: Codex evidence is high for the light main-window shell
+  and supporting Windows popovers but incomplete for dark appearance,
+  modal treatment, and interaction motion
 
 ## Intent
 
-Add a selectable `Codex` visual style to Happy. The result should feel close to
-Codex Desktop in typography, color, component construction, spacing, borders,
-shadows, icon treatment, and—most importantly—spatial hierarchy.
+Add a selectable, neutrally named `Studio` visual style to packaged Happy
+Desktop. Codex is the primary reference because its project/session sidebar,
+conversation stream, tool-result surfaces, and composer are structurally close
+to Happy. Otty is a supporting reference only for restraint and low visual noise.
 
-Codex is a visual reference only. Happy's remote-agent purpose, information,
-navigation, responsive behavior, actions, and workflows remain authoritative.
+Both reference applications are visual evidence only. Happy's remote-agent
+purpose, information, navigation, responsive behavior, actions, and workflows
+remain authoritative.
 
-The central design thesis is:
+The supporting Codex observation is:
 
 > Codex uses quiet component decoration inside an explicit, multi-level spatial
 > hierarchy. It is not visually flat; it is low-noise and strongly layered.
+
+Codex evidence is translated rather than cloned: Happy's information density,
+actions, remote-agent states, and product identity remain authoritative.
+Otty-specific geometry must not override the Codex-led main-window structure.
 
 ## Evidence model
 
@@ -37,6 +45,11 @@ not be committed.
 | Windows session metadata popover | Windows, light, unknown scale | Compact floating information surface |
 | Windows thread action menu | Windows, light, unknown scale | Long action menu, shortcuts, groups, downward placement |
 | Windows account menu | Windows, light, unknown scale | Upward placement, surface translucency, account/action grouping |
+
+The existing records below are the primary Codex evidence. Otty remains
+supporting evidence and does not gate Codex-led product-code slices. Each slice
+still requires an exact reference/Happy comparison and explicit user approval;
+unobserved values remain `unknown`, not inferred from memory.
 
 Validated evidence records:
 
@@ -75,6 +88,7 @@ must not be overinterpreted.
 - Existing responsive sidebar-width calculation and main-content width.
 - Existing session metadata, status dots, project groups, tool calls,
   permissions, diffs, composer actions, side chat, and keyboard shortcuts.
+- Existing standalone Web, iOS, and Android appearance and behavior.
 - Existing mobile safe-area, minimum touch-target, accessibility, and native
   interaction behavior.
 - Existing `adaptive`, `light`, and `dark` appearance behavior.
@@ -96,14 +110,15 @@ must not be overinterpreted.
 - Happy's information-rich rows by forcing Codex's simpler row geometry.
 - Status colors that communicate connection, permission, warning, success,
   destructive actions, or diff semantics.
-- Mobile interactions merely to imitate a desktop pointer interface.
+- Any styling, font loading, selector, or interaction on standalone Web, iOS,
+  or Android merely to imitate a desktop reference application.
 
 ## Theme model
 
 Visual style and light/dark appearance are independent:
 
 ```text
-visualStyle: default | codex
+visualStyle: default | studio
 appearance:  adaptive | light | dark
 ```
 
@@ -111,9 +126,12 @@ appearance:  adaptive | light | dark
 - Changing `appearance` does not reset `visualStyle`.
 - The choice persists with the same scope as the existing local appearance
   preference.
-- A development-only Codex light preview may precede dark completion.
-- The Codex style must not be presented as complete until both light and dark
-  appearances pass visual verification.
+- `studio` is effective only in identified packaged macOS and Windows clients.
+  Standalone Web, iOS, Android, and unknown runtimes resolve to `default` and do
+  not expose a Studio selector.
+- A development-only Studio light preview may precede dark completion.
+- Studio must not be presented as complete until both light and dark appearances
+  pass visual verification and the user explicitly accepts them.
 
 ## Visual principles
 
@@ -137,7 +155,7 @@ appearance:  adaptive | light | dark
 
 ## Canonical layer model
 
-The Codex style uses seven conceptual levels. These are semantic surface roles,
+Studio uses seven conceptual levels. These are semantic surface roles,
 not a mandate for seven nested views.
 
 | Level | Role | Purpose | Primary separation | Typical Happy examples |
@@ -203,7 +221,6 @@ values are marked **Supported**. Unresolved values remain **Candidate**.
 | --- | --- | --- |
 | macOS | Sidebar approximately `#F4F5F6`, visually uniform in the captured state | Use a cool neutral sidebar; platform vibrancy is optional and must be visually verified |
 | Windows | Upper sidebar/titlebar approximately `#F0F3F9`; lower area picks up a warm environmental tint | Prefer a Windows backdrop/material adapter when available; use `#F0F3F9` as opaque fallback; do not hard-code the observed warm gradient |
-| Mobile | No matching Codex evidence | Use an opaque platform-safe region surface until native evidence exists |
 
 The exact Windows mechanism—Mica, Acrylic, alpha overlay, or another material—is
 blocked by still-only evidence. API selection remains an implementation choice,
@@ -252,8 +269,8 @@ remain separate from this neutral hierarchy.
 - Happy logo: Bricolage Grotesque may remain where it is part of brand identity;
   it must not appear in ordinary UI text.
 
-Desktop/Web should load Geist explicitly. Mobile may bundle the same faces only
-after startup cost and rendering quality are verified.
+Packaged Desktop may load Geist explicitly after a user-approved typography
+slice. Standalone Web, iOS, and Android must not load Studio-specific fonts.
 
 ### Scale
 
@@ -298,10 +315,10 @@ display scale, the two action menus show:
 - label start approximately 59–60 pixels from the panel edge;
 - section-divider inset approximately 23–24 pixels.
 
-These are proportional evidence, not logical constants. Happy's current Web
-menu row height of `48` logical units is already structurally compatible and may
-remain unless screenshot comparison shows a mismatch. Keep one stable grid for
-icons, labels, shortcuts, and submenu chevrons across every popover variant.
+These are proportional evidence, not logical constants. Happy's packaged
+desktop renderer currently uses a menu row height of `48` logical units; it may
+remain only if the user accepts the matched screenshot. Keep one stable grid
+for icons, labels, shortcuts, and submenu chevrons across every popover variant.
 
 ## Shape system
 
@@ -369,7 +386,7 @@ Candidates must be tuned against matched captures.
 - Main/side-chat and sidebar/main boundaries use a single hairline.
 - No ambient shadow separates persistent regions.
 - Windows native title/menu controls remain platform chrome; they are not copied
-  to macOS or mobile.
+  to macOS.
 - Side chat is a stateful Happy feature and does not define a platform-default
   third-column proportion.
 
@@ -467,14 +484,15 @@ Observed variants:
 - Do not reuse a popover shadow unchanged for a large command palette.
 - A visible scrim is allowed only when interaction is genuinely blocking.
 - Current hard-coded command-palette colors and strong shadow must become
-  theme-aware before the Codex style is considered complete.
+  theme-aware before Studio is considered complete.
 - Final radius, scrim opacity, and shadow require matched Codex modal evidence.
 
 ### Settings and grouped lists — L2/L3
 
-- Add a separate visual-style choice: `Default` and `Codex`.
+- Packaged Desktop may expose a separate visual-style choice: `Default` and
+  `Studio`; unsupported runtimes expose no Studio entry.
 - Keep `Automatic`, `Light`, and `Dark` as the appearance choice.
-- Grouped settings may remain contained, but should use no shadow in the Codex
+- Grouped settings may remain contained, but should use no shadow in the Studio
   style; rely on shared background, outer radius, and internal dividers.
 - A theme preview should communicate region, selection, text, and accent without
   introducing a new settings layout.
@@ -491,27 +509,26 @@ Observed variants:
 
 - Hover: 5% primary-ink overlay.
 - Pressed: 10% primary-ink overlay.
-- Focus: `2px` accent ring with `2px` offset on Web/Desktop; preserve accessible
-  native focus behavior on mobile.
+- Focus: `2px` accent ring with `2px` offset on packaged Desktop.
 - Transition: `120–160ms` for color/opacity; no decorative bounce.
 - Disabled: reduce foreground contrast without lowering an entire composite
   below accessible text contrast.
 
 Opening/closing motion, hovered rows, keyboard focus, and nested submenu motion
-remain evidence gaps and must not be described as Codex facts.
+remain evidence gaps and must not be described as reference facts.
 
 ## Happy implementation audit
 
 The specification maps to existing seams and identifies current hierarchy drift.
 
-| Happy surface | Current evidence | Codex-style requirement |
+| Happy surface | Current evidence | Studio requirement |
 | --- | --- | --- |
-| `theme.ts` / Unistyles | Semantic colors exist, but no independent visual-style dimension | Add Codex style variants without coupling to `packages/codium` |
+| `theme.ts` / Unistyles | Semantic colors exist, but no independent visual-style dimension | Add Studio variants without coupling to reference-app runtime code |
 | `SidebarView` / session rows | Multiple bordered white controls and rounded containers | Move ordinary navigation toward Region + fill-only selection |
 | `AgentInput` | Already uses a large rounded shadowed shell | Tune to PersistentElevated rather than redesigning structure |
-| `SessionActionsPopover` Web | Visible 12% full-window scrim, no Web border, divider after each item | No visible scrim, floating hairline, semantic group dividers |
-| `FloatingOverlay` Web | Radius `12` and small `3.84` shadow radius differ from session menu | Consume the same shared Floating shell |
-| `ItemGroup` Web | Uses a small elevation/shadow | Contained group with no shadow |
+| `SessionActionsPopover` desktop renderer | Visible 12% full-window scrim, no Web border, divider after each item | No visible scrim, floating hairline, semantic group dividers |
+| `FloatingOverlay` desktop renderer | Radius `12` and small `3.84` shadow radius differ from session menu | Consume the same shared Floating shell |
+| `ItemGroup` desktop renderer | Uses a small elevation/shadow | Contained group with no shadow |
 | `CommandPalette` | Hard-coded white, border, and strong `0.25/40` shadow | Theme-aware provisional Modal tier |
 | suggestion rows | Some icons use circular filled tiles | Monochrome outline grid without decorative icon tiles |
 | side-chat panel | Own canvas, tabs, and composer already form separate regions | Preserve structure; align surfaces and shared composer hierarchy |
@@ -519,22 +536,29 @@ The specification maps to existing seams and identifies current hierarchy drift.
 This audit authorizes no product-code change by itself. Implementation still
 follows the repository workflow and must preserve existing behavior.
 
-## Implementation sequence
+## Human-gated implementation loop
 
-1. Add `visualStyle` persistence independent from appearance.
-2. Define shared semantic hierarchy roles for Canvas, Region, Contained,
-   PersistentElevated, Floating, and provisional Modal.
-3. Register Codex light/dark Unistyles variants; light may be preview-only until
-   dark evidence is complete.
-4. Make typography theme-aware while retaining Happy logo typography.
-5. Apply shell, sidebar, header, conversation, and composer mappings.
-6. Consolidate Web/Desktop popovers around one Floating surface and placement
-   contract; keep platform-native mobile menus where appropriate.
-7. Remove or theme hard-coded decorative colors, shadows, and icon tiles in the
-   scoped components.
-8. Compare matched Happy screenshots by layer before broadening the rollout.
+Implementation is deliberately serial and cannot be treated as a batch plan.
+For every visible change:
 
-Avoid broad component rewrites. Prefer theme roles and small integration seams.
+1. Capture or identify one bounded Otty reference state and the matching current
+   Happy Desktop state.
+2. Propose exactly one visible improvement, including scope, non-goals, and the
+   state that will be shown for acceptance.
+3. Wait for explicit user confirmation before changing product code.
+4. Create or resume a workflow limited to that accepted item and implement only
+   the smallest coherent change needed for it.
+5. Build the packaged desktop client and present the resulting state for human
+   review. Automated tests are necessary but never substitute for this review.
+6. If the user rejects the result, continue adjusting the same item or roll it
+   back. Do not introduce a second improvement.
+7. Only after the user explicitly says the item passes may the workflow finish
+   and the next improvement be proposed.
+
+Theme plumbing may be introduced only when it is the minimum support required
+by the currently accepted visible item. Do not pre-build a complete token,
+component, or selector system in anticipation of later items. Avoid broad
+component rewrites and preserve small integration seams.
 
 ## Visual acceptance
 
@@ -572,8 +596,18 @@ Avoid broad component rewrites. Prefer theme roles and small integration seams.
   and touch targets are unchanged.
 - Floating placement still flips above/below and remains within viewport bounds.
 - Outside-click dismissal remains available without a visible popover scrim.
-- Switching `Default`/`Codex` is immediate and persistent.
+- Switching `Default`/`Studio` is immediate and persistent on supported packaged
+  Desktop clients only.
+- Standalone Web, iOS, and Android remain on Default and expose no Studio entry.
 - Existing light/dark/adaptive behavior remains correct.
+
+### Human acceptance gate
+
+- Each result is reviewed in a real packaged desktop client at a named state.
+- Approval of a proposal authorizes only that item, not the remaining theme.
+- Silence, automated checks, or acceptance of documentation never counts as
+  acceptance of a visual result.
+- No later item may begin until the user explicitly accepts the current result.
 
 ## Open evidence work
 
@@ -591,7 +625,7 @@ universal accent constant. They do not block a scoped light hierarchy preview.
 
 ## Delivery boundary
 
-This document and its linked task plan are the completed deliverable for the
-current workflow. Product implementation, runtime validation, and the remaining
-evidence captures require a separate follow-up workflow so that later code
-changes are reviewed and verified independently from this design contract.
+This contract reset and its linked task plan are the only deliverables for the
+current workflow. Product implementation remains blocked until the user accepts
+this document, reviews one proposed visual item, and explicitly authorizes that
+single item.

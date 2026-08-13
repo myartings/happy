@@ -1,0 +1,1741 @@
+{
+  "version": "2.14",
+  "children": [
+    {
+      "type": "frame",
+      "id": "QNbno",
+      "x": 0,
+      "y": 0,
+      "name": "DesktopNavigationControls",
+      "reusable": true,
+      "width": 186,
+      "height": 32,
+      "gap": 16,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "ybDe3",
+          "name": "Traffic Light",
+          "fill": "#D3D5D7",
+          "width": 14,
+          "height": 14
+        },
+        {
+          "type": "ellipse",
+          "id": "G479a",
+          "name": "Traffic Light",
+          "fill": "#D3D5D7",
+          "width": 14,
+          "height": 14
+        },
+        {
+          "type": "ellipse",
+          "id": "C0Wyh",
+          "name": "Traffic Light",
+          "fill": "#D3D5D7",
+          "width": 14,
+          "height": 14
+        },
+        {
+          "type": "icon",
+          "id": "o3worT",
+          "name": "Zen Toggle",
+          "width": 18,
+          "height": 18,
+          "icon": "circle",
+          "library": "lucide",
+          "fill": "$studio-text"
+        },
+        {
+          "type": "icon",
+          "id": "J8BCq",
+          "name": "Back",
+          "width": 18,
+          "height": 18,
+          "icon": "chevron-left",
+          "library": "lucide",
+          "fill": "$studio-muted"
+        },
+        {
+          "type": "icon",
+          "id": "itGOn",
+          "name": "Forward",
+          "width": 18,
+          "height": 18,
+          "icon": "chevron-right",
+          "library": "lucide",
+          "fill": "$studio-muted"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "PYQdI",
+      "x": 170,
+      "y": 0,
+      "name": "NewSessionAction",
+      "reusable": true,
+      "width": 224,
+      "height": 38,
+      "fill": "#FFFFFF",
+      "cornerRadius": 9,
+      "stroke": "$studio-hairline",
+      "strokeWidth": 1,
+      "gap": 10,
+      "padding": [
+        0,
+        12
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "g6LN9P",
+          "name": "New Session Icon",
+          "width": 16,
+          "height": 16,
+          "icon": "square-pen",
+          "library": "lucide",
+          "fill": "$studio-text"
+        },
+        {
+          "type": "text",
+          "id": "X4Fjyc",
+          "name": "New Session Label",
+          "fill": "$studio-text",
+          "content": "New session",
+          "fontFamily": "$studio-font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qkqsY",
+      "x": 410,
+      "y": 0,
+      "name": "ArchiveAction",
+      "reusable": true,
+      "width": 46,
+      "height": 38,
+      "fill": "#FFFFFF",
+      "cornerRadius": 9,
+      "stroke": "$studio-hairline",
+      "strokeWidth": 1,
+      "gap": 8,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "HgsFx",
+          "name": "Archive Icon",
+          "width": 17,
+          "height": 17,
+          "icon": "archive",
+          "library": "lucide",
+          "fill": "$studio-text"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dNTSx",
+      "x": 472,
+      "y": 0,
+      "name": "TodoAction",
+      "reusable": true,
+      "width": 286,
+      "height": 38,
+      "fill": "#FFFFFF",
+      "cornerRadius": 9,
+      "stroke": "$studio-hairline",
+      "strokeWidth": 1,
+      "gap": 10,
+      "padding": [
+        0,
+        12
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "iN3Y8",
+          "name": "Todo Icon",
+          "width": 16,
+          "height": 16,
+          "icon": "square-check",
+          "library": "lucide",
+          "fill": "$studio-secondary"
+        },
+        {
+          "type": "text",
+          "id": "oaEJp",
+          "name": "Todo Label",
+          "fill": "$studio-text",
+          "content": "Todo",
+          "fontFamily": "$studio-font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "XVSVi",
+          "name": "Todo Count",
+          "fill": "$studio-muted",
+          "content": "32",
+          "fontFamily": "$studio-font",
+          "fontSize": 12,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zXIDA",
+      "x": 780,
+      "y": 0,
+      "name": "SessionSectionHeader",
+      "reusable": true,
+      "width": 286,
+      "height": 24,
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "a5bEL",
+          "name": "Section Label",
+          "fill": "$studio-secondary",
+          "content": "Today active",
+          "fontFamily": "$studio-font",
+          "fontSize": 12,
+          "fontWeight": "600"
+        },
+        {
+          "type": "icon",
+          "id": "pdfaq",
+          "name": "Section More",
+          "width": 15,
+          "height": 15,
+          "icon": "ellipsis",
+          "library": "lucide",
+          "fill": "$studio-muted"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "cHypa",
+      "x": 1080,
+      "y": 0,
+      "name": "RichSessionRow",
+      "reusable": true,
+      "width": 286,
+      "height": 62,
+      "fill": "#00000000",
+      "cornerRadius": 9,
+      "gap": 9,
+      "padding": [
+        7,
+        9
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "S0pvUu",
+          "name": "Session Status",
+          "fill": "$studio-muted",
+          "width": 6,
+          "height": 6
+        },
+        {
+          "type": "frame",
+          "id": "T5ISpV",
+          "name": "Session Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 3,
+          "children": [
+            {
+              "type": "text",
+              "id": "pMPdp",
+              "name": "Session Title",
+              "fill": "$studio-text",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Session title",
+              "fontFamily": "$studio-font",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "wqotc",
+              "name": "Session Meta Primary",
+              "fill": "$studio-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "dev · happy · macOS",
+              "fontFamily": "$studio-font",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "w12PR8",
+              "name": "Session Meta Secondary",
+              "fill": "$studio-muted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Codex · online · permitted",
+              "fontFamily": "$studio-font",
+              "fontSize": 10,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dbWhz",
+      "x": 0,
+      "y": 72,
+      "name": "MessageActions",
+      "reusable": true,
+      "height": 28,
+      "gap": 7,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "y92bh",
+          "name": "MessageAction Copy",
+          "width": 28,
+          "height": 28,
+          "cornerRadius": 7,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "io190",
+              "name": "Copy Icon",
+              "width": 14,
+              "height": 14,
+              "icon": "copy",
+              "library": "lucide",
+              "fill": "$studio-muted"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "w6Fj99",
+          "name": "MessageAction Approve",
+          "width": 28,
+          "height": 28,
+          "cornerRadius": 7,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "WhkJv",
+              "name": "Approve Icon",
+              "width": 14,
+              "height": 14,
+              "icon": "thumbs-up",
+              "library": "lucide",
+              "fill": "$studio-muted"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "g8yeLU",
+          "name": "MessageAction Reject",
+          "width": 28,
+          "height": 28,
+          "cornerRadius": 7,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "T1yoT6",
+              "name": "Reject Icon",
+              "width": 14,
+              "height": 14,
+              "icon": "thumbs-down",
+              "library": "lucide",
+              "fill": "$studio-muted"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "oH1WE",
+          "name": "MessageAction Retry",
+          "width": 28,
+          "height": 28,
+          "cornerRadius": 7,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "MyyGY",
+              "name": "Retry Icon",
+              "width": 14,
+              "height": 14,
+              "icon": "rotate-ccw",
+              "library": "lucide",
+              "fill": "$studio-muted"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "k9AT8S",
+          "name": "MessageAction More",
+          "width": 28,
+          "height": 28,
+          "cornerRadius": 7,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "i8nyP",
+              "name": "More Icon",
+              "width": 14,
+              "height": 14,
+              "icon": "ellipsis",
+              "library": "lucide",
+              "fill": "$studio-muted"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "rTZVt",
+      "x": 220,
+      "y": 72,
+      "name": "OnlineStatus",
+      "reusable": true,
+      "height": 24,
+      "fill": "#ECFDF3",
+      "cornerRadius": 12,
+      "gap": 6,
+      "padding": [
+        0,
+        8
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "fvLuf",
+          "name": "Online Dot",
+          "fill": "$studio-success",
+          "width": 6,
+          "height": 6
+        },
+        {
+          "type": "text",
+          "id": "CCs4K",
+          "name": "Online Label",
+          "fill": "$studio-success",
+          "content": "Online",
+          "fontFamily": "$studio-font",
+          "fontSize": 12,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "raCZZ",
+      "x": 350,
+      "y": 72,
+      "name": "PermissionMode",
+      "reusable": true,
+      "height": 24,
+      "fill": "#FFF7E8",
+      "cornerRadius": 12,
+      "gap": 7,
+      "padding": [
+        0,
+        8
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "jHMtU",
+          "name": "Permission Icon",
+          "width": 13,
+          "height": 13,
+          "icon": "shield-check",
+          "library": "lucide",
+          "fill": "$studio-warning"
+        },
+        {
+          "type": "text",
+          "id": "s9wsQB",
+          "name": "Permission Label",
+          "fill": "$studio-warning",
+          "content": "YOLO",
+          "fontFamily": "$studio-font",
+          "fontSize": 12,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "O393uN",
+      "x": 500,
+      "y": 72,
+      "name": "ToolActivityRow",
+      "reusable": true,
+      "width": 720,
+      "height": 34,
+      "fill": "#FFFFFF",
+      "cornerRadius": 8,
+      "stroke": "$studio-hairline",
+      "strokeWidth": 1,
+      "gap": 10,
+      "padding": [
+        0,
+        10
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "k2cnLE",
+          "name": "Tool Icon",
+          "width": 16,
+          "height": 16,
+          "icon": "square-terminal",
+          "library": "lucide",
+          "fill": "$studio-text"
+        },
+        {
+          "type": "text",
+          "id": "cEhgv",
+          "name": "Tool Label",
+          "fill": "$studio-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Ran 1 command",
+          "fontFamily": "$studio-font",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "I3Rssj",
+          "name": "Tool Status",
+          "fill": "$studio-success",
+          "content": "done",
+          "fontFamily": "$studio-font",
+          "fontSize": 12,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "yk17p",
+      "x": 0,
+      "y": 124,
+      "name": "SectionHeading",
+      "reusable": true,
+      "width": 800,
+      "height": 35,
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "OWMMj",
+          "name": "Heading Label",
+          "fill": "$studio-text",
+          "content": "Final spec review",
+          "fontFamily": "$studio-font",
+          "fontSize": 23,
+          "fontWeight": "650"
+        },
+        {
+          "type": "rectangle",
+          "id": "sfUCL",
+          "name": "Heading Rule",
+          "fill": "$studio-text",
+          "width": 40,
+          "height": 2
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "jqF5E",
+      "x": 0,
+      "y": 176,
+      "name": "AssistantMessage",
+      "reusable": true,
+      "width": 800,
+      "layout": "vertical",
+      "gap": 13,
+      "children": [
+        {
+          "type": "text",
+          "id": "lawls",
+          "name": "Assistant Paragraph",
+          "fill": "$studio-text",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "I reviewed the workflow evidence against the implementation receipt. The remaining work is verification and a compact archive of the result.",
+          "lineHeight": 1.45,
+          "fontFamily": "$studio-font",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        },
+        {
+          "id": "T4czSN",
+          "type": "ref",
+          "ref": "dbWhz",
+          "name": "Assistant Actions"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ZuReQ",
+      "x": 840,
+      "y": 124,
+      "name": "HappyComposer",
+      "reusable": true,
+      "width": 800,
+      "height": 110,
+      "fill": "#FFFFFF",
+      "cornerRadius": 20,
+      "stroke": "$studio-border",
+      "strokeWidth": 1,
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "#00000024",
+        "offset": {
+          "x": 0,
+          "y": 16
+        },
+        "blur": 32,
+        "spread": -10
+      },
+      "layout": "vertical",
+      "gap": 12,
+      "padding": [
+        14,
+        16
+      ],
+      "justifyContent": "space_between",
+      "children": [
+        {
+          "type": "text",
+          "id": "p7gRKj",
+          "name": "Composer Placeholder",
+          "fill": "#B5B8BC",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Type a message or command...",
+          "fontFamily": "$studio-font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "iFS1s",
+          "name": "Composer Toolbar",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "tvsN6",
+              "name": "Composer Left Controls",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "qg27Q",
+                  "name": "Settings",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "settings",
+                  "library": "lucide",
+                  "fill": "$studio-secondary"
+                },
+                {
+                  "type": "icon",
+                  "id": "LAGEn",
+                  "name": "Permissions",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "shield",
+                  "library": "lucide",
+                  "fill": "$studio-secondary"
+                },
+                {
+                  "type": "icon",
+                  "id": "dZq5p",
+                  "name": "Attach",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "paperclip",
+                  "library": "lucide",
+                  "fill": "$studio-secondary"
+                },
+                {
+                  "type": "icon",
+                  "id": "p1Qvgx",
+                  "name": "Image",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "image",
+                  "library": "lucide",
+                  "fill": "$studio-secondary"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b5WpXI",
+              "name": "Composer Right Controls",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IkXxx",
+                  "name": "Model Selector",
+                  "fill": "$studio-secondary",
+                  "content": "5.6 Sol",
+                  "fontFamily": "$studio-font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "icon",
+                  "id": "dwg52",
+                  "name": "Model Chevron",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "chevron-down",
+                  "library": "lucide",
+                  "fill": "$studio-muted"
+                },
+                {
+                  "type": "icon",
+                  "id": "RudLp",
+                  "name": "Voice",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "mic",
+                  "library": "lucide",
+                  "fill": "$studio-text"
+                },
+                {
+                  "type": "frame",
+                  "id": "i6Nao",
+                  "name": "Send Button",
+                  "width": 34,
+                  "height": 34,
+                  "fill": "$studio-text",
+                  "cornerRadius": 17,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "v14l4x",
+                      "name": "Send Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "arrow-up",
+                      "library": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vYaWj",
+      "x": 0,
+      "y": 353,
+      "name": "DesktopShell - Happy Studio Main Window v2 Review",
+      "clip": true,
+      "width": 1470,
+      "height": 870,
+      "fill": "$studio-canvas",
+      "children": [
+        {
+          "type": "frame",
+          "id": "tH8Cd",
+          "name": "HappySidebar",
+          "width": 316,
+          "height": "fill_container",
+          "fill": "$studio-sidebar",
+          "stroke": "$studio-hairline",
+          "strokeWidth": {
+            "right": 1
+          },
+          "layout": "vertical",
+          "padding": [
+            14,
+            12,
+            12,
+            18
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "QeKio",
+              "name": "Sidebar Upper",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "id": "N1LtU",
+                  "type": "ref",
+                  "ref": "QNbno",
+                  "name": "DesktopNavigationControls"
+                },
+                {
+                  "type": "frame",
+                  "id": "NPeu5",
+                  "name": "Quick Actions",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "nuppz",
+                      "type": "ref",
+                      "ref": "PYQdI",
+                      "name": "NewSessionAction",
+                      "width": "fill_container"
+                    },
+                    {
+                      "id": "IUkA9",
+                      "type": "ref",
+                      "ref": "qkqsY",
+                      "name": "ArchiveAction"
+                    }
+                  ]
+                },
+                {
+                  "id": "acVHW",
+                  "type": "ref",
+                  "ref": "dNTSx",
+                  "name": "TodoAction",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "tqOFk",
+                  "name": "Session Groups",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "sY3Tk",
+                      "name": "Today active",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "id": "CMUvg",
+                          "type": "ref",
+                          "ref": "zXIDA",
+                          "name": "SessionSectionHeader",
+                          "width": "fill_container",
+                          "descendants": {
+                            "a5bEL": {
+                              "content": "Today active"
+                            }
+                          }
+                        },
+                        {
+                          "id": "yrU88",
+                          "type": "ref",
+                          "ref": "cHypa",
+                          "name": "RichSessionRow Selected",
+                          "width": "fill_container",
+                          "fill": "$studio-selected",
+                          "descendants": {
+                            "S0pvUu": {
+                              "fill": "$studio-success"
+                            },
+                            "pMPdp": {
+                              "content": "Review Studio v2 visual theme"
+                            },
+                            "wqotc": {
+                              "content": "dev · happy · macOS"
+                            },
+                            "w12PR8": {
+                              "content": "Codex · online · YOLO",
+                              "fill": "$studio-secondary"
+                            }
+                          }
+                        },
+                        {
+                          "id": "MAqTG",
+                          "type": "ref",
+                          "ref": "cHypa",
+                          "name": "RichSessionRow Default",
+                          "width": "fill_container",
+                          "fill": "#00000000",
+                          "descendants": {
+                            "S0pvUu": {
+                              "fill": "$studio-warning"
+                            },
+                            "pMPdp": {
+                              "content": "Restore full Happy baseline map"
+                            },
+                            "wqotc": {
+                              "content": "main · happy · Windows"
+                            },
+                            "w12PR8": {
+                              "content": "Codex · permission ask",
+                              "fill": "$studio-muted"
+                            }
+                          }
+                        },
+                        {
+                          "id": "taR7M",
+                          "type": "ref",
+                          "ref": "cHypa",
+                          "name": "RichSessionRow Default",
+                          "width": "fill_container",
+                          "fill": "#00000000",
+                          "descendants": {
+                            "S0pvUu": {
+                              "fill": "$studio-muted"
+                            },
+                            "pMPdp": {
+                              "content": "Archive-aware session density"
+                            },
+                            "wqotc": {
+                              "content": "dev · ai-coding-template · macOS"
+                            },
+                            "w12PR8": {
+                              "content": "Codex · completed",
+                              "fill": "$studio-muted"
+                            }
+                          }
+                        },
+                        {
+                          "id": "LJb53",
+                          "type": "ref",
+                          "ref": "cHypa",
+                          "name": "RichSessionRow Default",
+                          "width": "fill_container",
+                          "fill": "#00000000",
+                          "descendants": {
+                            "S0pvUu": {
+                              "fill": "$studio-blue"
+                            },
+                            "pMPdp": {
+                              "content": "Todo panel shortcut polish"
+                            },
+                            "wqotc": {
+                              "content": "main · ios-coding-template · macOS"
+                            },
+                            "w12PR8": {
+                              "content": "Codex · queued",
+                              "fill": "$studio-muted"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vxkCl",
+                      "name": "Earlier active",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "id": "SLQkH",
+                          "type": "ref",
+                          "ref": "zXIDA",
+                          "name": "SessionSectionHeader",
+                          "width": "fill_container",
+                          "descendants": {
+                            "a5bEL": {
+                              "content": "Earlier active"
+                            }
+                          }
+                        },
+                        {
+                          "id": "OYJwG",
+                          "type": "ref",
+                          "ref": "cHypa",
+                          "name": "RichSessionRow Default",
+                          "width": "fill_container",
+                          "fill": "#00000000",
+                          "descendants": {
+                            "S0pvUu": {
+                              "fill": "$studio-muted"
+                            },
+                            "pMPdp": {
+                              "content": "New conversation"
+                            },
+                            "wqotc": {
+                              "content": "dev · happy · macOS"
+                            },
+                            "w12PR8": {
+                              "content": "Codex · online · YOLO",
+                              "fill": "$studio-muted"
+                            }
+                          }
+                        },
+                        {
+                          "id": "NA06W",
+                          "type": "ref",
+                          "ref": "cHypa",
+                          "name": "RichSessionRow Default",
+                          "width": "fill_container",
+                          "fill": "#00000000",
+                          "descendants": {
+                            "S0pvUu": {
+                              "fill": "$studio-muted"
+                            },
+                            "pMPdp": {
+                              "content": "Template migration notes"
+                            },
+                            "wqotc": {
+                              "content": "main · ios-coding-template · Windows"
+                            },
+                            "w12PR8": {
+                              "content": "Codex · archived visible",
+                              "fill": "$studio-muted"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TZaJZ",
+                      "name": "Archived",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "id": "q4Bio",
+                          "type": "ref",
+                          "ref": "zXIDA",
+                          "name": "SessionSectionHeader",
+                          "width": "fill_container",
+                          "descendants": {
+                            "a5bEL": {
+                              "content": "Archived"
+                            }
+                          }
+                        },
+                        {
+                          "id": "HpSxs",
+                          "type": "ref",
+                          "ref": "cHypa",
+                          "name": "RichSessionRow Default",
+                          "width": "fill_container",
+                          "fill": "#00000000",
+                          "descendants": {
+                            "S0pvUu": {
+                              "fill": "$studio-muted"
+                            },
+                            "pMPdp": {
+                              "content": "Release branch cleanup"
+                            },
+                            "wqotc": {
+                              "content": "main · happy · macOS"
+                            },
+                            "w12PR8": {
+                              "content": "Codex · archived · read only",
+                              "fill": "$studio-muted"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rdWBR",
+              "name": "Sidebar Footer",
+              "width": "fill_container",
+              "height": 44,
+              "stroke": "$studio-hairline",
+              "strokeWidth": {
+                "top": 1
+              },
+              "padding": [
+                10,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "D3omQ",
+                  "name": "Account",
+                  "gap": 9,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tKGlV",
+                      "name": "Account Avatar",
+                      "width": 26,
+                      "height": 26,
+                      "fill": "#A98645",
+                      "cornerRadius": 13,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "TvHru",
+                          "name": "Account Initials",
+                          "fill": "#FFFFFF",
+                          "content": "YM",
+                          "fontFamily": "$studio-font",
+                          "fontSize": 10,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "UkvxV",
+                      "name": "Account Name",
+                      "fill": "$studio-text",
+                      "content": "yb Miao",
+                      "fontFamily": "$studio-font",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "DCnl3",
+                  "name": "Help",
+                  "fill": "$studio-muted",
+                  "content": "?",
+                  "fontFamily": "$studio-font",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Krv4s",
+          "name": "Main Conversation Region",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$studio-canvas",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "hrqyT",
+              "name": "ConversationHeader",
+              "width": "fill_container",
+              "height": 54,
+              "stroke": "$studio-hairline",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "padding": [
+                0,
+                22
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "q0AoQ",
+                  "name": "Conversation Title Group",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "mX88N",
+                      "name": "Conversation Folder",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "folder",
+                      "library": "lucide",
+                      "fill": "$studio-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V7t9Ea",
+                      "name": "Conversation Breadcrumb",
+                      "fill": "$studio-text",
+                      "content": "happy / Studio visual theme v2",
+                      "fontFamily": "$studio-font",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iypE9",
+                  "name": "Conversation Actions",
+                  "gap": 16,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Z5gyA",
+                      "name": "Open Repository",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "github",
+                      "library": "lucide",
+                      "fill": "$studio-text"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "y6RdN",
+                      "name": "More Actions",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "ellipsis",
+                      "library": "lucide",
+                      "fill": "$studio-text"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "FADIE",
+                      "name": "Side Chat",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "panel-right",
+                      "library": "lucide",
+                      "fill": "$studio-text"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tGafa",
+              "name": "Conversation Body",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                32,
+                0,
+                18,
+                0
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "dDQvT",
+                  "name": "Reading Column",
+                  "width": 800,
+                  "layout": "vertical",
+                  "gap": 18,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "T6a0h",
+                      "name": "Assistant Intro",
+                      "fill": "$studio-text",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "The v2 review keeps Happy's desktop map intact while shifting the composition toward a quieter Studio grammar: denser navigation, unboxed assistant prose, compact tool activity, and one elevated composer.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$studio-font",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NrlSJ",
+                      "name": "Assistant Followup",
+                      "fill": "$studio-text",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "I preserved session status, project and branch metadata, provider and permission state, archive visibility, Todo access, conversation actions, and the full composer controls in their existing major regions.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$studio-font",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "XiJm5",
+                      "type": "ref",
+                      "ref": "O393uN",
+                      "name": "ToolActivityRow",
+                      "width": "fill_container",
+                      "descendants": {
+                        "cEhgv": {
+                          "content": "Ran 1 command: /bin/bash -lc 'git diff -- docs/design/system'"
+                        },
+                        "I3Rssj": {
+                          "content": "ok",
+                          "fill": "$studio-success"
+                        }
+                      }
+                    },
+                    {
+                      "id": "GNmKm",
+                      "type": "ref",
+                      "ref": "O393uN",
+                      "name": "ToolActivityRow",
+                      "width": "fill_container",
+                      "descendants": {
+                        "cEhgv": {
+                          "content": "Ran 1 command: python3 scripts/workflow-audit.py --strict --require-active"
+                        },
+                        "I3Rssj": {
+                          "content": "ok",
+                          "fill": "$studio-success"
+                        }
+                      }
+                    },
+                    {
+                      "id": "VeBkR",
+                      "type": "ref",
+                      "ref": "O393uN",
+                      "name": "ToolActivityRow",
+                      "width": "fill_container",
+                      "descendants": {
+                        "cEhgv": {
+                          "content": "Ran 1 command: export review frame at 1470x870 scale 1"
+                        },
+                        "I3Rssj": {
+                          "content": "ok",
+                          "fill": "$studio-success"
+                        }
+                      }
+                    },
+                    {
+                      "id": "upB4L",
+                      "type": "ref",
+                      "ref": "yk17p",
+                      "name": "SectionHeading",
+                      "width": "fill_container",
+                      "descendants": {
+                        "OWMMj": {
+                          "content": "Final review checklist"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "i5wKk",
+                      "name": "Checklist Item",
+                      "fill": "$studio-text",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "• Functional map: traffic lights, navigation, new, archive, Todo, grouped sessions, conversation actions, tool activity, online, permission, and composer are visible.",
+                      "lineHeight": 1.42,
+                      "fontFamily": "$studio-font",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KuspD",
+                      "name": "Checklist Item",
+                      "fill": "$studio-text",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "• Geometry: 316pt sidebar, 62pt rich rows, 800pt reading measure, 110pt composer, fill-only selected row.",
+                      "lineHeight": 1.42,
+                      "fontFamily": "$studio-font",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Emi1o",
+                      "name": "Checklist Item",
+                      "fill": "$studio-text",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "• Semantics: success, warning, archived, provider, device, project, and branch metadata remain readable without card-heavy decoration.",
+                      "lineHeight": 1.42,
+                      "fontFamily": "$studio-font",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "p23Txz",
+                      "name": "Compact Diff Summary",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 10,
+                      "stroke": "$studio-hairline",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fKlLA",
+                          "name": "Diff Header",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "$studio-subtle",
+                          "padding": [
+                            0,
+                            14
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NZEne",
+                              "name": "Diff Title",
+                              "fill": "$studio-text",
+                              "content": "Edited design files",
+                              "fontFamily": "$studio-font",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "OFzLW",
+                              "name": "Diff Counts",
+                              "fill": "$studio-success",
+                              "content": "+24  -0",
+                              "fontFamily": "$studio-mono",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "x5cTc",
+                          "name": "Diff Row",
+                          "width": "fill_container",
+                          "height": 34,
+                          "stroke": "$studio-hairline",
+                          "strokeWidth": {
+                            "top": 1
+                          },
+                          "padding": [
+                            0,
+                            14
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "JMd6J",
+                              "name": "Diff Path",
+                              "fill": "$studio-secondary",
+                              "content": "docs/design/studio-main-window-v2.pen",
+                              "fontFamily": "$studio-mono",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "i5wWGN",
+                              "name": "Diff Delta",
+                              "fill": "$studio-success",
+                              "content": "+18",
+                              "fontFamily": "$studio-mono",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "d2mEd",
+                          "name": "Diff Row",
+                          "width": "fill_container",
+                          "height": 34,
+                          "stroke": "$studio-hairline",
+                          "strokeWidth": {
+                            "top": 1
+                          },
+                          "padding": [
+                            0,
+                            14
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "BLrVo",
+                              "name": "Diff Path",
+                              "fill": "$studio-secondary",
+                              "content": "docs/design/studio-main-window-v2.png",
+                              "fontFamily": "$studio-mono",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "qMbLm",
+                              "name": "Diff Delta",
+                              "fill": "$studio-success",
+                              "content": "+6",
+                              "fontFamily": "$studio-mono",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "fLn9d",
+                      "type": "ref",
+                      "ref": "dbWhz",
+                      "name": "MessageActions"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FjDeZ",
+                  "name": "Status And Composer",
+                  "width": 800,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "OI631",
+                      "name": "Composer Status Row",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "klVbG",
+                          "name": "Left Status Chips",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "ji6EO",
+                              "type": "ref",
+                              "ref": "rTZVt",
+                              "name": "OnlineStatus"
+                            },
+                            {
+                              "id": "atqEy",
+                              "type": "ref",
+                              "ref": "raCZZ",
+                              "name": "PermissionMode"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "M1KZcM",
+                          "name": "Archive Visibility",
+                          "fill": "$studio-danger",
+                          "content": "Archived shown",
+                          "fontFamily": "$studio-font",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "PXdm9",
+                      "type": "ref",
+                      "ref": "ZuReQ",
+                      "name": "HappyComposer",
+                      "width": "fill_container"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "bg-canvas": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "bg-sidebar": {
+      "type": "color",
+      "value": "#FCFCFC"
+    },
+    "bg-selected": {
+      "type": "color",
+      "value": "#EFF0F0"
+    },
+    "bg-subtle": {
+      "type": "color",
+      "value": "#F3F3F4"
+    },
+    "text-primary": {
+      "type": "color",
+      "value": "#1A1C1F"
+    },
+    "text-secondary": {
+      "type": "color",
+      "value": "#5F6368"
+    },
+    "text-muted": {
+      "type": "color",
+      "value": "#8A8D91"
+    },
+    "divider": {
+      "type": "color",
+      "value": "#E4E4E5"
+    },
+    "border-soft": {
+      "type": "color",
+      "value": "#DDDDDE"
+    },
+    "accent-blue": {
+      "type": "color",
+      "value": "#0969DA"
+    },
+    "success": {
+      "type": "color",
+      "value": "#168A45"
+    },
+    "danger": {
+      "type": "color",
+      "value": "#B42318"
+    },
+    "font-ui": {
+      "type": "string",
+      "value": "Geist"
+    },
+    "font-mono": {
+      "type": "string",
+      "value": "Geist Mono"
+    },
+    "studio-sidebar": {
+      "type": "color",
+      "value": "#F6F7F7"
+    },
+    "studio-canvas": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "studio-selected": {
+      "type": "color",
+      "value": "#EAEBEB"
+    },
+    "studio-subtle": {
+      "type": "color",
+      "value": "#F4F4F5"
+    },
+    "studio-hairline": {
+      "type": "color",
+      "value": "#E5E5E6"
+    },
+    "studio-border": {
+      "type": "color",
+      "value": "#DCDCDD"
+    },
+    "studio-text": {
+      "type": "color",
+      "value": "#1A1C1F"
+    },
+    "studio-secondary": {
+      "type": "color",
+      "value": "#62666A"
+    },
+    "studio-muted": {
+      "type": "color",
+      "value": "#8E9296"
+    },
+    "studio-success": {
+      "type": "color",
+      "value": "#22A55A"
+    },
+    "studio-warning": {
+      "type": "color",
+      "value": "#C27A16"
+    },
+    "studio-danger": {
+      "type": "color",
+      "value": "#C9362C"
+    },
+    "studio-blue": {
+      "type": "color",
+      "value": "#0969DA"
+    },
+    "studio-font": {
+      "type": "string",
+      "value": "Geist"
+    },
+    "studio-mono": {
+      "type": "string",
+      "value": "Geist Mono"
+    }
+  },
+  "fileToken": "b2245c1d-a536-4941-bc34-2b0d3822017f"
+}
