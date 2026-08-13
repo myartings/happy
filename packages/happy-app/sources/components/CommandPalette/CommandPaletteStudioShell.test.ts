@@ -3,24 +3,28 @@ import * as React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-const studioPresentation = vi.hoisted(() => ({
-    commandPalette: {
-        backdropPeakOpacity: 1,
-        contentMaxWidth: 640,
-        shellMaxHeightWeb: '52vh',
-    },
-    isStudio: true,
-    modal: {
-        borderColor: '#DDDDDE',
-        borderWidth: 1,
-        radius: 16,
-        scrimColor: 'rgba(0, 0, 0, 0.10)',
-        shadowOffsetY: 18,
-        shadowOpacity: 0.16,
-        shadowRadius: 42,
-        surfaceColor: '#FFFFFF',
+const presentationState = vi.hoisted(() => ({
+    current: {
+        commandPalette: {
+            backdropPeakOpacity: 1,
+            contentMaxWidth: 640,
+            shellMaxHeightWeb: '52vh',
+        },
+        isStudio: true,
+        modal: {
+            borderColor: '#DDDDDE',
+            borderWidth: 1,
+            radius: 16,
+            scrimColor: 'rgba(0, 0, 0, 0.10)',
+            shadowOffsetY: 18,
+            shadowOpacity: 0.16,
+            shadowRadius: 42,
+            surfaceColor: '#FFFFFF',
+        },
     },
 }));
+
+const viewportState = vi.hoisted(() => ({ width: 1470 }));
 
 vi.mock('react-native', async () => {
     const ReactModule = await import('react');
@@ -46,12 +50,18 @@ vi.mock('react-native', async () => {
             create: (styles: any) => styles,
         },
         TouchableWithoutFeedback: host('TouchableWithoutFeedback'),
+        useWindowDimensions: () => ({
+            fontScale: 1,
+            height: 874,
+            scale: 2,
+            width: viewportState.width,
+        }),
         View: host('View'),
     };
 });
 
 vi.mock('@/features/studio-overlays/useStudioOverlayPresentation', () => ({
-    useStudioOverlayPresentation: () => studioPresentation,
+    useStudioOverlayPresentation: () => presentationState.current,
 }));
 
 vi.mock('./useCommandPalette', () => ({
@@ -121,6 +131,7 @@ describe('Studio Command Palette shell wiring', () => {
     });
 
     it('applies the lighter scrim at full animated peak and narrows the modal host', () => {
+        viewportState.width = 1470;
         const renderer = render(React.createElement(CommandPaletteModal, {
             visible: true,
             onClose: vi.fn(),
@@ -133,5 +144,34 @@ describe('Studio Command Palette shell wiring', () => {
         expect(backdrop.backgroundColor).toBe('rgba(0, 0, 0, 0.10)');
         expect(backdrop.opacity.outputRange).toEqual([0, 1]);
         expect(content.maxWidth).toBe(640);
+        expect(content.width).toBe(640);
+    });
+
+    it('keeps the actual outer modal wrapper responsive below 640', () => {
+        viewportState.width = 600;
+        const renderer = render(React.createElement(CommandPaletteModal, {
+            visible: true,
+            onClose: vi.fn(),
+            children: React.createElement('PaletteContent'),
+        }));
+        const content = flattenStyle(renderer.root.findAllByType('AnimatedView' as any)[1].props.style);
+
+        expect(content.width).toBe(540);
+        expect(content.maxWidth).toBe(640);
+    });
+
+    it('retains the existing percentage width and 800 cap outside Studio', () => {
+        viewportState.width = 1470;
+        presentationState.current.isStudio = false;
+        const renderer = render(React.createElement(CommandPaletteModal, {
+            visible: true,
+            onClose: vi.fn(),
+            children: React.createElement('PaletteContent'),
+        }));
+        const content = flattenStyle(renderer.root.findAllByType('AnimatedView' as any)[1].props.style);
+
+        expect(content.width).toBe('90%');
+        expect(content.maxWidth).toBe(800);
+        presentationState.current.isStudio = true;
     });
 });

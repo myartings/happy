@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-command-palette-shell-width",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Parent cherry-picks, rebuilds packaged dev client, captures same state, and requests user visual decision",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Failed packaged screenshot and corrected outer-wrapper behavior are captured in context.md",
+      "updated": "2026-08-13T07:28:54+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "No new design decision; accepted 640 pt candidate remains, with explicit 90 percent small-window responsiveness",
+      "updated": "2026-08-13T07:28:54+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Single outer modal wrapper and its render test; public seam, regression signal, rollback, and parent visual boundary recorded",
+      "updated": "2026-08-13T07:28:54+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Bounded presentation wiring fix; no repository risk trigger or protected path",
+      "updated": "2026-08-13T07:28:54+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "RED proved actual wrapper retained 90 percent; GREEN uses live viewport to emit 640 at 1470 and 540 at 600, with Default 90 percent/800 unchanged; 12 focused tests and typecheck pass",
+      "updated": "2026-08-13T07:30:24+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Actual-wrapper RED/GREEN test, focused Palette 3 files/12 tests, Happy App typecheck, workflow validation/core/CI, strict audit, and diff check pass",
+      "updated": "2026-08-13T07:31:29+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue; live viewport width is Studio-only and modal behavior/non-Studio styles are unchanged",
+      "updated": "2026-08-13T07:31:29+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Acceptance mapping, validation, review, rollback, session handoff, and parent packaged follow-up are complete",
+      "updated": "2026-08-13T07:31:29+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T07:28:02+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T07:28:54+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Failed packaged screenshot and corrected outer-wrapper behavior are captured in context.md"
+    },
+    {
+      "at": "2026-08-13T07:28:54+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "No new design decision; accepted 640 pt candidate remains, with explicit 90 percent small-window responsiveness"
+    },
+    {
+      "at": "2026-08-13T07:28:54+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Bounded presentation wiring fix; no repository risk trigger or protected path"
+    },
+    {
+      "at": "2026-08-13T07:28:54+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Single outer modal wrapper and its render test; public seam, regression signal, rollback, and parent visual boundary recorded"
+    },
+    {
+      "at": "2026-08-13T07:28:54+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write failing outer-wrapper viewport test, then apply explicit responsive width"
+    },
+    {
+      "at": "2026-08-13T07:30:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED proved actual wrapper retained 90 percent; GREEN uses live viewport to emit 640 at 1470 and 540 at 600, with Default 90 percent/800 unchanged; 12 focused tests and typecheck pass"
+    },
+    {
+      "at": "2026-08-13T07:30:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run repository workflow checks and whole-diff review"
+    },
+    {
+      "at": "2026-08-13T07:31:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Actual-wrapper RED/GREEN test, focused Palette 3 files/12 tests, Happy App typecheck, workflow validation/core/CI, strict audit, and diff check pass"
+    },
+    {
+      "at": "2026-08-13T07:31:29+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue; live viewport width is Studio-only and modal behavior/non-Studio styles are unchanged"
+    },
+    {
+      "at": "2026-08-13T07:31:29+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive corrected outer-wrapper wiring and return local commit"
+    },
+    {
+      "at": "2026-08-13T07:31:29+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Acceptance mapping, validation, review, rollback, session handoff, and parent packaged follow-up are complete"
+    },
+    {
+      "at": "2026-08-13T07:31:29+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Make the actual Studio Command Palette outer wrapper explicitly 640 pt with responsive 90 percent smaller-window behavior; commit: pending; follow-up: Parent cherry-picks, rebuilds packaged dev client, captures same state, and requests user visual decision"
+    }
+  ],
+  "updated": "2026-08-13T07:31:29+00:00",
+  "archivedAt": "2026-08-13T07:31:29+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Make the actual Studio Command Palette outer wrapper explicitly 640 pt with responsive 90 percent smaller-window behavior",
+  "archiveFollowUp": "Parent cherry-picks, rebuilds packaged dev client, captures same state, and requests user visual decision"
+}

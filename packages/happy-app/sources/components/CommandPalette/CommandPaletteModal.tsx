@@ -6,7 +6,8 @@ import {
     Animated,
     StyleSheet,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    useWindowDimensions,
 } from 'react-native';
 import { LocalBlurHalo } from '@/components/AnimatedOverlay';
 import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
@@ -23,6 +24,7 @@ export function CommandPaletteModal({
     children
 }: CommandPaletteModalProps) {
     const overlayPresentation = useStudioOverlayPresentation();
+    const { width: viewportWidth } = useWindowDimensions();
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
     const [isModalVisible, setIsModalVisible] = React.useState(true);
@@ -122,6 +124,10 @@ export function CommandPaletteModal({
                         },
                         overlayPresentation.isStudio && {
                             maxWidth: overlayPresentation.commandPalette.contentMaxWidth,
+                            width: Math.min(
+                                viewportWidth * 0.9,
+                                overlayPresentation.commandPalette.contentMaxWidth,
+                            ),
                         },
                     ]}
                 >

@@ -1,0 +1,4 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-command-palette-shell-width/context.md","reason":"Acceptance contract and failed screenshot evidence"}
+{"path":"docs/workspace/studio-command-palette-shell-width/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/components/CommandPalette/CommandPaletteStudioShell.test.ts","reason":"Outer-wrapper large/small viewport regression evidence"}
