@@ -9,6 +9,7 @@ import { CompactSessionRow } from './ActiveSessionsGroupCompact';
 import { ProjectTodoButton } from './ProjectTodoButton';
 import { shouldShowWorkspaceLabel } from '@/utils/sessionRowDisplayContext';
 import type { DesktopSessionRowStyle } from '@/features/studio-visual-style/studioVisualStyle';
+import { resolveStudioSidebarGroupPresentation } from '@/features/studio-visual-style/studioSidebarGroupPresentation';
 
 interface ProjectGroupProps {
     project: ProjectGroupData;
@@ -28,6 +29,7 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
     const [favoriteProjectIds, setFavoriteProjectIds] = useSettingMutable('favoriteProjectIds');
     const collapsed = !!collapsedProjects[project.id];
     const isFavorite = favoriteProjectIds.includes(project.id);
+    const groupPresentation = resolveStudioSidebarGroupPresentation(sessionRowStyle);
 
     const toggleCollapsed = React.useCallback(() => {
         setCollapsedProjects({ ...collapsedProjects, [project.id]: !collapsed });
@@ -47,14 +49,11 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
         return machine?.metadata?.displayName || machine?.metadata?.host || null;
     }, [machines, project.machineId]);
     return (
-        <View style={[
-            styles.container,
-            sessionRowStyle.visualStyle === 'studio' && styles.containerStudio,
-        ]}>
+        <View style={groupPresentation === 'card' ? styles.container : styles.containerUnboxed}>
             <Pressable
                 style={[
                     styles.header,
-                    sessionRowStyle.visualStyle === 'studio' && styles.headerStudio,
+                    groupPresentation === 'unboxed' && styles.headerUnboxed,
                 ]}
                 onPress={toggleCollapsed}
                 hitSlop={8}
@@ -159,9 +158,10 @@ const stylesheet = StyleSheet.create((theme) => ({
         borderRadius: 12,
         overflow: 'hidden',
     },
-    containerStudio: {
+    containerUnboxed: {
         backgroundColor: 'transparent',
         marginHorizontal: 0,
+        marginBottom: 8,
         borderRadius: 0,
         overflow: 'visible',
     },
@@ -172,10 +172,9 @@ const stylesheet = StyleSheet.create((theme) => ({
         paddingVertical: 10,
         gap: 6,
     },
-    headerStudio: {
+    headerUnboxed: {
         marginHorizontal: 8,
-        borderRadius: 12,
-        backgroundColor: theme.colors.surface,
+        backgroundColor: 'transparent',
     },
     chevron: {
         width: 16,

@@ -29,6 +29,7 @@ import { SessionEnvironmentMetadata } from './SessionEnvironmentMetadata';
 import { resolveSessionEnvironmentDisplay } from '@/utils/sessionEnvironmentDisplay';
 import { resolveSessionRowDisplayPolicy, type SessionRowDisplayContext } from '@/utils/sessionRowDisplayContext';
 import type { DesktopSessionRowStyle } from '@/features/studio-visual-style/studioVisualStyle';
+import { resolveStudioSidebarGroupPresentation } from '@/features/studio-visual-style/studioSidebarGroupPresentation';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -184,6 +185,12 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
     const styles = stylesheet;
     const machines = useAllMachines();
     const sortActiveSessionsGlobally = useSetting('sortActiveSessionsGlobally');
+    const groupPresentation = resolveStudioSidebarGroupPresentation(sessionRowStyle);
+    const groupContainerStyle = [
+        groupPresentation === 'card' && styles.projectCard,
+        groupPresentation === 'unboxed' && styles.projectGroupUnboxed,
+        groupPresentation === 'card' && !sessionRowStyle.showGroupShellBoundary && styles.projectCardWithoutBoundary,
+    ];
 
     const machineGroups = React.useMemo(() => buildActiveSessionDisplayGroups(
         sessions,
@@ -195,11 +202,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
     if (sortActiveSessionsGlobally) {
         return (
             <View style={styles.container}>
-                <View style={[
-                    styles.projectCard,
-                    sessionRowStyle.visualStyle === 'studio' && styles.projectCardStudio,
-                    !sessionRowStyle.showGroupShellBoundary && styles.projectCardWithoutBoundary,
-                ]}>
+                <View style={groupContainerStyle}>
                     {sessions.map((session, index) => (
                         <CompactSessionRow
                             key={session.id}
@@ -240,11 +243,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
                                         session={firstSession}
                                         displayPath={projectGroup.displayPath}
                                     />
-                                    <View style={[
-                                        styles.projectCard,
-                                        sessionRowStyle.visualStyle === 'studio' && styles.projectCardStudio,
-                                        !sessionRowStyle.showGroupShellBoundary && styles.projectCardWithoutBoundary,
-                                    ]}>
+                                    <View style={groupContainerStyle}>
                                         {projectGroup.sessions.map((session, index) => (
                                             <CompactSessionRow
                                                 key={session.id}
@@ -626,15 +625,9 @@ const stylesheet = StyleSheet.create((theme) => ({
         shadowRadius: 0,
         elevation: Platform.select({ web: 1, default: 0 }),
     },
-    projectCardStudio: {
-        backgroundColor: 'transparent',
-        marginHorizontal: 0,
+    projectGroupUnboxed: {
         marginBottom: 4,
-        borderRadius: 0,
-        borderWidth: 0,
         overflow: 'visible',
-        shadowOpacity: 0,
-        elevation: 0,
     },
     projectCardWithoutBoundary: {
         borderColor: 'transparent',

@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-sidebar-unboxed-groups.md","reason":"Accepted observable behavior and compatibility boundary"}
+{"path":"docs/tasks/studio-sidebar-unboxed-groups-tasks.md","reason":"Delegated slice ownership and validation boundary"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Existing packaged-desktop Studio gating and regional style contract"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarGroupPresentation.ts","reason":"Shared testable card-versus-unboxed presentation decision"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Active-session project group container wiring"}
+{"path":"packages/happy-app/sources/components/ProjectGroup.tsx","reason":"Project/workspace group and header surface wiring"}
