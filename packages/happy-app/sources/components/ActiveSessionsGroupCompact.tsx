@@ -29,7 +29,10 @@ import { SessionEnvironmentMetadata } from './SessionEnvironmentMetadata';
 import { resolveSessionEnvironmentDisplay } from '@/utils/sessionEnvironmentDisplay';
 import { resolveSessionRowDisplayPolicy, type SessionRowDisplayContext } from '@/utils/sessionRowDisplayContext';
 import type { DesktopSessionRowStyle } from '@/features/studio-visual-style/studioVisualStyle';
-import { resolveStudioSidebarGroupPresentation } from '@/features/studio-visual-style/studioSidebarGroupPresentation';
+import {
+    resolveStudioSidebarGroupPresentation,
+    resolveStudioSidebarRowChrome,
+} from '@/features/studio-visual-style/studioSidebarGroupPresentation';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -276,6 +279,10 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const isStudio = sessionRowStyle.visualStyle === 'studio';
+    const rowChrome = resolveStudioSidebarRowChrome(sessionRowStyle, {
+        selected: !!selected,
+        showDivider: !!showBorder,
+    });
     const baseStatus = STATUS_CONFIG[session.state];
     const navigateToSession = useNavigateToSession();
     const showActiveSessionRuntime = useLocalSetting('devShowActiveSessionRuntimeEnabled');
@@ -379,8 +386,8 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
         <Pressable
             style={[
                 styles.sessionRow,
-                showBorder && !isStudio && styles.sessionRowWithBorder,
-                selected && !isStudio && styles.sessionRowSelected,
+                rowChrome.showDivider && styles.sessionRowWithBorder,
+                rowChrome.backgroundRole === 'selected' && !isStudio && styles.sessionRowSelected,
                 isStudio && {
                     height: sessionRowStyle.height!,
                     minHeight: sessionRowStyle.height!,
@@ -388,9 +395,12 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     marginBottom: sessionRowStyle.gap!,
                     paddingHorizontal: sessionRowStyle.horizontalPadding!,
                     paddingVertical: sessionRowStyle.verticalPadding!,
-                    borderRadius: sessionRowStyle.cornerRadius!,
+                    borderRadius: rowChrome.cornerRadius!,
                     borderWidth: 0,
-                    backgroundColor: selected ? sessionRowStyle.selectedBackground! : 'transparent',
+                    backgroundColor: rowChrome.backgroundRole === 'selected'
+                        ? sessionRowStyle.selectedBackground!
+                        : 'transparent',
+                    overflow: rowChrome.clipToRowShape ? 'hidden' : 'visible',
                     shadowOpacity: 0,
                     elevation: 0,
                 },

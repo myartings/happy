@@ -1,0 +1,9 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-sidebar-unboxed-rows-followup/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-sidebar-unboxed-rows-followup.md","reason":"Acceptance criteria to verify"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarGroupPresentation.test.ts","reason":"Focused group and row chrome compatibility coverage"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarWiring.test.ts","reason":"Focused frame-to-list and policy-to-renderer wiring coverage"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Verify authoritative style propagation"}
+{"path":"packages/happy-app/sources/components/MainView.tsx","reason":"Verify sidebar-only host seam and phone compatibility"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Verify historical rows do not compose default chrome in Studio"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Verify compact rows do not compose group chrome in Studio"}

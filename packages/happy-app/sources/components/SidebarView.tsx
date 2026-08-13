@@ -218,7 +218,7 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
             )}
 
             {/* Sessions list */}
-            <MainView variant="sidebar" />
+            <MainView variant="sidebar" sidebarVisualStyle={sidebarFrame?.visualStyle} />
 
             {/* Settings at bottom */}
             <Pressable

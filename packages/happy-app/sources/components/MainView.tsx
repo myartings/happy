@@ -36,9 +36,11 @@ import { MOBILE_GLASS_HEADER_HEIGHT } from './navigation/headerMetrics';
 import { useNewSessionDraft } from '@/hooks/useNewSessionDraft';
 import { useStartSessionFromDraft } from '@/hooks/useStartSessionFromDraft';
 import { ProjectTodoButton } from './ProjectTodoButton';
+import type { VisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 
 interface MainViewProps {
     variant: 'phone' | 'sidebar';
+    sidebarVisualStyle?: VisualStyle;
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -413,7 +415,7 @@ const HeaderRight = React.memo(({
     return null;
 });
 
-export const MainView = React.memo(({ variant }: MainViewProps) => {
+export const MainView = React.memo(({ variant, sidebarVisualStyle }: MainViewProps) => {
     const { theme } = useUnistyles();
     const sessionListViewData = useVisibleSessionListViewData();
     const hasArchivedSessions = useHasArchivedSessions();
@@ -530,7 +532,7 @@ export const MainView = React.memo(({ variant }: MainViewProps) => {
         // Sessions list
         return (
             <View style={styles.sidebarContentContainer}>
-                <SessionsList />
+                <SessionsList sidebarVisualStyle={sidebarVisualStyle} />
             </View>
         );
     }
