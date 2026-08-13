@@ -6,4 +6,4 @@ agent, worktree, or parallel child handoff.
 
 | Date | Session | Agent / Scope | Branch / Worktree | Commit | Notes |
 | --- | --- | --- | --- | --- | --- |
-| 2026-08-13 | `sessions/2026-08-13-parallel-integration.md` | Parent integration, two visual repair loops, final verification | `feature/studio-ui-integration` / `studio-ui-integration` | pending | User accepted final packaged sidebar and Command Palette; ready to archive, commit, and merge locally into `dev`. |
+| 2026-08-13 | `sessions/2026-08-13-parallel-integration.md` | Parent integration, two visual repair loops, final verification | `feature/studio-ui-integration` / `studio-ui-integration` | `2a73bc1c` | User accepted final packaged sidebar and Command Palette; merged locally into `dev` as `80d3f10f`, with no remote push. |

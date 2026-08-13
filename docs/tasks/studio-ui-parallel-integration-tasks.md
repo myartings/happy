@@ -30,4 +30,4 @@
 - [x] Integrate user-requested narrower and denser Command Palette styling.
 - [x] Rebuild and capture the two revised states at the same fixed window size.
 - [x] Present the revision screenshots for the next explicit accept/revise decision.
-- [ ] Merge accepted integration output to local `dev`; do not push.
+- [x] Merge accepted integration output to local `dev`; do not push.
