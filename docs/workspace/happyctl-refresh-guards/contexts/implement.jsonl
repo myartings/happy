@@ -1,0 +1,4 @@
+{"path":"devtools/AGENTS.md","reason":"Personal branch invariants and devtools safety boundaries"}
+{"path":"docs/tasks/happyctl-refresh-guards-tasks.md","reason":"Accepted behavior and bounded implementation scope"}
+{"path":"devtools/happyctl","reason":"macOS/Linux refresh and build guard implementation"}
+{"path":"devtools/tests/devtools-layout-smoke.sh","reason":"Existing executable shell smoke seam for branch equivalence"}

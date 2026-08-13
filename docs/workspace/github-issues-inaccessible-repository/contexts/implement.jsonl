@@ -1,0 +1,9 @@
+{"path":"packages/happy-app/sources/features/github-issues/githubRepositoryResolution.ts","reason":"Owning detected repository resolution result"}
+{"path":"packages/happy-app/sources/components/GithubIssuesButton.tsx","reason":"Owning Session entry routing and picker state"}
+{"path":"packages/happy-app/sources/app/(app)/github-issues/index.tsx","reason":"Owning connection-management rendering"}
+{"path":"packages/happy-app/sources/features/github-issues/githubRepositoryResolution.test.ts","reason":"Resolver contract regression seam"}
+{"path":"packages/happy-app/sources/features/github-issues/githubIssuesButton.test.ts","reason":"Session routing regression seam"}
+{"path":"packages/happy-app/sources/features/github-issues/githubIssuesScreen.test.ts","reason":"Connection-management presentation regression seam"}
+{"path":"packages/happy-app/sources/text/_default.ts","reason":"Default access-state copy"}
+{"path":"packages/happy-app/sources/text/translations/zh-Hans.ts","reason":"Chinese access-state copy seen in the reported client"}
+{"path":"docs/tasks/github-issues-inaccessible-repository-tasks.md","reason":"Accepted behavior contract"}

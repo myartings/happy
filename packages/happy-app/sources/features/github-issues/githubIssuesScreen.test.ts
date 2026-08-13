@@ -122,6 +122,24 @@ describe('GitHub Issues native list', () => {
         expect(text).toContain('Remove from this device');
         expect(text).not.toContain('Add GitHub Issues page');
     });
+
+    it('names the detected inaccessible repository without opening GitHub automatically', async () => {
+        screenState.params = {
+            mode: 'settings',
+            access: 'repository',
+            owner: 'private',
+            repo: 'widget',
+            sourceSessionId: 'session-a',
+        };
+        let renderer: ReturnType<typeof create>;
+        await act(async () => { renderer = create(React.createElement(GithubIssuesScreen)); });
+        await act(async () => undefined);
+        const text = renderer!.root.findAllByType('Text' as any).map((node: any) => node.props.children).flat().join(' ');
+        expect(text).toContain('private/widget is not available to the GitHub App');
+        expect(text).toContain('Manage repository access');
+        expect(text).not.toContain('Remove from this device');
+        expect(openExternalUrl).not.toHaveBeenCalled();
+    });
     it('shows task metadata without a persistent account-management card', async () => {
         let renderer: ReturnType<typeof create>;
         await act(async () => { renderer = create(React.createElement(GithubIssuesScreen)); });

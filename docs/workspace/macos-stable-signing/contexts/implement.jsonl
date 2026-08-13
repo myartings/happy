@@ -1,0 +1,5 @@
+{"path":"devtools/happyctl","reason":"Owning macOS build, signing, installation, and verification flow"}
+{"path":"devtools/config.example.env","reason":"Document optional machine-local signing identity override"}
+{"path":"devtools/tests/happyctl-macos-signing-smoke.sh","reason":"Focused public shell regression seam"}
+{"path":"docs/tasks/macos-stable-signing-tasks.md","reason":"Accepted bounded behavior contract"}
+{"path":"docs/workspace/macos-stable-signing/decisions.md","reason":"Signing and credential migration decisions"}
