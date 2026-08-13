@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-sidebar-refinement",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Merge into studio-ui-integration, build packaged desktop, and request explicit user visual acceptance.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User authorized batched parallel Studio development; accepted Pencil v2 is the visual contract and this slice is limited to sidebar typography hierarchy and footer density.",
+      "updated": "2026-08-13T05:36:31+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "No material product or architecture decision: existing functional layout and accepted Studio geometry remain unchanged.",
+      "updated": "2026-08-13T05:36:31+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Track A exclusively owns sidebar components and studioVisualStyle; desktop Studio only, with default/web/mobile behavior preserved.",
+      "updated": "2026-08-13T05:36:31+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only desktop styling with no data, protocol, navigation, authorization, or release changes.",
+      "updated": "2026-08-13T05:36:31+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Implemented desktop-Studio-only sidebar title/metadata roles and compact Settings footer in the Track A-owned files; focused resolver tests pass.",
+      "updated": "2026-08-13T05:39:36+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "15/15 focused tests, happy-app typecheck, and diff check pass; packaged-desktop screenshot/readability acceptance is intentionally delegated to the parent integration workflow.",
+      "updated": "2026-08-13T05:47:29+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent read-only review found no blocking code/API issue. Validation ledger was completed and the footer values were moved into the tested Studio regional resolver; remaining uncertainty is explicit human screenshot acceptance.",
+      "updated": "2026-08-13T05:45:17+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review documents exact validation, independent review follow-ups, rollback, structured handoff, and the parent-owned visual acceptance gap.",
+      "updated": "2026-08-13T05:48:35+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T05:36:30+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T05:36:31+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User authorized batched parallel Studio development; accepted Pencil v2 is the visual contract and this slice is limited to sidebar typography hierarchy and footer density."
+    },
+    {
+      "at": "2026-08-13T05:36:31+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "No material product or architecture decision: existing functional layout and accepted Studio geometry remain unchanged."
+    },
+    {
+      "at": "2026-08-13T05:36:31+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Track A exclusively owns sidebar components and studioVisualStyle; desktop Studio only, with default/web/mobile behavior preserved."
+    },
+    {
+      "at": "2026-08-13T05:36:31+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only desktop styling with no data, protocol, navigation, authorization, or release changes."
+    },
+    {
+      "at": "2026-08-13T05:37:44+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement sidebar typography hierarchy and footer density, then run focused tests and typecheck."
+    },
+    {
+      "at": "2026-08-13T05:39:36+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented desktop-Studio-only sidebar title/metadata roles and compact Settings footer in the Track A-owned files; focused resolver tests pass."
+    },
+    {
+      "at": "2026-08-13T05:39:37+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run repository verification and whole-diff review; visual acceptance remains pending integration screenshot."
+    },
+    {
+      "at": "2026-08-13T05:39:37+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "pnpm --filter happy-app exec vitest run sources/features/studio-visual-style/studioVisualStyle.test.ts: 13/13 passed; pnpm --filter happy-app typecheck passed; git diff --check passed."
+    },
+    {
+      "at": "2026-08-13T05:45:17+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent read-only review found no blocking code/API issue. Validation ledger was completed and the footer values were moved into the tested Studio regional resolver; remaining uncertainty is explicit human screenshot acceptance."
+    },
+    {
+      "at": "2026-08-13T05:46:10+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive the verified child batch; parent integration owns screenshot acceptance."
+    },
+    {
+      "at": "2026-08-13T05:47:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "15/15 focused tests, happy-app typecheck, and diff check pass; packaged-desktop screenshot/readability acceptance is intentionally delegated to the parent integration workflow."
+    },
+    {
+      "at": "2026-08-13T05:48:35+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review documents exact validation, independent review follow-ups, rollback, structured handoff, and the parent-owned visual acceptance gap."
+    },
+    {
+      "at": "2026-08-13T05:48:35+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and verified Studio sidebar typography hierarchy and compact footer; visual acceptance delegated to the parent integration screenshot.; commit: pending; follow-up: Merge into studio-ui-integration, build packaged desktop, and request explicit user visual acceptance."
+    }
+  ],
+  "updated": "2026-08-13T05:48:35+00:00",
+  "archivedAt": "2026-08-13T05:48:35+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and verified Studio sidebar typography hierarchy and compact footer; visual acceptance delegated to the parent integration screenshot.",
+  "archiveFollowUp": "Merge into studio-ui-integration, build packaged desktop, and request explicit user visual acceptance."
+}

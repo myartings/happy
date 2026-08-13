@@ -642,7 +642,12 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                     <Text style={[
                         styles.sessionTitle,
                         status.isConnected ? styles.sessionTitleConnected : styles.sessionTitleDisconnected,
-                        isStudio && { fontSize: 14, lineHeight: 18 },
+                        isStudio && {
+                            fontSize: sessionRowStyle.titleFontSize!,
+                            lineHeight: sessionRowStyle.titleLineHeight!,
+                            fontWeight: sessionRowStyle.titleFontWeight!,
+                            ...Typography.default('semiBold'),
+                        },
                     ]} numberOfLines={1}>
                         {session.name}
                     </Text>
@@ -655,18 +660,18 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                 {showSessionModel && session.identityLine ? (
                     <View style={styles.sessionSubtitleRow}>
                         <ProviderIcon kind={session.providerKind} size={13} />
-                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
+                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: sessionRowStyle.primaryMetadataFontSize!, lineHeight: 14 }]} numberOfLines={1}>
                             {session.identityLine}
                         </Text>
                     </View>
                 ) : session.path ? (
                     <View style={styles.sessionSubtitleRow}>
-                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
+                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: sessionRowStyle.primaryMetadataFontSize!, lineHeight: 14 }]} numberOfLines={1}>
                             {session.path.split(/[/\\]/).filter(Boolean).pop()}
                         </Text>
                     </View>
                 ) : (
-                    <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
+                    <Text style={[styles.sessionSubtitle, isStudio && { fontSize: sessionRowStyle.primaryMetadataFontSize!, lineHeight: 14 }]} numberOfLines={1}>
                         {session.subtitle}
                     </Text>
                 )}
@@ -678,7 +683,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                     <Text style={[
                         styles.statusText,
                         { color: status.color },
-                        isStudio && { fontSize: 11, lineHeight: 14 },
+                        isStudio && { fontSize: sessionRowStyle.secondaryMetadataFontSize!, lineHeight: 13 },
                     ]}>
                         {showSessionModel && session.modelName ? `${session.modelName} · ` : ''}{statusText}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
                     </Text>

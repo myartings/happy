@@ -407,7 +407,12 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         style={[
                             styles.sessionTitle,
                             status.isConnected ? styles.sessionTitleConnected : styles.sessionTitleDisconnected,
-                            isStudio && { fontSize: 14, lineHeight: 18 },
+                            isStudio && {
+                                fontSize: sessionRowStyle.titleFontSize!,
+                                lineHeight: sessionRowStyle.titleLineHeight!,
+                                fontWeight: sessionRowStyle.titleFontWeight!,
+                                ...Typography.default('semiBold'),
+                            },
                         ]}
                         numberOfLines={isStudio ? 1 : 2}
                     >
@@ -431,11 +436,13 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     <SessionEnvironmentMetadata
                         environment={environment}
                         contentInset={isStudio ? sessionRowStyle.metadataInset! : undefined}
+                        fontSize={isStudio ? sessionRowStyle.primaryMetadataFontSize! : undefined}
                     />
                 ) : displayPolicy.environmentPlacement === 'branch-only' && environment?.branchName ? (
                     <SessionEnvironmentMetadata
                         environment={{ worktreeName: null, branchName: environment.branchName }}
                         contentInset={isStudio ? sessionRowStyle.metadataInset! : undefined}
+                        fontSize={isStudio ? sessionRowStyle.primaryMetadataFontSize! : undefined}
                     />
                 ) : null}
                 {showActiveSessionRuntime ? (
@@ -448,6 +455,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         identityLine={showSessionModel ? session.identityLine : null}
                         activitySummary={session.activitySummary}
                         contentInset={isStudio ? sessionRowStyle.metadataInset! : undefined}
+                        fontSize={isStudio ? sessionRowStyle.secondaryMetadataFontSize! : undefined}
                     />
                 ) : showSessionModel && session.identityLine ? (
                     <View style={[
@@ -455,7 +463,10 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         isStudio && { marginLeft: sessionRowStyle.metadataInset! },
                     ]}>
                         <ProviderIcon kind={session.providerKind} size={11} />
-                        <Text style={styles.sessionIdentity} numberOfLines={1}>
+                        <Text style={[
+                            styles.sessionIdentity,
+                            isStudio && { fontSize: sessionRowStyle.secondaryMetadataFontSize! },
+                        ]} numberOfLines={1}>
                             {session.identityLine}{showSessionModel && session.modelName ? ` · ${session.modelName}` : ''}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
                         </Text>
                     </View>

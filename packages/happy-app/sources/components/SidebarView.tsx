@@ -15,6 +15,7 @@ import { ProjectTodoButton } from './ProjectTodoButton';
 import { useHasArchivedSessions } from '@/hooks/useVisibleSessionListViewData';
 import {
     resolveDesktopTodoRowStyle,
+    resolveDesktopSidebarFooterStyle,
     resolveDesktopTopControlsStyle,
     type DesktopSidebarFrame,
 } from '@/features/studio-visual-style/studioVisualStyle';
@@ -115,6 +116,10 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
     }), [sidebarFrame?.visualStyle]);
     const isStudio = topControlsStyle.visualStyle === 'studio';
     const todoRowStyle = React.useMemo(() => resolveDesktopTodoRowStyle({
+        isTauriRuntime: isStudio,
+        requestedStyle: isStudio ? 'studio' : 'default',
+    }), [isStudio]);
+    const footerStyle = React.useMemo(() => resolveDesktopSidebarFooterStyle({
         isTauriRuntime: isStudio,
         requestedStyle: isStudio ? 'studio' : 'default',
     }), [isStudio]);
@@ -220,11 +225,17 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                 onPress={() => router.push('/settings')}
                 style={[
                     styles.settingsRow,
+                    isStudio && {
+                        height: footerStyle.height!,
+                        paddingHorizontal: footerStyle.horizontalPadding!,
+                        paddingVertical: 0,
+                        gap: footerStyle.contentGap!,
+                    },
                     shortcutHintsVisible && styles.shortcutTargetActive,
                 ]}
             >
-                <Ionicons name="settings-outline" size={18} color={stylesheet.settingsText.color} />
-                <Text style={styles.settingsText}>{t('settings.title')}</Text>
+                <Ionicons name="settings-outline" size={isStudio ? footerStyle.iconSize! : 18} color={stylesheet.settingsText.color} />
+                <Text style={[styles.settingsText, isStudio && { fontSize: footerStyle.labelFontSize! }]}>{t('settings.title')}</Text>
                 <ShortcutHintBadge shortcutKey="," style={styles.shortcutBadgeInline} />
             </Pressable>
         </View>

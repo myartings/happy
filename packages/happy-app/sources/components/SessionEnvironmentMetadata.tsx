@@ -6,9 +6,10 @@ import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
 import type { SessionEnvironmentDisplay } from '@/utils/sessionEnvironmentDisplay';
 
-export function SessionEnvironmentMetadata({ environment, contentInset }: {
+export function SessionEnvironmentMetadata({ environment, contentInset, fontSize }: {
     environment: SessionEnvironmentDisplay;
     contentInset?: number;
+    fontSize?: number;
 }) {
     const { theme } = useUnistyles();
 
@@ -24,16 +25,16 @@ export function SessionEnvironmentMetadata({ environment, contentInset }: {
             {environment.worktreeName ? (
                 <View style={styles.item}>
                     <MaterialCommunityIcons name="tree" size={11} color={theme.colors.textSecondary} />
-                    <Text style={styles.text} numberOfLines={1}>{environment.worktreeName}</Text>
+                    <Text style={[styles.text, fontSize !== undefined && { fontSize }]} numberOfLines={1}>{environment.worktreeName}</Text>
                 </View>
             ) : null}
             {environment.worktreeName && environment.branchName ? (
-                <Text style={styles.separator}>·</Text>
+                <Text style={[styles.separator, fontSize !== undefined && { fontSize }]}>·</Text>
             ) : null}
             {environment.branchName ? (
                 <View style={styles.item}>
                     <Ionicons name="git-branch-outline" size={11} color={theme.colors.textSecondary} />
-                    <Text style={styles.text} numberOfLines={1}>{environment.branchName}</Text>
+                    <Text style={[styles.text, fontSize !== undefined && { fontSize }]} numberOfLines={1}>{environment.branchName}</Text>
                 </View>
             ) : null}
         </View>

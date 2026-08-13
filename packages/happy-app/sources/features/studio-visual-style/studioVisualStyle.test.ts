@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     resolveDesktopSectionHeaderStyle,
+    resolveDesktopSidebarFooterStyle,
     resolveDesktopSessionRowStyle,
     resolveDesktopTodoRowStyle,
     resolveDesktopTopControlsStyle,
@@ -81,6 +82,11 @@ describe('Studio desktop visual style', () => {
             leadingIndicatorWidth: 10,
             leadingIndicatorGap: 6,
             metadataInset: 16,
+            titleFontSize: 13,
+            titleLineHeight: 17,
+            titleFontWeight: '600',
+            primaryMetadataFontSize: 11,
+            secondaryMetadataFontSize: 10,
             cornerRadius: 9,
             selectedBackground: '#E8EAEA',
             showCardSurface: false,
@@ -99,6 +105,8 @@ describe('Studio desktop visual style', () => {
             leadingIndicatorWidth: null,
             leadingIndicatorGap: null,
             metadataInset: null,
+            titleFontSize: null,
+            secondaryMetadataFontSize: null,
             showGroupShellBoundary: true,
         });
         expect(resolveDesktopSessionRowStyle({
@@ -183,6 +191,32 @@ describe('Studio desktop visual style', () => {
             requestedStyle: 'default',
         }).fontSize).toBeNull();
         expect(resolveDesktopSectionHeaderStyle({
+            isTauriRuntime: false,
+            requestedStyle: 'studio',
+            previewStyle: 'studio',
+        }).visualStyle).toBe('default');
+    });
+
+    it('resolves the compact Studio sidebar footer hierarchy', () => {
+        expect(resolveDesktopSidebarFooterStyle({
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+        })).toEqual({
+            visualStyle: 'studio',
+            height: 44,
+            horizontalPadding: 18,
+            contentGap: 9,
+            iconSize: 17,
+            labelFontSize: 13,
+        });
+    });
+
+    it('keeps Default and non-Tauri sidebar footers on their existing style path', () => {
+        expect(resolveDesktopSidebarFooterStyle({
+            isTauriRuntime: true,
+            requestedStyle: 'default',
+        }).height).toBeNull();
+        expect(resolveDesktopSidebarFooterStyle({
             isTauriRuntime: false,
             requestedStyle: 'studio',
             previewStyle: 'studio',
