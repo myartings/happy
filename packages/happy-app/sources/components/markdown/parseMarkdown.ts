@@ -1,5 +1,9 @@
 import { parseMarkdownBlock } from "./parseMarkdownBlock"
 
+export type ParseMarkdownOptions = Readonly<{
+    enableStudioExtensions?: boolean;
+}>;
+
 export type MarkdownBlock = {
     type: 'text'
     content: MarkdownSpan[]
@@ -44,6 +48,6 @@ export type MarkdownSpan = {
     url: string | null
 }
 
-export function parseMarkdown(markdown: string) {
-    return parseMarkdownBlock(markdown);
+export function parseMarkdown(markdown: string, options: ParseMarkdownOptions = {}) {
+    return parseMarkdownBlock(markdown, options);
 }

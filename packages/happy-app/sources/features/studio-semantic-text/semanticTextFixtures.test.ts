@@ -55,7 +55,7 @@ describe('semanticTextFixtures', () => {
             'diff-content',
         ]);
 
-        const blocks = parseMarkdown(studioRichTextMarkdownFixture);
+        const blocks = parseMarkdown(studioRichTextMarkdownFixture, { enableStudioExtensions: true });
         expect(new Set(blocks.map((block) => block.type))).toEqual(new Set([
             'text',
             'header',

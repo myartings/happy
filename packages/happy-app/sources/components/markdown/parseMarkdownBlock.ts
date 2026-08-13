@@ -1,4 +1,4 @@
-import type { MarkdownBlock, MarkdownSpan } from "./parseMarkdown";
+import type { MarkdownBlock, MarkdownSpan, ParseMarkdownOptions } from "./parseMarkdown";
 import { parseMarkdownSpans } from "./parseMarkdownSpans";
 
 // Split a pipe-delimited table row into cells, stripping only the leading/trailing
@@ -10,7 +10,7 @@ function splitTableRow(line: string): string[] {
     return cells;
 }
 
-function parseTable(lines: string[], startIndex: number): { table: MarkdownBlock | null; nextIndex: number } {
+function parseTable(lines: string[], startIndex: number, options: ParseMarkdownOptions): { table: MarkdownBlock | null; nextIndex: number } {
     let index = startIndex;
     const tableLines: string[] = [];
 
@@ -40,7 +40,7 @@ function parseTable(lines: string[], startIndex: number): { table: MarkdownBlock
     }
 
     const headers = splitTableRow(tableLines[0])
-        .map(cell => parseMarkdownSpans(cell, false));
+        .map(cell => parseMarkdownSpans(cell, false, options));
 
     if (headers.length === 0) {
         return { table: null, nextIndex: startIndex };
@@ -50,7 +50,7 @@ function parseTable(lines: string[], startIndex: number): { table: MarkdownBlock
     const rows: MarkdownSpan[][][] = [];
     for (let i = 2; i < tableLines.length; i++) {
         const rowCells = splitTableRow(tableLines[i])
-            .map(cell => parseMarkdownSpans(cell, false));
+            .map(cell => parseMarkdownSpans(cell, false, options));
         if (rowCells.length > 0) {
             rows.push(rowCells);
         }
@@ -65,7 +65,7 @@ function parseTable(lines: string[], startIndex: number): { table: MarkdownBlock
     return { table, nextIndex: index };
 }
 
-export function parseMarkdownBlock(markdown: string) {
+export function parseMarkdownBlock(markdown: string, options: ParseMarkdownOptions = {}) {
     const blocks: MarkdownBlock[] = [];
     const lines = markdown.split('\n');
     let index = 0;
@@ -76,7 +76,7 @@ export function parseMarkdownBlock(markdown: string) {
         // Headers
         for (let i = 1; i <= 6; i++) {
             if (line.startsWith(`${'#'.repeat(i)} `)) {
-                blocks.push({ type: 'header', level: i as 1 | 2 | 3 | 4 | 5 | 6, content: parseMarkdownSpans(line.slice(i + 1).trim(), true) });
+                blocks.push({ type: 'header', level: i as 1 | 2 | 3 | 4 | 5 | 6, content: parseMarkdownSpans(line.slice(i + 1).trim(), true, options) });
                 continue outer;
             }
         }
@@ -145,7 +145,7 @@ export function parseMarkdownBlock(markdown: string) {
 
         // Consecutive quote lines form one selectable block while retaining
         // inline Markdown semantics and explicit line breaks.
-        if (/^>\s?/.test(trimmed)) {
+        if (options.enableStudioExtensions && /^>\s?/.test(trimmed)) {
             const quoteLines = [trimmed.replace(/^>\s?/, '')];
             while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
                 quoteLines.push(lines[index].trim().replace(/^>\s?/, ''));
@@ -153,7 +153,7 @@ export function parseMarkdownBlock(markdown: string) {
             }
             blocks.push({
                 type: 'blockquote',
-                content: parseMarkdownSpans(quoteLines.join('\n'), false),
+                content: parseMarkdownSpans(quoteLines.join('\n'), false, options),
             });
             continue;
         }
@@ -173,7 +173,7 @@ export function parseMarkdownBlock(markdown: string) {
                 index++;
             }
             const baseIndent = allLines[0].indent;
-            blocks.push({ type: 'numbered-list', items: allLines.map((l) => ({ number: l.number, depth: Math.floor((l.indent - baseIndent) / 2), spans: parseMarkdownSpans(l.content, false) })) });
+            blocks.push({ type: 'numbered-list', items: allLines.map((l) => ({ number: l.number, depth: Math.floor((l.indent - baseIndent) / 2), spans: parseMarkdownSpans(l.content, false, options) })) });
             continue;
         }
 
@@ -192,13 +192,13 @@ export function parseMarkdownBlock(markdown: string) {
                 index++;
             }
             const baseIndent = allLines[0].indent;
-            blocks.push({ type: 'list', items: allLines.map((l) => ({ depth: Math.floor((l.indent - baseIndent) / 2), spans: parseMarkdownSpans(l.content, false) })) });
+            blocks.push({ type: 'list', items: allLines.map((l) => ({ depth: Math.floor((l.indent - baseIndent) / 2), spans: parseMarkdownSpans(l.content, false, options) })) });
             continue;
         }
 
         // Check for table
         if (trimmed.includes('|') && !trimmed.startsWith('```')) {
-            const { table, nextIndex } = parseTable(lines, index - 1);
+            const { table, nextIndex } = parseTable(lines, index - 1, options);
             if (table) {
                 blocks.push(table);
                 index = nextIndex;
@@ -208,7 +208,7 @@ export function parseMarkdownBlock(markdown: string) {
 
         // Fallback
         if (trimmed.length > 0) {
-            blocks.push({ type: 'text', content: parseMarkdownSpans(trimmed, false) });
+            blocks.push({ type: 'text', content: parseMarkdownSpans(trimmed, false, options) });
         }
     }
     return blocks;

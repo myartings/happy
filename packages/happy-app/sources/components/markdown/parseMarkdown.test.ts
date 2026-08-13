@@ -11,7 +11,7 @@ describe('parseMarkdown', () => {
         const blocks = parseMarkdown([
             '> A restrained quote with ~~obsolete~~ guidance.',
             '> Keep the second line selectable.',
-        ].join('\n'));
+        ].join('\n'), { enableStudioExtensions: true });
 
         expect(blocks).toEqual([{
             type: 'blockquote',
@@ -20,6 +20,19 @@ describe('parseMarkdown', () => {
                 { styles: ['strikethrough'], text: 'obsolete', url: null },
                 { styles: [], text: ' guidance.\nKeep the second line selectable.', url: null },
             ],
+        }]);
+    });
+
+    it('preserves legacy plain text when Studio extensions are not enabled', () => {
+        const blocks = parseMarkdown('> Keep ~~literal markers~~ outside packaged Studio.');
+
+        expect(blocks).toEqual([{
+            type: 'text',
+            content: [{
+                styles: [],
+                text: '> Keep ~~literal markers~~ outside packaged Studio.',
+                url: null,
+            }],
         }]);
     });
 

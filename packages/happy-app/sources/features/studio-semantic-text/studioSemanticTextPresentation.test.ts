@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
     resolveMarkdownSpanRoles,
+    resolveMarkdownSpanPresentationStyles,
     resolveStudioSemanticTextPresentation,
 } from './studioSemanticTextPresentation';
+import { parseMarkdown } from '../../components/markdown/parseMarkdown';
 
 describe('resolveStudioSemanticTextPresentation', () => {
     it('returns a Codex-led semantic hierarchy for packaged Studio desktop', () => {
@@ -96,6 +98,71 @@ describe('resolveStudioSemanticTextPresentation', () => {
 });
 
 describe('resolveMarkdownSpanRoles', () => {
+    it('maps parsed Markdown command, path, number, and emphasized status labels into production roles', () => {
+        const blocks = parseMarkdown([
+            'Run `pnpm typecheck`, inspect `/tmp/happy/report.json`, count `128`,',
+            'then mark **Complete**, **Warning**, **Failed**, or **Queued**.',
+        ].join(' '), { enableStudioExtensions: true });
+        const block = blocks[0];
+        if (block?.type !== 'text') throw new Error('Expected text block');
+
+        const rolesByText = Object.fromEntries(block.content.map((span) => [
+            span.text,
+            resolveMarkdownSpanRoles(span, false),
+        ]));
+
+        expect(rolesByText).toMatchObject({
+            'pnpm typecheck': ['inlineCode', 'command'],
+            '/tmp/happy/report.json': ['inlineCode', 'path'],
+            '128': ['inlineCode', 'number'],
+            'Complete': ['emphasis', 'statusSuccess'],
+            'Warning': ['emphasis', 'statusWarning'],
+            'Failed': ['emphasis', 'statusError'],
+            'Queued': ['emphasis', 'statusSecondary'],
+        });
+    });
+
+    it('composes parsed semantic roles into the concrete styles consumed by MarkdownView', () => {
+        const presentation = resolveStudioSemanticTextPresentation({
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+            dark: false,
+        });
+        const blocks = parseMarkdown('Run `pnpm typecheck` with `128`; result **Complete**.', {
+            enableStudioExtensions: true,
+        });
+        const block = blocks[0];
+        if (!presentation || block?.type !== 'text') throw new Error('Expected Studio text presentation');
+
+        const stylesByText = Object.fromEntries(block.content.map((span) => [
+            span.text,
+            resolveMarkdownSpanPresentationStyles(span, false, presentation),
+        ]));
+
+        expect(stylesByText['pnpm typecheck']).toEqual([
+            presentation.roles.inlineCode,
+            presentation.inlineCode,
+            presentation.roles.command,
+        ]);
+        expect(stylesByText['128']).toEqual([
+            presentation.roles.inlineCode,
+            presentation.inlineCode,
+            presentation.roles.number,
+        ]);
+        expect(stylesByText.Complete).toEqual([
+            presentation.roles.emphasis,
+            presentation.roles.statusSuccess,
+        ]);
+    });
+
+    it('does not color ordinary prose that happens to contain status or path-like words', () => {
+        const blocks = parseMarkdown('Complete warning failed queued /tmp/report 128');
+        const block = blocks[0];
+        if (block?.type !== 'text') throw new Error('Expected text block');
+
+        expect(block.content.flatMap((span) => resolveMarkdownSpanRoles(span, false))).toEqual([]);
+    });
+
     it('maps Markdown meaning to shared semantic roles without changing text', () => {
         expect(resolveMarkdownSpanRoles({
             text: 'docs',

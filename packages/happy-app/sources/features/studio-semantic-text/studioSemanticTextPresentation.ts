@@ -201,15 +201,69 @@ type SemanticMarkdownSpan = Readonly<{
     url: string | null;
 }>;
 
+const markdownCommandPattern = /^(?:\$\s*)?(?:pnpm|npm|yarn|bun|git|gh|node|python3?|cargo|go|swift|xcodebuild|make|cmake|docker|kubectl|happy)(?:\s|$)/i;
+const markdownPathPattern = /^(?:\/|\.\.?\/|~\/|[a-z]:[\\/])\S+$/i;
+const markdownNumberPattern = /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/;
+
+function resolveEmphasizedStatusRole(text: string): SemanticTextRole | null {
+    const normalized = text.trim().toLowerCase();
+    if (['complete', 'completed', 'success', 'succeeded', 'passed', 'done', 'ok'].includes(normalized)) {
+        return 'statusSuccess';
+    }
+    if (['warning', 'warn', 'waiting', 'blocked'].includes(normalized)) {
+        return 'statusWarning';
+    }
+    if (['error', 'failed', 'failure'].includes(normalized)) {
+        return 'statusError';
+    }
+    if (['queued', 'pending', 'skipped', 'cancelled', 'canceled'].includes(normalized)) {
+        return 'statusSecondary';
+    }
+    return null;
+}
+
 export function resolveMarkdownSpanRoles(
     span: SemanticMarkdownSpan,
     isInteractiveLink = false,
 ): SemanticTextRole[] {
     const roles: SemanticTextRole[] = [];
-    if (span.styles.includes('bold') || span.styles.includes('semibold')) {
+    const emphasized = span.styles.includes('bold') || span.styles.includes('semibold');
+    if (emphasized) {
         roles.push('emphasis');
     }
-    if (span.styles.includes('code')) roles.push('inlineCode');
+    if (span.styles.includes('code')) {
+        roles.push('inlineCode');
+        const text = span.text.trim();
+        if (markdownNumberPattern.test(text)) {
+            roles.push('number');
+        } else if (markdownPathPattern.test(text)) {
+            roles.push('path');
+        } else if (markdownCommandPattern.test(text)) {
+            roles.push('command');
+        }
+    }
+    if (emphasized) {
+        const statusRole = resolveEmphasizedStatusRole(span.text);
+        if (statusRole) roles.push(statusRole);
+    }
     if (isInteractiveLink) roles.push('link');
     return roles;
+}
+
+type MarkdownSpanPresentationStyle =
+    | SemanticRoleTextStyle
+    | StudioSemanticTextPresentation['inlineCode'];
+
+export function resolveMarkdownSpanPresentationStyles(
+    span: SemanticMarkdownSpan,
+    isInteractiveLink: boolean,
+    presentation: StudioSemanticTextPresentation | null,
+): readonly MarkdownSpanPresentationStyle[] {
+    if (!presentation) return [];
+
+    return resolveMarkdownSpanRoles(span, isInteractiveLink).flatMap((role) => (
+        role === 'inlineCode'
+            ? [presentation.roles.inlineCode, presentation.inlineCode]
+            : [presentation.roles[role]]
+    ));
 }

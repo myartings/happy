@@ -17,7 +17,7 @@ import { MermaidRenderer } from './MermaidRenderer';
 import { t } from '@/text';
 import { isHttpMarkdownLink } from './linkUtils';
 import { openExternalUrl } from '@/utils/openExternalUrl';
-import { resolveMarkdownSpanRoles, type StudioSemanticTextPresentation } from '@/features/studio-semantic-text/studioSemanticTextPresentation';
+import { resolveMarkdownSpanPresentationStyles, type StudioSemanticTextPresentation } from '@/features/studio-semantic-text/studioSemanticTextPresentation';
 import { useStudioSemanticTextPresentation } from '@/features/studio-semantic-text/useStudioSemanticTextPresentation';
 
 // Option type for callback
@@ -30,8 +30,6 @@ export const MarkdownView = React.memo((props: {
     onOptionPress?: (option: Option) => void;
     sessionId?: string;
 }) => {
-    const blocks = React.useMemo(() => parseMarkdown(props.markdown), [props.markdown]);
-    
     // Backwards compatibility: The original version just returned the view, wrapping the list of blocks.
     // It made each of the individual text elements selectable. When we enable the markdownCopyV2 feature,
     // we disable the selectable property on individual text segments on mobile only. Instead, the long press
@@ -41,6 +39,10 @@ export const MarkdownView = React.memo((props: {
     const selectable = Platform.OS === 'web' || !markdownCopyV2;
     const router = useRouter();
     const studioPresentation = useStudioSemanticTextPresentation();
+    const enableStudioExtensions = studioPresentation !== null;
+    const blocks = React.useMemo(() => parseMarkdown(props.markdown, {
+        enableStudioExtensions,
+    }), [props.markdown, enableStudioExtensions]);
 
     const handleLinkPress = React.useCallback((url: string) => {
         if (!isHttpMarkdownLink(url)) {
@@ -293,11 +295,11 @@ function RenderSpans(props: RenderSpanProps) {
     return (<>
         {props.spans.map((span, index) => {
             const isExternalLink = span.url ? isHttpMarkdownLink(span.url) : false;
-            const semanticStyles = resolveMarkdownSpanRoles(span, isExternalLink).map((role) => (
-                role === 'inlineCode'
-                    ? [props.studioPresentation?.roles[role], props.studioPresentation?.inlineCode]
-                    : props.studioPresentation?.roles[role]
-            ));
+            const semanticStyles = resolveMarkdownSpanPresentationStyles(
+                span,
+                isExternalLink,
+                props.studioPresentation,
+            );
             if (span.url) {
                 return (
                     <Text

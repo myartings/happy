@@ -111,9 +111,9 @@ export const studioRichTextMarkdownFixture = [
     '',
     '| Role | Example |',
     '| --- | --- |',
-    '| Success | Complete |',
-    '| Warning | Waiting |',
-    '| Error | Failed |',
+    '| Success | **Complete** |',
+    '| Warning | **Warning** |',
+    '| Error | **Failed** |',
     '| Tool output | 128 files processed |',
     '| Diff content | + added / - removed |',
 ].join('\n');

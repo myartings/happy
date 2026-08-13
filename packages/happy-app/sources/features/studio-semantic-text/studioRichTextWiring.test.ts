@@ -8,6 +8,9 @@ const markdownView = readFileSync(
 
 describe('Studio rich-text renderer wiring', () => {
     it('wires accepted block presentation through the existing Markdown renderer', () => {
+        expect(markdownView).toContain('const enableStudioExtensions = studioPresentation !== null;');
+        expect(markdownView).toContain('enableStudioExtensions,');
+        expect(markdownView).toContain('resolveMarkdownSpanPresentationStyles(');
         expect(markdownView).toContain("block.type === 'blockquote'");
         expect(markdownView).toContain('props.studioPresentation?.blockquote');
         expect(markdownView).toContain('studioPresentation?.horizontalRule');
