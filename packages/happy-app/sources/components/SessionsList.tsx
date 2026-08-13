@@ -24,6 +24,12 @@ import { useSessionActionAlert } from '@/hooks/useSessionQuickActions';
 import { t } from '@/text';
 import { SessionShortcutHintBadge } from './ShortcutHints';
 import { ProviderIcon } from './ProviderIcon';
+import { isTauri } from '@/utils/isTauri';
+import {
+    resolveDesktopSectionHeaderStyle,
+    resolveDesktopSessionRowStyle,
+    type DesktopSessionRowStyle,
+} from '@/features/studio-visual-style/studioVisualStyle';
 
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
@@ -204,6 +210,18 @@ export function SessionsList({
     const sourceData = useVisibleSessionListViewData();
     const pathname = usePathname();
     const isTablet = useIsTablet();
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const sessionRowStyle = React.useMemo(() => resolveDesktopSessionRowStyle({
+        isTauriRuntime: isTauri(),
+        requestedStyle: requestedVisualStyle,
+        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+    }), [requestedVisualStyle]);
+    const sectionHeaderStyle = React.useMemo(() => resolveDesktopSectionHeaderStyle({
+        isTauriRuntime: isTauri(),
+        requestedStyle: requestedVisualStyle,
+        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+    }), [requestedVisualStyle]);
+    const isStudioSectionHeader = sectionHeaderStyle.visualStyle === 'studio';
     // Selection is derived once from pathname so the data array stays stable
     // across navigations. This keeps FlatList virtualization intact: only
     // the previously- and newly-selected rows re-render, instead of the
@@ -307,8 +325,23 @@ export function SessionsList({
         switch (item.type) {
             case 'header':
                 return (
-                    <View style={styles.headerSection}>
-                        <Text style={styles.headerText}>
+                    <View style={[
+                        styles.headerSection,
+                        isStudioSectionHeader && {
+                            paddingHorizontal: sectionHeaderStyle.horizontalPadding!,
+                            paddingTop: sectionHeaderStyle.topPadding!,
+                            paddingBottom: sectionHeaderStyle.bottomPadding!,
+                        },
+                    ]}>
+                        <Text style={[
+                            styles.headerText,
+                            isStudioSectionHeader && {
+                                ...Typography.default(),
+                                fontSize: sectionHeaderStyle.fontSize!,
+                                lineHeight: sectionHeaderStyle.lineHeight!,
+                                fontWeight: sectionHeaderStyle.fontWeight!,
+                            },
+                        ]}>
                             {item.title}
                         </Text>
                     </View>
@@ -318,8 +351,23 @@ export function SessionsList({
                 return (
                     <View>
                         {item.period ? (
-                            <View style={styles.headerSection}>
-                                <Text style={styles.headerText}>
+                            <View style={[
+                                styles.headerSection,
+                                isStudioSectionHeader && {
+                                    paddingHorizontal: sectionHeaderStyle.horizontalPadding!,
+                                    paddingTop: sectionHeaderStyle.topPadding!,
+                                    paddingBottom: sectionHeaderStyle.bottomPadding!,
+                                },
+                            ]}>
+                                <Text style={[
+                                    styles.headerText,
+                                    isStudioSectionHeader && {
+                                        ...Typography.default(),
+                                        fontSize: sectionHeaderStyle.fontSize!,
+                                        lineHeight: sectionHeaderStyle.lineHeight!,
+                                        fontWeight: sectionHeaderStyle.fontWeight!,
+                                    },
+                                ]}>
                                     {item.period === 'today'
                                         ? t('sidebar.activeToday')
                                         : t('sidebar.activeEarlier')}
@@ -329,6 +377,7 @@ export function SessionsList({
                         <ActiveSessionsGroupCompact
                             sessions={item.sessions}
                             selectedSessionId={selectedSessionId}
+                            sessionRowStyle={sessionRowStyle}
                         />
                     </View>
                 );
@@ -336,22 +385,53 @@ export function SessionsList({
             case 'attention-sessions':
                 return (
                     <View>
-                        <View style={styles.headerSection}>
-                            <Text style={styles.headerText}>
+                        <View style={[
+                            styles.headerSection,
+                            isStudioSectionHeader && {
+                                paddingHorizontal: sectionHeaderStyle.horizontalPadding!,
+                                paddingTop: sectionHeaderStyle.topPadding!,
+                                paddingBottom: sectionHeaderStyle.bottomPadding!,
+                            },
+                        ]}>
+                            <Text style={[
+                                styles.headerText,
+                                isStudioSectionHeader && {
+                                    ...Typography.default(),
+                                    fontSize: sectionHeaderStyle.fontSize!,
+                                    lineHeight: sectionHeaderStyle.lineHeight!,
+                                    fontWeight: sectionHeaderStyle.fontWeight!,
+                                },
+                            ]}>
                                 {t('sidebar.needsAttention', { count: item.sessions.length })}
                             </Text>
                         </View>
                         <ActiveSessionsGroupCompact
                             sessions={item.sessions}
                             selectedSessionId={selectedSessionId}
+                            sessionRowStyle={sessionRowStyle}
                         />
                     </View>
                 );
 
             case 'projects-header':
                 return (
-                    <View style={styles.headerSection}>
-                        <Text style={styles.headerText}>
+                    <View style={[
+                        styles.headerSection,
+                        isStudioSectionHeader && {
+                            paddingHorizontal: sectionHeaderStyle.horizontalPadding!,
+                            paddingTop: sectionHeaderStyle.topPadding!,
+                            paddingBottom: sectionHeaderStyle.bottomPadding!,
+                        },
+                    ]}>
+                        <Text style={[
+                            styles.headerText,
+                            isStudioSectionHeader && {
+                                ...Typography.default(),
+                                fontSize: sectionHeaderStyle.fontSize!,
+                                lineHeight: sectionHeaderStyle.lineHeight!,
+                                fontWeight: sectionHeaderStyle.fontWeight!,
+                            },
+                        ]}>
                             {item.source === 'rig' ? 'Rig' : t('sidebar.sessionsTitle')}
                         </Text>
                     </View>
@@ -362,6 +442,7 @@ export function SessionsList({
                     <ProjectGroup
                         project={item.project}
                         selectedSessionId={selectedSessionId}
+                        sessionRowStyle={sessionRowStyle}
                     />
                 );
 
@@ -394,10 +475,11 @@ export function SessionsList({
                         isFirst={isFirst}
                         isLast={isLast}
                         isSingle={isSingle}
+                        sessionRowStyle={sessionRowStyle}
                     />
                 );
         }
-    }, [selectedSessionId, data]);
+    }, [selectedSessionId, data, sessionRowStyle, sectionHeaderStyle, isStudioSectionHeader]);
 
 
     // Remove this section as we'll use FlatList for all items now
@@ -448,16 +530,18 @@ const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isP
     permission_required: { color: '#FF9500', dotColor: '#FF9500', isPulsing: true, isConnected: true },
 };
 
-const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }: {
+const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, sessionRowStyle }: {
     session: SessionRowData;
     selected?: boolean;
     isFirst?: boolean;
     isLast?: boolean;
     isSingle?: boolean;
+    sessionRowStyle: DesktopSessionRowStyle;
 }) => {
     const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
     const styles = stylesheet;
+    const isStudio = sessionRowStyle.visualStyle === 'studio';
     const navigateToSession = useNavigateToSession();
     const [actionsAnchor, setActionsAnchor] = React.useState<SessionActionsAnchor | null>(null);
     const baseStatus = STATUS_CONFIG[session.state];
@@ -507,7 +591,16 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
             styles.sessionItemContainer,
             isSingle ? styles.sessionItemContainerSingle :
                 isFirst ? styles.sessionItemContainerFirst :
-                    isLast ? styles.sessionItemContainerLast : {}
+                    isLast ? styles.sessionItemContainerLast : {},
+            isStudio && {
+                marginHorizontal: sessionRowStyle.horizontalInset!,
+                marginBottom: isLast || isSingle ? 8 : sessionRowStyle.gap!,
+                borderWidth: 0,
+                borderRadius: sessionRowStyle.cornerRadius!,
+                backgroundColor: 'transparent',
+                shadowOpacity: 0,
+                elevation: 0,
+            },
         ]}>
         <Pressable
             style={[
@@ -515,15 +608,27 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
                 selected && styles.sessionItemSelected,
                 isSingle ? styles.sessionItemSingle :
                     isFirst ? styles.sessionItemFirst :
-                        isLast ? styles.sessionItemLast : {}
+                        isLast ? styles.sessionItemLast : {},
+                isStudio && {
+                    height: sessionRowStyle.height!,
+                    paddingHorizontal: sessionRowStyle.horizontalPadding!,
+                    borderRadius: sessionRowStyle.cornerRadius!,
+                    backgroundColor: selected ? sessionRowStyle.selectedBackground! : 'transparent',
+                },
             ]}
             onPress={handlePress}
             {...menuProps}
         >
-            <View style={styles.avatarContainer}>
-                <Avatar id={session.avatarId} size={48} monochrome={!status.isConnected} flavor={session.flavor} clientId={session.clientId} />
+            <View style={[
+                styles.avatarContainer,
+                isStudio && { width: 32, height: 32 },
+            ]}>
+                <Avatar id={session.avatarId} size={isStudio ? 32 : 48} monochrome={!status.isConnected} flavor={session.flavor} clientId={session.clientId} />
                 {session.hasDraft && (
-                    <View style={styles.draftIconContainer}>
+                    <View style={[
+                        styles.draftIconContainer,
+                        isStudio && { width: 14, height: 14, bottom: -1, right: -1 },
+                    ]}>
                         <Ionicons
                             name="create-outline"
                             size={12}
@@ -532,11 +637,12 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
                     </View>
                 )}
             </View>
-            <View style={styles.sessionContent}>
+            <View style={[styles.sessionContent, isStudio && { marginLeft: 10 }]}>
                 <View style={styles.sessionTitleRow}>
                     <Text style={[
                         styles.sessionTitle,
-                        status.isConnected ? styles.sessionTitleConnected : styles.sessionTitleDisconnected
+                        status.isConnected ? styles.sessionTitleConnected : styles.sessionTitleDisconnected,
+                        isStudio && { fontSize: 14, lineHeight: 18 },
                     ]} numberOfLines={1}>
                         {session.name}
                     </Text>
@@ -549,18 +655,18 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
                 {showSessionModel && session.identityLine ? (
                     <View style={styles.sessionSubtitleRow}>
                         <ProviderIcon kind={session.providerKind} size={13} />
-                        <Text style={styles.sessionSubtitle} numberOfLines={1}>
+                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
                             {session.identityLine}
                         </Text>
                     </View>
                 ) : session.path ? (
                     <View style={styles.sessionSubtitleRow}>
-                        <Text style={styles.sessionSubtitle} numberOfLines={1}>
+                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
                             {session.path.split(/[/\\]/).filter(Boolean).pop()}
                         </Text>
                     </View>
                 ) : (
-                    <Text style={styles.sessionSubtitle} numberOfLines={1}>
+                    <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
                         {session.subtitle}
                     </Text>
                 )}
@@ -571,7 +677,8 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle }
                     </View>
                     <Text style={[
                         styles.statusText,
-                        { color: status.color }
+                        { color: status.color },
+                        isStudio && { fontSize: 11, lineHeight: 14 },
                     ]}>
                         {showSessionModel && session.modelName ? `${session.modelName} · ` : ''}{statusText}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
                     </Text>

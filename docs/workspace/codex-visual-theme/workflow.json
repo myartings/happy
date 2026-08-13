@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "slug": "codex-visual-theme",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Create a new workflow for product implementation, remaining evidence capture, and runtime visual verification",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/codex-visual-theme.md; docs/tasks/codex-visual-theme-tasks.md",
+      "updated": "2026-08-10T09:20:50+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-visual-theme/decisions.md",
+      "updated": "2026-08-10T09:20:50+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/specs/codex-visual-theme.md#product-boundaries; docs/specs/codex-visual-theme.md#canonical-layer-model; docs/specs/codex-visual-theme.md#implementation-sequence",
+      "updated": "2026-08-10T09:20:50+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Documentation-only visual specification; no product code, protocol, data, or external state changed.",
+      "updated": "2026-08-10T08:48:59+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Documentation-only delivery completed: docs/specs/codex-visual-theme.md; docs/tasks/codex-visual-theme-tasks.md",
+      "updated": "2026-08-11T20:48:49+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-11T20:49:05+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole documentation diff reviewed: no blocking findings; scope contains specification, task plan, and workflow evidence only",
+      "updated": "2026-08-11T20:49:36+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Specification and implementation plan accepted; deterministic workflow checks and whole-diff review passed; product implementation is a separate follow-up workflow",
+      "updated": "2026-08-11T20:49:36+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-10T08:45:26+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-10T08:48:59+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/codex-visual-theme.md; docs/tasks/codex-visual-theme-tasks.md"
+    },
+    {
+      "at": "2026-08-10T08:48:59+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-visual-theme/decisions.md"
+    },
+    {
+      "at": "2026-08-10T08:48:59+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Documentation-only visual specification; no product code, protocol, data, or external state changed."
+    },
+    {
+      "at": "2026-08-10T08:48:59+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/codex-visual-theme.md#product-boundaries; docs/specs/codex-visual-theme.md#implementation-boundaries"
+    },
+    {
+      "at": "2026-08-10T08:49:23+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Review the visual specification and capture missing dark/interactive reference states"
+    },
+    {
+      "at": "2026-08-10T09:20:50+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/codex-visual-theme.md; docs/tasks/codex-visual-theme-tasks.md"
+    },
+    {
+      "at": "2026-08-10T09:20:50+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-visual-theme/decisions.md"
+    },
+    {
+      "at": "2026-08-10T09:20:50+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/codex-visual-theme.md#product-boundaries; docs/specs/codex-visual-theme.md#canonical-layer-model; docs/specs/codex-visual-theme.md#implementation-sequence"
+    },
+    {
+      "at": "2026-08-11T20:48:49+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Complete the accepted visual specification and implementation plan"
+    },
+    {
+      "at": "2026-08-11T20:48:49+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Documentation-only delivery completed: docs/specs/codex-visual-theme.md; docs/tasks/codex-visual-theme-tasks.md"
+    },
+    {
+      "at": "2026-08-11T20:48:49+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run repository workflow checks and review the complete documentation diff"
+    },
+    {
+      "at": "2026-08-11T20:49:05+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-11T20:49:36+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole documentation diff reviewed: no blocking findings; scope contains specification, task plan, and workflow evidence only"
+    },
+    {
+      "at": "2026-08-11T20:49:36+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive the accepted documentation slice with commit pending"
+    },
+    {
+      "at": "2026-08-11T20:49:36+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Specification and implementation plan accepted; deterministic workflow checks and whole-diff review passed; product implementation is a separate follow-up workflow"
+    },
+    {
+      "at": "2026-08-11T20:49:36+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Accepted Codex visual hierarchy specification and implementation plan; commit: pending; follow-up: Create a new workflow for product implementation, remaining evidence capture, and runtime visual verification"
+    }
+  ],
+  "updated": "2026-08-11T20:49:36+00:00",
+  "archivedAt": "2026-08-11T20:49:36+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Accepted Codex visual hierarchy specification and implementation plan",
+  "archiveFollowUp": "Create a new workflow for product implementation, remaining evidence capture, and runtime visual verification"
+}

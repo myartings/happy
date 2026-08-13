@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/design/studio-implementation-slice-v2-04.md","reason":"User-approved implementation and stop boundary"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Existing desktop-only Studio resolver and feature-owned metrics seam"}
+{"path":"packages/happy-app/sources/components/ProjectTodoButton.tsx","reason":"Shared Todo component optional presentation seam"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Sole Studio Todo instance activation seam"}

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-visual-contract-reset",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User authorized the documentation-only contract reset; final document result still requires explicit review.",
+      "updated": "2026-08-12T06:40:28+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-visual-contract-reset/decisions.md records the user-confirmed name, reference, platform, and cadence decisions.",
+      "updated": "2026-08-12T06:40:28+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-visual-contract-reset/context.md limits the slice to specification, tasks, and workflow evidence; product code is excluded.",
+      "updated": "2026-08-12T06:40:28+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Documentation-only change; no product runtime, data, protocol, credentials, release, or protected paths.",
+      "updated": "2026-08-12T06:40:28+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Updated only docs/specs/codex-visual-theme.md, docs/tasks/codex-visual-theme-tasks.md, and workflow evidence; no product code changed.",
+      "updated": "2026-08-12T06:40:29+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-visual-contract-reset/validation.md records passing contract assertions, dirty-scope check, workflow validation, and repository workflow validation.",
+      "updated": "2026-08-12T06:41:50+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Complete documentation diff received semantic review; the only ambiguity was corrected and no blocking finding remains.",
+      "updated": "2026-08-12T06:41:50+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records summary, verification, whole-diff review, rollback, scoped learning, and the Otty extraction follow-up; user accepted the contract.",
+      "updated": "2026-08-12T06:52:21+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T06:35:13+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T06:40:28+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User authorized the documentation-only contract reset; final document result still requires explicit review."
+    },
+    {
+      "at": "2026-08-12T06:40:28+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-visual-contract-reset/decisions.md records the user-confirmed name, reference, platform, and cadence decisions."
+    },
+    {
+      "at": "2026-08-12T06:40:28+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-visual-contract-reset/context.md limits the slice to specification, tasks, and workflow evidence; product code is excluded."
+    },
+    {
+      "at": "2026-08-12T06:40:28+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Documentation-only change; no product runtime, data, protocol, credentials, release, or protected paths."
+    },
+    {
+      "at": "2026-08-12T06:40:28+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Apply only the accepted documentation contract reset."
+    },
+    {
+      "at": "2026-08-12T06:40:29+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Updated only docs/specs/codex-visual-theme.md, docs/tasks/codex-visual-theme-tasks.md, and workflow evidence; no product code changed."
+    },
+    {
+      "at": "2026-08-12T06:40:29+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify contract consistency, scope, and human-gate semantics."
+    },
+    {
+      "at": "2026-08-12T06:41:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-visual-contract-reset/validation.md records passing contract assertions, dirty-scope check, workflow validation, and repository workflow validation."
+    },
+    {
+      "at": "2026-08-12T06:41:50+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Complete documentation diff received semantic review; the only ambiguity was corrected and no blocking finding remains."
+    },
+    {
+      "at": "2026-08-12T06:44:27+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record accepted documentation-only contract and archive without committing."
+    },
+    {
+      "at": "2026-08-12T06:52:21+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records summary, verification, whole-diff review, rollback, scoped learning, and the Otty extraction follow-up; user accepted the contract."
+    },
+    {
+      "at": "2026-08-12T06:52:21+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Reset Studio to an Otty-first, packaged-desktop-only visual contract with proposal and result human gates for every item.; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-12T06:52:21+00:00",
+  "archivedAt": "2026-08-12T06:52:21+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Reset Studio to an Otty-first, packaged-desktop-only visual contract with proposal and result human gates for every item.",
+  "archiveFollowUp": "None"
+}

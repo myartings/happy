@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-todo-row-v2-04",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Propose one fifth visible Studio slice and await approval before implementation",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly approved docs/design/studio-implementation-slice-v2-04.md on 2026-08-13",
+      "updated": "2026-08-13T02:48:19+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md resolves existing geometry, runtime/shared-component boundaries, interaction preservation, and risk",
+      "updated": "2026-08-13T02:48:19+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: Studio-owned pure Todo metrics, optional shared-component presentation prop, and one SidebarView activation seam; targeted tests then complete Happy App family; local-only acceptance",
+      "updated": "2026-08-13T02:48:19+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only packaged-desktop conditional styling; no auth, protocol, migration, sync, protected path, deployment, or destructive action",
+      "updated": "2026-08-13T02:48:19+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD Studio Todo metrics, optional ProjectTodoButton presentation prop, and one SidebarView activation seam implemented; 23 targeted tests, typecheck, diff check, and four-caller audit pass; all other callers remain Default",
+      "updated": "2026-08-13T02:50:55+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures",
+      "updated": "2026-08-13T02:58:50+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues: optional presentation prop is activated only by resolved Studio SidebarView; three other callers remain unchanged; pressed, hitSlop, accessibility, feature flag, navigation, and external style ordering are preserved",
+      "updated": "2026-08-13T02:59:22+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "All acceptance rows complete; configured check passed 8 commands with 0 failures; whole-diff review passed; installed Studio result explicitly accepted by user; rollback and local signing limitation recorded",
+      "updated": "2026-08-13T03:00:48+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T02:47:14+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T02:48:19+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly approved docs/design/studio-implementation-slice-v2-04.md on 2026-08-13"
+    },
+    {
+      "at": "2026-08-13T02:48:19+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md resolves existing geometry, runtime/shared-component boundaries, interaction preservation, and risk"
+    },
+    {
+      "at": "2026-08-13T02:48:19+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only packaged-desktop conditional styling; no auth, protocol, migration, sync, protected path, deployment, or destructive action"
+    },
+    {
+      "at": "2026-08-13T02:48:19+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: Studio-owned pure Todo metrics, optional shared-component presentation prop, and one SidebarView activation seam; targeted tests then complete Happy App family; local-only acceptance"
+    },
+    {
+      "at": "2026-08-13T02:48:19+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD compact Studio Todo metrics, wire optional ProjectTodoButton and SidebarView seams, verify, build/install/capture, and stop for user acceptance"
+    },
+    {
+      "at": "2026-08-13T02:50:55+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD Studio Todo metrics, optional ProjectTodoButton presentation prop, and one SidebarView activation seam implemented; 23 targeted tests, typecheck, diff check, and four-caller audit pass; all other callers remain Default"
+    },
+    {
+      "at": "2026-08-13T02:50:55+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete Happy App tests, review bounded diff, build/ad-hoc-sign/install/capture Studio preview, and stop for explicit user acceptance"
+    },
+    {
+      "at": "2026-08-13T02:58:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T02:59:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues: optional presentation prop is activated only by resolved Studio SidebarView; three other callers remain unchanged; pressed, hitSlop, accessibility, feature flag, navigation, and external style ordering are preserved"
+    },
+    {
+      "at": "2026-08-13T02:59:22+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record accepted installed result, rollback path, archive workflow with commit pending, stage the complete visual-theme change set, and run staged workflow CI"
+    },
+    {
+      "at": "2026-08-13T03:00:48+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "All acceptance rows complete; configured check passed 8 commands with 0 failures; whole-diff review passed; installed Studio result explicitly accepted by user; rollback and local signing limitation recorded"
+    },
+    {
+      "at": "2026-08-13T03:00:48+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Accepted Studio v2-04 Todo utility row spacing refinement; complete client/server checks, installed reproduction evidence, review, and explicit user acceptance passed; commit: pending; follow-up: Propose one fifth visible Studio slice and await approval before implementation"
+    }
+  ],
+  "updated": "2026-08-13T03:00:48+00:00",
+  "archivedAt": "2026-08-13T03:00:48+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Accepted Studio v2-04 Todo utility row spacing refinement; complete client/server checks, installed reproduction evidence, review, and explicit user acceptance passed",
+  "archiveFollowUp": "Propose one fifth visible Studio slice and await approval before implementation"
+}

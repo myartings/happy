@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-main-window-pencil-v2",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Await explicit user approval of docs/design/studio-implementation-slice-v2-01.md before creating a new implementation workflow",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly accepted docs/design/studio-main-window-v2.png by replying 通过 on 2026-08-12",
+      "updated": "2026-08-12T14:20:52+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-main-window-pencil-v2/decisions.md resolves functional skeleton, visual reference, versioning, privacy, and no-code boundary",
+      "updated": "2026-08-12T09:41:44+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Scope is documentation plus new versioned studio-main-window-v2.pen/png only; no product code or private raw screenshots",
+      "updated": "2026-08-12T09:41:44+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Design artifacts only; no product code, protocol, auth, data, deployment, mobile paths, or destructive operations",
+      "updated": "2026-08-12T09:41:44+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Created docs/design/studio-main-window-v2.pen/png and v2 brief/workflow evidence; no product code changed and v1 remained intact",
+      "updated": "2026-08-12T14:20:52+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Pencil strict validator passed; PNG is 1470x870; layout snapshot had no problems; local visual inspection and git diff --check passed",
+      "updated": "2026-08-12T14:20:52+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole bounded design diff reviewed with no blocking findings; private baselines and product/protected paths unchanged; obsolete v1 proposal superseded",
+      "updated": "2026-08-12T14:20:52+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records validation, user acceptance, whole-diff review, rollback, and single-slice follow-up",
+      "updated": "2026-08-12T14:20:52+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T09:39:12+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T09:41:44+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly requested v2 after clarifying that Happy functional layout stays stable while regional proportions and component geometry may be redesigned boldly; contract docs/design/studio-main-window-v2-pencil-brief.md"
+    },
+    {
+      "at": "2026-08-12T09:41:44+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-main-window-pencil-v2/decisions.md resolves functional skeleton, visual reference, versioning, privacy, and no-code boundary"
+    },
+    {
+      "at": "2026-08-12T09:41:44+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Scope is documentation plus new versioned studio-main-window-v2.pen/png only; no product code or private raw screenshots"
+    },
+    {
+      "at": "2026-08-12T09:41:44+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Design artifacts only; no product code, protocol, auth, data, deployment, mobile paths, or destructive operations"
+    },
+    {
+      "at": "2026-08-12T09:41:44+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Generate studio-main-window-v2.pen/png and stop for explicit user visual acceptance"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly accepted docs/design/studio-main-window-v2.png by replying 通过 on 2026-08-12"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Accepted v2 design artifact complete; advance lifecycle without product-code changes"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Created docs/design/studio-main-window-v2.pen/png and v2 brief/workflow evidence; no product code changed and v1 remained intact"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify v2 artifact, exact export, functional coverage, and explicit user acceptance"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Pencil strict validator passed; PNG is 1470x870; layout snapshot had no problems; local visual inspection and git diff --check passed"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole bounded design diff reviewed with no blocking findings; private baselines and product/protected paths unchanged; obsolete v1 proposal superseded"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive accepted v2 design; await approval of one v2 sidebar-frame implementation proposal"
+    },
+    {
+      "at": "2026-08-12T14:20:52+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records validation, user acceptance, whole-diff review, rollback, and single-slice follow-up"
+    },
+    {
+      "at": "2026-08-12T14:21:08+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Accepted Happy Studio main-window v2 Pencil design preserving Happy functional map with Codex-led geometry; no product code changed; commit: pending; follow-up: Await explicit user approval of docs/design/studio-implementation-slice-v2-01.md before creating a new implementation workflow"
+    }
+  ],
+  "updated": "2026-08-12T14:21:08+00:00",
+  "archivedAt": "2026-08-12T14:21:08+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Accepted Happy Studio main-window v2 Pencil design preserving Happy functional map with Codex-led geometry; no product code changed",
+  "archiveFollowUp": "Await explicit user approval of docs/design/studio-implementation-slice-v2-01.md before creating a new implementation workflow"
+}

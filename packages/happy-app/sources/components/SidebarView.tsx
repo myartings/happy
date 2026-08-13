@@ -13,6 +13,11 @@ import { Typography } from '@/constants/Typography';
 import { ShortcutHintBadge, useShortcutHints } from './ShortcutHints';
 import { ProjectTodoButton } from './ProjectTodoButton';
 import { useHasArchivedSessions } from '@/hooks/useVisibleSessionListViewData';
+import {
+    resolveDesktopTodoRowStyle,
+    resolveDesktopTopControlsStyle,
+    type DesktopSidebarFrame,
+} from '@/features/studio-visual-style/studioVisualStyle';
 
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
@@ -93,7 +98,7 @@ const stylesheet = StyleSheet.create((theme) => ({
     },
 }));
 
-export const SidebarView = React.memo(() => {
+export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: DesktopSidebarFrame }) => {
     const styles = stylesheet;
     const safeArea = useSafeAreaInsets();
     const router = useRouter();
@@ -104,6 +109,15 @@ export const SidebarView = React.memo(() => {
     // have no rename migration — but it hides archived sessions only.
     const [hideArchivedSessions, setHideArchivedSessions] = useSettingMutable('hideInactiveSessions');
     const { visible: shortcutHintsVisible } = useShortcutHints();
+    const topControlsStyle = React.useMemo(() => resolveDesktopTopControlsStyle({
+        isTauriRuntime: sidebarFrame?.visualStyle === 'studio',
+        requestedStyle: sidebarFrame?.visualStyle ?? 'default',
+    }), [sidebarFrame?.visualStyle]);
+    const isStudio = topControlsStyle.visualStyle === 'studio';
+    const todoRowStyle = React.useMemo(() => resolveDesktopTodoRowStyle({
+        isTauriRuntime: isStudio,
+        requestedStyle: isStudio ? 'studio' : 'default',
+    }), [isStudio]);
 
     const handleNewSession = React.useCallback(() => {
         router.navigate('/new');
@@ -113,12 +127,39 @@ export const SidebarView = React.memo(() => {
     }, [hideArchivedSessions, setHideArchivedSessions]);
 
     return (
-        <View style={[styles.container, { paddingTop: safeArea.top + headerHeight }]}>
-            <View style={styles.topControls}>
+        <View style={[
+            styles.container,
+            {
+                paddingTop: safeArea.top + headerHeight,
+                backgroundColor: sidebarFrame?.sidebarBackground,
+                ...(sidebarFrame?.visualStyle === 'studio'
+                    ? {
+                        borderTopWidth: 0,
+                        borderBottomWidth: 0,
+                        borderLeftWidth: 0,
+                        borderRightWidth: 0,
+                    }
+                    : {}),
+            },
+        ]}>
+            <View style={[
+                styles.topControls,
+                isStudio && { gap: topControlsStyle.groupGap! },
+            ]}>
                 <Pressable
                     onPress={handleNewSession}
+                    hitSlop={isStudio ? { top: 3, bottom: 3 } : undefined}
                     style={({ pressed }) => [
                         styles.newSessionButton,
+                        isStudio && {
+                            height: topControlsStyle.controlHeight!,
+                            paddingVertical: 0,
+                            paddingHorizontal: topControlsStyle.horizontalPadding!,
+                            borderRadius: topControlsStyle.cornerRadius!,
+                            gap: topControlsStyle.contentGap!,
+                            shadowOpacity: 0,
+                            elevation: 0,
+                        },
                         shortcutHintsVisible && styles.shortcutTargetActive,
                         pressed && styles.newSessionButtonPressed,
                     ]}
@@ -130,6 +171,7 @@ export const SidebarView = React.memo(() => {
                 {hasArchivedSessions && (
                     <Pressable
                         onPress={handleArchiveVisibility}
+                        hitSlop={isStudio ? 3 : undefined}
                         accessibilityLabel={hideArchivedSessions
                             ? t('sidebar.showArchived')
                             : t('sidebar.hideArchived')}
@@ -137,6 +179,13 @@ export const SidebarView = React.memo(() => {
                         accessibilityState={{ selected: !hideArchivedSessions }}
                         style={({ pressed }) => [
                             styles.archiveButton,
+                            isStudio && {
+                                width: topControlsStyle.archiveWidth!,
+                                height: topControlsStyle.controlHeight!,
+                                borderRadius: topControlsStyle.cornerRadius!,
+                                shadowOpacity: 0,
+                                elevation: 0,
+                            },
                             !hideArchivedSessions && styles.archiveButtonActive,
                             pressed && styles.newSessionButtonPressed,
                         ]}
@@ -150,7 +199,14 @@ export const SidebarView = React.memo(() => {
                 )}
             </View>
 
-            <ProjectTodoButton showLabel style={styles.projectTodosButton} />
+            <ProjectTodoButton
+                showLabel
+                presentationStyle={todoRowStyle}
+                style={[
+                    styles.projectTodosButton,
+                    isStudio && { paddingHorizontal: todoRowStyle.horizontalPadding! },
+                ]}
+            />
 
             {realtimeStatus !== 'disconnected' && (
                 <VoiceAssistantStatusBar variant="sidebar" />

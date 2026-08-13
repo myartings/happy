@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/design/studio-implementation-slice-v2-07.md","reason":"Accepted one-item visual contract."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Studio-only group-shell presentation metric."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.test.ts","reason":"Public resolver behavior seam."}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Existing active-period group-shell activation seam."}

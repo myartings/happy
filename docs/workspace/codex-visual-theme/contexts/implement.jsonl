@@ -1,0 +1,15 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/codex-visual-theme.md","reason":"Authoritative visual theme contract and component mapping"}
+{"path":"docs/tasks/codex-visual-theme-tasks.md","reason":"Acceptance checklist and implementation sequence"}
+{"path":"packages/happy-app/sources/theme.ts","reason":"Current Happy semantic theme and spacing structure"}
+{"path":"packages/happy-app/sources/unistyles.ts","reason":"Current appearance registration and runtime switching"}
+{"path":"packages/happy-app/sources/constants/Typography.ts","reason":"Current Happy font-family abstraction"}
+{"path":"packages/happy-app/sources/app/(app)/settings/appearance.tsx","reason":"Current appearance settings integration seam"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Core sidebar chrome mapping target"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Session-row and selection mapping target"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Composer surface mapping target"}
+{"path":"packages/happy-app/sources/components/SessionActionsPopover.tsx","reason":"Existing contextual-menu placement, scrim, row, and floating-surface seam"}
+{"path":"packages/happy-app/sources/components/FloatingOverlay.tsx","reason":"Existing shared overlay shell candidate"}
+{"path":"packages/happy-app/sources/components/ItemGroup.tsx","reason":"Contained settings-group surface mapping target"}
+{"path":"packages/happy-app/sources/components/CommandPalette/CommandPalette.tsx","reason":"Provisional modal-tier mapping target"}
+{"path":"packages/happy-app/sources/components/SideChatPanel.tsx","reason":"Persistent side-region and repeated composer mapping target"}

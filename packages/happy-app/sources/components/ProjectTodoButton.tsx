@@ -7,12 +7,14 @@ import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
 import { useLocalSetting, useSetting } from '@/sync/storage';
 import { t } from '@/text';
+import type { DesktopTodoRowStyle } from '@/features/studio-visual-style/studioVisualStyle';
 
 interface ProjectTodoButtonProps {
     projectKey?: string;
     showLabel?: boolean;
     style?: StyleProp<ViewStyle>;
     tintColor?: string;
+    presentationStyle?: DesktopTodoRowStyle;
 }
 
 export const ProjectTodoButton = React.memo(({
@@ -20,6 +22,7 @@ export const ProjectTodoButton = React.memo(({
     showLabel = false,
     style,
     tintColor,
+    presentationStyle,
 }: ProjectTodoButtonProps) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
@@ -29,6 +32,7 @@ export const ProjectTodoButton = React.memo(({
     const todos = projectKey ? projectTodos[projectKey] ?? [] : Object.values(projectTodos).flat();
     const pendingCount = todos.filter((todo) => !todo.completed).length;
     const color = tintColor ?? theme.colors.textSecondary;
+    const isStudio = presentationStyle?.visualStyle === 'studio';
 
     const openProjectTodos = React.useCallback((event: { stopPropagation?: () => void }) => {
         event.stopPropagation?.();
@@ -50,6 +54,14 @@ export const ProjectTodoButton = React.memo(({
             style={({ pressed }) => [
                 styles.button,
                 showLabel && styles.labeledButton,
+                isStudio && {
+                    height: presentationStyle.height!,
+                    paddingHorizontal: presentationStyle.horizontalPadding!,
+                    borderRadius: presentationStyle.cornerRadius!,
+                    gap: presentationStyle.contentGap!,
+                    shadowOpacity: 0,
+                    elevation: 0,
+                },
                 pressed && styles.pressed,
                 style,
             ]}

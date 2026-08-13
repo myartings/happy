@@ -11,6 +11,7 @@ import {
 describe('personal development local settings', () => {
     it('uses the intended defaults for every personal UI feature', () => {
         expect(localSettingsDefaults).toMatchObject({
+            visualStyle: 'default',
             devProjectTodosEnabled: true,
             devGithubIssuesEnabled: false,
             devNeedsAttentionSessionsEnabled: true,
@@ -28,6 +29,7 @@ describe('personal development local settings', () => {
     it('adds enabled defaults when loading settings saved by an older client', () => {
         expect(localSettingsParse({ themePreference: 'dark' })).toMatchObject({
             themePreference: 'dark',
+            visualStyle: 'default',
             devProjectTodosEnabled: true,
             devGithubIssuesEnabled: false,
             devNeedsAttentionSessionsEnabled: true,

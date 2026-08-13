@@ -6,14 +6,15 @@ import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
 import type { SessionEnvironmentDisplay } from '@/utils/sessionEnvironmentDisplay';
 
-export function SessionEnvironmentMetadata({ environment }: {
+export function SessionEnvironmentMetadata({ environment, contentInset }: {
     environment: SessionEnvironmentDisplay;
+    contentInset?: number;
 }) {
     const { theme } = useUnistyles();
 
     return (
         <View
-            style={styles.row}
+            style={[styles.row, contentInset !== undefined && { marginLeft: contentInset }]}
             accessible
             accessibilityLabel={[
                 environment.worktreeName ? `Worktree ${environment.worktreeName}` : null,

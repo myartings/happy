@@ -16,6 +16,7 @@ import { useOverlayNav } from '@/-session/sessionOverlayNav';
 import { DEFAULT_APP_ZOOM } from '@/hooks/useTauriZoom';
 import { canRouteForward, canUseRouteBack, getNavigatorCanGoBack } from '@/navigation/browserNavigation';
 import { useBrowserNavigationStore } from '@/navigation/browserNavigationStore';
+import { resolveDesktopSidebarFrame } from '@/features/studio-visual-style/studioVisualStyle';
 
 const TAURI_HEADER_CONTROL_LEFT = Math.ceil(92 / DEFAULT_APP_ZOOM);
 
@@ -26,12 +27,16 @@ export const SidebarNavigator = React.memo(() => {
     const isDesktopLayout = auth.isAuthenticated && isTablet;
     const showSidebar = isDesktopLayout && !zenMode;
     const { width: windowWidth } = useWindowDimensions();
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const inTauri = isTauri();
 
-    // Calculate target drawer width
-    const fullDrawerWidth = React.useMemo(() => {
-        if (!isDesktopLayout) return 280;
-        return Math.min(Math.max(Math.floor(windowWidth * 0.3), 250), 360);
-    }, [windowWidth, isDesktopLayout]);
+    const sidebarFrame = React.useMemo(() => resolveDesktopSidebarFrame({
+        windowWidth,
+        isTauriRuntime: inTauri,
+        requestedStyle: requestedVisualStyle,
+        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+    }), [inTauri, requestedVisualStyle, windowWidth]);
+    const fullDrawerWidth = isDesktopLayout ? sidebarFrame.width : 280;
     const drawerWidth = showSidebar ? fullDrawerWidth : 0;
 
     const drawerNavigationOptions = React.useMemo(() => {
@@ -61,8 +66,9 @@ export const SidebarNavigator = React.memo(() => {
             headerShown: false,
             drawerType: 'permanent' as const,
             drawerStyle: {
-                backgroundColor: 'white',
-                borderRightWidth: 0,
+                backgroundColor: sidebarFrame.sidebarBackground,
+                borderRightWidth: sidebarFrame.dividerWidth,
+                borderRightColor: sidebarFrame.dividerColor,
                 width: drawerWidth,
                 overflow: 'hidden' as const,
             } as any,
@@ -72,15 +78,15 @@ export const SidebarNavigator = React.memo(() => {
             drawerItemStyle: { display: 'none' as const },
             drawerLabelStyle: { display: 'none' as const },
         };
-    }, [isDesktopLayout, drawerWidth]);
+    }, [isDesktopLayout, drawerWidth, sidebarFrame]);
 
     const drawerContent = React.useCallback(
-        () => <SidebarView />,
-        []
+        () => <SidebarView sidebarFrame={sidebarFrame} />,
+        [sidebarFrame]
     );
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: sidebarFrame.canvasBackground }}>
             <Drawer
                 screenOptions={drawerNavigationOptions}
                 drawerContent={isDesktopLayout ? drawerContent : undefined}
