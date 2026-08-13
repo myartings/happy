@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-sidebar-unboxed-groups",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent integrates, builds the packaged desktop client, captures the sidebar, and requests explicit user visual acceptance.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly approved revising the Studio sidebar by removing the large white/card shell and keeping a lightweight unboxed list; durable criteria are in docs/specs/studio-sidebar-unboxed-groups.md.",
+      "updated": "2026-08-13T07:02:00+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "No unresolved material decision: preserve functional layout and interactions, change only packaged-desktop Studio group/header surfaces, and return the integrated screenshot to the user.",
+      "updated": "2026-08-13T07:02:00+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature is presentation-only and isolated to feature/studio-sidebar; allowed product files are the Studio group presentation policy, ActiveSessionsGroupCompact, ProjectGroup, and focused tests; parent owns integration.",
+      "updated": "2026-08-13T07:02:01+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "No configured risk trigger: no authentication, authorization, protocol, persistence, synchronization, destructive operation, or release change.",
+      "updated": "2026-08-13T07:02:01+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Added a pure Studio sidebar group-presentation policy and wired ActiveSessionsGroupCompact plus ProjectGroup so the unboxed path never inherits default card chrome; 17 focused tests and happy-app typecheck pass.",
+      "updated": "2026-08-13T07:04:57+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Focused 17/17 tests, complete Happy App 1116/1116 tests, happy-app typecheck, diff check, and four workflow checks pass. Parent assignment explicitly delegates packaged screenshot and user visual acceptance to integration.",
+      "updated": "2026-08-13T07:07:16+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking correctness, compatibility, security, or maintainability issue: Default/non-Tauri remain card-based, Studio alone skips default card chrome, and all JSX order/callbacks/controls remain unchanged.",
+      "updated": "2026-08-13T07:07:16+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records exact verification, whole-diff review, rollback, structured child handoff, and parent-owned packaged screenshot/user acceptance follow-up.",
+      "updated": "2026-08-13T07:08:02+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T06:59:55+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T07:02:00+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly approved revising the Studio sidebar by removing the large white/card shell and keeping a lightweight unboxed list; durable criteria are in docs/specs/studio-sidebar-unboxed-groups.md."
+    },
+    {
+      "at": "2026-08-13T07:02:00+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "No unresolved material decision: preserve functional layout and interactions, change only packaged-desktop Studio group/header surfaces, and return the integrated screenshot to the user."
+    },
+    {
+      "at": "2026-08-13T07:02:01+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature is presentation-only and isolated to feature/studio-sidebar; allowed product files are the Studio group presentation policy, ActiveSessionsGroupCompact, ProjectGroup, and focused tests; parent owns integration."
+    },
+    {
+      "at": "2026-08-13T07:02:01+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "No configured risk trigger: no authentication, authorization, protocol, persistence, synchronization, destructive operation, or release change."
+    },
+    {
+      "at": "2026-08-13T07:02:35+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add a focused RED test for Studio-only unboxed group policy, wire both sidebar group renderers, then run targeted checks."
+    },
+    {
+      "at": "2026-08-13T07:04:57+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Added a pure Studio sidebar group-presentation policy and wired ActiveSessionsGroupCompact plus ProjectGroup so the unboxed path never inherits default card chrome; 17 focused tests and happy-app typecheck pass."
+    },
+    {
+      "at": "2026-08-13T07:04:57+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run deterministic workflow checks and whole-diff review; parent retains packaged screenshot acceptance."
+    },
+    {
+      "at": "2026-08-13T07:05:36+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T07:07:16+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Focused 17/17 tests, complete Happy App 1116/1116 tests, happy-app typecheck, diff check, and four workflow checks pass. Parent assignment explicitly delegates packaged screenshot and user visual acceptance to integration."
+    },
+    {
+      "at": "2026-08-13T07:07:16+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking correctness, compatibility, security, or maintainability issue: Default/non-Tauri remain card-based, Studio alone skips default card chrome, and all JSX order/callbacks/controls remain unchanged."
+    },
+    {
+      "at": "2026-08-13T07:07:16+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, archive with commit pending, pass staged workflow CI, and make the authorized local child commit."
+    },
+    {
+      "at": "2026-08-13T07:08:02+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records exact verification, whole-diff review, rollback, structured child handoff, and parent-owned packaged screenshot/user acceptance follow-up."
+    },
+    {
+      "at": "2026-08-13T07:08:02+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Removed Studio sidebar group card shells through an explicit unboxed presentation path; 1116 Happy App tests and workflow checks pass.; commit: pending; follow-up: Parent integrates, builds the packaged desktop client, captures the sidebar, and requests explicit user visual acceptance."
+    }
+  ],
+  "updated": "2026-08-13T07:08:02+00:00",
+  "archivedAt": "2026-08-13T07:08:02+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Removed Studio sidebar group card shells through an explicit unboxed presentation path; 1116 Happy App tests and workflow checks pass.",
+  "archiveFollowUp": "Parent integrates, builds the packaged desktop client, captures the sidebar, and requests explicit user visual acceptance."
+}

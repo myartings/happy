@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-semantic-text",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent integrates commit, preserves parent ACTIVE pointer, captures light/dark screenshots, and requests user visual acceptance",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/studio-semantic-text.md defines observable semantic/ANSI behavior, parallel boundary, AC1-AC8, and accepted uncertainty; user explicitly requested parallel feature development and documentation update",
+      "updated": "2026-08-12T05:44:41+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-semantic-text/decisions.md D1-D9 resolve naming, desktop scope, semantic-first model, SGR allowlist, preservation, visual reference, checkpoint integration, first slice, and concurrent file ownership",
+      "updated": "2026-08-12T05:44:41+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/tasks/studio-semantic-text-tasks.md separates independent T1-T4 into new self-contained files from checkpoint-dependent T5-T6 and reserves theme.ts, unistyles.ts, visual-style settings/resolver, and UI mapping for later integration",
+      "updated": "2026-08-12T05:44:41+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared-with-controls: docs/specs/studio-semantic-text.md limits parsing to pure display-only SGR, neutralizes non-SGR/OSC behavior, bounds run growth, forbids side effects, and requires adversarial tests in T2-T3",
+      "updated": "2026-08-12T05:44:41+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "T1-T5 child batch implemented within owned semantic-text, MarkdownView, and MessageView seams; 7 focused files/25 tests, Happy app typecheck, diff check, and workflow validation pass",
+      "updated": "2026-08-13T05:37:54+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Final verification passed: 7 focused Vitest files/25 tests, happy-app typecheck, git diff --check, workflow validation; Studio overrides are Tauri-only and trusted-link behavior remains bounded",
+      "updated": "2026-08-13T05:38:59+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found and corrected one misleading unsafe-link styling issue; rerun is green, no blocking findings remain, and changed product files stay within semantic-text/MarkdownView/MessageView ownership",
+      "updated": "2026-08-13T05:39:09+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md and final session handoff document merge-ready child scope, exact verification, rollback, tool-shell follow-up, verified parent visual-acceptance handoff, and no child parity claim",
+      "updated": "2026-08-13T05:40:44+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-12T05:25:46+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-12T05:44:41+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/studio-semantic-text.md defines observable semantic/ANSI behavior, parallel boundary, AC1-AC8, and accepted uncertainty; user explicitly requested parallel feature development and documentation update"
+    },
+    {
+      "at": "2026-08-12T05:44:41+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-semantic-text/decisions.md D1-D9 resolve naming, desktop scope, semantic-first model, SGR allowlist, preservation, visual reference, checkpoint integration, first slice, and concurrent file ownership"
+    },
+    {
+      "at": "2026-08-12T05:44:41+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared-with-controls: docs/specs/studio-semantic-text.md limits parsing to pure display-only SGR, neutralizes non-SGR/OSC behavior, bounds run growth, forbids side effects, and requires adversarial tests in T2-T3"
+    },
+    {
+      "at": "2026-08-12T05:44:41+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/tasks/studio-semantic-text-tasks.md separates independent T1-T4 into new self-contained files from checkpoint-dependent T5-T6 and reserves theme.ts, unistyles.ts, visual-style settings/resolver, and UI mapping for later integration"
+    },
+    {
+      "at": "2026-08-12T05:44:41+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement T1 semantic-role contract in new self-contained files with focused tests; do not edit theme-owned shared files"
+    },
+    {
+      "at": "2026-08-13T05:37:54+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T5 child batch implemented within owned semantic-text, MarkdownView, and MessageView seams; 7 focused files/25 tests, Happy app typecheck, diff check, and workflow validation pass"
+    },
+    {
+      "at": "2026-08-13T05:37:54+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify acceptance criteria, desktop-only gating, Default/mobile preservation, and complete diff"
+    },
+    {
+      "at": "2026-08-13T05:38:59+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Final verification passed: 7 focused Vitest files/25 tests, happy-app typecheck, git diff --check, workflow validation; Studio overrides are Tauri-only and trusted-link behavior remains bounded"
+    },
+    {
+      "at": "2026-08-13T05:39:09+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found and corrected one misleading unsafe-link styling issue; rerun is green, no blocking findings remain, and changed product files stay within semantic-text/MarkdownView/MessageView ownership"
+    },
+    {
+      "at": "2026-08-13T05:39:09+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Document merge-ready child batch and delegate visual acceptance to parent integration"
+    },
+    {
+      "at": "2026-08-13T05:40:44+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md and final session handoff document merge-ready child scope, exact verification, rollback, tool-shell follow-up, verified parent visual-acceptance handoff, and no child parity claim"
+    },
+    {
+      "at": "2026-08-13T05:40:44+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Complete merge-ready Studio semantic text child batch; visual acceptance delegated to parent integration; commit: pending; follow-up: Parent integrates commit, preserves parent ACTIVE pointer, captures light/dark screenshots, and requests user visual acceptance"
+    }
+  ],
+  "updated": "2026-08-13T05:40:44+00:00",
+  "archivedAt": "2026-08-13T05:40:44+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Complete merge-ready Studio semantic text child batch; visual acceptance delegated to parent integration",
+  "archiveFollowUp": "Parent integrates commit, preserves parent ACTIVE pointer, captures light/dark screenshots, and requests user visual acceptance"
+}

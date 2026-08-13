@@ -27,9 +27,13 @@ import { ProviderIcon } from './ProviderIcon';
 import { isTauri } from '@/utils/isTauri';
 import {
     resolveDesktopSectionHeaderStyle,
-    resolveDesktopSessionRowStyle,
     type DesktopSessionRowStyle,
+    type VisualStyle,
 } from '@/features/studio-visual-style/studioVisualStyle';
+import {
+    resolveSidebarSessionRowStyle,
+    resolveStudioSidebarRowChrome,
+} from '@/features/studio-visual-style/studioSidebarGroupPresentation';
 
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
@@ -199,11 +203,13 @@ export function SessionsList({
     bottomContentInset = 128,
     onScroll,
     searchQuery = '',
+    sidebarVisualStyle,
 }: {
     topContentInset?: number;
     bottomContentInset?: number;
     onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     searchQuery?: string;
+    sidebarVisualStyle?: VisualStyle;
 } = {}) {
     const styles = stylesheet;
     const safeArea = useSafeAreaInsets();
@@ -211,16 +217,17 @@ export function SessionsList({
     const pathname = usePathname();
     const isTablet = useIsTablet();
     const requestedVisualStyle = useLocalSetting('visualStyle');
-    const sessionRowStyle = React.useMemo(() => resolveDesktopSessionRowStyle({
-        isTauriRuntime: isTauri(),
+    const inTauri = isTauri();
+    const sessionRowStyle = React.useMemo(() => resolveSidebarSessionRowStyle({
+        sidebarVisualStyle,
+        isTauriRuntime: inTauri,
         requestedStyle: requestedVisualStyle,
         previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-    }), [requestedVisualStyle]);
+    }), [inTauri, requestedVisualStyle, sidebarVisualStyle]);
     const sectionHeaderStyle = React.useMemo(() => resolveDesktopSectionHeaderStyle({
-        isTauriRuntime: isTauri(),
-        requestedStyle: requestedVisualStyle,
-        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-    }), [requestedVisualStyle]);
+        isTauriRuntime: sessionRowStyle.visualStyle === 'studio',
+        requestedStyle: sessionRowStyle.visualStyle,
+    }), [sessionRowStyle.visualStyle]);
     const isStudioSectionHeader = sectionHeaderStyle.visualStyle === 'studio';
     // Selection is derived once from pathname so the data array stays stable
     // across navigations. This keeps FlatList virtualization intact: only
@@ -542,6 +549,10 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
     const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
     const styles = stylesheet;
     const isStudio = sessionRowStyle.visualStyle === 'studio';
+    const rowChrome = resolveStudioSidebarRowChrome(sessionRowStyle, {
+        selected: !!selected,
+        showDivider: !isLast && !isSingle,
+    });
     const navigateToSession = useNavigateToSession();
     const [actionsAnchor, setActionsAnchor] = React.useState<SessionActionsAnchor | null>(null);
     const baseStatus = STATUS_CONFIG[session.state];
@@ -588,16 +599,19 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
 
     return (
         <View style={[
-            styles.sessionItemContainer,
-            isSingle ? styles.sessionItemContainerSingle :
-                isFirst ? styles.sessionItemContainerFirst :
-                    isLast ? styles.sessionItemContainerLast : {},
+            rowChrome.useDefaultContainerSurface && styles.sessionItemContainer,
+            rowChrome.useGroupPositionShape && (
+                isSingle ? styles.sessionItemContainerSingle :
+                    isFirst ? styles.sessionItemContainerFirst :
+                        isLast ? styles.sessionItemContainerLast : {}
+            ),
             isStudio && {
                 marginHorizontal: sessionRowStyle.horizontalInset!,
                 marginBottom: isLast || isSingle ? 8 : sessionRowStyle.gap!,
                 borderWidth: 0,
-                borderRadius: sessionRowStyle.cornerRadius!,
+                borderRadius: 0,
                 backgroundColor: 'transparent',
+                overflow: rowChrome.clipToRowShape ? 'hidden' : 'visible',
                 shadowOpacity: 0,
                 elevation: 0,
             },
@@ -605,15 +619,19 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
         <Pressable
             style={[
                 styles.sessionItem,
-                selected && styles.sessionItemSelected,
-                isSingle ? styles.sessionItemSingle :
-                    isFirst ? styles.sessionItemFirst :
-                        isLast ? styles.sessionItemLast : {},
+                rowChrome.backgroundRole === 'selected' && !isStudio && styles.sessionItemSelected,
+                rowChrome.useGroupPositionShape && (
+                    isSingle ? styles.sessionItemSingle :
+                        isFirst ? styles.sessionItemFirst :
+                            isLast ? styles.sessionItemLast : {}
+                ),
                 isStudio && {
                     height: sessionRowStyle.height!,
                     paddingHorizontal: sessionRowStyle.horizontalPadding!,
-                    borderRadius: sessionRowStyle.cornerRadius!,
-                    backgroundColor: selected ? sessionRowStyle.selectedBackground! : 'transparent',
+                    borderRadius: rowChrome.cornerRadius!,
+                    backgroundColor: rowChrome.backgroundRole === 'selected'
+                        ? sessionRowStyle.selectedBackground!
+                        : 'transparent',
                 },
             ]}
             onPress={handlePress}
@@ -642,7 +660,12 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                     <Text style={[
                         styles.sessionTitle,
                         status.isConnected ? styles.sessionTitleConnected : styles.sessionTitleDisconnected,
-                        isStudio && { fontSize: 14, lineHeight: 18 },
+                        isStudio && {
+                            fontSize: sessionRowStyle.titleFontSize!,
+                            lineHeight: sessionRowStyle.titleLineHeight!,
+                            fontWeight: sessionRowStyle.titleFontWeight!,
+                            ...Typography.default('semiBold'),
+                        },
                     ]} numberOfLines={1}>
                         {session.name}
                     </Text>
@@ -655,18 +678,18 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                 {showSessionModel && session.identityLine ? (
                     <View style={styles.sessionSubtitleRow}>
                         <ProviderIcon kind={session.providerKind} size={13} />
-                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
+                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: sessionRowStyle.primaryMetadataFontSize!, lineHeight: 14 }]} numberOfLines={1}>
                             {session.identityLine}
                         </Text>
                     </View>
                 ) : session.path ? (
                     <View style={styles.sessionSubtitleRow}>
-                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
+                        <Text style={[styles.sessionSubtitle, isStudio && { fontSize: sessionRowStyle.primaryMetadataFontSize!, lineHeight: 14 }]} numberOfLines={1}>
                             {session.path.split(/[/\\]/).filter(Boolean).pop()}
                         </Text>
                     </View>
                 ) : (
-                    <Text style={[styles.sessionSubtitle, isStudio && { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
+                    <Text style={[styles.sessionSubtitle, isStudio && { fontSize: sessionRowStyle.primaryMetadataFontSize!, lineHeight: 14 }]} numberOfLines={1}>
                         {session.subtitle}
                     </Text>
                 )}
@@ -678,7 +701,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                     <Text style={[
                         styles.statusText,
                         { color: status.color },
-                        isStudio && { fontSize: 11, lineHeight: 14 },
+                        isStudio && { fontSize: sessionRowStyle.secondaryMetadataFontSize!, lineHeight: 13 },
                     ]}>
                         {showSessionModel && session.modelName ? `${session.modelName} · ` : ''}{statusText}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
                     </Text>

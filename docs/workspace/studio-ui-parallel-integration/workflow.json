@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-ui-parallel-integration",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User authorized the current Happy workflow parallel design: preserve functional layout, apply accepted Codex-derived Studio v2 details boldly, and require user screenshot acceptance rather than one-shot completion.",
+      "updated": "2026-08-13T05:51:50+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "Decisions recorded: four-slot regional worktree execution, exclusive ownership, region-local style adapters, ordered integration, local-only commits, and parent-owned visual gate.",
+      "updated": "2026-08-13T05:51:50+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Batch plan defines five disjoint product regions, allowed ownership, shared-file rules, merge order, validation, and stop conditions; integration owns build/screenshots.",
+      "updated": "2026-08-13T05:51:50+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Desktop presentation-only integration; no auth, protocol, persistence, backend, mobile, deployment, or destructive product changes.",
+      "updated": "2026-08-13T05:51:50+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Integrated five verified regional commits plus two user-directed revision batches; packaged wiring corrections produce unboxed ordinary sidebar rows and an actual 640pt Studio Command Palette shell; user explicitly accepted both final screenshots.",
+      "updated": "2026-08-13T07:54:34+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures",
+      "updated": "2026-08-13T07:58:55+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review from fb26bb46 through final integration plus active workflow found no blocking product findings; Studio remains packaged-Tauri gated, behavior seams are preserved, and the sole EOF whitespace issue was fixed.",
+      "updated": "2026-08-13T08:03:54+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish receipt records accepted packaged screenshots, formal 8-command zero-failure check, no-blocker whole-diff review, recoverable installed-app backups, multi-session summary, and local-dev/no-push handoff.",
+      "updated": "2026-08-13T08:05:15+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T05:13:44+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T05:51:50+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User authorized the current Happy workflow parallel design: preserve functional layout, apply accepted Codex-derived Studio v2 details boldly, and require user screenshot acceptance rather than one-shot completion."
+    },
+    {
+      "at": "2026-08-13T05:51:50+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "Decisions recorded: four-slot regional worktree execution, exclusive ownership, region-local style adapters, ordered integration, local-only commits, and parent-owned visual gate."
+    },
+    {
+      "at": "2026-08-13T05:51:50+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Batch plan defines five disjoint product regions, allowed ownership, shared-file rules, merge order, validation, and stop conditions; integration owns build/screenshots."
+    },
+    {
+      "at": "2026-08-13T05:51:50+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Desktop presentation-only integration; no auth, protocol, persistence, backend, mobile, deployment, or destructive product changes."
+    },
+    {
+      "at": "2026-08-13T06:57:18+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Revise the two screenshot-rejected regions in parallel: unboxed sidebar groups and denser Command Palette, then integrate, rebuild, capture, and return for user visual acceptance."
+    },
+    {
+      "at": "2026-08-13T07:54:34+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Integrated five verified regional commits plus two user-directed revision batches; packaged wiring corrections produce unboxed ordinary sidebar rows and an actual 640pt Studio Command Palette shell; user explicitly accepted both final screenshots."
+    },
+    {
+      "at": "2026-08-13T07:54:34+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final complete Happy App test family, typecheck, workflow checks, visual evidence validation, and whole-diff review before finish."
+    },
+    {
+      "at": "2026-08-13T07:58:55+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T08:03:54+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review from fb26bb46 through final integration plus active workflow found no blocking product findings; Studio remains packaged-Tauri gated, behavior seams are preserved, and the sole EOF whitespace issue was fixed."
+    },
+    {
+      "at": "2026-08-13T08:03:54+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize receipts, archive with commit pending, stage the complete integration atomically, pass staged workflow CI, commit, and merge locally into dev without push."
+    },
+    {
+      "at": "2026-08-13T08:05:15+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish receipt records accepted packaged screenshots, formal 8-command zero-failure check, no-blocker whole-diff review, recoverable installed-app backups, multi-session summary, and local-dev/no-push handoff."
+    },
+    {
+      "at": "2026-08-13T08:05:15+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Integrated and user-accepted the Codex-derived Studio desktop sidebar, conversation, semantic text, composer, and overlay presentation; corrected two packaged wiring failures; full App/Server checks and whole-diff review pass.; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-13T08:05:15+00:00",
+  "archivedAt": "2026-08-13T08:05:15+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Integrated and user-accepted the Codex-derived Studio desktop sidebar, conversation, semantic text, composer, and overlay presentation; corrected two packaged wiring failures; full App/Server checks and whole-diff review pass.",
+  "archiveFollowUp": "None"
+}

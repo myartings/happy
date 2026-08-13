@@ -29,6 +29,10 @@ import { SessionEnvironmentMetadata } from './SessionEnvironmentMetadata';
 import { resolveSessionEnvironmentDisplay } from '@/utils/sessionEnvironmentDisplay';
 import { resolveSessionRowDisplayPolicy, type SessionRowDisplayContext } from '@/utils/sessionRowDisplayContext';
 import type { DesktopSessionRowStyle } from '@/features/studio-visual-style/studioVisualStyle';
+import {
+    resolveStudioSidebarGroupPresentation,
+    resolveStudioSidebarRowChrome,
+} from '@/features/studio-visual-style/studioSidebarGroupPresentation';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -184,6 +188,12 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
     const styles = stylesheet;
     const machines = useAllMachines();
     const sortActiveSessionsGlobally = useSetting('sortActiveSessionsGlobally');
+    const groupPresentation = resolveStudioSidebarGroupPresentation(sessionRowStyle);
+    const groupContainerStyle = [
+        groupPresentation === 'card' && styles.projectCard,
+        groupPresentation === 'unboxed' && styles.projectGroupUnboxed,
+        groupPresentation === 'card' && !sessionRowStyle.showGroupShellBoundary && styles.projectCardWithoutBoundary,
+    ];
 
     const machineGroups = React.useMemo(() => buildActiveSessionDisplayGroups(
         sessions,
@@ -195,11 +205,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
     if (sortActiveSessionsGlobally) {
         return (
             <View style={styles.container}>
-                <View style={[
-                    styles.projectCard,
-                    sessionRowStyle.visualStyle === 'studio' && styles.projectCardStudio,
-                    !sessionRowStyle.showGroupShellBoundary && styles.projectCardWithoutBoundary,
-                ]}>
+                <View style={groupContainerStyle}>
                     {sessions.map((session, index) => (
                         <CompactSessionRow
                             key={session.id}
@@ -240,11 +246,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
                                         session={firstSession}
                                         displayPath={projectGroup.displayPath}
                                     />
-                                    <View style={[
-                                        styles.projectCard,
-                                        sessionRowStyle.visualStyle === 'studio' && styles.projectCardStudio,
-                                        !sessionRowStyle.showGroupShellBoundary && styles.projectCardWithoutBoundary,
-                                    ]}>
+                                    <View style={groupContainerStyle}>
                                         {projectGroup.sessions.map((session, index) => (
                                             <CompactSessionRow
                                                 key={session.id}
@@ -277,6 +279,10 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const isStudio = sessionRowStyle.visualStyle === 'studio';
+    const rowChrome = resolveStudioSidebarRowChrome(sessionRowStyle, {
+        selected: !!selected,
+        showDivider: !!showBorder,
+    });
     const baseStatus = STATUS_CONFIG[session.state];
     const navigateToSession = useNavigateToSession();
     const showActiveSessionRuntime = useLocalSetting('devShowActiveSessionRuntimeEnabled');
@@ -380,8 +386,8 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
         <Pressable
             style={[
                 styles.sessionRow,
-                showBorder && !isStudio && styles.sessionRowWithBorder,
-                selected && !isStudio && styles.sessionRowSelected,
+                rowChrome.showDivider && styles.sessionRowWithBorder,
+                rowChrome.backgroundRole === 'selected' && !isStudio && styles.sessionRowSelected,
                 isStudio && {
                     height: sessionRowStyle.height!,
                     minHeight: sessionRowStyle.height!,
@@ -389,9 +395,12 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     marginBottom: sessionRowStyle.gap!,
                     paddingHorizontal: sessionRowStyle.horizontalPadding!,
                     paddingVertical: sessionRowStyle.verticalPadding!,
-                    borderRadius: sessionRowStyle.cornerRadius!,
+                    borderRadius: rowChrome.cornerRadius!,
                     borderWidth: 0,
-                    backgroundColor: selected ? sessionRowStyle.selectedBackground! : 'transparent',
+                    backgroundColor: rowChrome.backgroundRole === 'selected'
+                        ? sessionRowStyle.selectedBackground!
+                        : 'transparent',
+                    overflow: rowChrome.clipToRowShape ? 'hidden' : 'visible',
                     shadowOpacity: 0,
                     elevation: 0,
                 },
@@ -407,7 +416,12 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         style={[
                             styles.sessionTitle,
                             status.isConnected ? styles.sessionTitleConnected : styles.sessionTitleDisconnected,
-                            isStudio && { fontSize: 14, lineHeight: 18 },
+                            isStudio && {
+                                fontSize: sessionRowStyle.titleFontSize!,
+                                lineHeight: sessionRowStyle.titleLineHeight!,
+                                fontWeight: sessionRowStyle.titleFontWeight!,
+                                ...Typography.default('semiBold'),
+                            },
                         ]}
                         numberOfLines={isStudio ? 1 : 2}
                     >
@@ -431,11 +445,13 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     <SessionEnvironmentMetadata
                         environment={environment}
                         contentInset={isStudio ? sessionRowStyle.metadataInset! : undefined}
+                        fontSize={isStudio ? sessionRowStyle.primaryMetadataFontSize! : undefined}
                     />
                 ) : displayPolicy.environmentPlacement === 'branch-only' && environment?.branchName ? (
                     <SessionEnvironmentMetadata
                         environment={{ worktreeName: null, branchName: environment.branchName }}
                         contentInset={isStudio ? sessionRowStyle.metadataInset! : undefined}
+                        fontSize={isStudio ? sessionRowStyle.primaryMetadataFontSize! : undefined}
                     />
                 ) : null}
                 {showActiveSessionRuntime ? (
@@ -448,6 +464,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         identityLine={showSessionModel ? session.identityLine : null}
                         activitySummary={session.activitySummary}
                         contentInset={isStudio ? sessionRowStyle.metadataInset! : undefined}
+                        fontSize={isStudio ? sessionRowStyle.secondaryMetadataFontSize! : undefined}
                     />
                 ) : showSessionModel && session.identityLine ? (
                     <View style={[
@@ -455,7 +472,10 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         isStudio && { marginLeft: sessionRowStyle.metadataInset! },
                     ]}>
                         <ProviderIcon kind={session.providerKind} size={11} />
-                        <Text style={styles.sessionIdentity} numberOfLines={1}>
+                        <Text style={[
+                            styles.sessionIdentity,
+                            isStudio && { fontSize: sessionRowStyle.secondaryMetadataFontSize! },
+                        ]} numberOfLines={1}>
                             {session.identityLine}{showSessionModel && session.modelName ? ` · ${session.modelName}` : ''}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
                         </Text>
                     </View>
@@ -615,15 +635,9 @@ const stylesheet = StyleSheet.create((theme) => ({
         shadowRadius: 0,
         elevation: Platform.select({ web: 1, default: 0 }),
     },
-    projectCardStudio: {
-        backgroundColor: 'transparent',
-        marginHorizontal: 0,
+    projectGroupUnboxed: {
         marginBottom: 4,
-        borderRadius: 0,
-        borderWidth: 0,
         overflow: 'visible',
-        shadowOpacity: 0,
-        elevation: 0,
     },
     projectCardWithoutBoundary: {
         borderColor: 'transparent',

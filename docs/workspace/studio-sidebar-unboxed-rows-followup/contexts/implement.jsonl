@@ -1,0 +1,8 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-sidebar-unboxed-rows-followup.md","reason":"Accepted failed-reproduction correction contract"}
+{"path":"docs/tasks/studio-sidebar-unboxed-rows-followup-tasks.md","reason":"Delegated batch and ownership boundary"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Authoritative resolved sidebar visual style entry point"}
+{"path":"packages/happy-app/sources/components/MainView.tsx","reason":"Narrow host seam between sidebar frame and session list"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Historical row renderer and current independent style resolution"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Active and project/workspace compact row renderer"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarGroupPresentation.ts","reason":"Existing group presentation feature boundary to extend with row chrome"}

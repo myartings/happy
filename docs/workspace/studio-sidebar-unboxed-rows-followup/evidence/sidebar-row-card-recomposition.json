@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "happy-studio-sidebar-row-card-recomposition-2026-08-13",
+  "scope": {
+    "level": "component",
+    "name": "Happy Studio sidebar session groups",
+    "screenId": "desktop-main-session",
+    "componentId": "sidebar-session-list",
+    "state": "light appearance, selected active session, revision-2 integration",
+    "renderEnvironment": {
+      "platform": "macOS",
+      "osVersion": "26.5.2",
+      "device": "Happy (dev) packaged desktop window",
+      "width": 1470,
+      "height": 875,
+      "scale": 2,
+      "appearance": "light"
+    }
+  },
+  "claims": [
+    {
+      "id": "claim-contiguous-white-row-card",
+      "category": "component",
+      "subject": "Active and earlier sidebar session groups",
+      "observation": "Ordinary child rows form contiguous white blocks with visible outer corner rounding and separators, reproducing the same group-card silhouette after the explicit outer shell was removed.",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": ["revision-2-screenshot"],
+      "limitations": ["Hover and focus states are not shown."]
+    },
+    {
+      "id": "claim-style-source-split",
+      "category": "component",
+      "subject": "Sidebar visual-style propagation",
+      "observation": "The sidebar frame passes its resolved Studio style into SidebarView, but SessionsList independently resolves row style from runtime and local inputs instead of inheriting that frame decision.",
+      "status": "inferred",
+      "confidence": "high",
+      "evidenceRefs": ["sidebar-view-source", "sessions-list-source", "revision-2-screenshot"],
+      "implementationCandidate": "Propagate the resolved frame visual style through the sidebar host seam into SessionsList.",
+      "conflicts": ["Static Studio row overrides intend transparency, while reproduction truth shows Default-like row chrome."],
+      "limitations": ["The exact runtime input that diverged is not exposed in the screenshot."]
+    },
+    {
+      "id": "claim-default-chrome-composition",
+      "category": "radius",
+      "subject": "Historical and compact row chrome",
+      "observation": "Row renderers compose default container/position styles before conditional Studio overrides, so surface, position radius, clipping, and divider behavior are not represented by one enforceable policy.",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": ["sessions-list-source", "compact-row-source"],
+      "implementationCandidate": "Use a shared tested row-chrome decision and do not apply default chrome styles on Studio paths."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "revision-2-screenshot",
+      "type": "screenshot",
+      "truthClass": "reproduction",
+      "quality": "baseline",
+      "path": "/Users/myartings/Sync/tmp/happy-studio-parallel-2026-08-13/revision-2/sidebar-unboxed.png",
+      "renderEnvironment": {
+        "platform": "macOS",
+        "osVersion": "26.5.2",
+        "device": "Happy (dev) packaged desktop window",
+        "width": 1470,
+        "height": 875,
+        "scale": 2,
+        "appearance": "light"
+      },
+      "sha256": "07e1d0b771d4936e2cd5b02f8df80f9dc8aab240243fa78265e0966fed9ec6e6",
+      "notes": "Lossless window capture with metadata-backed 2x scale."
+    },
+    {
+      "id": "sidebar-view-source",
+      "type": "runtime-source",
+      "truthClass": "static",
+      "quality": "analysis",
+      "path": "/Users/myartings/workspace/happy/.dev/worktree/codex-visual-theme/packages/happy-app/sources/components/SidebarView.tsx",
+      "notes": "Receives the resolved DesktopSidebarFrame and derives Studio top-control styling from it."
+    },
+    {
+      "id": "sessions-list-source",
+      "type": "runtime-source",
+      "truthClass": "static",
+      "quality": "analysis",
+      "path": "/Users/myartings/workspace/happy/.dev/worktree/codex-visual-theme/packages/happy-app/sources/components/SessionsList.tsx",
+      "notes": "Independently resolves session-row style and composes default historical-row container/position chrome."
+    },
+    {
+      "id": "compact-row-source",
+      "type": "runtime-source",
+      "truthClass": "static",
+      "quality": "analysis",
+      "path": "/Users/myartings/workspace/happy/.dev/worktree/codex-visual-theme/packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx",
+      "notes": "Compact rows conditionally override individual chrome without a shared row-chrome policy."
+    }
+  ],
+  "quality": {
+    "overall": "high",
+    "limitations": [
+      "Only light appearance and one window size are captured.",
+      "Hover, keyboard focus, search filtering, collapsed projects, and mobile states are not visible.",
+      "The exact divergent runtime style input is inferred from screenshot/source disagreement rather than logged."
+    ],
+    "conflicts": [
+      "Static Studio overrides describe transparent ordinary rows, but the packaged reproduction shows Default-like contiguous card chrome."
+    ],
+    "missingEvidence": [
+      "Post-fix same-state packaged screenshot",
+      "Hover/focus screenshot",
+      "Dark appearance screenshot"
+    ]
+  },
+  "notes": "This record describes the failed reproduction and source disagreement; product acceptance remains with the parent/user loop."
+}

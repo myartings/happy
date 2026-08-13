@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-sidebar-unboxed-groups/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-sidebar-unboxed-groups.md","reason":"Acceptance criteria to verify"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.test.ts","reason":"Existing Studio-only and non-Tauri gating coverage"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarGroupPresentation.test.ts","reason":"Focused group-presentation behavior coverage"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Verify active-session renderer wiring and unchanged interactions"}
+{"path":"packages/happy-app/sources/components/ProjectGroup.tsx","reason":"Verify project renderer wiring and unchanged interactions"}

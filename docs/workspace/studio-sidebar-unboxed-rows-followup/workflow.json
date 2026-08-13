@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-sidebar-unboxed-rows-followup",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent cherry-picks, rebuilds the packaged desktop client, captures the same sidebar state, and requests explicit user visual acceptance.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Parent reported revision-2 packaged screenshot failure: child rows still recompose a large white card. Durable corrective criteria and evidence map are in docs/specs/studio-sidebar-unboxed-rows-followup.md.",
+      "updated": "2026-08-13T07:31:53+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "No unresolved product decision: inherit the resolved sidebar frame style, remove ordinary Studio row surface/radius/clipping/dividers, preserve bounded selected fill and all non-Studio behavior.",
+      "updated": "2026-08-13T07:31:53+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready Feature correction in isolated feature/studio-sidebar worktree; scope is one pure row-chrome contract plus narrow SidebarView/MainView/SessionsList propagation and both row renderers; parent owns integration.",
+      "updated": "2026-08-13T07:31:53+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only client change with no auth, permissions, protocol, persistence, synchronization, destructive, protected-path, or release trigger.",
+      "updated": "2026-08-13T07:31:53+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Implemented authoritative SidebarView-to-SessionsList style propagation and a shared row-chrome policy consumed by compact and historical rows; 24 focused policy/wiring tests, typecheck, and diff check pass.",
+      "updated": "2026-08-13T07:36:03+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "24 focused policy/wiring tests, complete Happy App 1123/1123 tests, typecheck, diff check, visual evidence validation, and four workflow checks pass. Parent assignment explicitly retains post-fix packaged screenshot/user acceptance.",
+      "updated": "2026-08-13T07:37:53+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue: authoritative override is restricted to runtime-gated SidebarView, phone/non-Tauri omit it, Default chrome is preserved, and Studio ordinary rows cannot apply default surfaces/position shapes/dividers.",
+      "updated": "2026-08-13T07:37:53+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records the failed first screenshot, corrected root cause, exact tests/checks, whole-diff review, rollback, structured handoff, and explicitly delegated parent-owned packaged acceptance gap.",
+      "updated": "2026-08-13T07:38:44+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T07:29:27+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T07:31:53+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Parent reported revision-2 packaged screenshot failure: child rows still recompose a large white card. Durable corrective criteria and evidence map are in docs/specs/studio-sidebar-unboxed-rows-followup.md."
+    },
+    {
+      "at": "2026-08-13T07:31:53+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "No unresolved product decision: inherit the resolved sidebar frame style, remove ordinary Studio row surface/radius/clipping/dividers, preserve bounded selected fill and all non-Studio behavior."
+    },
+    {
+      "at": "2026-08-13T07:31:53+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready Feature correction in isolated feature/studio-sidebar worktree; scope is one pure row-chrome contract plus narrow SidebarView/MainView/SessionsList propagation and both row renderers; parent owns integration."
+    },
+    {
+      "at": "2026-08-13T07:31:53+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only client change with no auth, permissions, protocol, persistence, synchronization, destructive, protected-path, or release trigger."
+    },
+    {
+      "at": "2026-08-13T07:31:54+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED row-chrome and style-propagation tests, then implement one authoritative sidebar style path and explicit Studio row chrome."
+    },
+    {
+      "at": "2026-08-13T07:36:03+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented authoritative SidebarView-to-SessionsList style propagation and a shared row-chrome policy consumed by compact and historical rows; 24 focused policy/wiring tests, typecheck, and diff check pass."
+    },
+    {
+      "at": "2026-08-13T07:36:03+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run the complete Happy App family, configured workflow checks, and whole-diff review; parent owns packaged visual reproduction."
+    },
+    {
+      "at": "2026-08-13T07:36:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T07:37:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "24 focused policy/wiring tests, complete Happy App 1123/1123 tests, typecheck, diff check, visual evidence validation, and four workflow checks pass. Parent assignment explicitly retains post-fix packaged screenshot/user acceptance."
+    },
+    {
+      "at": "2026-08-13T07:37:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue: authoritative override is restricted to runtime-gated SidebarView, phone/non-Tauri omit it, Default chrome is preserved, and Studio ordinary rows cannot apply default surfaces/position shapes/dividers."
+    },
+    {
+      "at": "2026-08-13T07:37:53+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete corrective finish evidence, archive, pass staged workflow CI, and create the authorized local follow-up commit."
+    },
+    {
+      "at": "2026-08-13T07:38:44+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records the failed first screenshot, corrected root cause, exact tests/checks, whole-diff review, rollback, structured handoff, and explicitly delegated parent-owned packaged acceptance gap."
+    },
+    {
+      "at": "2026-08-13T07:38:44+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Corrected failed Studio sidebar unboxing by propagating the authoritative frame style and eliminating ordinary-row group chrome; 1123 Happy App tests pass.; commit: pending; follow-up: Parent cherry-picks, rebuilds the packaged desktop client, captures the same sidebar state, and requests explicit user visual acceptance."
+    }
+  ],
+  "updated": "2026-08-13T07:38:44+00:00",
+  "archivedAt": "2026-08-13T07:38:44+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Corrected failed Studio sidebar unboxing by propagating the authoritative frame style and eliminating ordinary-row group chrome; 1123 Happy App tests pass.",
+  "archiveFollowUp": "Parent cherry-picks, rebuilds the packaged desktop client, captures the same sidebar state, and requests explicit user visual acceptance."
+}

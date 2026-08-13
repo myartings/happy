@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-overlays-pages.md","reason":"Accepted child-slice contract"}
+{"path":"docs/tasks/studio-overlays-pages-tasks.md","reason":"Implementation task state"}
+{"path":"packages/happy-app/sources/features/","reason":"Parent directory for the isolated Studio overlay presentation module and pure tests"}
+{"path":"packages/happy-app/sources/components/FloatingOverlay.tsx","reason":"Shared L5 shell consumer"}
+{"path":"packages/happy-app/sources/components/SessionActionsPopover.tsx","reason":"Desktop session menu L5 consumer and placement"}
+{"path":"packages/happy-app/sources/components/CommandPalette/","reason":"Provisional theme-aware L6 command palette"}

@@ -15,6 +15,7 @@ import { layout } from "./layout";
 import { parseLocalCommandMessage, isUserSlashCommandEcho } from './parseLocalCommandMessage';
 import { resolveUserMessageBubbleColor } from '@/utils/userMessageBubbleColor';
 import { getMessageTargetNativeId } from '@/utils/messageTarget';
+import { useStudioSemanticTextPresentation } from '@/features/studio-semantic-text/useStudioSemanticTextPresentation';
 
 
 export const MessageView = React.memo((props: {
@@ -92,6 +93,7 @@ function UserTextBlock(props: {
 
   const userMessageBubbleColor = useSetting('userMessageBubbleColor');
   const { theme } = useUnistyles();
+  const studioPresentation = useStudioSemanticTextPresentation();
   const bubblePalette = resolveUserMessageBubbleColor(userMessageBubbleColor, theme.dark);
   const bubbleStyle = {
     backgroundColor: bubblePalette.background,
@@ -129,7 +131,7 @@ function UserTextBlock(props: {
         </View>
         <View style={styles.goalSentRow}>
           <Ionicons name="locate-outline" size={16} color={styles.goalSentText.color} />
-          <Text style={styles.goalSentText}>{t('message.sentAsGoal')}</Text>
+          <Text style={[styles.goalSentText, studioPresentation?.roles.statusSecondary, studioPresentation?.metadata]}>{t('message.sentAsGoal')}</Text>
         </View>
       </View>
     );
@@ -143,7 +145,7 @@ function UserTextBlock(props: {
           </View>
         ) : null}
         <View style={[styles.commandChip, styles.userMessageBubbleSolid, bubbleStyle]}>
-          <Text style={styles.commandChipText}>/{parsed.commandName}</Text>
+          <Text style={[styles.commandChipText, studioPresentation?.roles.command, studioPresentation?.metadata]}>/{parsed.commandName}</Text>
         </View>
       </View>
     );
@@ -184,17 +186,24 @@ function AgentEventBlock(props: {
   event: AgentEvent;
   metadata: Metadata | null;
 }) {
+  const studioPresentation = useStudioSemanticTextPresentation();
+  const eventTextStyle = [
+    styles.agentEventText,
+    studioPresentation?.roles.statusSecondary,
+    studioPresentation?.metadata,
+  ];
+
   if (props.event.type === 'switch') {
     return (
       <View style={styles.agentEventContainer}>
-        <Text style={styles.agentEventText}>{t('message.switchedToMode', { mode: props.event.mode })}</Text>
+        <Text style={eventTextStyle}>{t('message.switchedToMode', { mode: props.event.mode })}</Text>
       </View>
     );
   }
   if (props.event.type === 'message') {
     return (
       <View style={styles.agentEventContainer}>
-        <Text style={styles.agentEventText}>{props.event.message}</Text>
+        <Text style={eventTextStyle}>{props.event.message}</Text>
       </View>
     );
   }
@@ -210,7 +219,7 @@ function AgentEventBlock(props: {
 
     return (
       <View style={styles.agentEventContainer}>
-        <Text style={styles.agentEventText}>
+        <Text style={eventTextStyle}>
           {t('message.usageLimitUntil', { time: formatTime(props.event.endsAt) })}
         </Text>
       </View>
@@ -218,7 +227,7 @@ function AgentEventBlock(props: {
   }
   return (
     <View style={styles.agentEventContainer}>
-      <Text style={styles.agentEventText}>{t('message.unknownEvent')}</Text>
+      <Text style={[eventTextStyle, studioPresentation?.roles.statusWarning]}>{t('message.unknownEvent')}</Text>
     </View>
   );
 }

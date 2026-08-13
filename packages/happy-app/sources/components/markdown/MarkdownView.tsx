@@ -17,6 +17,8 @@ import { MermaidRenderer } from './MermaidRenderer';
 import { t } from '@/text';
 import { isHttpMarkdownLink } from './linkUtils';
 import { openExternalUrl } from '@/utils/openExternalUrl';
+import { resolveMarkdownSpanRoles, type StudioSemanticTextPresentation } from '@/features/studio-semantic-text/studioSemanticTextPresentation';
+import { useStudioSemanticTextPresentation } from '@/features/studio-semantic-text/useStudioSemanticTextPresentation';
 
 // Option type for callback
 export type Option = {
@@ -38,6 +40,7 @@ export const MarkdownView = React.memo((props: {
     const markdownCopyV2 = useLocalSetting('markdownCopyV2');
     const selectable = Platform.OS === 'web' || !markdownCopyV2;
     const router = useRouter();
+    const studioPresentation = useStudioSemanticTextPresentation();
 
     const handleLinkPress = React.useCallback((url: string) => {
         if (!isHttpMarkdownLink(url)) {
@@ -61,23 +64,23 @@ export const MarkdownView = React.memo((props: {
             <View style={{ width: '100%' }}>
                 {blocks.map((block, index) => {
                     if (block.type === 'text') {
-                        return <RenderTextBlock spans={block.content} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} />;
+                        return <RenderTextBlock spans={block.content} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'header') {
-                        return <RenderHeaderBlock level={block.level} spans={block.content} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} />;
+                        return <RenderHeaderBlock level={block.level} spans={block.content} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'horizontal-rule') {
                         return <View style={style.horizontalRule} key={index} />;
                     } else if (block.type === 'list') {
-                        return <RenderListBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} />;
+                        return <RenderListBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'numbered-list') {
-                        return <RenderNumberedListBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} />;
+                        return <RenderNumberedListBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'code-block') {
-                        return <RenderCodeBlock content={block.content} language={block.language} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} />;
+                        return <RenderCodeBlock content={block.content} language={block.language} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'mermaid') {
                         return <MermaidRenderer content={block.content} key={index} />;
                     } else if (block.type === 'options') {
                         return <RenderOptionsBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onOptionPress={props.onOptionPress} />;
                     } else if (block.type === 'table') {
-                        return <RenderTableBlock headers={block.headers} rows={block.rows} onLinkPress={handleLinkPress} selectable={selectable} key={index} first={index === 0} last={index === blocks.length - 1} />;
+                        return <RenderTableBlock headers={block.headers} rows={block.rows} onLinkPress={handleLinkPress} selectable={selectable} key={index} first={index === 0} last={index === blocks.length - 1} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'image') {
                         return <RenderImageBlock url={block.url} alt={block.alt} key={index} first={index === 0} last={index === blocks.length - 1} />;
                     } else {
@@ -119,49 +122,51 @@ type RenderSpanProps = {
     baseStyle?: any;
     selectable: boolean;
     onLinkPress: (url: string) => void;
+    studioPresentation: StudioSemanticTextPresentation | null;
 };
 
-function RenderTextBlock(props: { spans: MarkdownSpan[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void }) {
-    return <Text selectable={props.selectable} style={[style.text, props.first && style.first, props.last && style.last]}><RenderSpans spans={props.spans} baseStyle={style.text} selectable={props.selectable} onLinkPress={props.onLinkPress} /></Text>;
+function RenderTextBlock(props: { spans: MarkdownSpan[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void, studioPresentation: StudioSemanticTextPresentation | null }) {
+    const textStyle = [style.text, props.studioPresentation?.body, props.studioPresentation?.roles.body];
+    return <Text selectable={props.selectable} style={[textStyle, props.first && style.first, props.last && style.last]}><RenderSpans spans={props.spans} baseStyle={textStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} /></Text>;
 }
 
-function RenderHeaderBlock(props: { level: 1 | 2 | 3 | 4 | 5 | 6, spans: MarkdownSpan[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void }) {
+function RenderHeaderBlock(props: { level: 1 | 2 | 3 | 4 | 5 | 6, spans: MarkdownSpan[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void, studioPresentation: StudioSemanticTextPresentation | null }) {
     const s = (style as any)[`header${props.level}`];
-    const headerStyle = [style.header, s, props.first && style.first, props.last && style.last];
-    return <Text selectable={props.selectable} style={headerStyle}><RenderSpans spans={props.spans} baseStyle={headerStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} /></Text>;
+    const headerStyle = [style.header, s, props.studioPresentation?.roles.heading, props.studioPresentation?.headings[props.level], props.first && style.first, props.last && style.last];
+    return <Text selectable={props.selectable} style={headerStyle}><RenderSpans spans={props.spans} baseStyle={headerStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} /></Text>;
 }
 
 const BULLETS = ['•', '◦', '▪'] as const;
 
-function RenderListBlock(props: { items: { depth: number, spans: MarkdownSpan[] }[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void }) {
-    const listStyle = [style.text, style.list];
+function RenderListBlock(props: { items: { depth: number, spans: MarkdownSpan[] }[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void, studioPresentation: StudioSemanticTextPresentation | null }) {
+    const listStyle = [style.text, style.list, props.studioPresentation?.body, props.studioPresentation?.roles.body];
     return (
         <View style={{ flexDirection: 'column', marginBottom: 8, gap: 6 }}>
             {props.items.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingLeft: item.depth * 16 }}>
                     <Text selectable={false} style={[listStyle, { marginRight: 8, marginTop: 1 }]}>{BULLETS[Math.min(item.depth, BULLETS.length - 1)]}</Text>
-                    <Text selectable={props.selectable} style={[listStyle, { flex: 1 }]}><RenderSpans spans={item.spans} baseStyle={listStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} /></Text>
+                    <Text selectable={props.selectable} style={[listStyle, { flex: 1 }]}><RenderSpans spans={item.spans} baseStyle={listStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} /></Text>
                 </View>
             ))}
         </View>
     );
 }
 
-function RenderNumberedListBlock(props: { items: { number: number, depth: number, spans: MarkdownSpan[] }[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void }) {
-    const listStyle = [style.text, style.list];
+function RenderNumberedListBlock(props: { items: { number: number, depth: number, spans: MarkdownSpan[] }[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void, studioPresentation: StudioSemanticTextPresentation | null }) {
+    const listStyle = [style.text, style.list, props.studioPresentation?.body, props.studioPresentation?.roles.body];
     return (
         <View style={{ flexDirection: 'column', marginBottom: 8, gap: 6 }}>
             {props.items.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingLeft: item.depth * 16 }}>
                     <Text selectable={false} style={[listStyle, { marginRight: 8, marginTop: 1 }]}>{item.number}.</Text>
-                    <Text selectable={props.selectable} style={[listStyle, { flex: 1 }]}><RenderSpans spans={item.spans} baseStyle={listStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} /></Text>
+                    <Text selectable={props.selectable} style={[listStyle, { flex: 1 }]}><RenderSpans spans={item.spans} baseStyle={listStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} /></Text>
                 </View>
             ))}
         </View>
     );
 }
 
-function RenderCodeBlock(props: { content: string, language: string | null, first: boolean, last: boolean, selectable: boolean }) {
+function RenderCodeBlock(props: { content: string, language: string | null, first: boolean, last: boolean, selectable: boolean, studioPresentation: StudioSemanticTextPresentation | null }) {
     const [isHovered, setIsHovered] = React.useState(false);
 
     const copyCode = React.useCallback(async () => {
@@ -176,13 +181,13 @@ function RenderCodeBlock(props: { content: string, language: string | null, firs
 
     return (
         <View
-            style={[style.codeBlock, props.first && style.first, props.last && style.last]}
+            style={[style.codeBlock, props.studioPresentation?.codeBlock, props.first && style.first, props.last && style.last]}
             // @ts-ignore - Web only events
             onMouseEnter={() => setIsHovered(true)}
             // @ts-ignore - Web only events
             onMouseLeave={() => setIsHovered(false)}
         >
-            {props.language && <Text selectable={props.selectable} style={style.codeLanguage}>{props.language}</Text>}
+            {props.language && <Text selectable={props.selectable} style={[style.codeLanguage, props.studioPresentation?.roles.statusSecondary, props.studioPresentation?.metadata]}>{props.language}</Text>}
             <HorizontalScrollView
                 contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
             >
@@ -264,14 +269,19 @@ function RenderOptionsBlock(props: {
 function RenderSpans(props: RenderSpanProps) {
     return (<>
         {props.spans.map((span, index) => {
+            const isExternalLink = span.url ? isHttpMarkdownLink(span.url) : false;
+            const semanticStyles = resolveMarkdownSpanRoles(span, isExternalLink).map((role) => (
+                role === 'inlineCode'
+                    ? [props.studioPresentation?.roles[role], props.studioPresentation?.inlineCode]
+                    : props.studioPresentation?.roles[role]
+            ));
             if (span.url) {
-                const isExternalLink = isHttpMarkdownLink(span.url);
                 return (
                     <Text
                         key={index}
                         selectable={props.selectable}
                         accessibilityRole={isExternalLink ? 'link' : undefined}
-                        style={[props.baseStyle, isExternalLink && style.link, span.styles.map(s => style[s])]}
+                        style={[props.baseStyle, isExternalLink && style.link, span.styles.map(s => style[s]), semanticStyles]}
                         {...(isExternalLink && Platform.OS === 'web' ? { onClick: () => props.onLinkPress(span.url!) } as any : {})}
                         onPress={isExternalLink && Platform.OS !== 'web'
                             ? () => props.onLinkPress(span.url!)
@@ -281,7 +291,7 @@ function RenderSpans(props: RenderSpanProps) {
                     </Text>
                 );
             } else {
-                return <Text key={index} selectable={props.selectable} style={[props.baseStyle, span.styles.map(s => style[s])]}>{span.text}</Text>
+                return <Text key={index} selectable={props.selectable} style={[props.baseStyle, span.styles.map(s => style[s]), semanticStyles]}>{span.text}</Text>
             }
         })}
     </>)
@@ -314,7 +324,8 @@ function RenderTableBlock(props: {
     onLinkPress: (url: string) => void,
     selectable: boolean,
     first: boolean,
-    last: boolean
+    last: boolean,
+    studioPresentation: StudioSemanticTextPresentation | null,
 }) {
     const columnCount = props.headers.length;
     const rowCount = props.rows.length;
@@ -349,7 +360,7 @@ function RenderTableBlock(props: {
                                 style={[style.tableCell, style.tableHeaderCell, { width: columnWidths[colIndex] }, !isLastCol(colIndex) && style.tableCellBorderRight]}
                             >
                                 <Text style={style.tableHeaderText}>
-                                    <RenderSpans spans={header} baseStyle={style.tableHeaderText} onLinkPress={props.onLinkPress} selectable={props.selectable} />
+                                    <RenderSpans spans={header} baseStyle={[style.tableHeaderText, props.studioPresentation?.roles.heading]} onLinkPress={props.onLinkPress} selectable={props.selectable} studioPresentation={props.studioPresentation} />
                                 </Text>
                             </View>
                         ))}
@@ -366,7 +377,7 @@ function RenderTableBlock(props: {
                                     style={[style.tableCell, { width: columnWidths[colIndex] }, !isLastCol(colIndex) && style.tableCellBorderRight]}
                                 >
                                     <Text style={style.tableCellText}>
-                                        <RenderSpans spans={row[colIndex] ?? []} baseStyle={style.tableCellText} onLinkPress={props.onLinkPress} selectable={props.selectable} />
+                                        <RenderSpans spans={row[colIndex] ?? []} baseStyle={[style.tableCellText, props.studioPresentation?.roles.body]} onLinkPress={props.onLinkPress} selectable={props.selectable} studioPresentation={props.studioPresentation} />
                                     </Text>
                                 </View>
                             ))}

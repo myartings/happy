@@ -14,6 +14,10 @@ import {
 } from '@/keyboard/shortcuts';
 import { MobileGlassSurface } from './MobileGlass';
 import { AnimatedPopup, LocalBlurHalo } from './AnimatedOverlay';
+import {
+    resolveSessionActionsMenuPosition,
+} from '@/features/studio-overlays/studioOverlayPresentation';
+import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 
 export type SessionActionsAnchor =
     | {
@@ -142,6 +146,7 @@ export function SessionActionsPopover({
 }: SessionActionsPopoverProps) {
     const styles = stylesheet;
     const { theme } = useUnistyles();
+    const overlayPresentation = useStudioOverlayPresentation();
     const safeArea = useSafeAreaInsets();
     const { height: windowHeight, width: windowWidth } = useWindowDimensions();
     const session = useSession(sessionId);
@@ -158,23 +163,15 @@ export function SessionActionsPopover({
             return null;
         }
 
-        const estimatedHeight = actions.length * WEB_MENU_ITEM_HEIGHT;
-        const leftBase = anchor.type === 'point'
-            ? anchor.x
-            : anchor.x + anchor.width - WEB_MENU_WIDTH;
-
-        let topBase = anchor.type === 'point'
-            ? anchor.y
-            : anchor.y + anchor.height + 8;
-
-        if (anchor.type === 'rect' && topBase + estimatedHeight > windowHeight - WEB_MENU_MARGIN) {
-            topBase = anchor.y - estimatedHeight - 8;
-        }
-
-        return {
-            left: Math.max(WEB_MENU_MARGIN, Math.min(windowWidth - WEB_MENU_WIDTH - WEB_MENU_MARGIN, leftBase)),
-            top: Math.max(WEB_MENU_MARGIN, Math.min(windowHeight - estimatedHeight - WEB_MENU_MARGIN, topBase)),
-        };
+        return resolveSessionActionsMenuPosition({
+            actionCount: actions.length,
+            anchor,
+            itemHeight: WEB_MENU_ITEM_HEIGHT,
+            margin: WEB_MENU_MARGIN,
+            menuWidth: WEB_MENU_WIDTH,
+            windowHeight,
+            windowWidth,
+        });
     }, [actions.length, anchor, windowHeight, windowWidth]);
 
     const handleActionPress = React.useCallback((action: SessionActionItem) => {
@@ -225,20 +222,43 @@ export function SessionActionsPopover({
                 onPress={() => handleActionPress(action)}
                 style={({ pressed }) => [
                     styles.menuItem,
-                    !isLast && styles.menuItemDivider,
+                    !isLast && !overlayPresentation.isStudio && styles.menuItemDivider,
                     pressed && styles.menuItemPressed,
+                    pressed && overlayPresentation.isStudio && {
+                        backgroundColor: overlayPresentation.pressedColor,
+                    },
                 ]}
             >
                 <Ionicons
-                    color={color}
+                    color={action.destructive ? color : (overlayPresentation.isStudio
+                        ? overlayPresentation.textSecondaryColor
+                        : color)}
                     name={action.icon as keyof typeof Ionicons.glyphMap}
                     size={18}
                 />
-                <Text numberOfLines={1} style={[styles.menuItemLabel, { color }]}>
+                <Text
+                    numberOfLines={1}
+                    style={[
+                        styles.menuItemLabel,
+                        { color: action.destructive ? color : (overlayPresentation.isStudio
+                            ? overlayPresentation.textColor
+                            : color) },
+                    ]}
+                >
                     {action.label}
                 </Text>
                 {Platform.OS === 'web' && (
-                    <Text style={styles.menuItemShortcut}>{shortcutLabel}</Text>
+                    <Text
+                        style={[
+                            styles.menuItemShortcut,
+                            overlayPresentation.isStudio && {
+                                color: overlayPresentation.textSecondaryColor,
+                                fontWeight: '400',
+                            },
+                        ]}
+                    >
+                        {shortcutLabel}
+                    </Text>
                 )}
             </Pressable>
         );
@@ -272,7 +292,16 @@ export function SessionActionsPopover({
                 visible={visible}
             >
                 <View style={styles.webContainer}>
-                    <Pressable onPress={onClose} style={[styles.backdrop, styles.webBackdrop]} />
+                    <Pressable
+                        onPress={onClose}
+                        style={[
+                            styles.backdrop,
+                            styles.webBackdrop,
+                            overlayPresentation.isStudio && {
+                                backgroundColor: overlayPresentation.floating.clickAwayColor,
+                            },
+                        ]}
+                    />
                     <View
                         style={[
                             styles.webMenu,
@@ -282,7 +311,25 @@ export function SessionActionsPopover({
                             },
                         ]}
                     >
-                        <View style={[styles.card, { backgroundColor: theme.colors.header.background }]}>
+                        <View
+                            style={[
+                                styles.card,
+                                { backgroundColor: theme.colors.header.background },
+                                overlayPresentation.isStudio && {
+                                    backgroundColor: overlayPresentation.floating.surfaceColor,
+                                    borderColor: overlayPresentation.floating.borderColor,
+                                    borderRadius: overlayPresentation.floating.radius,
+                                    borderWidth: overlayPresentation.floating.borderWidth,
+                                    shadowColor: '#000000',
+                                    shadowOffset: {
+                                        width: 0,
+                                        height: overlayPresentation.floating.shadowOffsetY,
+                                    },
+                                    shadowOpacity: overlayPresentation.floating.shadowOpacity,
+                                    shadowRadius: overlayPresentation.floating.shadowRadius,
+                                },
+                            ]}
+                        >
                             {actionItems}
                         </View>
                     </View>

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TextInput, StyleSheet, Platform } from 'react-native';
 import { Typography } from '@/constants/Typography';
 import { t } from '@/text';
+import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 
 interface CommandPaletteInputProps {
     value: string;
@@ -11,6 +12,7 @@ interface CommandPaletteInputProps {
 }
 
 export function CommandPaletteInput({ value, onChangeText, onKeyPress, inputRef }: CommandPaletteInputProps) {
+    const overlayPresentation = useStudioOverlayPresentation();
     const handleKeyDown = React.useCallback((e: any) => {
         if (Platform.OS === 'web' && onKeyPress) {
             const key = e.nativeEvent.key;
@@ -25,14 +27,33 @@ export function CommandPaletteInput({ value, onChangeText, onKeyPress, inputRef 
     }, [onKeyPress]);
 
     return (
-        <View style={styles.container}>
+        <View
+            style={[
+                styles.container,
+                overlayPresentation.isStudio && {
+                    backgroundColor: overlayPresentation.inputSurfaceColor,
+                    borderBottomColor: overlayPresentation.dividerColor,
+                },
+            ]}
+        >
             <TextInput
                 ref={inputRef}
-                style={[styles.input, Typography.default()]}
+                style={[
+                    styles.input,
+                    Typography.default(),
+                    overlayPresentation.isStudio && {
+                        color: overlayPresentation.textColor,
+                        fontSize: overlayPresentation.commandPalette.inputFontSize,
+                        paddingHorizontal: overlayPresentation.commandPalette.inputPaddingHorizontal,
+                        paddingVertical: overlayPresentation.commandPalette.inputPaddingVertical,
+                    },
+                ]}
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={t('commandPalette.placeholder')}
-                placeholderTextColor="#999"
+                placeholderTextColor={overlayPresentation.isStudio
+                    ? overlayPresentation.textSecondaryColor
+                    : '#999'}
                 autoFocus
                 autoCorrect={false}
                 autoCapitalize="none"

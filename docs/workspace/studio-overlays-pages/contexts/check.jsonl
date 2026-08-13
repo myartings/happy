@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-overlays-pages/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-overlays-pages.md","reason":"Acceptance criteria"}
+{"path":"packages/happy-app/sources/features/","reason":"Pure resolver and placement tests under the isolated Studio overlay module"}
+{"path":"packages/happy-app/sources/components/FloatingOverlay.tsx","reason":"Conditional L5 integration review"}
+{"path":"packages/happy-app/sources/components/SessionActionsPopover.tsx","reason":"Menu behavior and L5 integration review"}
+{"path":"packages/happy-app/sources/components/CommandPalette/","reason":"Theme-aware L6 integration review"}

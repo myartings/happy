@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { MobileGlassSurface } from './MobileGlass';
 import { AnimatedPopup, LocalBlurHalo } from './AnimatedOverlay';
+import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 
 const stylesheet = StyleSheet.create((theme, runtime) => ({
     container: {
@@ -35,6 +36,7 @@ interface FloatingOverlayProps {
 export const FloatingOverlay = React.memo((props: FloatingOverlayProps) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
+    const overlayPresentation = useStudioOverlayPresentation();
     const { 
         children, 
         maxHeight = 240, 
@@ -46,7 +48,22 @@ export const FloatingOverlay = React.memo((props: FloatingOverlayProps) => {
     // In particular, web does not get the local blur halo or its entry motion.
     if (Platform.OS === 'web') {
         return (
-            <Animated.View style={[styles.container, { maxHeight }]}>
+            <Animated.View
+                style={[
+                    styles.container,
+                    { maxHeight },
+                    overlayPresentation.isStudio && {
+                        backgroundColor: overlayPresentation.floating.surfaceColor,
+                        borderColor: overlayPresentation.floating.borderColor,
+                        borderRadius: overlayPresentation.floating.radius,
+                        borderWidth: overlayPresentation.floating.borderWidth,
+                        shadowColor: '#000000',
+                        shadowOffset: { width: 0, height: overlayPresentation.floating.shadowOffsetY },
+                        shadowOpacity: overlayPresentation.floating.shadowOpacity,
+                        shadowRadius: overlayPresentation.floating.shadowRadius,
+                    },
+                ]}
+            >
                 <Animated.ScrollView
                     style={{ maxHeight }}
                     keyboardShouldPersistTaps={keyboardShouldPersistTaps}

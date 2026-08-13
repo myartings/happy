@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-sidebar-refinement.md","reason":"Accepted bounded sidebar behavior and visual criteria"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Desktop-only Studio regional style resolver"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Sidebar controls and footer host"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Active rich-session row presentation"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Historical session row presentation"}

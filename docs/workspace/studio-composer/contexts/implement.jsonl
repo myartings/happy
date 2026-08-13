@@ -1,0 +1,8 @@
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Narrow host seam for the existing composer shell and actions."}
+{"path":"packages/happy-app/sources/components/AgentInputAttachmentStrip.tsx","reason":"Studio-only attachment density variant."}
+{"path":"packages/happy-app/sources/components/AgentInputAutocomplete.tsx","reason":"Studio-only autocomplete shell and row geometry."}
+{"path":"packages/happy-app/sources/components/AgentInputSuggestionView.tsx","reason":"Studio-only suggestion content density."}
+{"path":"packages/happy-app/sources/features","reason":"Parent directory for the new feature-owned Studio composer resolver and deterministic tests."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Read-only activation resolver used by the feature module."}
+{"path":"docs/specs/studio-composer.md","reason":"Accepted behavior contract."}
+{"path":"docs/tasks/studio-composer-tasks.md","reason":"Implementation checklist."}

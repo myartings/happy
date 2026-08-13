@@ -22,7 +22,7 @@ import { TextInputState, MultiTextInputHandle } from './MultiTextInput';
 import { applySuggestion } from './autocomplete/applySuggestion';
 import { GitStatusBadge, useHasMeaningfulGitStatus } from './GitStatusBadge';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { useSetting } from '@/sync/storage';
+import { useLocalSetting, useSetting } from '@/sync/storage';
 import { hackMode, hackModes } from '@/sync/modeHacks';
 import { Theme } from '@/theme';
 import { t } from '@/text';
@@ -43,6 +43,8 @@ import {
     resolveMobileComposerMenuGeometry,
 } from './agentInputLayout';
 import { shouldUseExpoNativeSettingsMenu } from './glassInteractionPolicy';
+import { isTauri } from '@/utils/isTauri';
+import { resolveDesktopComposerStyle } from '@/features/studio-composer/studioComposerStyle';
 
 interface AgentInputProps {
     // `initialValue` seeds the uncontrolled textarea once; keystrokes never
@@ -157,6 +159,13 @@ const stylesheet = StyleSheet.create((theme, runtime) => ({
         shadowRadius: 16,
         elevation: 4,
     },
+    studioUnifiedPanelShadow: {
+        shadowColor: '#1A1C1F',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.1,
+        shadowRadius: 24,
+        elevation: 6,
+    },
     mobileUnifiedPanel: {
         // The frosted material is supplied by MobileGlassSurface. The dense
         // tint keeps the transcript illegible behind it without losing glass.
@@ -183,6 +192,12 @@ const stylesheet = StyleSheet.create((theme, runtime) => ({
         paddingRight: 8,
         paddingVertical: 4,
         minHeight: 40,
+    },
+    studioInputContainer: {
+        alignItems: 'flex-start',
+        paddingLeft: 4,
+        paddingRight: 4,
+        paddingVertical: 0,
     },
     mobileInputContainer: {
         alignItems: 'center',
@@ -376,6 +391,9 @@ const stylesheet = StyleSheet.create((theme, runtime) => ({
         flex: 1,
         overflow: 'hidden',
     },
+    studioActionButtonsLeft: {
+        gap: 4,
+    },
     actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -399,6 +417,9 @@ const stylesheet = StyleSheet.create((theme, runtime) => ({
         alignItems: 'center',
         flexShrink: 0,
         marginLeft: 8,
+    },
+    studioSendButton: {
+        marginLeft: 6,
     },
     mobilePrimaryButton: MOBILE_PRIMARY_ACTION_GEOMETRY,
     mobilePrimaryButtonActive: {
@@ -696,6 +717,13 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
     // existing composer affordances rather than inheriting it.
     const runningOnMac = isRunningOnMac();
     const compactMobileComposer = Platform.OS !== 'web' && !runningOnMac && screenWidth <= 700;
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const composerStyle = React.useMemo(() => resolveDesktopComposerStyle({
+        isTauriRuntime: isTauri(),
+        requestedStyle: requestedVisualStyle,
+        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+    }), [requestedVisualStyle]);
+    const isStudioComposer = composerStyle.visualStyle === 'studio';
     const useNativeSettingsMenus = compactMobileComposer
         || shouldUseExpoNativeSettingsMenu(Platform.OS, runningOnMac);
     const activeSendIconColor = compactMobileComposer ? theme.colors.text : theme.colors.button.primary.tint;
@@ -1246,19 +1274,33 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
     }, [suggestions, moveUp, moveDown, selected, handleSuggestionSelect, props.showAbortButton, props.onAbort, isAborting, handleAbortPress, agentInputEnterToSend, props.onSend, props.onPermissionModeChange, availableModes, permissionModeKey, isSendBlocked, handleBlockedSendAttempt, props.isSendDisabled]);
 
     const desktopActionControls = (
-        <View style={styles.actionButtonsContainer}>
+        <View style={[
+            styles.actionButtonsContainer,
+            isStudioComposer && { minHeight: composerStyle.actionHeight! },
+        ]}>
             <View style={{ flexDirection: 'column', flex: 1, gap: 2 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     {props.zenMode && <View style={{ flex: 1 }} />}
-                    {!props.zenMode && <View style={styles.actionButtonsLeft}>
+                    {!props.zenMode && <View style={[
+                        styles.actionButtonsLeft,
+                        isStudioComposer && styles.studioActionButtonsLeft,
+                    ]}>
                         {props.onPermissionModeChange && (
                             useNativeSettingsMenus ? (
                                 <NativeSettingsMenu
                                     accessibilityLabel={t('settings.title')}
                                     groups={[...permissionSettingsGroups, ...modelSettingsGroups]}
-                                    style={{ width: 40, height: 40 }}
+                                    style={{
+                                        width: isStudioComposer ? composerStyle.actionHeight! : 40,
+                                        height: isStudioComposer ? composerStyle.actionHeight! : 40,
+                                    }}
                                 >
-                                    <View style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                                    <View style={{
+                                        width: isStudioComposer ? composerStyle.actionHeight! : 40,
+                                        height: isStudioComposer ? composerStyle.actionHeight! : 40,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}>
                                         <Octicons name="gear" size={16} color={theme.colors.button.secondary.tint} />
                                     </View>
                                 </NativeSettingsMenu>
@@ -1269,7 +1311,7 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                     style={(p) => ({
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                        borderRadius: Platform.select({ default: 16, android: 20 }),
+                                        borderRadius: isStudioComposer ? composerStyle.actionRadius! : Platform.select({ default: 16, android: 20 }),
                                         paddingHorizontal: 8,
                                         paddingVertical: 6,
                                         justifyContent: 'center',
@@ -1292,7 +1334,7 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                 style={(p) => ({
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    borderRadius: Platform.select({ default: 16, android: 20 }),
+                                    borderRadius: isStudioComposer ? composerStyle.actionRadius! : Platform.select({ default: 16, android: 20 }),
                                     paddingHorizontal: 10,
                                     paddingVertical: 6,
                                     justifyContent: 'center',
@@ -1325,7 +1367,7 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                     style={(p) => ({
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                        borderRadius: Platform.select({ default: 16, android: 20 }),
+                                        borderRadius: isStudioComposer ? composerStyle.actionRadius! : Platform.select({ default: 16, android: 20 }),
                                         paddingHorizontal: 8,
                                         paddingVertical: 6,
                                         justifyContent: 'center',
@@ -1345,7 +1387,11 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             </Shaker>
                         )}
 
-                        <GitStatusButton sessionId={props.sessionId} onPress={props.onFileViewerPress} />
+                        <GitStatusButton
+                            sessionId={props.sessionId}
+                            onPress={props.onFileViewerPress}
+                            cornerRadius={composerStyle.actionRadius ?? undefined}
+                        />
 
                         {props.onPickImages && (
                             <Pressable
@@ -1354,7 +1400,7 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                 style={(p) => ({
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    borderRadius: Platform.select({ default: 16, android: 20 }),
+                                    borderRadius: isStudioComposer ? composerStyle.actionRadius! : Platform.select({ default: 16, android: 20 }),
                                     paddingHorizontal: 8,
                                     paddingVertical: 6,
                                     justifyContent: 'center',
@@ -1376,6 +1422,8 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                     <View
                         style={[
                             styles.sendButton,
+                            isStudioComposer && styles.studioSendButton,
+                            isStudioComposer && { borderRadius: composerStyle.actionRadius! },
                             isSendBlocked
                                 ? styles.sendButtonLocked
                                 : (hasText || props.isSending || (props.onMicPress && !props.isMicActive))
@@ -1607,7 +1655,7 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
         ]}>
             <View style={[
                 styles.innerContainer,
-                { maxWidth: layout.maxWidth }
+                { maxWidth: composerStyle.maxWidth ?? layout.maxWidth }
             ]}>
                 {/* Autocomplete suggestions overlay */}
                 {suggestions.length > 0 && (
@@ -1618,11 +1666,19 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                         <AgentInputAutocomplete
                             suggestions={suggestions.map(s => {
                                 const Component = s.component;
-                                return <Component key={s.key} />;
+                                return (
+                                    <Component
+                                        key={s.key}
+                                        studio={isStudioComposer}
+                                        rowHeight={composerStyle.autocompleteRowHeight ?? undefined}
+                                    />
+                                );
                             })}
                             selectedIndex={selected}
                             onSelect={handleSuggestionSelect}
-                            itemHeight={48}
+                            itemHeight={composerStyle.autocompleteRowHeight ?? 48}
+                            studio={isStudioComposer}
+                            cornerRadius={composerStyle.autocompleteRadius ?? undefined}
                         />
                     </View>
                 )}
@@ -1934,6 +1990,8 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                     <View style={[
                         compactMobileComposer && styles.unifiedPanelShadow,
                         compactMobileComposer && styles.mobileUnifiedPanelShadow,
+                        composerStyle.showElevation && styles.studioUnifiedPanelShadow,
+                        isStudioComposer && { borderRadius: composerStyle.shellRadius! },
                     ]}>
                         <MobileGlassSurface
                             enabled={compactMobileComposer}
@@ -1943,6 +2001,16 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             style={[
                                 styles.unifiedPanel,
                                 compactMobileComposer && styles.mobileUnifiedPanel,
+                                isStudioComposer && {
+                                    minHeight: composerStyle.shellMinHeight!,
+                                    borderRadius: composerStyle.shellRadius!,
+                                    backgroundColor: composerStyle.shellBackground!,
+                                    borderWidth: composerStyle.shellBorderWidth!,
+                                    borderColor: composerStyle.shellBorder!,
+                                    paddingHorizontal: composerStyle.shellHorizontalPadding!,
+                                    paddingTop: composerStyle.shellTopPadding!,
+                                    paddingBottom: composerStyle.shellBottomPadding!,
+                                },
                             ]}
                         >
                     {/* Attachment preview strip */}
@@ -1950,12 +2018,16 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                         <AgentInputAttachmentStrip
                             images={props.selectedImages}
                             onRemove={props.onRemoveImage ?? (() => {})}
+                            studio={isStudioComposer}
+                            thumbnailSize={composerStyle.attachmentSize ?? undefined}
                         />
                     )}
                     {/* Input field */}
                     <View style={[
                         styles.inputContainer,
                         compactMobileComposer && styles.mobileInputContainer,
+                        isStudioComposer && styles.studioInputContainer,
+                        isStudioComposer && { minHeight: composerStyle.inputMinHeight! },
                         props.minHeight ? { minHeight: props.minHeight } : undefined,
                     ]}>
                         <MultiTextInput
@@ -1963,10 +2035,10 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             defaultValue={props.initialValue}
                             paddingTop={compactMobileComposer
                                 ? MOBILE_COMPOSER_METRICS.inputPaddingTop
-                                : Platform.OS === 'web' ? 10 : 8}
+                                : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
                             paddingBottom={compactMobileComposer
                                 ? MOBILE_COMPOSER_METRICS.inputPaddingBottom
-                                : Platform.OS === 'web' ? 10 : 8}
+                                : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
                             onChangeText={handleTextChange}
                             placeholder={props.placeholder}
                             onKeyPress={handleKeyPress}
@@ -2213,7 +2285,7 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
 }));
 
 // Git Status Button Component
-function GitStatusButton({ sessionId, onPress }: { sessionId?: string, onPress?: () => void }) {
+function GitStatusButton({ sessionId, onPress, cornerRadius }: { sessionId?: string, onPress?: () => void, cornerRadius?: number }) {
     const hasMeaningfulGitStatus = useHasMeaningfulGitStatus(sessionId || '');
     const styles = stylesheet;
     const { theme } = useUnistyles();
@@ -2227,7 +2299,7 @@ function GitStatusButton({ sessionId, onPress }: { sessionId?: string, onPress?:
             style={(p) => ({
                 flexDirection: 'row',
                 alignItems: 'center',
-                borderRadius: Platform.select({ default: 16, android: 20 }),
+                borderRadius: cornerRadius ?? Platform.select({ default: 16, android: 20 }),
                 paddingHorizontal: 8,
                 paddingVertical: 6,
                 height: 32,

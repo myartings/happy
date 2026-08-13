@@ -1,0 +1,4 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/workspace/studio-command-palette-shell-width/context.md","reason":"Accepted bug contract, evidence, scope, and root cause"}
+{"path":"packages/happy-app/sources/components/CommandPalette/CommandPaletteModal.tsx","reason":"Actual outer Animated modal wrapper that failed packaged width verification"}
+{"path":"packages/happy-app/sources/components/CommandPalette/CommandPaletteStudioShell.test.ts","reason":"Public render seam for outer wrapper width and responsive behavior"}

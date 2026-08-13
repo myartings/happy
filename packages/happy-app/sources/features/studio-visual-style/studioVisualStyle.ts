@@ -19,6 +19,11 @@ export type DesktopSessionRowStyle = {
     leadingIndicatorWidth: number | null;
     leadingIndicatorGap: number | null;
     metadataInset: number | null;
+    titleFontSize: number | null;
+    titleLineHeight: number | null;
+    titleFontWeight: '600' | null;
+    primaryMetadataFontSize: number | null;
+    secondaryMetadataFontSize: number | null;
     cornerRadius: number | null;
     selectedBackground: string | null;
     showCardSurface: boolean;
@@ -55,6 +60,15 @@ export type DesktopSectionHeaderStyle = {
     horizontalPadding: number | null;
     topPadding: number | null;
     bottomPadding: number | null;
+};
+
+export type DesktopSidebarFooterStyle = {
+    visualStyle: VisualStyle;
+    height: number | null;
+    horizontalPadding: number | null;
+    contentGap: number | null;
+    iconSize: number | null;
+    labelFontSize: number | null;
 };
 
 type ResolveDesktopVisualStyleInput = {
@@ -144,6 +158,11 @@ export function resolveDesktopSessionRowStyle({
             leadingIndicatorWidth: 10,
             leadingIndicatorGap: 6,
             metadataInset: 16,
+            titleFontSize: 13,
+            titleLineHeight: 17,
+            titleFontWeight: '600',
+            primaryMetadataFontSize: 11,
+            secondaryMetadataFontSize: 10,
             cornerRadius: 9,
             selectedBackground: '#E8EAEA',
             showCardSurface: false,
@@ -163,6 +182,11 @@ export function resolveDesktopSessionRowStyle({
         leadingIndicatorWidth: null,
         leadingIndicatorGap: null,
         metadataInset: null,
+        titleFontSize: null,
+        titleLineHeight: null,
+        titleFontWeight: null,
+        primaryMetadataFontSize: null,
+        secondaryMetadataFontSize: null,
         cornerRadius: null,
         selectedBackground: null,
         showCardSurface: true,
@@ -271,5 +295,37 @@ export function resolveDesktopSectionHeaderStyle({
         horizontalPadding: null,
         topPadding: null,
         bottomPadding: null,
+    };
+}
+
+export function resolveDesktopSidebarFooterStyle({
+    isTauriRuntime,
+    requestedStyle,
+    previewStyle,
+}: ResolveDesktopVisualStyleInput): DesktopSidebarFooterStyle {
+    const visualStyle = resolveDesktopVisualStyle({
+        isTauriRuntime,
+        requestedStyle,
+        previewStyle,
+    });
+
+    if (visualStyle === 'studio') {
+        return {
+            visualStyle,
+            height: 44,
+            horizontalPadding: 18,
+            contentGap: 9,
+            iconSize: 17,
+            labelFontSize: 13,
+        };
+    }
+
+    return {
+        visualStyle,
+        height: null,
+        horizontalPadding: null,
+        contentGap: null,
+        iconSize: null,
+        labelFontSize: null,
     };
 }

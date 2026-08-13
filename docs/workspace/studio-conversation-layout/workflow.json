@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-conversation-layout",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Integration owner merges locally, captures packaged 1470x870 screenshot, and requests user visual acceptance",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/studio-conversation-layout.md; user-authorized parallel implementation of accepted Studio v2 design on 2026-08-13",
+      "updated": "2026-08-13T05:22:24+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "docs/workspace/studio-conversation-layout/decisions.md records resolved local geometry decisions; no unresolved material decision",
+      "updated": "2026-08-13T05:22:24+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope and exclusive file boundary recorded in context.md; deterministic resolver seam and tests defined; tracker is local-only by explicit parallel coordination",
+      "updated": "2026-08-13T05:22:24+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only Tauri Studio layout; no .ai/project.json authentication, data, protocol, deployment, or sync trigger",
+      "updated": "2026-08-13T05:22:24+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Studio-owned resolver plus narrow ChatHeaderView and ChatList seams implemented; docs/tasks/studio-conversation-layout-tasks.md T2-T5 complete",
+      "updated": "2026-08-13T05:37:09+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Focused tests 15/15, happy-app typecheck, Happy workflow validation/core/CI tests, and git diff --check passed; user explicitly deferred packaged screenshot and visual acceptance to main integration session",
+      "updated": "2026-08-13T05:37:48+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed against docs/specs/studio-conversation-layout.md and exclusive ownership boundary; no actionable correctness, regression, security, or maintainability findings",
+      "updated": "2026-08-13T05:37:48+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md and structured session handoff record validation, no-findings review, rollback, local-only tracker state, and user-accepted deferral of the integration screenshot",
+      "updated": "2026-08-13T05:38:57+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T05:19:40+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T05:22:24+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/studio-conversation-layout.md; user-authorized parallel implementation of accepted Studio v2 design on 2026-08-13"
+    },
+    {
+      "at": "2026-08-13T05:22:24+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "docs/workspace/studio-conversation-layout/decisions.md records resolved local geometry decisions; no unresolved material decision"
+    },
+    {
+      "at": "2026-08-13T05:22:24+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only Tauri Studio layout; no .ai/project.json authentication, data, protocol, deployment, or sync trigger"
+    },
+    {
+      "at": "2026-08-13T05:22:24+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope and exclusive file boundary recorded in context.md; deterministic resolver seam and tests defined; tracker is local-only by explicit parallel coordination"
+    },
+    {
+      "at": "2026-08-13T05:22:40+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add resolver test first, then narrow ChatHeaderView and ChatList seams"
+    },
+    {
+      "at": "2026-08-13T05:37:09+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Studio-owned resolver plus narrow ChatHeaderView and ChatList seams implemented; docs/tasks/studio-conversation-layout-tasks.md T2-T5 complete"
+    },
+    {
+      "at": "2026-08-13T05:37:09+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Map acceptance criteria, inspect the whole diff, and record review"
+    },
+    {
+      "at": "2026-08-13T05:37:48+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Focused tests 15/15, happy-app typecheck, Happy workflow validation/core/CI tests, and git diff --check passed; user explicitly deferred packaged screenshot and visual acceptance to main integration session"
+    },
+    {
+      "at": "2026-08-13T05:37:48+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed against docs/specs/studio-conversation-layout.md and exclusive ownership boundary; no actionable correctness, regression, security, or maintainability findings"
+    },
+    {
+      "at": "2026-08-13T05:37:48+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record branch handoff, rollback, deferred screenshot, archive, and local commit"
+    },
+    {
+      "at": "2026-08-13T05:38:57+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md and structured session handoff record validation, no-findings review, rollback, local-only tracker state, and user-accepted deferral of the integration screenshot"
+    },
+    {
+      "at": "2026-08-13T05:38:57+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implement Studio desktop conversation header and centered message-column geometry; commit: pending; follow-up: Integration owner merges locally, captures packaged 1470x870 screenshot, and requests user visual acceptance"
+    }
+  ],
+  "updated": "2026-08-13T05:38:57+00:00",
+  "archivedAt": "2026-08-13T05:38:57+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implement Studio desktop conversation header and centered message-column geometry",
+  "archiveFollowUp": "Integration owner merges locally, captures packaged 1470x870 screenshot, and requests user visual acceptance"
+}

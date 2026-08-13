@@ -11,13 +11,15 @@ interface AgentInputAutocompleteProps {
     selectedIndex?: number;
     onSelect: (index: number) => void;
     itemHeight: number;
+    studio?: boolean;
+    cornerRadius?: number;
 }
 
 // We don't reuse FloatingOverlay here because the dropdown needs a ref on
 // its ScrollView so arrow-key navigation can scroll the selected item into
 // view when the list exceeds the visible window.
 export const AgentInputAutocomplete = React.memo((props: AgentInputAutocompleteProps) => {
-    const { suggestions, selectedIndex = -1, onSelect, itemHeight } = props;
+    const { suggestions, selectedIndex = -1, onSelect, itemHeight, studio = false, cornerRadius } = props;
     const { theme } = useUnistyles();
     const scrollRef = React.useRef<ScrollView>(null);
 
@@ -82,7 +84,12 @@ export const AgentInputAutocomplete = React.memo((props: AgentInputAutocompleteP
     // The desktop dropdown deliberately remains the old static popover.
     if (Platform.OS === 'web') {
         return (
-            <View style={[styles.container, { maxHeight: MAX_HEIGHT }]}>
+            <View style={[
+                styles.container,
+                studio && styles.containerStudio,
+                studio && cornerRadius !== undefined && { borderRadius: cornerRadius },
+                { maxHeight: MAX_HEIGHT },
+            ]}>
                 {suggestionsList}
             </View>
         );
@@ -122,5 +129,15 @@ const styles = StyleSheet.create((theme) => ({
         shadowRadius: Platform.select({ web: 3.84, default: 36 }),
         shadowOpacity: Platform.select({ web: theme.colors.shadow.opacity, default: 1 }),
         elevation: 14,
+    },
+    containerStudio: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E4E4E5',
+        shadowColor: '#1A1C1F',
+        shadowOffset: { width: 0, height: 8 },
+        shadowRadius: 20,
+        shadowOpacity: 0.1,
+        elevation: 8,
     },
 }));

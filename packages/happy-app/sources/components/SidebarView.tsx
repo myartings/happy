@@ -15,6 +15,7 @@ import { ProjectTodoButton } from './ProjectTodoButton';
 import { useHasArchivedSessions } from '@/hooks/useVisibleSessionListViewData';
 import {
     resolveDesktopTodoRowStyle,
+    resolveDesktopSidebarFooterStyle,
     resolveDesktopTopControlsStyle,
     type DesktopSidebarFrame,
 } from '@/features/studio-visual-style/studioVisualStyle';
@@ -118,6 +119,10 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
         isTauriRuntime: isStudio,
         requestedStyle: isStudio ? 'studio' : 'default',
     }), [isStudio]);
+    const footerStyle = React.useMemo(() => resolveDesktopSidebarFooterStyle({
+        isTauriRuntime: isStudio,
+        requestedStyle: isStudio ? 'studio' : 'default',
+    }), [isStudio]);
 
     const handleNewSession = React.useCallback(() => {
         router.navigate('/new');
@@ -213,18 +218,24 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
             )}
 
             {/* Sessions list */}
-            <MainView variant="sidebar" />
+            <MainView variant="sidebar" sidebarVisualStyle={sidebarFrame?.visualStyle} />
 
             {/* Settings at bottom */}
             <Pressable
                 onPress={() => router.push('/settings')}
                 style={[
                     styles.settingsRow,
+                    isStudio && {
+                        height: footerStyle.height!,
+                        paddingHorizontal: footerStyle.horizontalPadding!,
+                        paddingVertical: 0,
+                        gap: footerStyle.contentGap!,
+                    },
                     shortcutHintsVisible && styles.shortcutTargetActive,
                 ]}
             >
-                <Ionicons name="settings-outline" size={18} color={stylesheet.settingsText.color} />
-                <Text style={styles.settingsText}>{t('settings.title')}</Text>
+                <Ionicons name="settings-outline" size={isStudio ? footerStyle.iconSize! : 18} color={stylesheet.settingsText.color} />
+                <Text style={[styles.settingsText, isStudio && { fontSize: footerStyle.labelFontSize! }]}>{t('settings.title')}</Text>
                 <ShortcutHintBadge shortcutKey="," style={styles.shortcutBadgeInline} />
             </Pressable>
         </View>
