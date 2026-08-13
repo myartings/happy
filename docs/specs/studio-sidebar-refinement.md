@@ -18,4 +18,3 @@ or previously accepted frame and row geometry.
   remain unchanged.
 - Automated verification does not constitute visual acceptance; the integrated
   desktop screenshot is returned to the user for approval.
-

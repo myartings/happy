@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "studio-ui-revision-2-packaged-light",
+  "scope": {
+    "level": "state",
+    "name": "Packaged Studio sidebar and Command Palette revision 2",
+    "screenId": "happy-session",
+    "state": "selected conversation and open Command Palette",
+    "renderEnvironment": {
+      "platform": "macOS Tauri",
+      "osVersion": "26.5.2",
+      "device": "Mac display",
+      "width": 1470,
+      "height": 874,
+      "scale": 2,
+      "appearance": "light"
+    }
+  },
+  "claims": [
+    {
+      "id": "sidebar-unboxed-ordinary-rows",
+      "category": "component",
+      "subject": "Studio sidebar session groups",
+      "observation": "Ordinary project and session rows render directly on the sidebar background without a contiguous white group surface, dividers, or group-level corner silhouette; only the selected project row has a bounded local fill.",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": ["sidebar-final"],
+      "limitations": ["Hover, focus, dark appearance, and very long metadata states are not shown in this still."]
+    },
+    {
+      "id": "palette-outer-shell-narrowed",
+      "category": "spacing",
+      "subject": "Studio Command Palette outer shell",
+      "observation": "The packaged Command Palette outer shell is visibly narrower than the earlier approximately 800 pt candidate and is centered in the same 1470 pt window.",
+      "value": 640,
+      "unit": "pt runtime candidate corroborated by same-scale screenshot",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": ["palette-final"],
+      "limitations": ["The screenshot supports reproduction geometry, not equivalence to an official Codex modal reference."]
+    },
+    {
+      "id": "palette-density-and-scrim",
+      "category": "density",
+      "subject": "Studio Command Palette internals and backdrop",
+      "observation": "Input, category, and command rows use a compact vertical rhythm, while the light backdrop preserves more underlying page contrast than the first integration candidate.",
+      "status": "observed",
+      "confidence": "medium",
+      "evidenceRefs": ["palette-final"],
+      "limitations": ["Perceived visual quality and preferred scrim strength remain user acceptance decisions; dark appearance is not captured."]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "sidebar-final",
+      "type": "screenshot",
+      "truthClass": "reproduction",
+      "quality": "baseline",
+      "path": "/Users/myartings/Sync/tmp/happy-studio-parallel-2026-08-13/revision-2/sidebar-unboxed-final.png",
+      "renderEnvironment": {
+        "platform": "macOS Tauri",
+        "osVersion": "26.5.2",
+        "device": "Mac display",
+        "width": 1470,
+        "height": 874,
+        "scale": 2,
+        "appearance": "light"
+      },
+      "sha256": "45e150a9f390f0c8638b5327bba4964798e6ef2d146dd65a40d4adcba3ef12aa",
+      "notes": "Packaged, stably signed, installed Happy (dev) selected-conversation state."
+    },
+    {
+      "id": "palette-final",
+      "type": "screenshot",
+      "truthClass": "reproduction",
+      "quality": "baseline",
+      "path": "/Users/myartings/Sync/tmp/happy-studio-parallel-2026-08-13/revision-2/command-palette-final.png",
+      "renderEnvironment": {
+        "platform": "macOS Tauri",
+        "osVersion": "26.5.2",
+        "device": "Mac display",
+        "width": 1470,
+        "height": 874,
+        "scale": 2,
+        "appearance": "light"
+      },
+      "sha256": "44832f5001a62d3ceaed890ce4ed62ec6fd74ece55bd2e3612fbe7a0057d1b70",
+      "notes": "Same packaged client and window geometry with Command Palette open."
+    }
+  ],
+  "quality": {
+    "overall": "high",
+    "limitations": [
+      "Only light appearance is included in this revision gate.",
+      "Still screenshots do not prove hover, focus, keyboard traversal, scrolling, or animation quality.",
+      "Visual acceptance belongs to the user and is not inferred from tests or this record."
+    ],
+    "conflicts": [],
+    "missingEvidence": ["Dark Command Palette", "Sidebar hover/focus states", "Narrow-window responsive palette"]
+  },
+  "notes": "This record documents reproduction truth after parent packaged verification rejected and corrected two earlier wiring candidates."
+}
