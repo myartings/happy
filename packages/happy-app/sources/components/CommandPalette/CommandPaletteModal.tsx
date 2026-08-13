@@ -99,7 +99,12 @@ export function CommandPaletteModal({
                             {
                                 opacity: fadeAnim.interpolate({
                                     inputRange: [0, 1],
-                                    outputRange: [0, 0.7]
+                                    outputRange: [
+                                        0,
+                                        overlayPresentation.isStudio
+                                            ? overlayPresentation.commandPalette.backdropPeakOpacity
+                                            : 0.7,
+                                    ]
                                 })
                             }
                         ]}
@@ -114,7 +119,10 @@ export function CommandPaletteModal({
                         {
                             opacity: fadeAnim,
                             transform: [{ scale: scaleAnim }]
-                        }
+                        },
+                        overlayPresentation.isStudio && {
+                            maxWidth: overlayPresentation.commandPalette.contentMaxWidth,
+                        },
                     ]}
                 >
                     {Platform.OS !== 'web' && <LocalBlurHalo borderRadius={24} expansion={18} blurIntensity={38} />}

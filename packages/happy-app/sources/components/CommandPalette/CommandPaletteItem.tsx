@@ -45,6 +45,12 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
             overlayPresentation.isStudio && pressed && {
                 backgroundColor: overlayPresentation.pressedColor,
             },
+            overlayPresentation.isStudio && {
+                borderWidth: overlayPresentation.commandPalette.itemBorderWidth,
+                marginVertical: overlayPresentation.commandPalette.itemMarginVertical,
+                paddingHorizontal: overlayPresentation.commandPalette.itemPaddingHorizontal,
+                paddingVertical: overlayPresentation.commandPalette.itemPaddingVertical,
+            },
         ],
         onPress,
     };
@@ -62,12 +68,19 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
                     <View
                         style={[
                             styles.iconContainer,
-                            overlayPresentation.isStudio && { backgroundColor: 'transparent' },
+                            overlayPresentation.isStudio && {
+                                backgroundColor: 'transparent',
+                                height: overlayPresentation.commandPalette.itemIconContainerSize,
+                                marginRight: overlayPresentation.commandPalette.itemIconMarginRight,
+                                width: overlayPresentation.commandPalette.itemIconContainerSize,
+                            },
                         ]}
                     >
                         <Ionicons 
                             name={command.icon as any} 
-                            size={20} 
+                            size={overlayPresentation.isStudio
+                                ? overlayPresentation.commandPalette.itemIconSize
+                                : 20}
                             color={overlayPresentation.isStudio
                                 ? overlayPresentation.textSecondaryColor
                                 : (isSelected ? '#007AFF' : '#666')}
@@ -79,7 +92,10 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
                         style={[
                             styles.title,
                             Typography.default(),
-                            overlayPresentation.isStudio && { color: overlayPresentation.textColor },
+                            overlayPresentation.isStudio && {
+                                color: overlayPresentation.textColor,
+                                fontSize: overlayPresentation.commandPalette.itemTitleFontSize,
+                            },
                         ]}
                     >
                         {command.title}
@@ -91,6 +107,7 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
                                 Typography.default(),
                                 overlayPresentation.isStudio && {
                                     color: overlayPresentation.textSecondaryColor,
+                                    fontSize: overlayPresentation.commandPalette.itemSubtitleFontSize,
                                 },
                             ]}
                         >
@@ -102,7 +119,11 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
                     <View
                         style={[
                             styles.shortcutContainer,
-                            overlayPresentation.isStudio && { backgroundColor: 'transparent' },
+                            overlayPresentation.isStudio && {
+                                backgroundColor: 'transparent',
+                                paddingHorizontal: overlayPresentation.commandPalette.shortcutPaddingHorizontal,
+                                paddingVertical: overlayPresentation.commandPalette.shortcutPaddingVertical,
+                            },
                         ]}
                     >
                         <Text

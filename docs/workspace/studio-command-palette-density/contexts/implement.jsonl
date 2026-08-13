@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-command-palette-density.md","reason":"Accepted observable behavior and non-goals"}
+{"path":"docs/tasks/studio-command-palette-density-tasks.md","reason":"Bounded implementation and validation slices"}
+{"path":"docs/workspace/studio-command-palette-density/decisions.md","reason":"Accepted candidate metrics and evidence limits"}
+{"path":"docs/workspace/studio-command-palette-density/batch-plan.md","reason":"Writer worktree ownership, stop conditions, and return contract"}
+{"path":"packages/happy-app/sources/features/studio-overlays/studioOverlayPresentation.ts","reason":"Owned Studio-only presentation contract"}
+{"path":"packages/happy-app/sources/components/CommandPalette","reason":"Owned Palette component family consuming the contract"}

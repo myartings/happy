@@ -41,7 +41,12 @@ export function CommandPaletteInput({ value, onChangeText, onKeyPress, inputRef 
                 style={[
                     styles.input,
                     Typography.default(),
-                    overlayPresentation.isStudio && { color: overlayPresentation.textColor },
+                    overlayPresentation.isStudio && {
+                        color: overlayPresentation.textColor,
+                        fontSize: overlayPresentation.commandPalette.inputFontSize,
+                        paddingHorizontal: overlayPresentation.commandPalette.inputPaddingHorizontal,
+                        paddingVertical: overlayPresentation.commandPalette.inputPaddingVertical,
+                    },
                 ]}
                 value={value}
                 onChangeText={onChangeText}

@@ -13,6 +13,32 @@ describe('resolveStudioOverlayPresentation', () => {
             requestedStyle: 'studio',
         })).toMatchObject({
             isStudio: true,
+            commandPalette: {
+                backdropPeakOpacity: 1,
+                categoryFontSize: 11,
+                categoryPaddingBottom: 6,
+                categoryPaddingHorizontal: 20,
+                categoryPaddingTop: 12,
+                contentMaxWidth: 640,
+                emptyPadding: 32,
+                inputFontSize: 16,
+                inputPaddingHorizontal: 20,
+                inputPaddingVertical: 16,
+                itemBorderWidth: 1,
+                itemIconContainerSize: 28,
+                itemIconMarginRight: 10,
+                itemIconSize: 18,
+                itemMarginVertical: 1,
+                itemPaddingHorizontal: 16,
+                itemPaddingVertical: 8,
+                itemSubtitleFontSize: 12,
+                itemTitleFontSize: 14,
+                resultsMaxHeightWeb: '38vh',
+                resultsPaddingVertical: 6,
+                shellMaxHeightWeb: '52vh',
+                shortcutPaddingHorizontal: 8,
+                shortcutPaddingVertical: 3,
+            },
             floating: {
                 borderWidth: 1,
                 radius: 17,
@@ -21,13 +47,24 @@ describe('resolveStudioOverlayPresentation', () => {
                 shadowRadius: 24,
                 surfaceColor: 'rgba(255, 255, 255, 0.96)',
             },
+            modal: {
+                radius: 16,
+                scrimColor: 'rgba(0, 0, 0, 0.10)',
+            },
         });
 
         expect(resolveStudioOverlayPresentation({
             isDark: false,
             isTauriRuntime: false,
             requestedStyle: 'studio',
-        }).isStudio).toBe(false);
+        })).toMatchObject({
+            isStudio: false,
+            commandPalette: {
+                contentMaxWidth: 0,
+                inputPaddingVertical: 0,
+                itemPaddingVertical: 0,
+            },
+        });
 
         expect(resolveStudioOverlayPresentation({
             isDark: false,
@@ -46,7 +83,7 @@ describe('resolveStudioOverlayPresentation', () => {
 
         expect(presentation.isStudio).toBe(true);
         expect(presentation.modal.shadowRadius).not.toBe(presentation.floating.shadowRadius);
-        expect(presentation.modal.scrimColor).not.toBe('transparent');
+        expect(presentation.modal.scrimColor).toBe('rgba(0, 0, 0, 0.24)');
         expect(presentation.floating.clickAwayColor).toBe('transparent');
 
         expect(resolveStudioOverlayPresentation({

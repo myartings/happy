@@ -14,6 +14,32 @@ export type StudioOverlayLevelStyle = {
 };
 
 export type StudioOverlayPresentation = {
+    commandPalette: {
+        backdropPeakOpacity: number;
+        categoryFontSize: number;
+        categoryPaddingBottom: number;
+        categoryPaddingHorizontal: number;
+        categoryPaddingTop: number;
+        contentMaxWidth: number;
+        emptyPadding: number;
+        inputFontSize: number;
+        inputPaddingHorizontal: number;
+        inputPaddingVertical: number;
+        itemBorderWidth: number;
+        itemIconContainerSize: number;
+        itemIconMarginRight: number;
+        itemIconSize: number;
+        itemMarginVertical: number;
+        itemPaddingHorizontal: number;
+        itemPaddingVertical: number;
+        itemSubtitleFontSize: number;
+        itemTitleFontSize: number;
+        resultsMaxHeightWeb: string;
+        resultsPaddingVertical: number;
+        shellMaxHeightWeb: string;
+        shortcutPaddingHorizontal: number;
+        shortcutPaddingVertical: number;
+    };
     dividerColor: string;
     floating: StudioOverlayLevelStyle & { clickAwayColor: 'transparent' };
     hoverColor: string;
@@ -34,6 +60,32 @@ type ResolveStudioOverlayPresentationInput = {
 };
 
 const DEFAULT_PRESENTATION: StudioOverlayPresentation = {
+    commandPalette: {
+        backdropPeakOpacity: 0,
+        categoryFontSize: 0,
+        categoryPaddingBottom: 0,
+        categoryPaddingHorizontal: 0,
+        categoryPaddingTop: 0,
+        contentMaxWidth: 0,
+        emptyPadding: 0,
+        inputFontSize: 0,
+        inputPaddingHorizontal: 0,
+        inputPaddingVertical: 0,
+        itemBorderWidth: 0,
+        itemIconContainerSize: 0,
+        itemIconMarginRight: 0,
+        itemIconSize: 0,
+        itemMarginVertical: 0,
+        itemPaddingHorizontal: 0,
+        itemPaddingVertical: 0,
+        itemSubtitleFontSize: 0,
+        itemTitleFontSize: 0,
+        resultsMaxHeightWeb: '',
+        resultsPaddingVertical: 0,
+        shellMaxHeightWeb: '',
+        shortcutPaddingHorizontal: 0,
+        shortcutPaddingVertical: 0,
+    },
     dividerColor: 'transparent',
     floating: {
         borderColor: 'transparent',
@@ -107,6 +159,32 @@ export function resolveStudioOverlayPresentation({
         };
 
     return {
+        commandPalette: {
+            backdropPeakOpacity: 1,
+            categoryFontSize: 11,
+            categoryPaddingBottom: 6,
+            categoryPaddingHorizontal: 20,
+            categoryPaddingTop: 12,
+            contentMaxWidth: 640,
+            emptyPadding: 32,
+            inputFontSize: 16,
+            inputPaddingHorizontal: 20,
+            inputPaddingVertical: 16,
+            itemBorderWidth: 1,
+            itemIconContainerSize: 28,
+            itemIconMarginRight: 10,
+            itemIconSize: 18,
+            itemMarginVertical: 1,
+            itemPaddingHorizontal: 16,
+            itemPaddingVertical: 8,
+            itemSubtitleFontSize: 12,
+            itemTitleFontSize: 14,
+            resultsMaxHeightWeb: '38vh',
+            resultsPaddingVertical: 6,
+            shellMaxHeightWeb: '52vh',
+            shortcutPaddingHorizontal: 8,
+            shortcutPaddingVertical: 3,
+        },
         dividerColor: palette.divider,
         floating: {
             borderColor: palette.border,
@@ -124,8 +202,8 @@ export function resolveStudioOverlayPresentation({
         modal: {
             borderColor: palette.border,
             borderWidth: 1,
-            radius: 18,
-            scrimColor: isDark ? 'rgba(0, 0, 0, 0.42)' : 'rgba(0, 0, 0, 0.22)',
+            radius: 16,
+            scrimColor: isDark ? 'rgba(0, 0, 0, 0.24)' : 'rgba(0, 0, 0, 0.10)',
             shadowOffsetY: 18,
             shadowOpacity: isDark ? 0.32 : 0.16,
             shadowRadius: 42,

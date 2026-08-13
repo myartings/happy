@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-command-palette-density",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent cherry-picks, packages the dev client, captures the same Palette state, and requests explicit user visual acceptance",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User-approved narrow/lighter/denser Palette revision is captured in docs/specs/studio-command-palette-density.md",
+      "updated": "2026-08-13T07:02:52+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D4 record provisional 640 pt width, lighter theme-aware scrim, Studio-only metric ownership, and explicit evidence limits",
+      "updated": "2026-08-13T07:02:52+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope is isolated to Command Palette and Studio overlay resolver in a dedicated worktree; batch plan defines blocked files, tests, stop conditions, and parent integration ownership",
+      "updated": "2026-08-13T07:02:52+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "UI-only conditional presentation change; no authentication, authorization, migration, privacy, deployment, destructive, protocol, or synchronization trigger",
+      "updated": "2026-08-13T07:02:52+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Studio-only resolver metrics and conditional shell/modal/input/results/item wiring implemented; focused Vitest 3 files/10 tests and Happy App typecheck pass",
+      "updated": "2026-08-13T07:12:34+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Focused Vitest 3 files/10 tests, Happy App typecheck, diff check, Happy workflow validation, workflow core 14, workflow CI 14 all pass; packaged visual acceptance remains explicitly parent-owned",
+      "updated": "2026-08-13T07:14:01+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff semantic review found no blocking issues; behavioral hooks/callbacks/timing and non-Studio fallbacks are unchanged",
+      "updated": "2026-08-13T07:14:01+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review, rollback, complete acceptance-boundary mapping, session handoff, exact validation, and parent visual follow-up are recorded",
+      "updated": "2026-08-13T07:14:28+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T06:59:25+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T07:02:52+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User-approved narrow/lighter/denser Palette revision is captured in docs/specs/studio-command-palette-density.md"
+    },
+    {
+      "at": "2026-08-13T07:02:52+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 record provisional 640 pt width, lighter theme-aware scrim, Studio-only metric ownership, and explicit evidence limits"
+    },
+    {
+      "at": "2026-08-13T07:02:52+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "UI-only conditional presentation change; no authentication, authorization, migration, privacy, deployment, destructive, protocol, or synchronization trigger"
+    },
+    {
+      "at": "2026-08-13T07:02:52+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope is isolated to Command Palette and Studio overlay resolver in a dedicated worktree; batch plan defines blocked files, tests, stop conditions, and parent integration ownership"
+    },
+    {
+      "at": "2026-08-13T07:02:52+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add tested Studio-only Palette metrics and component wiring"
+    },
+    {
+      "at": "2026-08-13T07:12:34+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Studio-only resolver metrics and conditional shell/modal/input/results/item wiring implemented; focused Vitest 3 files/10 tests and Happy App typecheck pass"
+    },
+    {
+      "at": "2026-08-13T07:12:34+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run workflow checks, acceptance mapping, and whole-diff review"
+    },
+    {
+      "at": "2026-08-13T07:14:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Focused Vitest 3 files/10 tests, Happy App typecheck, diff check, Happy workflow validation, workflow core 14, workflow CI 14 all pass; packaged visual acceptance remains explicitly parent-owned"
+    },
+    {
+      "at": "2026-08-13T07:14:01+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff semantic review found no blocking issues; behavioral hooks/callbacks/timing and non-Studio fallbacks are unchanged"
+    },
+    {
+      "at": "2026-08-13T07:14:01+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive validated child slice and return one local commit to parent"
+    },
+    {
+      "at": "2026-08-13T07:14:28+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review, rollback, complete acceptance-boundary mapping, session handoff, exact validation, and parent visual follow-up are recorded"
+    },
+    {
+      "at": "2026-08-13T07:14:35+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Refine Studio Tauri Command Palette width, scrim, and desktop density without changing behavior or non-Studio paths; commit: pending; follow-up: Parent cherry-picks, packages the dev client, captures the same Palette state, and requests explicit user visual acceptance"
+    }
+  ],
+  "updated": "2026-08-13T07:14:35+00:00",
+  "archivedAt": "2026-08-13T07:14:35+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Refine Studio Tauri Command Palette width, scrim, and desktop density without changing behavior or non-Studio paths",
+  "archiveFollowUp": "Parent cherry-picks, packages the dev client, captures the same Palette state, and requests explicit user visual acceptance"
+}

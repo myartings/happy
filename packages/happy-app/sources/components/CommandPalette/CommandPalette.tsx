@@ -42,6 +42,8 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
                     shadowOffset: { width: 0, height: overlayPresentation.modal.shadowOffsetY },
                     shadowOpacity: overlayPresentation.modal.shadowOpacity,
                     shadowRadius: overlayPresentation.modal.shadowRadius,
+                    maxHeight: overlayPresentation.commandPalette.shellMaxHeightWeb,
+                    maxWidth: overlayPresentation.commandPalette.contentMaxWidth,
                 },
             ]}
         >

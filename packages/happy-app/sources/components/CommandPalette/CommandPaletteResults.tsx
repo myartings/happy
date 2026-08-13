@@ -43,7 +43,14 @@ export function CommandPaletteResults({
 
     if (categories.length === 0 || allCommands.length === 0) {
         return (
-            <View style={styles.emptyContainer}>
+            <View
+                style={[
+                    styles.emptyContainer,
+                    overlayPresentation.isStudio && {
+                        padding: overlayPresentation.commandPalette.emptyPadding,
+                    },
+                ]}
+            >
                 <Text
                     style={[
                         styles.emptyText,
@@ -64,7 +71,13 @@ export function CommandPaletteResults({
     return (
         <ScrollView 
             ref={scrollViewRef}
-            style={styles.container}
+            style={[
+                styles.container,
+                overlayPresentation.isStudio && {
+                    maxHeight: overlayPresentation.commandPalette.resultsMaxHeightWeb,
+                    paddingVertical: overlayPresentation.commandPalette.resultsPaddingVertical,
+                },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
         >
@@ -102,8 +115,12 @@ export function CommandPaletteResults({
                                 Typography.default('semiBold'),
                                 overlayPresentation.isStudio && {
                                     color: overlayPresentation.textSecondaryColor,
+                                    fontSize: overlayPresentation.commandPalette.categoryFontSize,
                                     fontWeight: '500',
                                     letterSpacing: 0.4,
+                                    paddingBottom: overlayPresentation.commandPalette.categoryPaddingBottom,
+                                    paddingHorizontal: overlayPresentation.commandPalette.categoryPaddingHorizontal,
+                                    paddingTop: overlayPresentation.commandPalette.categoryPaddingTop,
                                 },
                             ]}
                         >
