@@ -8,6 +8,9 @@ export type MarkdownBlock = {
     level: 1 | 2 | 3 | 4 | 5 | 6
     content: MarkdownSpan[]
 } | {
+    type: 'blockquote'
+    content: MarkdownSpan[]
+} | {
     type: 'list',
     items: { depth: number, spans: MarkdownSpan[] }[]
 } | {
@@ -36,7 +39,7 @@ export type MarkdownBlock = {
 }
 
 export type MarkdownSpan = {
-    styles: ('italic' | 'bold' | 'semibold' | 'code')[],
+    styles: ('italic' | 'bold' | 'semibold' | 'strikethrough' | 'code')[],
     text: string,
     url: string | null
 }

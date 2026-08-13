@@ -7,6 +7,40 @@ const item = (spans: { styles: string[]; text: string; url: string | null }[]) =
 });
 
 describe('parseMarkdown', () => {
+    it('parses blockquotes and strikethrough without flattening their meaning', () => {
+        const blocks = parseMarkdown([
+            '> A restrained quote with ~~obsolete~~ guidance.',
+            '> Keep the second line selectable.',
+        ].join('\n'));
+
+        expect(blocks).toEqual([{
+            type: 'blockquote',
+            content: [
+                { styles: [], text: 'A restrained quote with ', url: null },
+                { styles: ['strikethrough'], text: 'obsolete', url: null },
+                { styles: [], text: ' guidance.\nKeep the second line selectable.', url: null },
+            ],
+        }]);
+    });
+
+    it('preserves nested depth for ordered and unordered lists', () => {
+        const blocks = parseMarkdown([
+            '- outer',
+            '  - nested',
+            '    - deep',
+            '',
+            '1. first',
+            '  2. second',
+        ].join('\n'));
+
+        expect(blocks.filter((block) => block.type === 'list')[0]).toMatchObject({
+            items: [{ depth: 0 }, { depth: 1 }, { depth: 2 }],
+        });
+        expect(blocks.filter((block) => block.type === 'numbered-list')[0]).toMatchObject({
+            items: [{ number: 1, depth: 0 }, { number: 2, depth: 1 }],
+        });
+    });
+
     it('parses unordered lists across common markdown bullet markers and preserves clickable links', () => {
         const blocks = parseMarkdown([
             '* first item',

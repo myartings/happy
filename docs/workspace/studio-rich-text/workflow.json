@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-rich-text",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent integrates child commit and performs packaged light/dark fixture plus real tool/diff visual acceptance",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Parent Track C contract: docs/specs/studio-visual-convergence.md AC6-AC8 and docs/tasks/studio-visual-convergence-tasks.md Track C",
+      "updated": "2026-08-13T17:00:44+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "Resolved D1-D4 in docs/workspace/studio-rich-text/decisions.md",
+      "updated": "2026-08-13T17:00:44+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature child is isolated on feature/studio-rich-text; allowed/blocked paths, public test seams, final commands, and local-only tracker rationale are recorded",
+      "updated": "2026-08-13T17:00:44+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "UI-only parser/presentation work; no .ai/project.json risk trigger applies; assessment D5",
+      "updated": "2026-08-13T17:00:44+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "RED/GREEN/refactor recorded in validation.md; focused 31/31 tests, Happy App typecheck, and full 1187/1187 suite with bounded timeout pass",
+      "updated": "2026-08-13T17:10:26+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-13T17:11:38+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review recorded in finish.md: no blocking findings; compatibility, link safety, renderer preservation, runtime gating, and ownership boundaries confirmed",
+      "updated": "2026-08-13T17:12:32+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md and structured session record complete; verification, review, rollback, visual uncertainties, and parent follow-up documented",
+      "updated": "2026-08-13T17:13:05+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T16:59:17+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T17:00:44+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Parent Track C contract: docs/specs/studio-visual-convergence.md AC6-AC8 and docs/tasks/studio-visual-convergence-tasks.md Track C"
+    },
+    {
+      "at": "2026-08-13T17:00:44+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "Resolved D1-D4 in docs/workspace/studio-rich-text/decisions.md"
+    },
+    {
+      "at": "2026-08-13T17:00:44+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "UI-only parser/presentation work; no .ai/project.json risk trigger applies; assessment D5"
+    },
+    {
+      "at": "2026-08-13T17:00:44+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature child is isolated on feature/studio-rich-text; allowed/blocked paths, public test seams, final commands, and local-only tracker rationale are recorded"
+    },
+    {
+      "at": "2026-08-13T17:00:44+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Run focused RED tests for accepted Markdown constructs and Studio presentation"
+    },
+    {
+      "at": "2026-08-13T17:10:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED/GREEN/refactor recorded in validation.md; focused 31/31 tests, Happy App typecheck, and full 1187/1187 suite with bounded timeout pass"
+    },
+    {
+      "at": "2026-08-13T17:10:27+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run recorded workflow checks and whole-diff semantic review"
+    },
+    {
+      "at": "2026-08-13T17:11:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:12:32+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review recorded in finish.md: no blocking findings; compatibility, link safety, renderer preservation, runtime gating, and ownership boundaries confirmed"
+    },
+    {
+      "at": "2026-08-13T17:12:32+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize child handoff, archive with pending commit, run staged workflow CI, and commit locally"
+    },
+    {
+      "at": "2026-08-13T17:13:05+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md and structured session record complete; verification, review, rollback, visual uncertainties, and parent follow-up documented"
+    },
+    {
+      "at": "2026-08-13T17:13:05+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and validated Studio rich-text parser, deterministic fixture, light/dark presentation, and renderer wiring; commit: pending; follow-up: Parent integrates child commit and performs packaged light/dark fixture plus real tool/diff visual acceptance"
+    }
+  ],
+  "updated": "2026-08-13T17:13:05+00:00",
+  "previousActive": {
+    "feature": "studio-visual-convergence",
+    "phase": "implementation",
+    "updated": "2026-08-14",
+    "next": "Commit Batch 0, fork three isolated writers, then integrate validated child commits.",
+    "branch / worktree": "feature/studio-visual-convergence"
+  },
+  "archivedAt": "2026-08-13T17:13:05+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and validated Studio rich-text parser, deterministic fixture, light/dark presentation, and renderer wiring",
+  "archiveFollowUp": "Parent integrates child commit and performs packaged light/dark fixture plus real tool/diff visual acceptance"
+}

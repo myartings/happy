@@ -39,6 +39,40 @@ export type StudioSemanticTextPresentation = Readonly<{
         fontSize: number;
         lineHeight: number;
     }>;
+    list: Readonly<{
+        gap: number;
+        indent: number;
+        markerColor: string;
+    }>;
+    blockquote: Readonly<{
+        backgroundColor: string;
+        borderColor: string;
+        borderLeftWidth: number;
+        borderRadius: number;
+        marginVertical: number;
+        paddingHorizontal: number;
+        paddingVertical: number;
+    }>;
+    horizontalRule: Readonly<{
+        backgroundColor: string;
+        marginVertical: number;
+    }>;
+    table: Readonly<{
+        borderColor: string;
+        headerBackgroundColor: string;
+        borderRadius: number;
+        cellPaddingHorizontal: number;
+        cellPaddingVertical: number;
+        headerFontSize: number;
+        bodyFontSize: number;
+        lineHeight: number;
+    }>;
+    codeChrome: Readonly<{
+        labelColor: string;
+        copyBackgroundColor: string;
+        copyBorderColor: string;
+        copyTextColor: string;
+    }>;
 }>;
 
 type ResolveStudioSemanticTextPresentationInput = Readonly<{
@@ -124,12 +158,46 @@ export function resolveStudioSemanticTextPresentation({
             fontSize: 12,
             lineHeight: 18,
         },
+        list: {
+            gap: 4,
+            indent: 18,
+            markerColor: dark ? '#A6A6A6' : '#707070',
+        },
+        blockquote: {
+            backgroundColor: dark ? '#262626' : '#F7F7F6',
+            borderColor: dark ? '#55514C' : '#D8D6D2',
+            borderLeftWidth: 3,
+            borderRadius: 5,
+            marginVertical: 8,
+            paddingHorizontal: 13,
+            paddingVertical: 9,
+        },
+        horizontalRule: {
+            backgroundColor: dark ? '#414141' : '#E2E0DC',
+            marginVertical: 14,
+        },
+        table: {
+            borderColor: dark ? '#414141' : '#DFDDD9',
+            headerBackgroundColor: dark ? '#2D2D2D' : '#F4F3F1',
+            borderRadius: 6,
+            cellPaddingHorizontal: 11,
+            cellPaddingVertical: 7,
+            headerFontSize: 14,
+            bodyFontSize: 14,
+            lineHeight: 21,
+        },
+        codeChrome: {
+            labelColor: dark ? '#A6A6A6' : '#707070',
+            copyBackgroundColor: dark ? '#343434' : '#FFFFFF',
+            copyBorderColor: dark ? '#4A4A4A' : '#DDDCD9',
+            copyTextColor: dark ? '#E7E7E7' : '#343434',
+        },
     };
 }
 
 type SemanticMarkdownSpan = Readonly<{
     text: string;
-    styles: readonly ('italic' | 'bold' | 'semibold' | 'code')[];
+    styles: readonly ('italic' | 'bold' | 'semibold' | 'strikethrough' | 'code')[];
     url: string | null;
 }>;
 

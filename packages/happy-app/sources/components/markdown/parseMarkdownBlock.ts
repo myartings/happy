@@ -143,6 +143,21 @@ export function parseMarkdownBlock(markdown: string) {
             continue;
         }
 
+        // Consecutive quote lines form one selectable block while retaining
+        // inline Markdown semantics and explicit line breaks.
+        if (/^>\s?/.test(trimmed)) {
+            const quoteLines = [trimmed.replace(/^>\s?/, '')];
+            while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
+                quoteLines.push(lines[index].trim().replace(/^>\s?/, ''));
+                index++;
+            }
+            blocks.push({
+                type: 'blockquote',
+                content: parseMarkdownSpans(quoteLines.join('\n'), false),
+            });
+            continue;
+        }
+
         // If it is a numbered list
         const numberedListMatch = trimmed.match(/^(\d+)\.\s+/);
         if (numberedListMatch) {

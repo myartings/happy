@@ -33,6 +33,36 @@ describe('resolveStudioSemanticTextPresentation', () => {
                 3: { fontSize: 16, lineHeight: 24 },
                 6: { fontSize: 15, lineHeight: 23 },
             },
+            list: { gap: 4, indent: 18, markerColor: '#707070' },
+            blockquote: {
+                backgroundColor: '#F7F7F6',
+                borderColor: '#D8D6D2',
+                borderLeftWidth: 3,
+            },
+            horizontalRule: { backgroundColor: '#E2E0DC' },
+            table: {
+                borderColor: '#DFDDD9',
+                headerBackgroundColor: '#F4F3F1',
+            },
+            codeChrome: {
+                labelColor: '#707070',
+                copyBackgroundColor: '#FFFFFF',
+            },
+        });
+    });
+
+    it('uses restrained dark surfaces with equivalent semantic structure', () => {
+        const presentation = resolveStudioSemanticTextPresentation({
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+            dark: true,
+        });
+
+        expect(presentation).toMatchObject({
+            blockquote: { backgroundColor: '#262626', borderColor: '#55514C' },
+            horizontalRule: { backgroundColor: '#414141' },
+            table: { borderColor: '#414141', headerBackgroundColor: '#2D2D2D' },
+            codeChrome: { labelColor: '#A6A6A6', copyBackgroundColor: '#343434' },
         });
     });
 

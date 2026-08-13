@@ -1,7 +1,7 @@
 import type { MarkdownSpan } from "./parseMarkdown";
 
 // Updated pattern to handle nested markdown and asterisks
-const pattern = /(\*\*(.*?)(?:\*\*|$))|(\*(.*?)(?:\*|$))|(\[([^\]]+)\](?:\(([^)]+)\))?)|(`(.*?)(?:`|$))/g;
+const pattern = /(\*\*(.*?)(?:\*\*|$))|(~~(.*?)(?:~~|$))|(\*(.*?)(?:\*|$))|(\[([^\]]+)\](?:\(([^)]+)\))?)|(`(.*?)(?:`|$))/g;
 
 function pushTextWithAutoLinks(spans: MarkdownSpan[], text: string, styles: MarkdownSpan['styles']) {
     const urlPattern = /https?:\/\/[^\s<]+/g;
@@ -57,23 +57,26 @@ export function parseMarkdownSpans(markdown: string, header: boolean) {
                 pushTextWithAutoLinks(spans, match[2], ['bold']);
             }
         } else if (match[3]) {
+            // Strikethrough
+            pushTextWithAutoLinks(spans, match[4], ['strikethrough']);
+        } else if (match[5]) {
             // Italic
             if (header) {
-                pushTextWithAutoLinks(spans, match[4], []);
+                pushTextWithAutoLinks(spans, match[6], []);
             } else {
-                pushTextWithAutoLinks(spans, match[4], ['italic']);
+                pushTextWithAutoLinks(spans, match[6], ['italic']);
             }
-        } else if (match[5]) {
+        } else if (match[7]) {
             // Link - handle incomplete links (no URL part)
-            if (match[7]) {
-                spans.push({ styles: [], text: match[6], url: match[7] });
+            if (match[9]) {
+                spans.push({ styles: [], text: match[8], url: match[9] });
             } else {
                 // If no URL part, treat as plain text with brackets
-                pushTextWithAutoLinks(spans, `[${match[6]}]`, []);
+                pushTextWithAutoLinks(spans, `[${match[8]}]`, []);
             }
-        } else if (match[8]) {
+        } else if (match[10]) {
             // Inline code
-            spans.push({ styles: ['code'], text: match[9], url: null });
+            spans.push({ styles: ['code'], text: match[11], url: null });
         }
 
         lastIndex = pattern.lastIndex;
