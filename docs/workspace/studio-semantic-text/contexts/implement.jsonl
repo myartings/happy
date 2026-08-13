@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-semantic-text.md","reason":"Accepted behavior, parallel boundary, ANSI allowlist, and acceptance criteria"}
+{"path":"docs/tasks/studio-semantic-text-tasks.md","reason":"Dependency-aware T1-T6 execution boundary"}
+{"path":"docs/workspace/studio-semantic-text/context.md","reason":"Platform boundary, concurrent ownership, and checkpoint integration rule"}
+{"path":"docs/workspace/studio-semantic-text/decisions.md","reason":"Semantic hierarchy and ANSI safety decisions to resolve before implementation"}

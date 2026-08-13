@@ -1,0 +1,15 @@
+# Decisions: `studio-semantic-text`
+
+| ID | Question | Status | Decision/evidence |
+| --- | --- | --- | --- |
+| D1 | What product-facing visual style owns this work? | decided | Use neutral `Studio`; Otty and Codex are reference sources, not theme names. |
+| D2 | Which runtimes are in scope? | decided | Packaged macOS and Windows desktop clients only. iOS, Android, and standalone browser Web retain Default and are not acceptance targets. |
+| D3 | What is the primary coloring model? | decided | Semantic roles are primary because tool/status/path meaning is known even when a command emits no ANSI. Markdown, structured events, and tool views should consume shared roles rather than scattered literals. |
+| D4 | How is ANSI handled? | decided | Positive allowlist only CSI SGR (`ESC [` parameters `m`) for standard/256/truecolor foreground/background plus bold, dim, italic, underline, and resets. All cursor, erase, query, OSC title/link/clipboard, malformed, and truncated sequences remain inert or are removed from readable output. Parser stays pure, deterministic, dependency-free, and run growth is bounded. |
+| D5 | What existing rendering behavior must be preserved? | decided | Preserve Markdown parsing, selectable text, links, copy behavior, tables, Mermaid, and fenced-code syntax highlighting. Add hierarchy without changing content semantics. |
+| D6 | What is the visual reference and acceptance loop? | decided | Codex is primary and Otty historical supporting evidence. Use matched Happy Desktop screenshots and the project-local visual loop before claiming parity. |
+| D7 | Can this branch copy the prerequisite from another dirty worktree? | decided | No. Develop only self-contained files here. When `feature/codex-visual-theme` provides a committed checkpoint through `dev`, merge `dev` normally for final integration. |
+| D8 | What is the first implementation slice? | decided | T1-T4 may proceed now: platform-neutral semantic roles, pure ANSI parser, adversarial/resource tests, and deterministic fixtures. T5-T6 (theme/component binding and visual acceptance) wait for the Studio checkpoint. |
+| D9 | Which files are concurrently owned by the theme worktree? | decided | Treat `packages/happy-app/sources/theme.ts`, `unistyles.ts`, local visual-style settings/resolver, and their tests as theme-branch-owned until checkpoint integration; semantic-text work uses new self-contained files and tests. |
+| D10 | How does this child branch finish without self-approving visual parity? | decided | Complete and verify the bounded semantic-text code batch locally, then delegate matched screenshots and user acceptance to the parent Studio integration workflow. Child completion means merge-ready code, not visual acceptance. |
+| D11 | Are tool presentation files safe to edit concurrently? | decided | Not in this batch. Central Markdown and MessageView text seams are explicitly owned; tool shell/text boundaries overlap too broadly with parallel surface work, so this branch exposes reusable roles but leaves tool consumers to coordinated integration. |
