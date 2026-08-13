@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-interaction-states.md","reason":"Accepted behavior, invariants, and evidence map"}
+{"path":"docs/tasks/studio-interaction-states-tasks.md","reason":"Dependency-ordered implementation slices"}
+{"path":"docs/workspace/studio-interaction-states/decisions.md","reason":"Resolved appearance, geometry, and state-priority decisions"}
+{"path":"docs/workspace/studio-interaction-states/batch-plan.md","reason":"Delegated worktree ownership and stop conditions"}
+{"path":"packages/happy-app/sources/features/studio-visual-style","reason":"Owned sidebar presentation seam"}
+{"path":"packages/happy-app/sources/features/studio-overlays","reason":"Owned overlay presentation seam"}

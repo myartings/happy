@@ -33,6 +33,11 @@ import {
     resolveStudioSidebarGroupPresentation,
     resolveStudioSidebarRowChrome,
 } from '@/features/studio-visual-style/studioSidebarGroupPresentation';
+import {
+    resolveStudioSidebarInteractionPresentation,
+    resolveStudioSidebarStateBackground,
+} from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -279,6 +284,12 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const isStudio = sessionRowStyle.visualStyle === 'studio';
+    const interactionPresentation = React.useMemo(() => resolveStudioSidebarInteractionPresentation({
+        isDark: theme.dark,
+        isTauriRuntime: isStudio,
+        requestedStyle: isStudio ? 'studio' : 'default',
+    }), [isStudio, theme.dark]);
+    const interactionState = useStudioInteractionState(isStudio);
     const rowChrome = resolveStudioSidebarRowChrome(sessionRowStyle, {
         selected: !!selected,
         showDivider: !!showBorder,
@@ -384,7 +395,10 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
 
     const itemContent = (
         <Pressable
-            style={[
+            accessibilityRole="button"
+            accessibilityState={{ selected: !!selected }}
+            {...interactionState.interactionProps}
+            style={({ pressed }) => [
                 styles.sessionRow,
                 rowChrome.showDivider && styles.sessionRowWithBorder,
                 rowChrome.backgroundRole === 'selected' && !isStudio && styles.sessionRowSelected,
@@ -395,11 +409,19 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     marginBottom: sessionRowStyle.gap!,
                     paddingHorizontal: sessionRowStyle.horizontalPadding!,
                     paddingVertical: sessionRowStyle.verticalPadding!,
-                    borderRadius: rowChrome.cornerRadius!,
+                    borderRadius: sessionRowStyle.cornerRadius!,
                     borderWidth: 0,
-                    backgroundColor: rowChrome.backgroundRole === 'selected'
-                        ? sessionRowStyle.selectedBackground!
-                        : 'transparent',
+                    backgroundColor: resolveStudioSidebarStateBackground(interactionPresentation, {
+                        hovered: interactionState.hovered,
+                        pressed,
+                        selected: !!selected,
+                    }),
+                    ...(Platform.OS === 'web' && interactionState.focused ? {
+                        outlineColor: interactionPresentation.focusRingColor,
+                        outlineOffset: -2,
+                        outlineStyle: 'solid',
+                        outlineWidth: 2,
+                    } as any : {}),
                     overflow: rowChrome.clipToRowShape ? 'hidden' : 'visible',
                     shadowOpacity: 0,
                     elevation: 0,

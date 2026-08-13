@@ -4,6 +4,7 @@ import { Command } from './types';
 import { Typography } from '@/constants/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 interface CommandPaletteItemProps {
     command: Command;
@@ -14,32 +15,27 @@ interface CommandPaletteItemProps {
 
 export function CommandPaletteItem({ command, isSelected, onPress, onHover }: CommandPaletteItemProps) {
     const overlayPresentation = useStudioOverlayPresentation();
-    const [isHovered, setIsHovered] = React.useState(false);
+    const interactionState = useStudioInteractionState(
+        overlayPresentation.isStudio && Platform.OS === 'web',
+    );
     
     const handleMouseEnter = React.useCallback(() => {
         if (Platform.OS === 'web') {
-            setIsHovered(true);
             onHover?.();
         }
     }, [onHover]);
-    
-    const handleMouseLeave = React.useCallback(() => {
-        if (Platform.OS === 'web') {
-            setIsHovered(false);
-        }
-    }, []);
     
     const pressableProps: any = {
         style: ({ pressed }: any) => [
             styles.container,
             isSelected && styles.selected,
-            isHovered && !isSelected && styles.hovered,
+            interactionState.hovered && !isSelected && styles.hovered,
             pressed && Platform.OS === 'web' && styles.pressed,
             overlayPresentation.isStudio && isSelected && {
                 backgroundColor: overlayPresentation.selectedColor,
-                borderColor: 'transparent',
+                borderColor: overlayPresentation.selectedBorderColor,
             },
-            overlayPresentation.isStudio && isHovered && !isSelected && {
+            overlayPresentation.isStudio && interactionState.hovered && !isSelected && {
                 backgroundColor: overlayPresentation.hoverColor,
             },
             overlayPresentation.isStudio && pressed && {
@@ -50,15 +46,23 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
                 marginVertical: overlayPresentation.commandPalette.itemMarginVertical,
                 paddingHorizontal: overlayPresentation.commandPalette.itemPaddingHorizontal,
                 paddingVertical: overlayPresentation.commandPalette.itemPaddingVertical,
+                ...(Platform.OS === 'web' && interactionState.focused ? {
+                    outlineColor: overlayPresentation.focusRingColor,
+                    outlineOffset: -2,
+                    outlineStyle: 'solid',
+                    outlineWidth: 2,
+                } as any : {}),
             },
         ],
+        accessibilityRole: 'button',
+        accessibilityState: { selected: isSelected },
         onPress,
+        ...interactionState.interactionProps,
     };
     
     // Add mouse events only on web
     if (Platform.OS === 'web') {
         pressableProps.onMouseEnter = handleMouseEnter;
-        pressableProps.onMouseLeave = handleMouseLeave;
     }
     
     return (

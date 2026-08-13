@@ -47,10 +47,12 @@ describe('resolveStudioOverlayPresentation', () => {
                 shadowRadius: 24,
                 surfaceColor: 'rgba(255, 255, 255, 0.96)',
             },
+            focusRingColor: 'rgba(70, 111, 226, 0.82)',
             modal: {
                 radius: 16,
                 scrimColor: 'rgba(0, 0, 0, 0.10)',
             },
+            selectedBorderColor: 'rgba(70, 111, 226, 0.34)',
         });
 
         expect(resolveStudioOverlayPresentation({
@@ -82,6 +84,8 @@ describe('resolveStudioOverlayPresentation', () => {
         });
 
         expect(presentation.isStudio).toBe(true);
+        expect(presentation.focusRingColor).toBe('rgba(132, 168, 255, 0.88)');
+        expect(presentation.selectedBorderColor).toBe('rgba(132, 168, 255, 0.52)');
         expect(presentation.modal.shadowRadius).not.toBe(presentation.floating.shadowRadius);
         expect(presentation.modal.scrimColor).toBe('rgba(0, 0, 0, 0.24)');
         expect(presentation.floating.clickAwayColor).toBe('transparent');

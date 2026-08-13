@@ -16,8 +16,10 @@ import { MobileGlassSurface } from './MobileGlass';
 import { AnimatedPopup, LocalBlurHalo } from './AnimatedOverlay';
 import {
     resolveSessionActionsMenuPosition,
+    type StudioOverlayPresentation,
 } from '@/features/studio-overlays/studioOverlayPresentation';
 import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 export type SessionActionsAnchor =
     | {
@@ -46,6 +48,85 @@ interface SessionActionsPopoverProps {
 const WEB_MENU_WIDTH = 288;
 const WEB_MENU_ITEM_HEIGHT = 48;
 const WEB_MENU_MARGIN = 12;
+
+function SessionActionMenuItem({
+    action,
+    color,
+    isLast,
+    onPress,
+    overlayPresentation,
+    shortcutLabel,
+}: {
+    action: SessionActionItem;
+    color: string;
+    isLast: boolean;
+    onPress: () => void;
+    overlayPresentation: StudioOverlayPresentation;
+    shortcutLabel: string;
+}) {
+    const styles = stylesheet;
+    const interactionState = useStudioInteractionState(
+        overlayPresentation.isStudio && Platform.OS === 'web',
+    );
+
+    return (
+        <Pressable
+            accessibilityRole="button"
+            onPress={onPress}
+            {...interactionState.interactionProps}
+            style={({ pressed }) => [
+                styles.menuItem,
+                !isLast && !overlayPresentation.isStudio && styles.menuItemDivider,
+                pressed && styles.menuItemPressed,
+                overlayPresentation.isStudio && {
+                    backgroundColor: pressed
+                        ? overlayPresentation.pressedColor
+                        : interactionState.hovered
+                            ? overlayPresentation.hoverColor
+                            : 'transparent',
+                    ...(Platform.OS === 'web' && interactionState.focused ? {
+                        outlineColor: overlayPresentation.focusRingColor,
+                        outlineOffset: -2,
+                        outlineStyle: 'solid',
+                        outlineWidth: 2,
+                    } as any : {}),
+                },
+            ]}
+        >
+            <Ionicons
+                color={action.destructive ? color : (overlayPresentation.isStudio
+                    ? overlayPresentation.textSecondaryColor
+                    : color)}
+                name={action.icon as keyof typeof Ionicons.glyphMap}
+                size={18}
+            />
+            <Text
+                numberOfLines={1}
+                style={[
+                    styles.menuItemLabel,
+                    { color: action.destructive ? color : (overlayPresentation.isStudio
+                        ? overlayPresentation.textColor
+                        : color) },
+                ]}
+            >
+                {action.label}
+            </Text>
+            {Platform.OS === 'web' && (
+                <Text
+                    style={[
+                        styles.menuItemShortcut,
+                        overlayPresentation.isStudio && {
+                            color: overlayPresentation.textSecondaryColor,
+                            fontWeight: '400',
+                        },
+                    ]}
+                >
+                    {shortcutLabel}
+                </Text>
+            )}
+        </Pressable>
+    );
+}
 
 const stylesheet = StyleSheet.create((theme) => ({
     backdrop: {
@@ -216,51 +297,15 @@ export function SessionActionsPopover({
         );
 
         return (
-            <Pressable
+            <SessionActionMenuItem
                 key={action.id}
-                accessibilityRole="button"
+                action={action}
+                color={color}
+                isLast={isLast}
                 onPress={() => handleActionPress(action)}
-                style={({ pressed }) => [
-                    styles.menuItem,
-                    !isLast && !overlayPresentation.isStudio && styles.menuItemDivider,
-                    pressed && styles.menuItemPressed,
-                    pressed && overlayPresentation.isStudio && {
-                        backgroundColor: overlayPresentation.pressedColor,
-                    },
-                ]}
-            >
-                <Ionicons
-                    color={action.destructive ? color : (overlayPresentation.isStudio
-                        ? overlayPresentation.textSecondaryColor
-                        : color)}
-                    name={action.icon as keyof typeof Ionicons.glyphMap}
-                    size={18}
-                />
-                <Text
-                    numberOfLines={1}
-                    style={[
-                        styles.menuItemLabel,
-                        { color: action.destructive ? color : (overlayPresentation.isStudio
-                            ? overlayPresentation.textColor
-                            : color) },
-                    ]}
-                >
-                    {action.label}
-                </Text>
-                {Platform.OS === 'web' && (
-                    <Text
-                        style={[
-                            styles.menuItemShortcut,
-                            overlayPresentation.isStudio && {
-                                color: overlayPresentation.textSecondaryColor,
-                                fontWeight: '400',
-                            },
-                        ]}
-                    >
-                        {shortcutLabel}
-                    </Text>
-                )}
-            </Pressable>
+                overlayPresentation={overlayPresentation}
+                shortcutLabel={shortcutLabel}
+            />
         );
     });
 

@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Text, View, Pressable } from 'react-native';
+import { Platform, Text, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useHeaderHeight } from '@/utils/responsive';
 import { VoiceAssistantStatusBar } from './VoiceAssistantStatusBar';
 import { useRealtimeStatus, useSettingMutable } from '@/sync/storage';
 import { MainView } from './MainView';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { t } from '@/text';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/constants/Typography';
@@ -19,6 +19,8 @@ import {
     resolveDesktopTopControlsStyle,
     type DesktopSidebarFrame,
 } from '@/features/studio-visual-style/studioVisualStyle';
+import { resolveStudioSidebarInteractionPresentation } from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
@@ -101,6 +103,7 @@ const stylesheet = StyleSheet.create((theme) => ({
 
 export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: DesktopSidebarFrame }) => {
     const styles = stylesheet;
+    const { theme } = useUnistyles();
     const safeArea = useSafeAreaInsets();
     const router = useRouter();
     const headerHeight = useHeaderHeight();
@@ -115,6 +118,14 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
         requestedStyle: sidebarFrame?.visualStyle ?? 'default',
     }), [sidebarFrame?.visualStyle]);
     const isStudio = topControlsStyle.visualStyle === 'studio';
+    const interactionPresentation = React.useMemo(() => resolveStudioSidebarInteractionPresentation({
+        isDark: theme.dark,
+        isTauriRuntime: isStudio,
+        requestedStyle: isStudio ? 'studio' : 'default',
+    }), [isStudio, theme.dark]);
+    const newSessionState = useStudioInteractionState(isStudio);
+    const archiveState = useStudioInteractionState(isStudio);
+    const settingsState = useStudioInteractionState(isStudio);
     const todoRowStyle = React.useMemo(() => resolveDesktopTodoRowStyle({
         isTauriRuntime: isStudio,
         requestedStyle: isStudio ? 'studio' : 'default',
@@ -136,7 +147,9 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
             styles.container,
             {
                 paddingTop: safeArea.top + headerHeight,
-                backgroundColor: sidebarFrame?.sidebarBackground,
+                backgroundColor: isStudio
+                    ? interactionPresentation.surfaceColor
+                    : sidebarFrame?.sidebarBackground,
                 ...(sidebarFrame?.visualStyle === 'studio'
                     ? {
                         borderTopWidth: 0,
@@ -153,6 +166,7 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
             ]}>
                 <Pressable
                     onPress={handleNewSession}
+                    {...newSessionState.interactionProps}
                     hitSlop={isStudio ? { top: 3, bottom: 3 } : undefined}
                     style={({ pressed }) => [
                         styles.newSessionButton,
@@ -164,9 +178,23 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                             gap: topControlsStyle.contentGap!,
                             shadowOpacity: 0,
                             elevation: 0,
+                            borderColor: interactionPresentation.dividerColor,
                         },
                         shortcutHintsVisible && styles.shortcutTargetActive,
                         pressed && styles.newSessionButtonPressed,
+                        isStudio && {
+                            backgroundColor: pressed
+                                ? interactionPresentation.controlPressedColor
+                                : newSessionState.hovered
+                                    ? interactionPresentation.controlHoverColor
+                                    : interactionPresentation.controlSurfaceColor,
+                            ...(Platform.OS === 'web' && newSessionState.focused ? {
+                                outlineColor: interactionPresentation.focusRingColor,
+                                outlineOffset: -2,
+                                outlineStyle: 'solid',
+                                outlineWidth: 2,
+                            } as any : {}),
+                        },
                     ]}
                 >
                     <Ionicons name="create-outline" size={16} color={stylesheet.newSessionText.color} />
@@ -176,6 +204,7 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                 {hasArchivedSessions && (
                     <Pressable
                         onPress={handleArchiveVisibility}
+                        {...archiveState.interactionProps}
                         hitSlop={isStudio ? 3 : undefined}
                         accessibilityLabel={hideArchivedSessions
                             ? t('sidebar.showArchived')
@@ -190,9 +219,25 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                                 borderRadius: topControlsStyle.cornerRadius!,
                                 shadowOpacity: 0,
                                 elevation: 0,
+                                borderColor: interactionPresentation.dividerColor,
                             },
                             !hideArchivedSessions && styles.archiveButtonActive,
                             pressed && styles.newSessionButtonPressed,
+                            isStudio && {
+                                backgroundColor: pressed
+                                    ? interactionPresentation.controlPressedColor
+                                    : !hideArchivedSessions
+                                        ? interactionPresentation.rowSelectedColor
+                                        : archiveState.hovered
+                                            ? interactionPresentation.controlHoverColor
+                                            : interactionPresentation.controlSurfaceColor,
+                                ...(Platform.OS === 'web' && archiveState.focused ? {
+                                    outlineColor: interactionPresentation.focusRingColor,
+                                    outlineOffset: -2,
+                                    outlineStyle: 'solid',
+                                    outlineWidth: 2,
+                                } as any : {}),
+                            },
                         ]}
                     >
                         <Ionicons
@@ -223,7 +268,8 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
             {/* Settings at bottom */}
             <Pressable
                 onPress={() => router.push('/settings')}
-                style={[
+                {...settingsState.interactionProps}
+                style={({ pressed }) => [
                     styles.settingsRow,
                     isStudio && {
                         height: footerStyle.height!,
@@ -232,6 +278,20 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                         gap: footerStyle.contentGap!,
                     },
                     shortcutHintsVisible && styles.shortcutTargetActive,
+                    isStudio && {
+                        backgroundColor: pressed
+                            ? interactionPresentation.controlPressedColor
+                            : settingsState.hovered
+                                ? interactionPresentation.controlHoverColor
+                                : 'transparent',
+                        borderTopColor: interactionPresentation.dividerColor,
+                        ...(Platform.OS === 'web' && settingsState.focused ? {
+                            outlineColor: interactionPresentation.focusRingColor,
+                            outlineOffset: -2,
+                            outlineStyle: 'solid',
+                            outlineWidth: 2,
+                        } as any : {}),
+                    },
                 ]}
             >
                 <Ionicons name="settings-outline" size={isStudio ? footerStyle.iconSize! : 18} color={stylesheet.settingsText.color} />

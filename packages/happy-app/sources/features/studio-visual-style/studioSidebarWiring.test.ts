@@ -27,7 +27,28 @@ describe('Studio sidebar visual-style wiring', () => {
         expect(historicalRows).toContain('rowChrome.useDefaultContainerSurface && styles.sessionItemContainer');
         expect(historicalRows).toContain('rowChrome.useGroupPositionShape && (');
         expect(historicalRows).not.toMatch(/<View style=\{\[\s*styles\.sessionItemContainer,/);
-        expect(compactRows).toContain('borderRadius: rowChrome.cornerRadius!');
-        expect(historicalRows).toContain('borderRadius: rowChrome.cornerRadius!');
+        expect(compactRows).toContain('resolveStudioSidebarStateBackground(interactionPresentation');
+        expect(historicalRows).toContain('resolveStudioSidebarStateBackground(interactionPresentation');
+        expect(compactRows).toContain('borderRadius: sessionRowStyle.cornerRadius!');
+        expect(historicalRows).toContain('borderRadius: sessionRowStyle.cornerRadius!');
+        expect(compactRows).toContain('...interactionState.interactionProps');
+        expect(historicalRows).toContain('...interactionState.interactionProps');
+    });
+
+    it('wires shared interaction state into Studio controls and overlay consumers', () => {
+        const sidebar = readSource('../../components/SidebarView.tsx');
+        const projects = readSource('../../components/ProjectGroup.tsx');
+        const actions = readSource('../../components/SessionActionsPopover.tsx');
+        const paletteItem = readSource('../../components/CommandPalette/CommandPaletteItem.tsx');
+        const paletteInput = readSource('../../components/CommandPalette/CommandPaletteInput.tsx');
+
+        expect(sidebar).toContain('newSessionState.interactionProps');
+        expect(sidebar).toContain('archiveState.interactionProps');
+        expect(sidebar).toContain('settingsState.interactionProps');
+        expect(projects).toContain('headerInteraction.interactionProps');
+        expect(projects).toContain('favoriteInteraction.interactionProps');
+        expect(actions).toContain('interactionState.interactionProps');
+        expect(paletteItem).toContain('interactionState.interactionProps');
+        expect(paletteInput).toContain('interactionState.interactionProps');
     });
 });
