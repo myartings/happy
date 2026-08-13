@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/components/ChatHeaderView.tsx","reason":"Apply the desktop Studio header geometry through a narrow host seam."}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Apply the centered desktop Studio scroll-column geometry without changing item semantics."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Read-only activation resolver imported by the feature hosts."}
+{"path":"docs/specs/studio-conversation-layout.md","reason":"Accepted behavior contract."}
+{"path":"docs/tasks/studio-conversation-layout-tasks.md","reason":"Implementation checklist."}

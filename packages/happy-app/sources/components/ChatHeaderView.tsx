@@ -19,6 +19,10 @@ import {
     MOBILE_STRONG_HEADER_SCRIM_RESTING_OPACITY,
     MOBILE_STRONG_HEADER_SCRIM_UNDERLAP_OPACITY,
 } from './navigation/MobileHeaderScrim';
+import { useLocalSetting } from '@/sync/storage';
+import { isTauri } from '@/utils/isTauri';
+import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
+import { resolveStudioConversationLayout } from '@/features/studio-conversation-layout/studioConversationLayout';
 
 interface ChatHeaderViewProps {
     title: string;
@@ -57,6 +61,17 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
     const { theme } = useUnistyles();
     const insets = useSafeAreaInsets();
     const headerHeight = useHeaderHeight();
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const desktopVisualStyle = resolveDesktopVisualStyle({
+        isTauriRuntime: isTauri(),
+        requestedStyle: requestedVisualStyle,
+        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+    });
+    const conversationLayout = resolveStudioConversationLayout({
+        isTauriRuntime: isTauri(),
+        visualStyle: desktopVisualStyle,
+    });
+    const webHeaderHeight = conversationLayout.headerHeight ?? headerHeight;
     const isTablet = useIsTablet();
     const showBackButton = !isTablet && !!onBackPress;
     const hasExtra = !!extraPathSegment;
@@ -89,7 +104,13 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
         return (
             <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.colors.header.background }]}>
                 <View style={styles.contentWrapper}>
-                    <View style={[styles.webContent, { height: headerHeight }]}>
+                    <View style={[
+                        styles.webContent,
+                        {
+                            height: webHeaderHeight,
+                            paddingHorizontal: conversationLayout.headerHorizontalPadding ?? 16,
+                        },
+                    ]}>
                         {showBackButton && (
                             <Pressable onPress={onBackPress} hitSlop={15} style={styles.webBackButton}>
                                 <Ionicons
@@ -164,7 +185,14 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
                     </View>
                 </View>
                 {rightSlot && rightSlotPinnedToEdge ? (
-                    <View style={[styles.webPinnedRightSlot, { top: insets.top, height: headerHeight }]}>
+                    <View style={[
+                        styles.webPinnedRightSlot,
+                        {
+                            top: insets.top,
+                            right: conversationLayout.headerHorizontalPadding ?? 16,
+                            height: webHeaderHeight,
+                        },
+                    ]}>
                         {rightSlot}
                     </View>
                 ) : null}

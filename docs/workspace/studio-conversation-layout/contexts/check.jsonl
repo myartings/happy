@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-conversation-layout/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/components/ChatHeaderView.tsx","reason":"Verify the header seam is desktop Studio-only."}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Verify list geometry preserves scroll and virtualization behavior."}
+{"path":"docs/specs/studio-conversation-layout.md","reason":"Map acceptance criteria to evidence."}
+{"path":"docs/design/studio-main-window-v2.png","reason":"Compare implemented geometry to accepted design evidence."}

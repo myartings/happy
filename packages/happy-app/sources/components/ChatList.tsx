@@ -19,6 +19,9 @@ import { createMessageTargetRequest, getMessageTargetNativeId, getNextMessageTar
 import { SessionPromptHistoryNavigator } from './SessionPromptHistoryNavigator';
 import { resolveVisiblePromptId } from '@/utils/sessionPromptHistory';
 import { revealWebMessage } from '@/utils/webMessageReveal';
+import { isTauri } from '@/utils/isTauri';
+import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
+import { resolveStudioConversationLayout } from '@/features/studio-conversation-layout/studioConversationLayout';
 
 const SCROLL_THRESHOLD = 300;
 const DOCK_DETAILS_SHOW_OFFSET = 16;
@@ -55,7 +58,12 @@ export const ChatList = React.memo((props: {
     )
 });
 
-const ListHeader = React.memo((props: { isLoadingOlder: boolean; topContentInset?: number }) => {
+const ListHeader = React.memo((props: {
+    isLoadingOlder: boolean;
+    topContentInset?: number;
+    desktopHeaderHeight?: number | null;
+    messageTopGap?: number | null;
+}) => {
     const headerHeight = useHeaderHeight();
     const safeArea = useSafeAreaInsets();
     // ListFooterComponent on an inverted FlatList renders at the visual top
@@ -73,7 +81,8 @@ const ListHeader = React.memo((props: { isLoadingOlder: boolean; topContentInset
                 style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    height: props.topContentInset ?? headerHeight + safeArea.top + 32,
+                    height: props.topContentInset
+                        ?? (props.desktopHeaderHeight ?? headerHeight) + safeArea.top + (props.messageTopGap ?? 32),
                 }}
             />
         </View>
@@ -103,6 +112,16 @@ const ChatListInternal = React.memo((props: {
     onBottomDockVisibilityChange?: (visible: boolean) => void,
 }) => {
     const { theme } = useUnistyles();
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const desktopVisualStyle = resolveDesktopVisualStyle({
+        isTauriRuntime: isTauri(),
+        requestedStyle: requestedVisualStyle,
+        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+    });
+    const conversationLayout = resolveStudioConversationLayout({
+        isTauriRuntime: isTauri(),
+        visualStyle: desktopVisualStyle,
+    });
     const promptHistoryNavigatorEnabled = useLocalSetting('devPromptHistoryNavigatorEnabled');
     const flatListRef = React.useRef<FlatList>(null);
     const handledTargetRequestRef = React.useRef<string | null>(null);
@@ -594,7 +613,14 @@ const ChatListInternal = React.memo((props: {
                 // Inverted list: paddingTop renders at the visual bottom.
                 // The measured dock inset lets the newest message scroll above
                 // the floating composer instead of stopping underneath it.
-                contentContainerStyle={{ paddingTop: 8 + (props.bottomContentInset ?? 0) }}
+                contentContainerStyle={{
+                    paddingTop: (conversationLayout.messageBottomGap ?? 8) + (props.bottomContentInset ?? 0),
+                    ...(conversationLayout.messageViewportMaxWidth !== null ? {
+                        width: '100%',
+                        maxWidth: conversationLayout.messageViewportMaxWidth,
+                        alignSelf: 'center',
+                    } : {}),
+                }}
                 renderItem={renderItem}
                 onScroll={handleScroll}
                 onViewableItemsChanged={handleViewableItemsChanged}
@@ -616,6 +642,8 @@ const ChatListInternal = React.memo((props: {
                     <ListHeader
                         isLoadingOlder={props.isLoadingOlder}
                         topContentInset={props.topContentInset}
+                        desktopHeaderHeight={conversationLayout.headerHeight}
+                        messageTopGap={conversationLayout.messageTopGap}
                     />
                 )}
                 onEndReached={handleLoadOlder}
