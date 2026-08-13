@@ -1,7 +1,7 @@
 # Active Workflow
 
-**Feature**:
-**Phase**:
-**Updated**: 2026-08-13
-**Next**:
-**Branch / Worktree**:
+**Feature**: studio-visual-convergence
+**Phase**: implementation
+**Updated**: 2026-08-14
+**Next**: Commit Batch 0, fork three isolated writers, then integrate validated child commits.
+**Branch / Worktree**: feature/studio-visual-convergence
