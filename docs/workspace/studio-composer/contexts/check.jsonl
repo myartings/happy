@@ -1,0 +1,7 @@
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Verify host integration and unchanged behavior paths."}
+{"path":"packages/happy-app/sources/components/AgentInputAttachmentStrip.tsx","reason":"Verify Studio gating and attachment behavior."}
+{"path":"packages/happy-app/sources/components/AgentInputAutocomplete.tsx","reason":"Verify keyboard and selection behavior is preserved."}
+{"path":"packages/happy-app/sources/components/AgentInputSuggestionView.tsx","reason":"Verify suggestion content contract."}
+{"path":"packages/happy-app/sources/features","reason":"Verify the new feature-owned resolver behavior and tests."}
+{"path":"docs/specs/studio-composer.md","reason":"Map acceptance criteria to evidence."}
+{"path":"docs/workspace/studio-composer/validation.md","reason":"Record exact command evidence and remaining human gate."}

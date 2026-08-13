@@ -8,11 +8,17 @@ import { t } from '@/text';
 interface CommandSuggestionProps {
     command: string;
     description?: string;
+    studio?: boolean;
+    rowHeight?: number;
 }
 
-export const CommandSuggestion = React.memo(({ command, description }: CommandSuggestionProps) => {
+export const CommandSuggestion = React.memo(({ command, description, studio = false, rowHeight }: CommandSuggestionProps) => {
     return (
-        <View style={styles.suggestionContainer}>
+        <View style={[
+            styles.suggestionContainer,
+            studio && styles.suggestionContainerStudio,
+            studio && rowHeight !== undefined && { height: rowHeight },
+        ]}>
             <Text 
                 style={[styles.commandText, { marginRight: description ? 12 : 0 }]}
             >
@@ -34,12 +40,18 @@ interface FileMentionProps {
     fileName: string;
     filePath: string;
     fileType?: 'file' | 'folder';
+    studio?: boolean;
+    rowHeight?: number;
 }
 
-export const FileMentionSuggestion = React.memo(({ fileName, filePath, fileType = 'file' }: FileMentionProps) => {
+export const FileMentionSuggestion = React.memo(({ fileName, filePath, fileType = 'file', studio = false, rowHeight }: FileMentionProps) => {
     return (
-        <View style={styles.suggestionContainer}>
-            <View style={styles.iconContainer}>
+        <View style={[
+            styles.suggestionContainer,
+            studio && styles.suggestionContainerStudio,
+            studio && rowHeight !== undefined && { height: rowHeight },
+        ]}>
+            <View style={[styles.iconContainer, studio && styles.iconContainerStudio]}>
                 <Ionicons
                     name={fileType === 'folder' ? 'folder' : 'document-text'}
                     size={18}
@@ -67,6 +79,10 @@ const styles = StyleSheet.create((theme) => ({
         paddingVertical: 12,
         height: 48,
     },
+    suggestionContainerStudio: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
     commandText: {
         fontSize: 14,
         color: theme.colors.text,
@@ -87,6 +103,12 @@ const styles = StyleSheet.create((theme) => ({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
+    },
+    iconContainerStudio: {
+        width: 28,
+        height: 28,
+        borderRadius: 8,
+        marginRight: 8,
     },
     iconColor: {
         color: theme.colors.textSecondary,

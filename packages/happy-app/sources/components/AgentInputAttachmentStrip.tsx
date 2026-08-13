@@ -17,9 +17,11 @@ const BORDER_RADIUS = 8;
 interface AgentInputAttachmentStripProps {
     images: AttachmentPreview[];
     onRemove: (id: string) => void;
+    studio?: boolean;
+    thumbnailSize?: number;
 }
 
-export function AgentInputAttachmentStrip({ images, onRemove }: AgentInputAttachmentStripProps) {
+export function AgentInputAttachmentStrip({ images, onRemove, studio = false, thumbnailSize = THUMB_SIZE }: AgentInputAttachmentStripProps) {
     const { theme } = useUnistyles();
 
     if (images.length === 0) return null;
@@ -28,8 +30,8 @@ export function AgentInputAttachmentStrip({ images, onRemove }: AgentInputAttach
         <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={styles.strip}
-            contentContainerStyle={styles.stripContent}
+            style={[styles.strip, studio && styles.stripStudio]}
+            contentContainerStyle={[styles.stripContent, studio && styles.stripContentStudio]}
             keyboardShouldPersistTaps="always"
         >
             {images.map((img) => (
@@ -38,6 +40,8 @@ export function AgentInputAttachmentStrip({ images, onRemove }: AgentInputAttach
                     image={img}
                     onRemove={onRemove}
                     theme={theme}
+                    studio={studio}
+                    thumbnailSize={thumbnailSize}
                 />
             ))}
         </ScrollView>
@@ -48,10 +52,14 @@ function AttachmentThumbnail({
     image,
     onRemove,
     theme,
+    studio,
+    thumbnailSize,
 }: {
     image: AttachmentPreview;
     onRemove: (id: string) => void;
     theme: any;
+    studio: boolean;
+    thumbnailSize: number;
 }) {
     // Build placeholder from thumbhash if available
     const placeholder = React.useMemo(() => {
@@ -63,12 +71,18 @@ function AttachmentThumbnail({
     return (
         <View style={[
             styles.thumbContainer,
+            studio && styles.thumbContainerStudio,
+            { width: thumbnailSize, height: thumbnailSize },
             { borderColor: theme.colors.divider }
         ]}>
             <Image
                 source={{ uri: image.uri }}
                 placeholder={placeholder}
-                style={[{ width: THUMB_SIZE, height: THUMB_SIZE }, styles.thumb]}
+                style={[
+                    { width: thumbnailSize, height: thumbnailSize },
+                    styles.thumb,
+                    studio && styles.thumbStudio,
+                ]}
                 contentFit="cover"
                 transition={150}
             />
@@ -92,10 +106,19 @@ const styles = StyleSheet.create(() => ({
         marginBottom: 8,
         marginHorizontal: 8,
     },
+    stripStudio: {
+        marginBottom: 6,
+        marginHorizontal: 4,
+    },
     stripContent: {
         flexDirection: 'row',
         gap: 8,
         paddingHorizontal: 4,
+    },
+    stripContentStudio: {
+        gap: 6,
+        paddingHorizontal: 0,
+        paddingTop: 2,
     },
     thumbContainer: {
         width: THUMB_SIZE,
@@ -105,8 +128,14 @@ const styles = StyleSheet.create(() => ({
         borderWidth: 1,
         position: 'relative',
     },
+    thumbContainerStudio: {
+        borderRadius: 10,
+    },
     thumb: {
         borderRadius: BORDER_RADIUS,
+    },
+    thumbStudio: {
+        borderRadius: 10,
     },
     removeButton: {
         position: 'absolute',

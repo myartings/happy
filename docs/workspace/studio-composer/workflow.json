@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-composer",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Merge locally into the Studio UI integration worktree, capture the 1470x870 packaged Desktop, and obtain explicit user acceptance of the composer region.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User authorized the parallel Studio UI tracks on 2026-08-13; docs/specs/studio-composer.md bounds this accepted regional batch and preserves the later human visual gate.",
+      "updated": "2026-08-13T05:22:46+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "No material architecture or product decision remains: activation, metrics, ownership, and human acceptance boundary are fixed in decisions.md.",
+      "updated": "2026-08-13T05:22:46+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: isolated worktree/branch confirmed; owned product paths, excluded parallel tracks, test seam, typecheck, diff review, and local-only coordination are durable in the spec and workflow manifests.",
+      "updated": "2026-08-13T05:22:46+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only packaged-desktop styling; no auth, authorization, protocol, persistence schema, migration, privacy, destructive, or cross-device trigger.",
+      "updated": "2026-08-13T05:22:46+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Implemented the feature-owned Studio composer resolver and narrow host variants across the four owned AgentInput components; preserved existing callbacks, control order, keyboard paths, and non-Studio defaults.",
+      "updated": "2026-08-13T05:36:06+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Focused resolver/primary-action/layout tests pass 19/19, happy-app typecheck passes, Happy workflow validation passes, and git diff --check passes. Per the user's explicit instruction, integrated visual acceptance remains deferred to the parent session's packaged screenshot.",
+      "updated": "2026-08-13T05:38:42+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue after making host geometry resolver-driven. Product writes remain within the four owned AgentInput files plus features/studio-composer; Default/non-Tauri behavior and functional callbacks remain unchanged.",
+      "updated": "2026-08-13T05:38:43+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish record, rollback, explicitly accepted parent visual gap, session handoff, validation, and whole-diff review are complete; local commit is authorized, with no push or merge.",
+      "updated": "2026-08-13T05:39:52+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T05:20:22+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T05:22:46+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User authorized the parallel Studio UI tracks on 2026-08-13; docs/specs/studio-composer.md bounds this accepted regional batch and preserves the later human visual gate."
+    },
+    {
+      "at": "2026-08-13T05:22:46+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "No material architecture or product decision remains: activation, metrics, ownership, and human acceptance boundary are fixed in decisions.md."
+    },
+    {
+      "at": "2026-08-13T05:22:46+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only packaged-desktop styling; no auth, authorization, protocol, persistence schema, migration, privacy, destructive, or cross-device trigger."
+    },
+    {
+      "at": "2026-08-13T05:22:46+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: isolated worktree/branch confirmed; owned product paths, excluded parallel tracks, test seam, typecheck, diff review, and local-only coordination are durable in the spec and workflow manifests."
+    },
+    {
+      "at": "2026-08-13T05:23:02+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add resolver tests, integrate Studio-only composer styling, then run focused verification"
+    },
+    {
+      "at": "2026-08-13T05:36:06+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented the feature-owned Studio composer resolver and narrow host variants across the four owned AgentInput components; preserved existing callbacks, control order, keyboard paths, and non-Studio defaults."
+    },
+    {
+      "at": "2026-08-13T05:36:06+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run focused composer tests, happy-app typecheck, diff check, and whole-diff review"
+    },
+    {
+      "at": "2026-08-13T05:38:42+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Focused resolver/primary-action/layout tests pass 19/19, happy-app typecheck passes, Happy workflow validation passes, and git diff --check passes. Per the user's explicit instruction, integrated visual acceptance remains deferred to the parent session's packaged screenshot."
+    },
+    {
+      "at": "2026-08-13T05:38:43+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue after making host geometry resolver-driven. Product writes remain within the four owned AgentInput files plus features/studio-composer; Default/non-Tauri behavior and functional callbacks remain unchanged."
+    },
+    {
+      "at": "2026-08-13T05:38:43+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record branch handoff, archive with the accepted visual gap, run staged workflow CI, and commit locally"
+    },
+    {
+      "at": "2026-08-13T05:39:52+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish record, rollback, explicitly accepted parent visual gap, session handoff, validation, and whole-diff review are complete; local commit is authorized, with no push or merge."
+    },
+    {
+      "at": "2026-08-13T05:39:52+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and verified the isolated packaged-desktop Studio composer batch; ready for integration, with visual acceptance deferred to the parent screenshot gate.; commit: pending; follow-up: Merge locally into the Studio UI integration worktree, capture the 1470x870 packaged Desktop, and obtain explicit user acceptance of the composer region."
+    }
+  ],
+  "updated": "2026-08-13T05:39:52+00:00",
+  "archivedAt": "2026-08-13T05:39:52+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and verified the isolated packaged-desktop Studio composer batch; ready for integration, with visual acceptance deferred to the parent screenshot gate.",
+  "archiveFollowUp": "Merge locally into the Studio UI integration worktree, capture the 1470x870 packaged Desktop, and obtain explicit user acceptance of the composer region."
+}
