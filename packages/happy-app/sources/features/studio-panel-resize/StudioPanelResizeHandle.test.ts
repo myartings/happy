@@ -23,12 +23,12 @@ beforeAll(() => {
 
 afterAll(() => vi.restoreAllMocks());
 
-function renderHandle(side: 'left' | 'right', onWidthChange = vi.fn()) {
+function renderHandle(side: 'left' | 'right', onWidthChange = vi.fn(), width?: number) {
     let renderer!: ReturnType<typeof create>;
     act(() => {
         renderer = create(React.createElement(StudioPanelResizeHandle, {
             side,
-            width: side === 'left' ? 275 : 360,
+            width: width ?? (side === 'left' ? 275 : 360),
             windowWidth: 1470,
             oppositeWidth: side === 'left' ? 360 : 275,
             oppositeVisible: true,
@@ -80,5 +80,16 @@ describe('Studio panel resize handle', () => {
         act(() => handle.props.onKeyDown({ key: 'Home', preventDefault }));
         expect(onWidthChange).toHaveBeenLastCalledWith(275);
         expect(preventDefault).toHaveBeenCalledTimes(2);
+    });
+
+    it('resets to the intrinsic target even when current joint projection is constrained', () => {
+        const onWidthChange = vi.fn();
+        const { handle } = renderHandle('left', onWidthChange, 261);
+
+        act(() => handle.props.onDoubleClick({ preventDefault: vi.fn() }));
+        expect(onWidthChange).toHaveBeenLastCalledWith(275);
+
+        act(() => handle.props.onKeyDown({ key: 'ArrowRight', preventDefault: vi.fn() }));
+        expect(onWidthChange).toHaveBeenLastCalledWith(277);
     });
 });

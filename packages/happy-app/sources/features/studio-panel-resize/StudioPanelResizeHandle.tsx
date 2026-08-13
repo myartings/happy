@@ -3,7 +3,7 @@ import { Platform, View } from 'react-native';
 import {
     STUDIO_PANEL_GEOMETRY,
     projectPanelDrag,
-    projectPanelWidth,
+    projectPanelTarget,
     resetPanelWidth,
     type StudioPanelSide,
 } from './studioPanelResizePolicy';
@@ -46,19 +46,16 @@ export function StudioPanelResizeHandle({
         oppositeWidth,
         oppositeVisible,
     }), [oppositeVisible, oppositeWidth, side, windowWidth]);
-    const minimum = projectPanelWidth({ ...projectionInput, requestedWidth: -1_000_000 });
-    const maximum = projectPanelWidth({ ...projectionInput, requestedWidth: 1_000_000 });
+    const minimum = STUDIO_PANEL_GEOMETRY[side].minWidth;
+    const maximum = STUDIO_PANEL_GEOMETRY[side].maxWidth;
 
     const adjustBy = React.useCallback((delta: number) => {
-        onWidthChange(projectPanelWidth({
-            ...projectionInput,
-            requestedWidth: width + delta,
-        }));
-    }, [onWidthChange, projectionInput, width]);
+        onWidthChange(projectPanelTarget(side, width + delta));
+    }, [onWidthChange, side, width]);
 
     const reset = React.useCallback(() => {
-        onWidthChange(resetPanelWidth(projectionInput));
-    }, [onWidthChange, projectionInput]);
+        onWidthChange(resetPanelWidth(side));
+    }, [onWidthChange, side]);
 
     const pointerProps = Platform.OS === 'web' ? {
         role: 'separator',

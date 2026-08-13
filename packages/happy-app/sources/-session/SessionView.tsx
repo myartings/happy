@@ -89,7 +89,7 @@ import {
 } from '@/features/github-issues/githubIssuesWorkspace';
 import { GithubIssuesWorkspacePanel } from '@/features/github-issues/GithubIssuesWorkspacePanel';
 import { StudioPanelResizeHandle } from '@/features/studio-panel-resize/StudioPanelResizeHandle';
-import { projectPanelWidth } from '@/features/studio-panel-resize/studioPanelResizePolicy';
+import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioPanelResizePolicy';
 import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { setStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 
@@ -195,14 +195,15 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     // Preserve the established responsive geometry everywhere except packaged
     // Studio. Studio projects the device-local width through current-window
     // bounds, without overwriting it when the panel is collapsed.
+    const panelWidths = React.useMemo(() => projectStudioPanelWidths({
+        storedLeftWidth: persistedLeftPanelWidth,
+        storedRightWidth: persistedRightPanelWidth,
+        windowWidth,
+        leftVisible: !zenMode,
+        rightVisible: showSidebar,
+    }), [persistedLeftPanelWidth, persistedRightPanelWidth, showSidebar, windowWidth, zenMode]);
     const sidebarWidth = studioPanelResizeEnabled
-        ? projectPanelWidth({
-            side: 'right',
-            requestedWidth: persistedRightPanelWidth,
-            windowWidth,
-            oppositeWidth: persistedLeftPanelWidth,
-            oppositeVisible: !zenMode,
-        })
+        ? panelWidths.rightWidth
         : Math.min(Math.max(Math.floor(windowWidth * 0.3), 250), 360);
 
     React.useEffect(() => {
@@ -691,9 +692,9 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                 <View style={{ width: 0, alignSelf: 'stretch', zIndex: 20 }}>
                     <StudioPanelResizeHandle
                         side="right"
-                        width={sidebarWidth}
+                        width={panelWidths.rightWidth}
                         windowWidth={windowWidth}
-                        oppositeWidth={persistedLeftPanelWidth}
+                        oppositeWidth={panelWidths.leftWidth}
                         oppositeVisible={!zenMode}
                         label="Resize workspace panel"
                         onWidthChange={setPersistedRightPanelWidth}

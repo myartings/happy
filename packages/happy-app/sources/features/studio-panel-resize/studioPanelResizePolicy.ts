@@ -24,12 +24,120 @@ type PanelProjectionInput = {
     oppositeVisible: boolean;
 };
 
+type StudioPanelWidthsInput = {
+    storedLeftWidth: number;
+    storedRightWidth: number;
+    windowWidth: number;
+    leftVisible: boolean;
+    rightVisible: boolean;
+};
+
+export type StudioPanelWidths = {
+    leftWidth: number;
+    rightWidth: number;
+};
+
 function finiteOr(value: number, fallback: number): number {
     return Number.isFinite(value) ? value : fallback;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
     return Math.min(Math.max(value, minimum), maximum);
+}
+
+export function projectPanelTarget(side: StudioPanelSide, width: number): number {
+    const bounds = STUDIO_PANEL_GEOMETRY[side];
+    return Math.round(clamp(
+        finiteOr(width, bounds.defaultWidth),
+        bounds.minWidth,
+        bounds.maxWidth,
+    ));
+}
+
+function allocateProportionally(
+    available: number,
+    leftDemand: number,
+    rightDemand: number,
+): { left: number; right: number } {
+    const distributable = Math.max(0, Math.min(available, leftDemand + rightDemand));
+    const totalDemand = leftDemand + rightDemand;
+    if (totalDemand <= 0 || distributable <= 0) return { left: 0, right: 0 };
+
+    let left = Math.min(leftDemand, Math.round(distributable * leftDemand / totalDemand));
+    let right = Math.min(rightDemand, distributable - left);
+    const remainder = distributable - left - right;
+    if (remainder > 0) {
+        const leftCapacity = leftDemand - left;
+        const leftRemainder = Math.min(remainder, leftCapacity);
+        left += leftRemainder;
+        right += remainder - leftRemainder;
+    }
+    return { left, right };
+}
+
+export function projectStudioPanelWidths({
+    storedLeftWidth,
+    storedRightWidth,
+    windowWidth,
+    leftVisible,
+    rightVisible,
+}: StudioPanelWidthsInput): StudioPanelWidths {
+    if (!leftVisible && !rightVisible) return { leftWidth: 0, rightWidth: 0 };
+    if (!rightVisible) {
+        return {
+            leftWidth: projectPanelWidth({
+                side: 'left', requestedWidth: storedLeftWidth, windowWidth,
+                oppositeWidth: 0, oppositeVisible: false,
+            }),
+            rightWidth: 0,
+        };
+    }
+    if (!leftVisible) {
+        return {
+            leftWidth: 0,
+            rightWidth: projectPanelWidth({
+                side: 'right', requestedWidth: storedRightWidth, windowWidth,
+                oppositeWidth: 0, oppositeVisible: false,
+            }),
+        };
+    }
+
+    const left = STUDIO_PANEL_GEOMETRY.left;
+    const right = STUDIO_PANEL_GEOMETRY.right;
+    const requestedLeft = projectPanelTarget('left', storedLeftWidth);
+    const requestedRight = projectPanelTarget('right', storedRightWidth);
+    const minimumTotal = left.minWidth + right.minWidth;
+    const maximumTotal = left.maxWidth + right.maxWidth;
+    const panelBudget = Math.round(clamp(
+        Math.max(0, finiteOr(windowWidth, 0)) - STUDIO_PANEL_GEOMETRY.minMainWidth,
+        minimumTotal,
+        maximumTotal,
+    ));
+    const baseLeft = Math.min(requestedLeft, left.defaultWidth);
+    const baseRight = Math.min(requestedRight, right.defaultWidth);
+    const baseTotal = baseLeft + baseRight;
+
+    if (baseTotal > panelBudget) {
+        const baseAllocation = allocateProportionally(
+            panelBudget - minimumTotal,
+            baseLeft - left.minWidth,
+            baseRight - right.minWidth,
+        );
+        return {
+            leftWidth: left.minWidth + baseAllocation.left,
+            rightWidth: right.minWidth + baseAllocation.right,
+        };
+    }
+
+    const expansion = allocateProportionally(
+        panelBudget - baseTotal,
+        requestedLeft - baseLeft,
+        requestedRight - baseRight,
+    );
+    return {
+        leftWidth: baseLeft + expansion.left,
+        rightWidth: baseRight + expansion.right,
+    };
 }
 
 export function projectPanelWidth({
@@ -72,22 +180,15 @@ export function projectPanelDrag({
     startWidth,
     startPointerX,
     pointerX,
-    ...projection
 }: PanelDragInput): number {
     const pointerDelta = finiteOr(pointerX, startPointerX) - finiteOr(startPointerX, 0);
     const directionalDelta = side === 'left' ? pointerDelta : -pointerDelta;
-    return projectPanelWidth({
+    return projectPanelTarget(
         side,
-        requestedWidth: finiteOr(startWidth, STUDIO_PANEL_GEOMETRY[side].defaultWidth) + directionalDelta,
-        ...projection,
-    });
+        finiteOr(startWidth, STUDIO_PANEL_GEOMETRY[side].defaultWidth) + directionalDelta,
+    );
 }
 
-export function resetPanelWidth(
-    input: Omit<PanelProjectionInput, 'requestedWidth'>,
-): number {
-    return projectPanelWidth({
-        ...input,
-        requestedWidth: STUDIO_PANEL_GEOMETRY[input.side].defaultWidth,
-    });
+export function resetPanelWidth(side: StudioPanelSide): number {
+    return STUDIO_PANEL_GEOMETRY[side].defaultWidth;
 }

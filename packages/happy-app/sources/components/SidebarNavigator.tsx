@@ -18,7 +18,7 @@ import { canRouteForward, canUseRouteBack, getNavigatorCanGoBack } from '@/navig
 import { useBrowserNavigationStore } from '@/navigation/browserNavigationStore';
 import { resolveDesktopSidebarFrame } from '@/features/studio-visual-style/studioVisualStyle';
 import { StudioPanelResizeHandle } from '@/features/studio-panel-resize/StudioPanelResizeHandle';
-import { projectPanelWidth } from '@/features/studio-panel-resize/studioPanelResizePolicy';
+import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioPanelResizePolicy';
 import { useStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 
 const TAURI_HEADER_CONTROL_LEFT = Math.ceil(92 / DEFAULT_APP_ZOOM);
@@ -45,15 +45,16 @@ export const SidebarNavigator = React.memo(() => {
     const studioPanelResizeEnabled = isDesktopLayout
         && inTauri
         && sidebarFrame.visualStyle === 'studio';
+    const panelWidths = React.useMemo(() => projectStudioPanelWidths({
+        storedLeftWidth: persistedLeftPanelWidth,
+        storedRightWidth: persistedRightPanelWidth,
+        windowWidth,
+        leftVisible: showSidebar,
+        rightVisible: rightPanelVisible,
+    }), [persistedLeftPanelWidth, persistedRightPanelWidth, rightPanelVisible, showSidebar, windowWidth]);
     const fullDrawerWidth = isDesktopLayout
         ? studioPanelResizeEnabled
-            ? projectPanelWidth({
-                side: 'left',
-                requestedWidth: persistedLeftPanelWidth,
-                windowWidth,
-                oppositeWidth: persistedRightPanelWidth,
-                oppositeVisible: rightPanelVisible,
-            })
+            ? panelWidths.leftWidth
             : sidebarFrame.width
         : 280;
     const drawerWidth = showSidebar ? fullDrawerWidth : 0;
@@ -113,9 +114,9 @@ export const SidebarNavigator = React.memo(() => {
             {studioPanelResizeEnabled && showSidebar && (
                 <StudioPanelResizeHandle
                     side="left"
-                    width={fullDrawerWidth}
+                    width={panelWidths.leftWidth}
                     windowWidth={windowWidth}
-                    oppositeWidth={persistedRightPanelWidth}
+                    oppositeWidth={panelWidths.rightWidth}
                     oppositeVisible={rightPanelVisible}
                     label="Resize navigation panel"
                     onWidthChange={setPersistedLeftPanelWidth}
