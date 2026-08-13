@@ -43,6 +43,8 @@ export const LocalSettingsSchema = z.object({
     devSideChatQuickPanelEnabled: z.boolean().describe('Show the Codex-inspired desktop side-chat quick panel'),
     devPersonalDisplaySettingsMigrated: z.boolean().describe('Whether legacy synced personal display preferences were copied to this device'),
     devSessionListSettingsSynced: z.boolean().describe('Whether device-local session list choices were migrated to account settings'),
+    studioLeftPanelWidth: z.number().finite().describe('Last accepted Studio left navigation width on this device'),
+    studioRightPanelWidth: z.number().finite().describe('Last accepted Studio right workspace width on this device'),
     // Right file sidebar: which panels the user has opened and which is active.
     // Persisted so the layout survives reloads and long absences.
     sidebarPanelsOpen: z.array(z.enum(['changes', 'allFiles', 'sideChat', 'issues'])).describe('Open right-sidebar panels, in tab order'),
@@ -94,6 +96,8 @@ export const localSettingsDefaults: LocalSettings = {
     devSideChatQuickPanelEnabled: true,
     devPersonalDisplaySettingsMigrated: false,
     devSessionListSettingsSynced: false,
+    studioLeftPanelWidth: 275,
+    studioRightPanelWidth: 360,
     sidebarPanelsOpen: [],
     sidebarPanelActive: null,
     acknowledgedCliVersions: {},

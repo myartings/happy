@@ -29,7 +29,7 @@ import { Modal } from '@/modal';
 import { voiceHooks } from '@/realtime/hooks/voiceHooks';
 import { getCurrentVoiceConversationId, getCurrentVoiceSessionDurationSeconds, startRealtimeSession, stopRealtimeSession } from '@/realtime/RealtimeSession';
 import { sessionAbort, sessionGoalAction, sessionSetAgentModes, spawnSideChat, sessionKill, sessionArchive } from '@/sync/ops';
-import { storage, useIsDataReady, useLocalSetting, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
+import { storage, useIsDataReady, useLocalSetting, useLocalSettingMutable, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
 import { useSession } from '@/sync/storage';
 import { getSessionForkSource } from '@/utils/sessionFork';
 import { isTauri } from '@/utils/isTauri';
@@ -88,6 +88,10 @@ import {
     type GithubIssuesWorkspaceSelection,
 } from '@/features/github-issues/githubIssuesWorkspace';
 import { GithubIssuesWorkspacePanel } from '@/features/github-issues/GithubIssuesWorkspacePanel';
+import { StudioPanelResizeHandle } from '@/features/studio-panel-resize/StudioPanelResizeHandle';
+import { projectPanelWidth } from '@/features/studio-panel-resize/studioPanelResizePolicy';
+import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
+import { setStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 
 export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
     const sessionId = props.id;
@@ -113,6 +117,10 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
     const zenMode = useLocalSetting('zenMode');
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
+    const [persistedRightPanelWidth, setPersistedRightPanelWidth] = useLocalSettingMutable('studioRightPanelWidth');
+    const runningInTauri = isTauri();
     const gitStatus = useSessionGitStatus(sessionId);
     const sideChatForkSource = session ? getSessionForkSource(session) : null;
     const [headerBackdropVisible, setHeaderBackdropVisible] = React.useState(false);
@@ -177,8 +185,33 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const showQuickPanelControls = sidebarLayout.showQuickControls && isDataReady && !!session;
     const showQuickPanelFileActions = sidebarLayout.showFileActions && isDataReady && !!session;
 
-    // Match left sidebar width: 30% of window, clamped to 250–360px.
-    const sidebarWidth = Math.min(Math.max(Math.floor(windowWidth * 0.3), 250), 360);
+    const studioPanelResizeEnabled = isTablet
+        && runningInTauri
+        && resolveDesktopVisualStyle({
+            isTauriRuntime: runningInTauri,
+            requestedStyle: requestedVisualStyle,
+            previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+        }) === 'studio';
+    // Preserve the established responsive geometry everywhere except packaged
+    // Studio. Studio projects the device-local width through current-window
+    // bounds, without overwriting it when the panel is collapsed.
+    const sidebarWidth = studioPanelResizeEnabled
+        ? projectPanelWidth({
+            side: 'right',
+            requestedWidth: persistedRightPanelWidth,
+            windowWidth,
+            oppositeWidth: persistedLeftPanelWidth,
+            oppositeVisible: !zenMode,
+        })
+        : Math.min(Math.max(Math.floor(windowWidth * 0.3), 250), 360);
+
+    React.useEffect(() => {
+        const visible = studioPanelResizeEnabled && showSidebar;
+        setStudioRightPanelVisible(visible);
+        return () => {
+            if (visible) setStudioRightPanelVisible(false);
+        };
+    }, [showSidebar, studioPanelResizeEnabled]);
 
     // On web, snap width changes to avoid reflowing the whole chat tree on
     // every animation frame. Native keeps the UI-thread animation.
@@ -433,7 +466,6 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                 : undefined,
         };
     }, [session, isDataReady, showSessionModel]);
-    const runningInTauri = isTauri();
     const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
         enabled: githubIssuesEnabled,
         hasSession: !!session,
@@ -655,6 +687,26 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                     </View>
                 )}
             </View>
+            {studioPanelResizeEnabled && showSidebar && (
+                <View style={{ width: 0, alignSelf: 'stretch', zIndex: 20 }}>
+                    <StudioPanelResizeHandle
+                        side="right"
+                        width={sidebarWidth}
+                        windowWidth={windowWidth}
+                        oppositeWidth={persistedLeftPanelWidth}
+                        oppositeVisible={!zenMode}
+                        label="Resize workspace panel"
+                        onWidthChange={setPersistedRightPanelWidth}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            left: -4,
+                            zIndex: 20,
+                        }}
+                    />
+                </View>
+            )}
             <Animated.View style={[{ minWidth: 0, alignSelf: 'stretch' }, animatedSidebarStyle]}>
                 <View style={{ width: sidebarWidth, flex: 1 }}>
                     <FilesSidebar

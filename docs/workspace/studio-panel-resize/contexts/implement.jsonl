@@ -1,0 +1,8 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Accepted parent contract and Track A acceptance criteria."}
+{"path":"docs/tasks/studio-visual-convergence-tasks.md","reason":"Track A ownership and implementation checklist."}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"Left persistent drawer width and separator host seam."}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Right workspace panel width and separator host seam."}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Device-local persisted panel widths."}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Backward-compatible defaults and persistence schema coverage."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Read-only packaged-Tauri Studio activation contract."}

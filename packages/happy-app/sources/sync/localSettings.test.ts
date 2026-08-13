@@ -41,6 +41,24 @@ describe('personal development local settings', () => {
             devShowActiveSessionRuntimeEnabled: false,
             devShowSessionModelEnabled: true,
             devSideChatQuickPanelEnabled: true,
+            studioLeftPanelWidth: 275,
+            studioRightPanelWidth: 360,
+        });
+    });
+
+    it('persists Studio panel widths independently as device-local settings', () => {
+        expect(localSettingsDefaults).toMatchObject({
+            studioLeftPanelWidth: 275,
+            studioRightPanelWidth: 360,
+        });
+
+        const resized = applyLocalSettings(localSettingsDefaults, {
+            studioLeftPanelWidth: 318,
+            studioRightPanelWidth: 404,
+        });
+        expect(localSettingsParse(resized)).toMatchObject({
+            studioLeftPanelWidth: 318,
+            studioRightPanelWidth: 404,
         });
     });
 
