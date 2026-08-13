@@ -460,11 +460,17 @@ export function SessionsList({
 
             case 'project-group':
                 return (
-                    <View style={styles.projectGroup}>
-                        <Text style={styles.projectGroupTitle}>
+                    <View style={[
+                        styles.projectGroup,
+                        isStudioSectionHeader && { paddingHorizontal: 18, paddingVertical: 6, backgroundColor: 'transparent' },
+                    ]}>
+                        <Text style={[
+                            styles.projectGroupTitle,
+                            isStudioSectionHeader && { fontWeight: '400', ...Typography.default() },
+                        ]}>
                             {item.displayPath}
                         </Text>
-                        <Text style={styles.projectGroupSubtitle}>
+                        <Text style={[styles.projectGroupSubtitle, isStudioSectionHeader && { marginTop: 0 }]}>
                             {item.machine.metadata?.displayName || item.machine.metadata?.host || item.machine.id}
                         </Text>
                     </View>
@@ -687,7 +693,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                             fontSize: sessionRowStyle.titleFontSize!,
                             lineHeight: sessionRowStyle.titleLineHeight!,
                             fontWeight: sessionRowStyle.titleFontWeight!,
-                            ...Typography.default('semiBold'),
+                            ...Typography.default(),
                         },
                     ]} numberOfLines={1}>
                         {session.name}

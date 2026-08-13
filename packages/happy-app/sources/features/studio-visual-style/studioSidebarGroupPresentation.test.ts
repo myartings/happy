@@ -77,7 +77,7 @@ describe('Studio sidebar group presentation', () => {
             showDivider: true,
         })).toMatchObject({
             backgroundRole: 'selected',
-            cornerRadius: 9,
+            cornerRadius: 7,
             showDivider: false,
         });
     });

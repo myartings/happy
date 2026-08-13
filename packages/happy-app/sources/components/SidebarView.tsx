@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useHeaderHeight } from '@/utils/responsive';
 import { VoiceAssistantStatusBar } from './VoiceAssistantStatusBar';
-import { useRealtimeStatus, useSettingMutable } from '@/sync/storage';
+import { useLocalSetting, useRealtimeStatus, useSetting, useSettingMutable } from '@/sync/storage';
 import { MainView } from './MainView';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { t } from '@/text';
@@ -59,6 +59,23 @@ const stylesheet = StyleSheet.create((theme) => ({
         justifyContent: 'flex-start',
         paddingHorizontal: 14,
     },
+    projectTodosButtonStudio: {
+        minHeight: 36,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+    },
+    projectTodosText: {
+        fontSize: 13,
+        color: theme.colors.textSecondary,
+        ...Typography.default(),
+    },
+    projectTodosCount: {
+        marginLeft: 'auto',
+        fontSize: 11,
+        color: theme.colors.textSecondary,
+        ...Typography.default(),
+    },
     archiveButton: {
         width: 40,
         height: 40,
@@ -109,6 +126,12 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
     const headerHeight = useHeaderHeight();
     const realtimeStatus = useRealtimeStatus();
     const hasArchivedSessions = useHasArchivedSessions();
+    const projectTodosEnabled = useLocalSetting('devProjectTodosEnabled');
+    const projectTodos = useSetting('projectTodos');
+    const pendingProjectTodos = React.useMemo(
+        () => Object.values(projectTodos).flat().filter((todo) => !todo.completed).length,
+        [projectTodos],
+    );
     // Stored under its original `hideInactiveSessions` key — synced settings
     // have no rename migration — but it hides archived sessions only.
     const [hideArchivedSessions, setHideArchivedSessions] = useSettingMutable('hideInactiveSessions');
@@ -125,6 +148,7 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
     }), [isStudio, theme.dark]);
     const newSessionState = useStudioInteractionState(isStudio);
     const archiveState = useStudioInteractionState(isStudio);
+    const todoState = useStudioInteractionState(isStudio);
     const settingsState = useStudioInteractionState(isStudio);
     const todoRowStyle = React.useMemo(() => resolveDesktopTodoRowStyle({
         isTauriRuntime: isStudio,
@@ -141,6 +165,9 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
     const handleArchiveVisibility = React.useCallback(() => {
         setHideArchivedSessions(!hideArchivedSessions);
     }, [hideArchivedSessions, setHideArchivedSessions]);
+    const handleProjectTodos = React.useCallback(() => {
+        router.push('/project-todos' as any);
+    }, [router]);
 
     return (
         <View style={[
@@ -167,7 +194,9 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                 <Pressable
                     onPress={handleNewSession}
                     {...newSessionState.interactionProps}
-                    hitSlop={isStudio ? { top: 3, bottom: 3 } : undefined}
+                    hitSlop={isStudio ? { top: 4, bottom: 4 } : undefined}
+                    accessibilityLabel={t('sidebar.newSession')}
+                    accessibilityRole="button"
                     style={({ pressed }) => [
                         styles.newSessionButton,
                         isStudio && {
@@ -178,16 +207,19 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                             gap: topControlsStyle.contentGap!,
                             shadowOpacity: 0,
                             elevation: 0,
+                            borderWidth: topControlsStyle.showRestingBorder ? StyleSheet.hairlineWidth : 0,
                             borderColor: interactionPresentation.dividerColor,
                         },
                         shortcutHintsVisible && styles.shortcutTargetActive,
                         pressed && styles.newSessionButtonPressed,
                         isStudio && {
-                            backgroundColor: pressed
+                            backgroundColor: pressed || shortcutHintsVisible
                                 ? interactionPresentation.controlPressedColor
                                 : newSessionState.hovered
                                     ? interactionPresentation.controlHoverColor
-                                    : interactionPresentation.controlSurfaceColor,
+                                    : topControlsStyle.showRestingSurface
+                                        ? interactionPresentation.controlSurfaceColor
+                                        : 'transparent',
                             ...(Platform.OS === 'web' && newSessionState.focused ? {
                                 outlineColor: interactionPresentation.focusRingColor,
                                 outlineOffset: -2,
@@ -198,14 +230,17 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                     ]}
                 >
                     <Ionicons name="create-outline" size={16} color={stylesheet.newSessionText.color} />
-                    <Text style={styles.newSessionText}>{t('sidebar.newSession')}</Text>
+                    <Text style={[
+                        styles.newSessionText,
+                        isStudio && { fontWeight: '400', ...Typography.default() },
+                    ]}>{t('sidebar.newSession')}</Text>
                     <ShortcutHintBadge shortcutKey="N" style={styles.shortcutBadgeInline} />
                 </Pressable>
                 {hasArchivedSessions && (
                     <Pressable
                         onPress={handleArchiveVisibility}
                         {...archiveState.interactionProps}
-                        hitSlop={isStudio ? 3 : undefined}
+                        hitSlop={isStudio ? 4 : undefined}
                         accessibilityLabel={hideArchivedSessions
                             ? t('sidebar.showArchived')
                             : t('sidebar.hideArchived')}
@@ -219,6 +254,7 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                                 borderRadius: topControlsStyle.cornerRadius!,
                                 shadowOpacity: 0,
                                 elevation: 0,
+                                borderWidth: topControlsStyle.showRestingBorder ? StyleSheet.hairlineWidth : 0,
                                 borderColor: interactionPresentation.dividerColor,
                             },
                             !hideArchivedSessions && styles.archiveButtonActive,
@@ -230,7 +266,9 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                                         ? interactionPresentation.rowSelectedColor
                                         : archiveState.hovered
                                             ? interactionPresentation.controlHoverColor
-                                            : interactionPresentation.controlSurfaceColor,
+                                            : topControlsStyle.showRestingSurface
+                                                ? interactionPresentation.controlSurfaceColor
+                                                : 'transparent',
                                 ...(Platform.OS === 'web' && archiveState.focused ? {
                                     outlineColor: interactionPresentation.focusRingColor,
                                     outlineOffset: -2,
@@ -249,14 +287,56 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                 )}
             </View>
 
-            <ProjectTodoButton
-                showLabel
-                presentationStyle={todoRowStyle}
-                style={[
-                    styles.projectTodosButton,
-                    isStudio && { paddingHorizontal: todoRowStyle.horizontalPadding! },
-                ]}
-            />
+            {isStudio ? (
+                projectTodosEnabled && (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('projectTodos.title')}
+                        onPress={handleProjectTodos}
+                        hitSlop={{ top: 4, bottom: 4 }}
+                        {...todoState.interactionProps}
+                        style={({ pressed }) => [
+                            styles.projectTodosButton,
+                            styles.projectTodosButtonStudio,
+                            {
+                                height: todoRowStyle.height!,
+                                paddingHorizontal: todoRowStyle.horizontalPadding!,
+                                borderRadius: todoRowStyle.cornerRadius!,
+                                borderWidth: todoRowStyle.showRestingBorder ? StyleSheet.hairlineWidth : 0,
+                                borderColor: interactionPresentation.dividerColor,
+                                gap: todoRowStyle.contentGap!,
+                                backgroundColor: pressed
+                                    ? interactionPresentation.controlPressedColor
+                                    : todoState.hovered
+                                        ? interactionPresentation.controlHoverColor
+                                        : todoRowStyle.showRestingSurface
+                                            ? interactionPresentation.controlSurfaceColor
+                                            : 'transparent',
+                                ...(Platform.OS === 'web' && todoState.focused ? {
+                                    outlineColor: interactionPresentation.focusRingColor,
+                                    outlineOffset: -2,
+                                    outlineStyle: 'solid',
+                                    outlineWidth: 2,
+                                } as any : {}),
+                            },
+                        ]}
+                    >
+                        <Ionicons name="checkbox-outline" size={17} color={stylesheet.projectTodosText.color} />
+                        <Text style={styles.projectTodosText}>{t('projectTodos.shortTitle')}</Text>
+                        {pendingProjectTodos > 0 && (
+                            <Text style={styles.projectTodosCount}>
+                                {pendingProjectTodos > 99 ? '99+' : pendingProjectTodos}
+                            </Text>
+                        )}
+                    </Pressable>
+                )
+            ) : (
+                <ProjectTodoButton
+                    showLabel
+                    presentationStyle={todoRowStyle}
+                    style={styles.projectTodosButton}
+                />
+            )}
 
             {realtimeStatus !== 'disconnected' && (
                 <VoiceAssistantStatusBar variant="sidebar" />

@@ -66,6 +66,9 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
                     styles.header,
                     groupPresentation === 'unboxed' && styles.headerUnboxed,
                     isStudio && {
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        gap: 4,
                         backgroundColor: pressed
                             ? interactionPresentation.rowPressedColor
                             : headerInteraction.hovered
@@ -90,11 +93,18 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
                     style={styles.chevron}
                 />
                 <View style={styles.headerText}>
-                    <Text style={styles.title} numberOfLines={1}>
+                    <Text style={[
+                        styles.title,
+                        isStudio && {
+                            fontSize: 13,
+                            fontWeight: '400',
+                            ...Typography.default(),
+                        },
+                    ]} numberOfLines={1}>
                         {project.name}
                     </Text>
                     {machineName && (
-                        <Text style={styles.subtitle} numberOfLines={1}>
+                        <Text style={[styles.subtitle, isStudio && { fontSize: 11, marginTop: 0 }]} numberOfLines={1}>
                             {machineName}
                         </Text>
                     )}
@@ -162,15 +172,28 @@ const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, sele
     const styles = stylesheet;
     const { theme } = useUnistyles();
     return (
-        <View style={styles.workspace}>
+        <View style={[styles.workspace, sessionRowStyle.visualStyle === 'studio' && { paddingLeft: 0 }]}>
             {showLabel && (
-                <View style={styles.workspaceHeader}>
+                <View style={[
+                    styles.workspaceHeader,
+                    sessionRowStyle.visualStyle === 'studio' && {
+                        paddingHorizontal: 18,
+                        paddingTop: 4,
+                        paddingBottom: 2,
+                    },
+                ]}>
                     <Ionicons
                         name={workspace.name ? 'git-branch-outline' : 'folder-outline'}
                         size={13}
                         color={theme.colors.textSecondary}
                     />
-                    <Text style={styles.workspaceTitle} numberOfLines={1}>
+                    <Text style={[
+                        styles.workspaceTitle,
+                        sessionRowStyle.visualStyle === 'studio' && {
+                            fontSize: 11,
+                            ...Typography.default(),
+                        },
+                    ]} numberOfLines={1}>
                         {workspace.name ?? 'main'}
                     </Text>
                 </View>
@@ -200,7 +223,7 @@ const stylesheet = StyleSheet.create((theme) => ({
     containerUnboxed: {
         backgroundColor: 'transparent',
         marginHorizontal: 0,
-        marginBottom: 8,
+        marginBottom: 4,
         borderRadius: 0,
         overflow: 'visible',
     },
@@ -212,7 +235,7 @@ const stylesheet = StyleSheet.create((theme) => ({
         gap: 6,
     },
     headerUnboxed: {
-        marginHorizontal: 8,
+        marginHorizontal: 12,
         backgroundColor: 'transparent',
     },
     chevron: {

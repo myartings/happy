@@ -73,12 +73,17 @@ function useSectionGitInfo(sessionId: string) {
 
 // Section header: avatar | project + line changes | + button.
 // Branch and worktree identity live on each session row below.
-const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRowData; displayPath: string }) => {
+const SectionHeader = React.memo(({ session, displayPath, sessionRowStyle }: {
+    session: SessionRowData;
+    displayPath: string;
+    sessionRowStyle: DesktopSessionRowStyle;
+}) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const router = useRouter();
     const draft = useNewSessionDraft();
     const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
+    const isStudio = sessionRowStyle.visualStyle === 'studio';
 
     const sessionPath = session.path || '';
     const isWorktree = isWorktreePath(sessionPath);
@@ -111,7 +116,14 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
 
     return (
         <View
-            style={showOfficialBranchHeader || showEnhancedWorktreeHeader ? styles.sectionHeader : styles.sectionHeaderSingleLine}
+            style={[
+                showOfficialBranchHeader || showEnhancedWorktreeHeader ? styles.sectionHeader : styles.sectionHeaderSingleLine,
+                isStudio && {
+                    paddingHorizontal: 18,
+                    paddingTop: 7,
+                    paddingBottom: 3,
+                },
+            ]}
             // @ts-ignore - Web only events
             onMouseEnter={() => setIsHovered(true)}
             // @ts-ignore - Web only events
@@ -119,12 +131,20 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
         >
             {/* Avatar — vertically centered */}
             <View style={styles.sectionHeaderAvatar}>
-                <Avatar id={session.avatarId} size={24} flavor={null} />
+                <Avatar id={session.avatarId} size={isStudio ? 20 : 24} flavor={null} />
             </View>
 
             {/* Project name + aggregate changes */}
             <View style={styles.sectionHeaderContent}>
-                <Text style={styles.sectionHeaderPath} numberOfLines={1}>
+                <Text style={[
+                    styles.sectionHeaderPath,
+                    isStudio && {
+                        fontSize: 12,
+                        lineHeight: 16,
+                        fontWeight: '400',
+                        ...Typography.default(),
+                    },
+                ]} numberOfLines={1}>
                     {repoFolderName}
                 </Text>
                 {showEnhancedWorktreeHeader && environment?.worktreeName ? (
@@ -250,6 +270,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
                                     <SectionHeader
                                         session={firstSession}
                                         displayPath={projectGroup.displayPath}
+                                        sessionRowStyle={sessionRowStyle}
                                     />
                                     <View style={groupContainerStyle}>
                                         {projectGroup.sessions.map((session, index) => (
@@ -442,7 +463,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                                 fontSize: sessionRowStyle.titleFontSize!,
                                 lineHeight: sessionRowStyle.titleLineHeight!,
                                 fontWeight: sessionRowStyle.titleFontWeight!,
-                                ...Typography.default('semiBold'),
+                                ...Typography.default(),
                             },
                         ]}
                         numberOfLines={isStudio ? 1 : 2}

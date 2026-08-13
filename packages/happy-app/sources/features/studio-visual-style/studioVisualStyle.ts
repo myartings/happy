@@ -21,7 +21,7 @@ export type DesktopSessionRowStyle = {
     metadataInset: number | null;
     titleFontSize: number | null;
     titleLineHeight: number | null;
-    titleFontWeight: '600' | null;
+    titleFontWeight: '400' | '600' | null;
     primaryMetadataFontSize: number | null;
     secondaryMetadataFontSize: number | null;
     cornerRadius: number | null;
@@ -40,6 +40,8 @@ export type DesktopTopControlsStyle = {
     groupGap: number | null;
     contentGap: number | null;
     horizontalPadding: number | null;
+    showRestingBorder: boolean;
+    showRestingSurface: boolean;
     showShadow: boolean;
 };
 
@@ -49,6 +51,8 @@ export type DesktopTodoRowStyle = {
     cornerRadius: number | null;
     horizontalPadding: number | null;
     contentGap: number | null;
+    showRestingBorder: boolean;
+    showRestingSurface: boolean;
     showShadow: boolean;
 };
 
@@ -150,20 +154,20 @@ export function resolveDesktopSessionRowStyle({
     if (visualStyle === 'studio') {
         return {
             visualStyle,
-            height: 62,
+            height: 58,
             horizontalInset: 12,
             horizontalPadding: 12,
-            verticalPadding: 6,
-            gap: 4,
+            verticalPadding: 4,
+            gap: 2,
             leadingIndicatorWidth: 10,
             leadingIndicatorGap: 6,
             metadataInset: 16,
             titleFontSize: 13,
             titleLineHeight: 17,
-            titleFontWeight: '600',
+            titleFontWeight: '400',
             primaryMetadataFontSize: 11,
             secondaryMetadataFontSize: 10,
-            cornerRadius: 9,
+            cornerRadius: 7,
             selectedBackground: '#E8EAEA',
             showCardSurface: false,
             showGroupShellBoundary: false,
@@ -210,12 +214,14 @@ export function resolveDesktopTopControlsStyle({
     if (visualStyle === 'studio') {
         return {
             visualStyle,
-            controlHeight: 38,
-            archiveWidth: 38,
-            cornerRadius: 10,
-            groupGap: 6,
+            controlHeight: 36,
+            archiveWidth: 36,
+            cornerRadius: 7,
+            groupGap: 2,
             contentGap: 6,
             horizontalPadding: 12,
+            showRestingBorder: false,
+            showRestingSurface: false,
             showShadow: false,
         };
     }
@@ -228,6 +234,8 @@ export function resolveDesktopTopControlsStyle({
         groupGap: null,
         contentGap: null,
         horizontalPadding: null,
+        showRestingBorder: true,
+        showRestingSurface: true,
         showShadow: true,
     };
 }
@@ -247,9 +255,11 @@ export function resolveDesktopTodoRowStyle({
         return {
             visualStyle,
             height: 36,
-            cornerRadius: 10,
+            cornerRadius: 7,
             horizontalPadding: 12,
             contentGap: 4,
+            showRestingBorder: false,
+            showRestingSurface: false,
             showShadow: false,
         };
     }
@@ -260,6 +270,8 @@ export function resolveDesktopTodoRowStyle({
         cornerRadius: null,
         horizontalPadding: null,
         contentGap: null,
+        showRestingBorder: true,
+        showRestingSurface: true,
         showShadow: true,
     };
 }
@@ -278,12 +290,12 @@ export function resolveDesktopSectionHeaderStyle({
     if (visualStyle === 'studio') {
         return {
             visualStyle,
-            fontSize: 12,
-            lineHeight: 16,
+            fontSize: 11,
+            lineHeight: 15,
             fontWeight: '500',
             horizontalPadding: 18,
-            topPadding: 14,
-            bottomPadding: 6,
+            topPadding: 10,
+            bottomPadding: 4,
         };
     }
 
