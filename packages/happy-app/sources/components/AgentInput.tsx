@@ -44,7 +44,10 @@ import {
 } from './agentInputLayout';
 import { shouldUseExpoNativeSettingsMenu } from './glassInteractionPolicy';
 import { isTauri } from '@/utils/isTauri';
-import { resolveDesktopComposerStyle } from '@/features/studio-composer/studioComposerStyle';
+import {
+    resolveDesktopComposerStyle,
+    resolveStudioComposerStatePresentation,
+} from '@/features/studio-composer/studioComposerStyle';
 
 interface AgentInputProps {
     // `initialValue` seeds the uncontrolled textarea once; keystrokes never
@@ -1273,6 +1276,23 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
         return false; // Key was not handled
     }, [suggestions, moveUp, moveDown, selected, handleSuggestionSelect, props.showAbortButton, props.onAbort, isAborting, handleAbortPress, agentInputEnterToSend, props.onSend, props.onPermissionModeChange, availableModes, permissionModeKey, isSendBlocked, handleBlockedSendAttempt, props.isSendDisabled]);
 
+    const composerStatePresentation = resolveStudioComposerStatePresentation({
+        isStudio: isStudioComposer,
+        hasText,
+        hasAttachments: hasImages,
+        hasSuggestions: suggestions.length > 0,
+        pickerOpen: openPicker !== null,
+        isSending: props.isSending ?? false,
+        showAbortButton: props.showAbortButton ?? false,
+        isAborting,
+        isSendBlocked,
+    });
+    const desktopPrimaryActionColor = composerStatePresentation?.primaryActionForeground
+        ?? theme.colors.button.primary.tint;
+    const desktopAbortActionColor = isStudioComposer && props.showAbortButton
+        ? composerStatePresentation?.abortActionForeground ?? theme.colors.button.secondary.tint
+        : theme.colors.button.secondary.tint;
+
     const desktopActionControls = (
         <View style={[
             styles.actionButtonsContainer,
@@ -1317,6 +1337,9 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                         justifyContent: 'center',
                                         height: 32,
                                         opacity: p.pressed ? 0.7 : 1,
+                                        backgroundColor: isStudioComposer && openPicker === 'permission'
+                                            ? composerStatePresentation?.secondaryActiveBackground
+                                            : 'transparent',
                                     })}
                                 >
                                     <Octicons name="gear" size={16} color={theme.colors.button.secondary.tint} />
@@ -1373,15 +1396,18 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                         justifyContent: 'center',
                                         height: 32,
                                         opacity: p.pressed ? 0.7 : 1,
+                                        backgroundColor: isStudioComposer && props.showAbortButton
+                                            ? composerStatePresentation?.abortActionBackground
+                                            : 'transparent',
                                     })}
                                     hitSlop={{ top: 5, bottom: 10, left: 0, right: 0 }}
                                     onPress={handleAbortPress}
                                     disabled={isAborting}
                                 >
                                     {isAborting ? (
-                                        <ActivityIndicator size="small" color={theme.colors.button.secondary.tint} />
+                                        <ActivityIndicator size="small" color={desktopAbortActionColor} />
                                     ) : (
-                                        <Octicons name="stop" size={16} color={theme.colors.button.secondary.tint} />
+                                        <Octicons name="stop" size={16} color={desktopAbortActionColor} />
                                     )}
                                 </Pressable>
                             </Shaker>
@@ -1429,6 +1455,11 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                 : (hasText || props.isSending || (props.onMicPress && !props.isMicActive))
                                     ? styles.sendButtonActive
                                     : styles.sendButtonInactive,
+                            isStudioComposer && composerStatePresentation && {
+                                backgroundColor: composerStatePresentation.primaryActionBackground,
+                                borderWidth: composerStatePresentation.primaryActionBorder === 'transparent' ? 0 : 1,
+                                borderColor: composerStatePresentation.primaryActionBorder,
+                            },
                         ]}
                     >
                         <Pressable
@@ -1444,28 +1475,28 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             disabled={!desktopCanPressSendButton}
                         >
                             {props.isSending ? (
-                                <ActivityIndicator size="small" color={theme.colors.button.primary.tint} />
+                                <ActivityIndicator size="small" color={desktopPrimaryActionColor} />
                             ) : isSendBlocked ? (
                                 <Ionicons name="lock-closed" size={15} color={theme.colors.textSecondary} />
-                            ) : hasText ? (
+                            ) : (isStudioComposer ? hasComposerContent : hasText) ? (
                                 <Octicons
                                     name="arrow-up"
                                     size={16}
-                                    color={theme.colors.button.primary.tint}
-                                    style={[styles.sendButtonIcon, { marginTop: Platform.OS === 'web' ? 2 : 0 }]}
+                                    color={desktopPrimaryActionColor}
+                                    style={{ color: desktopPrimaryActionColor, marginTop: Platform.OS === 'web' ? 2 : 0 }}
                                 />
                             ) : props.onMicPress && !props.isMicActive ? (
                                 <Image
                                     source={require('@/assets/images/icon-voice-white.png')}
                                     style={{ width: 24, height: 24 }}
-                                    tintColor={theme.colors.button.primary.tint}
+                                    tintColor={desktopPrimaryActionColor}
                                 />
                             ) : (
                                 <Octicons
                                     name="arrow-up"
                                     size={16}
-                                    color={theme.colors.button.primary.tint}
-                                    style={[styles.sendButtonIcon, { marginTop: Platform.OS === 'web' ? 2 : 0 }]}
+                                    color={desktopPrimaryActionColor}
+                                    style={{ color: desktopPrimaryActionColor, marginTop: Platform.OS === 'web' ? 2 : 0 }}
                                 />
                             )}
                         </Pressable>
@@ -1490,7 +1521,13 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                 alignItems: 'flex-start',
                 paddingHorizontal: 16,
                 paddingVertical: 8,
-                backgroundColor: pressed ? theme.colors.surfacePressed : 'transparent',
+                backgroundColor: pressed
+                    ? isStudioComposer ? '#E7E8E8' : theme.colors.surfacePressed
+                    : selected && isStudioComposer
+                        ? composerStatePresentation?.secondaryActiveBackground
+                        : 'transparent',
+                borderRadius: isStudioComposer ? 8 : 0,
+                marginHorizontal: isStudioComposer ? 6 : 0,
             })}
         >
             <View style={{
@@ -1679,6 +1716,8 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             itemHeight={composerStyle.autocompleteRowHeight ?? 48}
                             studio={isStudioComposer}
                             cornerRadius={composerStyle.autocompleteRadius ?? undefined}
+                            selectedBackground={composerStatePresentation?.autocompleteSelectedBackground}
+                            pressedBackground={composerStatePresentation?.autocompletePressedBackground}
                         />
                     </View>
                 )}
@@ -1991,7 +2030,11 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                         compactMobileComposer && styles.unifiedPanelShadow,
                         compactMobileComposer && styles.mobileUnifiedPanelShadow,
                         composerStyle.showElevation && styles.studioUnifiedPanelShadow,
-                        isStudioComposer && { borderRadius: composerStyle.shellRadius! },
+                        isStudioComposer && {
+                            borderRadius: composerStyle.shellRadius!,
+                            shadowOpacity: composerStatePresentation?.shellShadowOpacity,
+                            shadowRadius: composerStatePresentation?.shellShadowRadius,
+                        },
                     ]}>
                         <MobileGlassSurface
                             enabled={compactMobileComposer}
@@ -2011,6 +2054,10 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                     paddingTop: composerStyle.shellTopPadding!,
                                     paddingBottom: composerStyle.shellBottomPadding!,
                                 },
+                                isStudioComposer && composerStatePresentation && {
+                                    backgroundColor: composerStatePresentation.shellBackground,
+                                    borderColor: composerStatePresentation.shellBorder,
+                                },
                             ]}
                         >
                     {/* Attachment preview strip */}
@@ -2020,6 +2067,8 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             onRemove={props.onRemoveImage ?? (() => {})}
                             studio={isStudioComposer}
                             thumbnailSize={composerStyle.attachmentSize ?? undefined}
+                            surfaceBackground={composerStatePresentation?.attachmentBackground}
+                            surfaceBorderColor={composerStatePresentation?.attachmentBorder}
                         />
                     )}
                     {/* Input field */}

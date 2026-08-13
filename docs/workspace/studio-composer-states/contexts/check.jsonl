@@ -1,0 +1,9 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-composer-states/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Verify state wiring and preserved callbacks and order"}
+{"path":"packages/happy-app/sources/components/AgentInputAttachmentStrip.tsx","reason":"Verify attachment behavior and Studio gating"}
+{"path":"packages/happy-app/sources/components/AgentInputAutocomplete.tsx","reason":"Verify keyboard selection behavior and Studio gating"}
+{"path":"packages/happy-app/sources/components/AgentInputSuggestionView.tsx","reason":"Verify suggestion content contract"}
+{"path":"packages/happy-app/sources/features/studio-composer","reason":"Verify state resolver, fixtures, and wiring tests"}
+{"path":"docs/specs/studio-composer-states.md","reason":"Acceptance criteria for verification"}

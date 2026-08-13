@@ -13,13 +13,24 @@ interface AgentInputAutocompleteProps {
     itemHeight: number;
     studio?: boolean;
     cornerRadius?: number;
+    selectedBackground?: string;
+    pressedBackground?: string;
 }
 
 // We don't reuse FloatingOverlay here because the dropdown needs a ref on
 // its ScrollView so arrow-key navigation can scroll the selected item into
 // view when the list exceeds the visible window.
 export const AgentInputAutocomplete = React.memo((props: AgentInputAutocompleteProps) => {
-    const { suggestions, selectedIndex = -1, onSelect, itemHeight, studio = false, cornerRadius } = props;
+    const {
+        suggestions,
+        selectedIndex = -1,
+        onSelect,
+        itemHeight,
+        studio = false,
+        cornerRadius,
+        selectedBackground,
+        pressedBackground,
+    } = props;
     const { theme } = useUnistyles();
     const scrollRef = React.useRef<ScrollView>(null);
 
@@ -69,10 +80,12 @@ export const AgentInputAutocomplete = React.memo((props: AgentInputAutocompleteP
                     style={({ pressed }) => ({
                         height: itemHeight,
                         backgroundColor: pressed
-                            ? theme.colors.surfacePressed
+                            ? pressedBackground ?? theme.colors.surfacePressed
                             : selectedIndex === index
-                                ? theme.colors.surfaceSelected
+                                ? selectedBackground ?? theme.colors.surfaceSelected
                                 : 'transparent',
+                        borderRadius: studio ? 8 : 0,
+                        marginHorizontal: studio ? 6 : 0,
                     })}
                 >
                     {suggestion}

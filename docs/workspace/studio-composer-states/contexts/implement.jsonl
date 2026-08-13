@@ -1,0 +1,11 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-composer-states/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Owned host seam for actual composer states and actions"}
+{"path":"packages/happy-app/sources/components/AgentInputAttachmentStrip.tsx","reason":"Owned Studio attachment state surface"}
+{"path":"packages/happy-app/sources/components/AgentInputAutocomplete.tsx","reason":"Owned Studio autocomplete shell and selection state"}
+{"path":"packages/happy-app/sources/components/AgentInputSuggestionView.tsx","reason":"Owned Studio suggestion row content"}
+{"path":"packages/happy-app/sources/features/studio-composer","reason":"Feature-owned state resolver, fixtures, and focused tests"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Read-only packaged-desktop activation dependency"}
+{"path":"docs/specs/studio-composer-states.md","reason":"Accepted behavior contract for implementation"}
+{"path":"docs/tasks/studio-composer-states-tasks.md","reason":"Task decomposition for implementation"}
