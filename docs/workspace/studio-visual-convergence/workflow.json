@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "slug": "studio-visual-convergence",
   "intensity": "feature",
-  "phase": "implementation",
-  "nextAction": "Commit Batch 0, fork three isolated writers, then integrate validated child commits.",
+  "phase": "archived",
+  "nextAction": "None",
   "riskRequired": false,
   "decisionsRequired": false,
   "legacyImport": false,
@@ -29,24 +29,24 @@
       "updated": "2026-08-13T16:56:35+00:00"
     },
     "implementation": {
-      "status": "pending",
-      "evidence": "",
-      "updated": "2026-08-13T16:51:23+00:00"
+      "status": "passed",
+      "evidence": "Packaged-Studio Markdown AI options now use compact geometry and explicit hover/focus-visible/pressed presentation with mounted renderer tests; Default, standalone Web, iOS, and Android retain the existing path.",
+      "updated": "2026-08-13T19:30:15+00:00"
     },
     "check": {
-      "status": "pending",
-      "evidence": "",
-      "updated": "2026-08-13T16:51:23+00:00"
+      "status": "passed",
+      "evidence": "Post-correction Markdown/semantic 9 files/39 tests, complete Happy App 137 files/1220 tests, Happy App and Server typechecks, git diff check, fresh Studio Tauri build, signing, strict verification, recoverable installation, and launch all passed.",
+      "updated": "2026-08-13T19:30:15+00:00"
     },
     "review": {
-      "status": "pending",
-      "evidence": "",
-      "updated": "2026-08-13T16:51:23+00:00"
+      "status": "passed",
+      "evidence": "Final read-only options review reports no blocking/high/medium finding and confirms Studio gating, real mounted renderer coverage, state priority, hook ordering, long-text expansion, callback preservation, and non-Studio compatibility.",
+      "updated": "2026-08-13T19:30:15+00:00"
     },
     "finish": {
-      "status": "pending",
-      "evidence": "",
-      "updated": "2026-08-13T16:51:23+00:00"
+      "status": "passed",
+      "evidence": "User accepted the installed compact Markdown options correction on 2026-08-14; final verification and whole-diff review passed, remaining automated resized/dark capture limitations are explicitly recorded, and richer execution transcripts are a separate follow-up feature.",
+      "updated": "2026-08-13T20:33:04+00:00"
     }
   },
   "history": [
@@ -89,7 +89,117 @@
       "type": "transition",
       "phase": "implementation",
       "evidence": "Commit Batch 0, fork three isolated writers, then integrate validated child commits."
+    },
+    {
+      "at": "2026-08-13T18:10:09+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Integrated Tracks A/B/C plus bounded review fixes: resizable Studio panels, sidebar hierarchy convergence, and Studio-only rich-text production semantics; all child workflows archived."
+    },
+    {
+      "at": "2026-08-13T18:10:09+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify integrated behavior, package, capture available evidence, and present for user acceptance."
+    },
+    {
+      "at": "2026-08-13T18:10:09+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Final integrated Happy App 426 suites/1216 tests, focused post-fix 52 tests, App/Server typechecks, workflow core and CI 14/14, selective workflow validation, and diff check all passed."
+    },
+    {
+      "at": "2026-08-13T18:10:09+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Three-stage read-only whole-diff review closed four findings; final review reports no blocking/high/medium correctness, compatibility, or regression issue."
+    },
+    {
+      "at": "2026-08-13T18:10:09+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Await user visual acceptance of the installed packaged candidate; adjust if rejected, otherwise finish/archive and merge locally to dev."
+    },
+    {
+      "at": "2026-08-13T19:09:58+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "User rejected the packaged Studio Markdown option density and authorized a bounded Studio-only acceptance correction on 2026-08-14."
+    },
+    {
+      "at": "2026-08-13T19:09:58+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Reverification required after the accepted options-density correction."
+    },
+    {
+      "at": "2026-08-13T19:09:58+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Whole-diff review must be rerun after the accepted options-density correction."
+    },
+    {
+      "at": "2026-08-13T19:09:58+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Refine packaged-Studio Markdown option density with behavior-first tests; preserve Default and mobile."
+    },
+    {
+      "at": "2026-08-13T19:30:15+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Packaged-Studio Markdown AI options now use compact geometry and explicit hover/focus-visible/pressed presentation with mounted renderer tests; Default, standalone Web, iOS, and Android retain the existing path."
+    },
+    {
+      "at": "2026-08-13T19:30:15+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Record final checks and review, then return the installed candidate for user visual acceptance."
+    },
+    {
+      "at": "2026-08-13T19:30:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Post-correction Markdown/semantic 9 files/39 tests, complete Happy App 137 files/1220 tests, Happy App and Server typechecks, git diff check, fresh Studio Tauri build, signing, strict verification, recoverable installation, and launch all passed."
+    },
+    {
+      "at": "2026-08-13T19:30:15+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Final read-only options review reports no blocking/high/medium finding and confirms Studio gating, real mounted renderer coverage, state priority, hook ordering, long-text expansion, callback preservation, and non-Studio compatibility."
+    },
+    {
+      "at": "2026-08-13T19:30:15+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Await user visual acceptance of the installed compact Markdown AI option rows; archive and merge locally to dev only after acceptance."
+    },
+    {
+      "at": "2026-08-13T20:33:04+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "User accepted the installed compact Markdown options correction on 2026-08-14; final verification and whole-diff review passed, remaining automated resized/dark capture limitations are explicitly recorded, and richer execution transcripts are a separate follow-up feature."
+    },
+    {
+      "at": "2026-08-13T20:33:04+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Completed and user-accepted Studio desktop convergence: panel resizing, sidebar hierarchy, rich Markdown semantics, and compact AI option rows; richer Codex-CLI-like execution transcripts deferred to a dedicated follow-up.; commit: pending; follow-up: None"
     }
   ],
-  "updated": "2026-08-13T16:57:01+00:00"
+  "updated": "2026-08-13T20:33:04+00:00",
+  "archivedAt": "2026-08-13T20:33:04+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Completed and user-accepted Studio desktop convergence: panel resizing, sidebar hierarchy, rich Markdown semantics, and compact AI option rows; richer Codex-CLI-like execution transcripts deferred to a dedicated follow-up.",
+  "archiveFollowUp": "None"
 }

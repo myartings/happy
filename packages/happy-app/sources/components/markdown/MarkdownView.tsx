@@ -17,8 +17,9 @@ import { MermaidRenderer } from './MermaidRenderer';
 import { t } from '@/text';
 import { isHttpMarkdownLink } from './linkUtils';
 import { openExternalUrl } from '@/utils/openExternalUrl';
-import { resolveMarkdownSpanPresentationStyles, type StudioSemanticTextPresentation } from '@/features/studio-semantic-text/studioSemanticTextPresentation';
+import { resolveMarkdownSpanPresentationStyles, resolveStudioMarkdownOptionState, type StudioSemanticTextPresentation } from '@/features/studio-semantic-text/studioSemanticTextPresentation';
 import { useStudioSemanticTextPresentation } from '@/features/studio-semantic-text/useStudioSemanticTextPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 // Option type for callback
 export type Option = {
@@ -86,7 +87,7 @@ export const MarkdownView = React.memo((props: {
                     } else if (block.type === 'mermaid') {
                         return <MermaidRenderer content={block.content} key={index} />;
                     } else if (block.type === 'options') {
-                        return <RenderOptionsBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onOptionPress={props.onOptionPress} />;
+                        return <RenderOptionsBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onOptionPress={props.onOptionPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'table') {
                         return <RenderTableBlock headers={block.headers} rows={block.rows} onLinkPress={handleLinkPress} selectable={selectable} key={index} first={index === 0} last={index === blocks.length - 1} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'image') {
@@ -260,34 +261,97 @@ function RenderOptionsBlock(props: {
     first: boolean, 
     last: boolean, 
     selectable: boolean,
-    onOptionPress?: (option: Option) => void 
+    onOptionPress?: (option: Option) => void,
+    studioPresentation: StudioSemanticTextPresentation | null,
 }) {
+    const optionPresentation = props.studioPresentation?.options;
+    const containerPresentation = optionPresentation ? {
+        gap: optionPresentation.gap,
+        marginVertical: optionPresentation.marginVertical,
+    } : null;
+    const itemPresentation = optionPresentation ? {
+        minHeight: optionPresentation.minHeight,
+        justifyContent: 'center' as const,
+        paddingHorizontal: optionPresentation.paddingHorizontal,
+        paddingVertical: optionPresentation.paddingVertical,
+        borderRadius: optionPresentation.borderRadius,
+        borderWidth: optionPresentation.borderWidth,
+        borderColor: optionPresentation.borderColor,
+        backgroundColor: optionPresentation.backgroundColor,
+    } : null;
+    const textPresentation = optionPresentation ? {
+        color: optionPresentation.textColor,
+        fontSize: optionPresentation.fontSize,
+        lineHeight: optionPresentation.lineHeight,
+    } : null;
+
     return (
-        <View style={[style.optionsContainer, props.first && style.first, props.last && style.last]}>
+        <View style={[style.optionsContainer, containerPresentation, props.first && style.first, props.last && style.last]}>
             {props.items.map((item, index) => {
                 if (props.onOptionPress) {
                     return (
-                        <Pressable 
-                            key={index} 
-                            style={({ pressed }) => [
-                                style.optionPressable,
-                                style.optionItem,
-                                pressed && style.optionItemPressed
-                            ]}
+                        <StudioMarkdownOption
+                            item={item}
+                            key={index}
+                            selectable={props.selectable}
+                            studioPresentation={props.studioPresentation}
                             onPress={() => props.onOptionPress?.({ title: item })}
-                        >
-                            <Text selectable={props.selectable} style={style.optionText}>{item}</Text>
-                        </Pressable>
+                        />
                     );
                 } else {
                     return (
-                        <View key={index} style={style.optionItem}>
-                            <Text selectable={props.selectable} style={style.optionText}>{item}</Text>
+                        <View key={index} style={[style.optionItem, itemPresentation]}>
+                            <Text selectable={props.selectable} style={[style.optionText, textPresentation]}>{item}</Text>
                         </View>
                     );
                 }
             })}
         </View>
+    );
+}
+
+function StudioMarkdownOption(props: {
+    item: string;
+    selectable: boolean;
+    studioPresentation: StudioSemanticTextPresentation | null;
+    onPress: () => void;
+}) {
+    const optionPresentation = props.studioPresentation?.options;
+    const interaction = useStudioInteractionState(optionPresentation !== undefined);
+
+    return (
+        <Pressable
+            {...interaction.interactionProps}
+            accessibilityRole={optionPresentation ? 'button' : undefined}
+            style={({ pressed }) => [
+                style.optionPressable,
+                style.optionItem,
+                optionPresentation && {
+                    minHeight: optionPresentation.minHeight,
+                    justifyContent: 'center' as const,
+                    paddingHorizontal: optionPresentation.paddingHorizontal,
+                    paddingVertical: optionPresentation.paddingVertical,
+                    borderRadius: optionPresentation.borderRadius,
+                    borderWidth: optionPresentation.borderWidth,
+                },
+                pressed && !optionPresentation && style.optionItemPressed,
+                optionPresentation && resolveStudioMarkdownOptionState(props.studioPresentation!, {
+                    focused: interaction.focused,
+                    hovered: interaction.hovered,
+                    pressed,
+                }),
+            ]}
+            onPress={props.onPress}
+        >
+            <Text selectable={props.selectable} style={[
+                style.optionText,
+                optionPresentation && {
+                    color: optionPresentation.textColor,
+                    fontSize: optionPresentation.fontSize,
+                    lineHeight: optionPresentation.lineHeight,
+                },
+            ]}>{props.item}</Text>
+        </Pressable>
     );
 }
 

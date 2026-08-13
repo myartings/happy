@@ -73,6 +73,24 @@ export type StudioSemanticTextPresentation = Readonly<{
         copyBorderColor: string;
         copyTextColor: string;
     }>;
+    options: Readonly<{
+        gap: number;
+        marginVertical: number;
+        minHeight: number;
+        paddingHorizontal: number;
+        paddingVertical: number;
+        borderRadius: number;
+        borderWidth: number;
+        backgroundColor: string;
+        borderColor: string;
+        pressedBackgroundColor: string;
+        hoverBackgroundColor: string;
+        hoverBorderColor: string;
+        focusBorderColor: string;
+        textColor: string;
+        fontSize: number;
+        lineHeight: number;
+    }>;
 }>;
 
 type ResolveStudioSemanticTextPresentationInput = Readonly<{
@@ -192,6 +210,52 @@ export function resolveStudioSemanticTextPresentation({
             copyBorderColor: dark ? '#4A4A4A' : '#DDDCD9',
             copyTextColor: dark ? '#E7E7E7' : '#343434',
         },
+        options: {
+            gap: 6,
+            marginVertical: 8,
+            minHeight: 40,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderRadius: 9,
+            borderWidth: 1,
+            backgroundColor: dark ? '#292929' : '#F7F7F6',
+            borderColor: dark ? '#3C3C3C' : '#E5E3DF',
+            pressedBackgroundColor: dark ? '#343434' : '#EEEDEB',
+            hoverBackgroundColor: dark ? '#303030' : '#F1F0EE',
+            hoverBorderColor: dark ? '#4A4A4A' : '#DAD8D4',
+            focusBorderColor: dark ? 'rgba(132, 168, 255, 0.88)' : 'rgba(70, 111, 226, 0.82)',
+            textColor: dark ? '#E7E7E7' : '#2D2D2D',
+            fontSize: 14,
+            lineHeight: 20,
+        },
+    };
+}
+
+export function resolveStudioMarkdownOptionState(
+    presentation: StudioSemanticTextPresentation,
+    state: Readonly<{ focused: boolean; hovered: boolean; pressed: boolean }>,
+): Readonly<{ backgroundColor: string; borderColor: string }> {
+    if (state.pressed) {
+        return {
+            backgroundColor: presentation.options.pressedBackgroundColor,
+            borderColor: presentation.options.hoverBorderColor,
+        };
+    }
+    if (state.focused) {
+        return {
+            backgroundColor: presentation.options.backgroundColor,
+            borderColor: presentation.options.focusBorderColor,
+        };
+    }
+    if (state.hovered) {
+        return {
+            backgroundColor: presentation.options.hoverBackgroundColor,
+            borderColor: presentation.options.hoverBorderColor,
+        };
+    }
+    return {
+        backgroundColor: presentation.options.backgroundColor,
+        borderColor: presentation.options.borderColor,
     };
 }
 

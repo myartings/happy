@@ -17,6 +17,7 @@ describe('Studio rich-text renderer wiring', () => {
         expect(markdownView).toContain('props.studioPresentation?.list');
         expect(markdownView).toContain('props.studioPresentation?.table');
         expect(markdownView).toContain('props.studioPresentation?.codeChrome');
+        expect(markdownView).toContain('props.studioPresentation?.options');
     });
 
     it('retains selection, trusted-link, copy, scrolling, Mermaid, options, and images', () => {

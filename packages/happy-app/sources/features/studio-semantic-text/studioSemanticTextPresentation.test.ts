@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
     resolveMarkdownSpanRoles,
     resolveMarkdownSpanPresentationStyles,
+    resolveStudioMarkdownOptionState,
     resolveStudioSemanticTextPresentation,
 } from './studioSemanticTextPresentation';
 import { parseMarkdown } from '../../components/markdown/parseMarkdown';
@@ -50,6 +51,21 @@ describe('resolveStudioSemanticTextPresentation', () => {
                 labelColor: '#707070',
                 copyBackgroundColor: '#FFFFFF',
             },
+            options: {
+                gap: 6,
+                marginVertical: 8,
+                minHeight: 40,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 9,
+                borderWidth: 1,
+                backgroundColor: '#F7F7F6',
+                borderColor: '#E5E3DF',
+                pressedBackgroundColor: '#EEEDEB',
+                textColor: '#2D2D2D',
+                fontSize: 14,
+                lineHeight: 20,
+            },
         });
     });
 
@@ -65,6 +81,12 @@ describe('resolveStudioSemanticTextPresentation', () => {
             horizontalRule: { backgroundColor: '#414141' },
             table: { borderColor: '#414141', headerBackgroundColor: '#2D2D2D' },
             codeChrome: { labelColor: '#A6A6A6', copyBackgroundColor: '#343434' },
+            options: {
+                backgroundColor: '#292929',
+                borderColor: '#3C3C3C',
+                pressedBackgroundColor: '#343434',
+                textColor: '#E7E7E7',
+            },
         });
     });
 
@@ -94,6 +116,42 @@ describe('resolveStudioSemanticTextPresentation', () => {
             previewStyle: 'studio',
             dark: true,
         })).toBeNull();
+    });
+});
+
+describe('resolveStudioMarkdownOptionState', () => {
+    it('keeps the resting surface quiet and gives hover, focus, and press distinct feedback', () => {
+        const presentation = resolveStudioSemanticTextPresentation({
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+            dark: false,
+        });
+        if (!presentation) throw new Error('Expected Studio presentation');
+
+        expect(resolveStudioMarkdownOptionState(presentation, {
+            focused: false, hovered: false, pressed: false,
+        })).toEqual({
+            backgroundColor: '#F7F7F6',
+            borderColor: '#E5E3DF',
+        });
+        expect(resolveStudioMarkdownOptionState(presentation, {
+            focused: false, hovered: true, pressed: false,
+        })).toEqual({
+            backgroundColor: '#F1F0EE',
+            borderColor: '#DAD8D4',
+        });
+        expect(resolveStudioMarkdownOptionState(presentation, {
+            focused: true, hovered: false, pressed: false,
+        })).toEqual({
+            backgroundColor: '#F7F7F6',
+            borderColor: 'rgba(70, 111, 226, 0.82)',
+        });
+        expect(resolveStudioMarkdownOptionState(presentation, {
+            focused: false, hovered: false, pressed: true,
+        })).toEqual({
+            backgroundColor: '#EEEDEB',
+            borderColor: '#DAD8D4',
+        });
     });
 });
 

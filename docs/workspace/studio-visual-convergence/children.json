@@ -1,5 +1,30 @@
 {
   "schemaVersion": 1,
   "feature": "studio-visual-convergence",
-  "children": []
+  "children": [
+    {
+      "slug": "studio-panel-resize",
+      "branch": "feature/studio-panel-resize",
+      "worktree": ".dev/worktree/studio-panel-resize",
+      "status": "integrated",
+      "commits": ["ca766f70", "046ab93c", "4c58f13b"],
+      "scope": "Persisted bounded left/right Studio desktop resizing"
+    },
+    {
+      "slug": "studio-sidebar-convergence",
+      "branch": "feature/studio-sidebar-convergence",
+      "worktree": ".dev/worktree/studio-sidebar-convergence",
+      "status": "integrated",
+      "commits": ["36710f2b"],
+      "scope": "Session hierarchy density and transparent top navigation rows"
+    },
+    {
+      "slug": "studio-rich-text",
+      "branch": "feature/studio-rich-text",
+      "worktree": ".dev/worktree/studio-rich-text",
+      "status": "integrated",
+      "commits": ["41678565", "630b7e8a"],
+      "scope": "Semantic fixture parser renderer and light/dark rich-text presentation"
+    }
+  ]
 }
