@@ -45,6 +45,7 @@ export const LocalSettingsSchema = z.object({
     devSessionListSettingsSynced: z.boolean().describe('Whether device-local session list choices were migrated to account settings'),
     studioLeftPanelWidth: z.number().finite().describe('Last accepted Studio left navigation width on this device'),
     studioRightPanelWidth: z.number().finite().describe('Last accepted Studio right workspace width on this device'),
+    studioLastResizedPanel: z.enum(['left', 'right']).nullable().describe('Studio panel that owns constrained-width resize priority'),
     // Right file sidebar: which panels the user has opened and which is active.
     // Persisted so the layout survives reloads and long absences.
     sidebarPanelsOpen: z.array(z.enum(['changes', 'allFiles', 'sideChat', 'issues'])).describe('Open right-sidebar panels, in tab order'),
@@ -98,6 +99,7 @@ export const localSettingsDefaults: LocalSettings = {
     devSessionListSettingsSynced: false,
     studioLeftPanelWidth: 275,
     studioRightPanelWidth: 360,
+    studioLastResizedPanel: null,
     sidebarPanelsOpen: [],
     sidebarPanelActive: null,
     acknowledgedCliVersions: {},

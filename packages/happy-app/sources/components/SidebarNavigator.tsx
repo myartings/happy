@@ -4,7 +4,7 @@ import { Drawer } from 'expo-router/drawer';
 import { useIsTablet, useHeaderHeight } from '@/utils/responsive';
 import { SidebarView } from './SidebarView';
 import { useWindowDimensions, View, Pressable, Platform } from 'react-native';
-import { useLocalSetting, useLocalSettingMutable } from '@/sync/storage';
+import { storage, useLocalSetting, useLocalSettingMutable } from '@/sync/storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -31,8 +31,9 @@ export const SidebarNavigator = React.memo(() => {
     const showSidebar = isDesktopLayout && !zenMode;
     const { width: windowWidth } = useWindowDimensions();
     const requestedVisualStyle = useLocalSetting('visualStyle');
-    const [persistedLeftPanelWidth, setPersistedLeftPanelWidth] = useLocalSettingMutable('studioLeftPanelWidth');
+    const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
     const persistedRightPanelWidth = useLocalSetting('studioRightPanelWidth');
+    const lastResizedPanel = useLocalSetting('studioLastResizedPanel');
     const rightPanelVisible = useStudioRightPanelVisible();
     const inTauri = isTauri();
 
@@ -51,7 +52,8 @@ export const SidebarNavigator = React.memo(() => {
         windowWidth,
         leftVisible: showSidebar,
         rightVisible: rightPanelVisible,
-    }), [persistedLeftPanelWidth, persistedRightPanelWidth, rightPanelVisible, showSidebar, windowWidth]);
+        activeSide: lastResizedPanel,
+    }), [lastResizedPanel, persistedLeftPanelWidth, persistedRightPanelWidth, rightPanelVisible, showSidebar, windowWidth]);
     const fullDrawerWidth = isDesktopLayout
         ? studioPanelResizeEnabled
             ? panelWidths.leftWidth
@@ -114,12 +116,16 @@ export const SidebarNavigator = React.memo(() => {
             {studioPanelResizeEnabled && showSidebar && (
                 <StudioPanelResizeHandle
                     side="left"
-                    width={panelWidths.leftWidth}
+                    targetWidth={persistedLeftPanelWidth}
+                    renderedWidth={panelWidths.leftWidth}
                     windowWidth={windowWidth}
                     oppositeWidth={panelWidths.rightWidth}
                     oppositeVisible={rightPanelVisible}
                     label="Resize navigation panel"
-                    onWidthChange={setPersistedLeftPanelWidth}
+                    onWidthChange={(width) => storage.getState().applyLocalSettings({
+                        studioLeftPanelWidth: width,
+                        studioLastResizedPanel: 'left',
+                    })}
                     style={{
                         position: 'absolute',
                         top: 0,

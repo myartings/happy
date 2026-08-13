@@ -10,6 +10,7 @@ vi.mock('react-native', async () => {
 });
 
 import { StudioPanelResizeHandle } from './StudioPanelResizeHandle';
+import { projectStudioPanelWidths } from './studioPanelResizePolicy';
 
 const originalConsoleError = console.error;
 
@@ -23,12 +24,13 @@ beforeAll(() => {
 
 afterAll(() => vi.restoreAllMocks());
 
-function renderHandle(side: 'left' | 'right', onWidthChange = vi.fn(), width?: number) {
+function renderHandle(side: 'left' | 'right', onWidthChange = vi.fn(), renderedWidth?: number, targetWidth?: number) {
     let renderer!: ReturnType<typeof create>;
     act(() => {
         renderer = create(React.createElement(StudioPanelResizeHandle, {
             side,
-            width: width ?? (side === 'left' ? 275 : 360),
+            renderedWidth: renderedWidth ?? (side === 'left' ? 275 : 360),
+            targetWidth: targetWidth ?? (side === 'left' ? 275 : 360),
             windowWidth: 1470,
             oppositeWidth: side === 'left' ? 360 : 275,
             oppositeVisible: true,
@@ -36,7 +38,7 @@ function renderHandle(side: 'left' | 'right', onWidthChange = vi.fn(), width?: n
             onWidthChange,
         }));
     });
-    return { handle: renderer.root.findByType('View' as any), onWidthChange };
+    return { handle: renderer.root.findByType('View' as any), onWidthChange, renderer };
 }
 
 describe('Studio panel resize handle', () => {
@@ -91,5 +93,32 @@ describe('Studio panel resize handle', () => {
 
         act(() => handle.props.onKeyDown({ key: 'ArrowRight', preventDefault: vi.fn() }));
         expect(onWidthChange).toHaveBeenLastCalledWith(277);
+    });
+
+    it('closes pointer and keyboard events through persisted targets back into rendered geometry', () => {
+        let storedLeftWidth = 420;
+        const storedRightWidth = 520;
+        const initial = projectStudioPanelWidths({
+            storedLeftWidth, storedRightWidth, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: null,
+        });
+        const persist = vi.fn((width: number) => { storedLeftWidth = width; });
+        const { handle } = renderHandle('left', persist, initial.leftWidth, storedLeftWidth);
+        const pointerTarget = { setPointerCapture: vi.fn() };
+
+        act(() => handle.props.onPointerDown({ pointerId: 1, clientX: 500, currentTarget: pointerTarget }));
+        act(() => handle.props.onPointerMove({ pointerId: 1, clientX: 510, currentTarget: pointerTarget }));
+        const dragged = projectStudioPanelWidths({
+            storedLeftWidth, storedRightWidth, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        });
+        expect(dragged).toEqual({ leftWidth: 271, rightWidth: 329 });
+
+        act(() => handle.props.onKeyDown({ key: 'ArrowRight', preventDefault: vi.fn() }));
+        const keyboard = projectStudioPanelWidths({
+            storedLeftWidth, storedRightWidth, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        });
+        expect(keyboard.leftWidth).toBeGreaterThan(initial.leftWidth);
     });
 });

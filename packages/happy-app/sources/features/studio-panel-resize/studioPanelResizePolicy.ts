@@ -30,6 +30,7 @@ type StudioPanelWidthsInput = {
     windowWidth: number;
     leftVisible: boolean;
     rightVisible: boolean;
+    activeSide?: StudioPanelSide | null;
 };
 
 export type StudioPanelWidths = {
@@ -81,6 +82,7 @@ export function projectStudioPanelWidths({
     windowWidth,
     leftVisible,
     rightVisible,
+    activeSide = null,
 }: StudioPanelWidthsInput): StudioPanelWidths {
     if (!leftVisible && !rightVisible) return { leftWidth: 0, rightWidth: 0 };
     if (!rightVisible) {
@@ -113,6 +115,26 @@ export function projectStudioPanelWidths({
         minimumTotal,
         maximumTotal,
     ));
+    if (activeSide) {
+        const activeBounds = STUDIO_PANEL_GEOMETRY[activeSide];
+        const oppositeSide: StudioPanelSide = activeSide === 'left' ? 'right' : 'left';
+        const oppositeBounds = STUDIO_PANEL_GEOMETRY[oppositeSide];
+        const activeTarget = activeSide === 'left' ? requestedLeft : requestedRight;
+        const oppositeTarget = oppositeSide === 'left' ? requestedLeft : requestedRight;
+        const activeWidth = Math.round(clamp(
+            activeTarget,
+            activeBounds.minWidth,
+            panelBudget - oppositeBounds.minWidth,
+        ));
+        const oppositeWidth = Math.round(clamp(
+            oppositeTarget,
+            oppositeBounds.minWidth,
+            Math.min(oppositeBounds.maxWidth, panelBudget - activeWidth),
+        ));
+        return activeSide === 'left'
+            ? { leftWidth: activeWidth, rightWidth: oppositeWidth }
+            : { leftWidth: oppositeWidth, rightWidth: activeWidth };
+    }
     const baseLeft = Math.min(requestedLeft, left.defaultWidth);
     const baseRight = Math.min(requestedRight, right.defaultWidth);
     const baseTotal = baseLeft + baseRight;
@@ -191,4 +213,15 @@ export function projectPanelDrag({
 
 export function resetPanelWidth(side: StudioPanelSide): number {
     return STUDIO_PANEL_GEOMETRY[side].defaultWidth;
+}
+
+export function projectPanelKeyboardTarget(
+    side: StudioPanelSide,
+    renderedWidth: number,
+    direction: -1 | 1,
+): number {
+    return projectPanelTarget(
+        side,
+        renderedWidth + direction * STUDIO_PANEL_GEOMETRY.keyboardStep,
+    );
 }

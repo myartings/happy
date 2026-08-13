@@ -3,14 +3,15 @@ import { Platform, View } from 'react-native';
 import {
     STUDIO_PANEL_GEOMETRY,
     projectPanelDrag,
-    projectPanelTarget,
+    projectPanelKeyboardTarget,
     resetPanelWidth,
     type StudioPanelSide,
 } from './studioPanelResizePolicy';
 
 type StudioPanelResizeHandleProps = {
     side: StudioPanelSide;
-    width: number;
+    targetWidth: number;
+    renderedWidth: number;
     windowWidth: number;
     oppositeWidth: number;
     oppositeVisible: boolean;
@@ -27,7 +28,8 @@ type ActivePointer = {
 
 export function StudioPanelResizeHandle({
     side,
-    width,
+    targetWidth,
+    renderedWidth,
     windowWidth,
     oppositeWidth,
     oppositeVisible,
@@ -50,8 +52,8 @@ export function StudioPanelResizeHandle({
     const maximum = STUDIO_PANEL_GEOMETRY[side].maxWidth;
 
     const adjustBy = React.useCallback((delta: number) => {
-        onWidthChange(projectPanelTarget(side, width + delta));
-    }, [onWidthChange, side, width]);
+        onWidthChange(projectPanelKeyboardTarget(side, renderedWidth, delta > 0 ? 1 : -1));
+    }, [onWidthChange, renderedWidth, side]);
 
     const reset = React.useCallback(() => {
         onWidthChange(resetPanelWidth(side));
@@ -69,7 +71,7 @@ export function StudioPanelResizeHandle({
             activePointer.current = {
                 id: event.pointerId,
                 startX: event.clientX,
-                startWidth: width,
+                startWidth: renderedWidth,
             };
             event.currentTarget?.setPointerCapture?.(event.pointerId);
             setDragging(true);
@@ -118,7 +120,7 @@ export function StudioPanelResizeHandle({
             {...pointerProps as any}
             accessibilityRole="adjustable"
             accessibilityLabel={label}
-            accessibilityValue={{ min: minimum, max: maximum, now: width }}
+            accessibilityValue={{ min: minimum, max: maximum, now: renderedWidth, text: `Target ${targetWidth}` }}
             accessibilityActions={[
                 { name: 'increment', label: 'Increase width' },
                 { name: 'decrement', label: 'Decrease width' },

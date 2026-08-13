@@ -119,7 +119,8 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const zenMode = useLocalSetting('zenMode');
     const requestedVisualStyle = useLocalSetting('visualStyle');
     const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
-    const [persistedRightPanelWidth, setPersistedRightPanelWidth] = useLocalSettingMutable('studioRightPanelWidth');
+    const persistedRightPanelWidth = useLocalSetting('studioRightPanelWidth');
+    const lastResizedPanel = useLocalSetting('studioLastResizedPanel');
     const runningInTauri = isTauri();
     const gitStatus = useSessionGitStatus(sessionId);
     const sideChatForkSource = session ? getSessionForkSource(session) : null;
@@ -201,7 +202,8 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
         windowWidth,
         leftVisible: !zenMode,
         rightVisible: showSidebar,
-    }), [persistedLeftPanelWidth, persistedRightPanelWidth, showSidebar, windowWidth, zenMode]);
+        activeSide: lastResizedPanel,
+    }), [lastResizedPanel, persistedLeftPanelWidth, persistedRightPanelWidth, showSidebar, windowWidth, zenMode]);
     const sidebarWidth = studioPanelResizeEnabled
         ? panelWidths.rightWidth
         : Math.min(Math.max(Math.floor(windowWidth * 0.3), 250), 360);
@@ -692,12 +694,16 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                 <View style={{ width: 0, alignSelf: 'stretch', zIndex: 20 }}>
                     <StudioPanelResizeHandle
                         side="right"
-                        width={panelWidths.rightWidth}
+                        targetWidth={persistedRightPanelWidth}
+                        renderedWidth={panelWidths.rightWidth}
                         windowWidth={windowWidth}
                         oppositeWidth={panelWidths.leftWidth}
                         oppositeVisible={!zenMode}
                         label="Resize workspace panel"
-                        onWidthChange={setPersistedRightPanelWidth}
+                        onWidthChange={(width) => storage.getState().applyLocalSettings({
+                            studioRightPanelWidth: width,
+                            studioLastResizedPanel: 'right',
+                        })}
                         style={{
                             position: 'absolute',
                             top: 0,

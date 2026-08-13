@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-panel-resize-interaction-projection/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/workspace/studio-panel-resize-interaction-projection/validation.md","reason":"Acceptance evidence."}
+{"path":"packages/happy-app/sources/features/studio-panel-resize","reason":"Closed-loop behavior tests and implementation."}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"Left host wiring."}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Right host wiring."}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Persistence compatibility."}

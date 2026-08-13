@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     STUDIO_PANEL_GEOMETRY,
     projectPanelDrag,
+    projectPanelKeyboardTarget,
     projectStudioPanelWidths,
     projectPanelWidth,
     resetPanelWidth,
@@ -59,6 +60,76 @@ describe('Studio panel resize policy', () => {
             leftVisible: true,
             rightVisible: true,
         })).toEqual({ leftWidth: 261, rightWidth: 339 });
+    });
+
+    it('closes the constrained drag loop in the requested direction', () => {
+        const before = projectStudioPanelWidths({
+            storedLeftWidth: 420, storedRightWidth: 520, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: null,
+        });
+        const storedLeftWidth = projectPanelDrag({
+            side: 'left', startWidth: before.leftWidth, startPointerX: 500,
+            pointerX: 510, windowWidth: 1200, oppositeWidth: before.rightWidth,
+            oppositeVisible: true,
+        });
+        const after = projectStudioPanelWidths({
+            storedLeftWidth, storedRightWidth: 520, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        });
+
+        expect(storedLeftWidth).toBe(271);
+        expect(after).toEqual({ leftWidth: 271, rightWidth: 329 });
+        expect(after.leftWidth).toBeGreaterThan(before.leftWidth);
+    });
+
+    it('closes keyboard, reset, and collapse/reopen loops with active-side priority', () => {
+        const initial = projectStudioPanelWidths({
+            storedLeftWidth: 420, storedRightWidth: 520, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: null,
+        });
+        const keyboardTarget = projectPanelKeyboardTarget('left', initial.leftWidth, 1);
+        const keyboard = projectStudioPanelWidths({
+            storedLeftWidth: keyboardTarget, storedRightWidth: 520, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        });
+        expect(keyboard).toEqual({ leftWidth: 277, rightWidth: 323 });
+
+        const reset = projectStudioPanelWidths({
+            storedLeftWidth: resetPanelWidth('left'), storedRightWidth: 520, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        });
+        expect(reset).toEqual({ leftWidth: 275, rightWidth: 325 });
+
+        expect(projectStudioPanelWidths({
+            storedLeftWidth: keyboardTarget, storedRightWidth: 520, windowWidth: 900,
+            leftVisible: true, rightVisible: false, activeSide: 'left',
+        })).toEqual({ leftWidth: 277, rightWidth: 0 });
+        expect(projectStudioPanelWidths({
+            storedLeftWidth: keyboardTarget, storedRightWidth: 520, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        })).toEqual(keyboard);
+    });
+
+    it('keeps both panel bounds while a persisted active side follows window changes', () => {
+        expect(projectStudioPanelWidths({
+            storedLeftWidth: 275, storedRightWidth: 520, windowWidth: 1470,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        })).toEqual({ leftWidth: 275, rightWidth: 520 });
+        expect(projectStudioPanelWidths({
+            storedLeftWidth: 275, storedRightWidth: 520, windowWidth: 1540,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        })).toEqual({ leftWidth: 275, rightWidth: 520 });
+
+        const narrow = projectStudioPanelWidths({
+            storedLeftWidth: 420, storedRightWidth: 520, windowWidth: 1200,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        });
+        const restored = projectStudioPanelWidths({
+            storedLeftWidth: 420, storedRightWidth: 520, windowWidth: 1540,
+            leftVisible: true, rightVisible: true, activeSide: 'left',
+        });
+        expect(narrow).toEqual({ leftWidth: 320, rightWidth: 280 });
+        expect(restored).toEqual({ leftWidth: 420, rightWidth: 520 });
     });
 
     it('balances containable defaults instead of pinning reset at a minimum', () => {
