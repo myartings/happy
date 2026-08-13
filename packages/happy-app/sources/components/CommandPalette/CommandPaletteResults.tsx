@@ -3,6 +3,7 @@ import { View, ScrollView, Text, StyleSheet, Platform } from 'react-native';
 import { Command, CommandCategory } from './types';
 import { CommandPaletteItem } from './CommandPaletteItem';
 import { Typography } from '@/constants/Typography';
+import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 
 interface CommandPaletteResultsProps {
     categories: CommandCategory[];
@@ -17,6 +18,7 @@ export function CommandPaletteResults({
     onSelectCommand, 
     onSelectionChange 
 }: CommandPaletteResultsProps) {
+    const overlayPresentation = useStudioOverlayPresentation();
     const scrollViewRef = useRef<ScrollView>(null);
     const itemRefs = useRef<{ [key: number]: View | null }>({});
     
@@ -42,7 +44,15 @@ export function CommandPaletteResults({
     if (categories.length === 0 || allCommands.length === 0) {
         return (
             <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, Typography.default()]}>
+                <Text
+                    style={[
+                        styles.emptyText,
+                        Typography.default(),
+                        overlayPresentation.isStudio && {
+                            color: overlayPresentation.textSecondaryColor,
+                        },
+                    ]}
+                >
                     No commands found
                 </Text>
             </View>
@@ -86,7 +96,17 @@ export function CommandPaletteResults({
 
                 return (
                     <View key={category.id}>
-                        <Text style={[styles.categoryTitle, Typography.default('semiBold')]}>
+                        <Text
+                            style={[
+                                styles.categoryTitle,
+                                Typography.default('semiBold'),
+                                overlayPresentation.isStudio && {
+                                    color: overlayPresentation.textSecondaryColor,
+                                    fontWeight: '500',
+                                    letterSpacing: 0.4,
+                                },
+                            ]}
+                        >
                             {category.title}
                         </Text>
                         {categoryCommands}

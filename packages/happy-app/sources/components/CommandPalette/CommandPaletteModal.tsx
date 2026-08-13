@@ -9,6 +9,7 @@ import {
     Platform
 } from 'react-native';
 import { LocalBlurHalo } from '@/components/AnimatedOverlay';
+import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 
 interface CommandPaletteModalProps {
     visible: boolean;
@@ -21,6 +22,7 @@ export function CommandPaletteModal({
     onClose,
     children
 }: CommandPaletteModalProps) {
+    const overlayPresentation = useStudioOverlayPresentation();
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
     const [isModalVisible, setIsModalVisible] = React.useState(true);
@@ -91,6 +93,9 @@ export function CommandPaletteModal({
                     <Animated.View 
                         style={[
                             Platform.OS === 'web' ? styles.backdrop : styles.nativeBackdrop,
+                            overlayPresentation.isStudio && {
+                                backgroundColor: overlayPresentation.modal.scrimColor,
+                            },
                             {
                                 opacity: fadeAnim.interpolate({
                                     inputRange: [0, 1],

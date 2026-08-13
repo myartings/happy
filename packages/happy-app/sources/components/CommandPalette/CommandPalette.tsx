@@ -4,6 +4,7 @@ import { CommandPaletteInput } from './CommandPaletteInput';
 import { CommandPaletteResults } from './CommandPaletteResults';
 import { useCommandPalette } from './useCommandPalette';
 import { Command } from './types';
+import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 
 interface CommandPaletteProps {
     commands: Command[];
@@ -11,6 +12,7 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
+    const overlayPresentation = useStudioOverlayPresentation();
     const {
         searchQuery,
         selectedIndex,
@@ -28,7 +30,21 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
     }
 
     return (
-        <View style={styles.container}>
+        <View
+            style={[
+                styles.container,
+                overlayPresentation.isStudio && {
+                    backgroundColor: overlayPresentation.modal.surfaceColor,
+                    borderColor: overlayPresentation.modal.borderColor,
+                    borderRadius: overlayPresentation.modal.radius,
+                    borderWidth: overlayPresentation.modal.borderWidth,
+                    shadowColor: '#000000',
+                    shadowOffset: { width: 0, height: overlayPresentation.modal.shadowOffsetY },
+                    shadowOpacity: overlayPresentation.modal.shadowOpacity,
+                    shadowRadius: overlayPresentation.modal.shadowRadius,
+                },
+            ]}
+        >
             <CommandPaletteInput
                 value={searchQuery}
                 onChangeText={handleSearchChange}

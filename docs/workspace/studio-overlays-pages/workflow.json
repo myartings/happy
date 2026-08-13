@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-overlays-pages",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Integrate the branch, package Studio Desktop, capture Session actions/FloatingOverlay/Command Palette light and palette dark, and request user visual acceptance",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/studio-overlays-pages.md records the user-authorized Studio Desktop first batch and eight verifiable criteria",
+      "updated": "2026-08-13T05:43:14+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md resolves L5 evidence, provisional L6 boundary, Tauri gating, risk, and parallel ownership",
+      "updated": "2026-08-13T05:43:14+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "batch-plan.md defines isolated worktree, allowed/blocked files, acceptance, validation, stop conditions, and parent-owned integration",
+      "updated": "2026-08-13T05:43:14+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only conditional styles; no configured authentication, authorization, permission, protocol, persistence, privacy, migration, deployment, destructive, or synchronization trigger",
+      "updated": "2026-08-13T05:43:14+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Implemented isolated Studio overlay resolver, shared L5 seams, preserved Session menu placement, and provisional theme-aware L6 Command Palette; focused 4 tests and app typecheck pass",
+      "updated": "2026-08-13T05:48:25+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-13T05:49:01+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blockers: default and non-Tauri branches preserve existing styles, pure extraction preserves point/rect positioning, actions/keyboard/dismissal remain unchanged, no blocked file changed, and provisional modal values stay documented pending user screenshot acceptance",
+      "updated": "2026-08-13T05:50:26+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records exact verification, no-blocker whole-diff review, atomic rollback, parent-owned screenshot states, and no claim of user visual acceptance",
+      "updated": "2026-08-13T05:51:34+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T05:41:28+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T05:43:14+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/studio-overlays-pages.md records the user-authorized Studio Desktop first batch and eight verifiable criteria"
+    },
+    {
+      "at": "2026-08-13T05:43:14+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md resolves L5 evidence, provisional L6 boundary, Tauri gating, risk, and parallel ownership"
+    },
+    {
+      "at": "2026-08-13T05:43:14+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only conditional styles; no configured authentication, authorization, permission, protocol, persistence, privacy, migration, deployment, destructive, or synchronization trigger"
+    },
+    {
+      "at": "2026-08-13T05:43:14+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "batch-plan.md defines isolated worktree, allowed/blocked files, acceptance, validation, stop conditions, and parent-owned integration"
+    },
+    {
+      "at": "2026-08-13T05:43:35+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement the pure overlay resolver and first-batch Studio seams"
+    },
+    {
+      "at": "2026-08-13T05:48:25+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented isolated Studio overlay resolver, shared L5 seams, preserved Session menu placement, and provisional theme-aware L6 Command Palette; focused 4 tests and app typecheck pass"
+    },
+    {
+      "at": "2026-08-13T05:48:25+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run focused/full applicable checks and inspect the whole diff"
+    },
+    {
+      "at": "2026-08-13T05:49:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T05:50:26+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blockers: default and non-Tauri branches preserve existing styles, pure extraction preserves point/rect positioning, actions/keyboard/dismissal remain unchanged, no blocked file changed, and provisional modal values stay documented pending user screenshot acceptance"
+    },
+    {
+      "at": "2026-08-13T05:50:27+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record downstream visual acceptance boundary, archive, staged CI, and local commit"
+    },
+    {
+      "at": "2026-08-13T05:51:34+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records exact verification, no-blocker whole-diff review, atomic rollback, parent-owned screenshot states, and no claim of user visual acceptance"
+    },
+    {
+      "at": "2026-08-13T05:51:51+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented verified Studio Desktop L5 overlay shells and provisional theme-aware L6 Command Palette without changing behavior; commit: pending; follow-up: Integrate the branch, package Studio Desktop, capture Session actions/FloatingOverlay/Command Palette light and palette dark, and request user visual acceptance"
+    }
+  ],
+  "updated": "2026-08-13T05:51:51+00:00",
+  "archivedAt": "2026-08-13T05:51:51+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented verified Studio Desktop L5 overlay shells and provisional theme-aware L6 Command Palette without changing behavior",
+  "archiveFollowUp": "Integrate the branch, package Studio Desktop, capture Session actions/FloatingOverlay/Command Palette light and palette dark, and request user visual acceptance"
+}

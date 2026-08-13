@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { Command } from './types';
 import { Typography } from '@/constants/Typography';
 import { Ionicons } from '@expo/vector-icons';
+import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 
 interface CommandPaletteItemProps {
     command: Command;
@@ -12,6 +13,7 @@ interface CommandPaletteItemProps {
 }
 
 export function CommandPaletteItem({ command, isSelected, onPress, onHover }: CommandPaletteItemProps) {
+    const overlayPresentation = useStudioOverlayPresentation();
     const [isHovered, setIsHovered] = React.useState(false);
     
     const handleMouseEnter = React.useCallback(() => {
@@ -32,7 +34,17 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
             styles.container,
             isSelected && styles.selected,
             isHovered && !isSelected && styles.hovered,
-            pressed && Platform.OS === 'web' && styles.pressed
+            pressed && Platform.OS === 'web' && styles.pressed,
+            overlayPresentation.isStudio && isSelected && {
+                backgroundColor: overlayPresentation.selectedColor,
+                borderColor: 'transparent',
+            },
+            overlayPresentation.isStudio && isHovered && !isSelected && {
+                backgroundColor: overlayPresentation.hoverColor,
+            },
+            overlayPresentation.isStudio && pressed && {
+                backgroundColor: overlayPresentation.pressedColor,
+            },
         ],
         onPress,
     };
@@ -47,27 +59,61 @@ export function CommandPaletteItem({ command, isSelected, onPress, onHover }: Co
         <Pressable {...pressableProps}>
             <View style={styles.content}>
                 {command.icon && (
-                    <View style={styles.iconContainer}>
+                    <View
+                        style={[
+                            styles.iconContainer,
+                            overlayPresentation.isStudio && { backgroundColor: 'transparent' },
+                        ]}
+                    >
                         <Ionicons 
                             name={command.icon as any} 
                             size={20} 
-                            color={isSelected ? '#007AFF' : '#666'} 
+                            color={overlayPresentation.isStudio
+                                ? overlayPresentation.textSecondaryColor
+                                : (isSelected ? '#007AFF' : '#666')}
                         />
                     </View>
                 )}
                 <View style={styles.textContainer}>
-                    <Text style={[styles.title, Typography.default()]}>
+                    <Text
+                        style={[
+                            styles.title,
+                            Typography.default(),
+                            overlayPresentation.isStudio && { color: overlayPresentation.textColor },
+                        ]}
+                    >
                         {command.title}
                     </Text>
                     {command.subtitle && (
-                        <Text style={[styles.subtitle, Typography.default()]}>
+                        <Text
+                            style={[
+                                styles.subtitle,
+                                Typography.default(),
+                                overlayPresentation.isStudio && {
+                                    color: overlayPresentation.textSecondaryColor,
+                                },
+                            ]}
+                        >
                             {command.subtitle}
                         </Text>
                     )}
                 </View>
                 {command.shortcut && (
-                    <View style={styles.shortcutContainer}>
-                        <Text style={[styles.shortcut, Typography.mono()]}>
+                    <View
+                        style={[
+                            styles.shortcutContainer,
+                            overlayPresentation.isStudio && { backgroundColor: 'transparent' },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.shortcut,
+                                Typography.mono(),
+                                overlayPresentation.isStudio && {
+                                    color: overlayPresentation.textSecondaryColor,
+                                },
+                            ]}
+                        >
                             {command.shortcut}
                         </Text>
                     </View>

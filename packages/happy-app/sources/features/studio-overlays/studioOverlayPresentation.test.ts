@@ -1,0 +1,97 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+    resolveSessionActionsMenuPosition,
+    resolveStudioOverlayPresentation,
+} from './studioOverlayPresentation';
+
+describe('resolveStudioOverlayPresentation', () => {
+    it('enables Studio overlay styling only for the packaged desktop runtime', () => {
+        expect(resolveStudioOverlayPresentation({
+            isDark: false,
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+        })).toMatchObject({
+            isStudio: true,
+            floating: {
+                borderWidth: 1,
+                radius: 17,
+                shadowOffsetY: 8,
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                surfaceColor: 'rgba(255, 255, 255, 0.96)',
+            },
+        });
+
+        expect(resolveStudioOverlayPresentation({
+            isDark: false,
+            isTauriRuntime: false,
+            requestedStyle: 'studio',
+        }).isStudio).toBe(false);
+
+        expect(resolveStudioOverlayPresentation({
+            isDark: false,
+            isTauriRuntime: true,
+            requestedStyle: 'default',
+        }).isStudio).toBe(false);
+    });
+
+    it('honors the existing preview override and keeps the provisional modal tier distinct', () => {
+        const presentation = resolveStudioOverlayPresentation({
+            isDark: true,
+            isTauriRuntime: true,
+            previewStyle: 'studio',
+            requestedStyle: 'default',
+        });
+
+        expect(presentation.isStudio).toBe(true);
+        expect(presentation.modal.shadowRadius).not.toBe(presentation.floating.shadowRadius);
+        expect(presentation.modal.scrimColor).not.toBe('transparent');
+        expect(presentation.floating.clickAwayColor).toBe('transparent');
+
+        expect(resolveStudioOverlayPresentation({
+            isDark: false,
+            isTauriRuntime: true,
+            previewStyle: 'default',
+            requestedStyle: 'studio',
+        }).isStudio).toBe(false);
+    });
+});
+
+describe('resolveSessionActionsMenuPosition', () => {
+    it('preserves point-anchor positioning and clamps only at the viewport edge', () => {
+        expect(resolveSessionActionsMenuPosition({
+            actionCount: 2,
+            anchor: { type: 'point', x: 420, y: 160 },
+            itemHeight: 48,
+            margin: 12,
+            menuWidth: 288,
+            windowHeight: 720,
+            windowWidth: 1200,
+        })).toEqual({ left: 420, top: 160 });
+    });
+
+    it('opens below a rectangular anchor when space is available', () => {
+        expect(resolveSessionActionsMenuPosition({
+            actionCount: 3,
+            anchor: { type: 'rect', x: 220, y: 80, width: 32, height: 32 },
+            itemHeight: 48,
+            margin: 12,
+            menuWidth: 288,
+            windowHeight: 720,
+            windowWidth: 1200,
+        })).toEqual({ left: 12, top: 120 });
+    });
+
+    it('flips above and clamps the menu to the viewport using the existing geometry', () => {
+        expect(resolveSessionActionsMenuPosition({
+            actionCount: 5,
+            anchor: { type: 'rect', x: 1140, y: 650, width: 32, height: 32 },
+            itemHeight: 48,
+            margin: 12,
+            menuWidth: 288,
+            windowHeight: 720,
+            windowWidth: 1200,
+        })).toEqual({ left: 884, top: 402 });
+    });
+});
