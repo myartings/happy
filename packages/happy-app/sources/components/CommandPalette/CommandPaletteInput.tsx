@@ -4,16 +4,19 @@ import { Typography } from '@/constants/Typography';
 import { t } from '@/text';
 import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
+import type { StudioOverlayPresentation } from '@/features/studio-overlays/studioOverlayPresentation';
 
 interface CommandPaletteInputProps {
     value: string;
     onChangeText: (text: string) => void;
     onKeyPress?: (key: string) => void;
     inputRef?: React.RefObject<TextInput | null>;
+    presentation?: StudioOverlayPresentation;
 }
 
-export function CommandPaletteInput({ value, onChangeText, onKeyPress, inputRef }: CommandPaletteInputProps) {
-    const overlayPresentation = useStudioOverlayPresentation();
+export function CommandPaletteInput({ value, onChangeText, onKeyPress, inputRef, presentation }: CommandPaletteInputProps) {
+    const resolvedPresentation = useStudioOverlayPresentation();
+    const overlayPresentation = presentation ?? resolvedPresentation;
     const interactionState = useStudioInteractionState(
         overlayPresentation.isStudio && Platform.OS === 'web',
     );

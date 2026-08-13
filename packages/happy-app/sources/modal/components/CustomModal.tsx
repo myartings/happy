@@ -35,7 +35,12 @@ function CommandPaletteWithAnimation({ config, onClose }: CustomModalProps) {
     }, [onClose]);
     
     return (
-        <CommandPaletteModal visible={!isClosing} onClose={onClose}>
+        <CommandPaletteModal
+            visible={!isClosing}
+            onClose={onClose}
+            studioIsDark={config.props?.studioIsDark}
+            studioPresentation={config.props?.studioPresentation}
+        >
             <CommandPalette {...config.props} onClose={handleClose} />
         </CommandPaletteModal>
     );

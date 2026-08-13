@@ -5,16 +5,19 @@ import { Typography } from '@/constants/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
+import type { StudioOverlayPresentation } from '@/features/studio-overlays/studioOverlayPresentation';
 
 interface CommandPaletteItemProps {
     command: Command;
     isSelected: boolean;
     onPress: () => void;
     onHover?: () => void;
+    presentation?: StudioOverlayPresentation;
 }
 
-export function CommandPaletteItem({ command, isSelected, onPress, onHover }: CommandPaletteItemProps) {
-    const overlayPresentation = useStudioOverlayPresentation();
+export function CommandPaletteItem({ command, isSelected, onPress, onHover, presentation }: CommandPaletteItemProps) {
+    const resolvedPresentation = useStudioOverlayPresentation();
+    const overlayPresentation = presentation ?? resolvedPresentation;
     const interactionState = useStudioInteractionState(
         overlayPresentation.isStudio && Platform.OS === 'web',
     );

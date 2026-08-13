@@ -54,6 +54,33 @@ export type StudioOverlayPresentation = {
     textSecondaryColor: string;
 };
 
+export function resolveStudioOverlayDarkMode({
+    runtimeThemeName,
+    themePreference,
+}: {
+    runtimeThemeName: string | null | undefined;
+    themePreference: 'adaptive' | 'dark' | 'light';
+}): boolean {
+    if (themePreference === 'dark') {
+        return true;
+    }
+    if (themePreference === 'light') {
+        return false;
+    }
+    return runtimeThemeName === 'dark';
+}
+
+export function resolveCommandPaletteDarkSnapshot({
+    currentThemeIsDark,
+    themePreference,
+}: {
+    currentThemeIsDark: boolean;
+    themePreference: 'adaptive' | 'dark' | 'light';
+}): boolean {
+    return themePreference === 'dark'
+        || (themePreference === 'adaptive' && currentThemeIsDark);
+}
+
 type ResolveStudioOverlayPresentationInput = {
     isDark: boolean;
     isTauriRuntime: boolean;

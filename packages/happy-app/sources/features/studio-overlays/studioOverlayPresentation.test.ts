@@ -1,9 +1,52 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    resolveCommandPaletteDarkSnapshot,
     resolveSessionActionsMenuPosition,
+    resolveStudioOverlayDarkMode,
     resolveStudioOverlayPresentation,
 } from './studioOverlayPresentation';
+
+describe('resolveCommandPaletteDarkSnapshot', () => {
+    it('honors the persisted preference read when the palette opens', () => {
+        expect(resolveCommandPaletteDarkSnapshot({
+            currentThemeIsDark: false,
+            themePreference: 'dark',
+        })).toBe(true);
+        expect(resolveCommandPaletteDarkSnapshot({
+            currentThemeIsDark: true,
+            themePreference: 'light',
+        })).toBe(false);
+        expect(resolveCommandPaletteDarkSnapshot({
+            currentThemeIsDark: true,
+            themePreference: 'adaptive',
+        })).toBe(true);
+    });
+});
+
+describe('resolveStudioOverlayDarkMode', () => {
+    it('uses the persisted fixed preference across modal roots', () => {
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'light',
+            themePreference: 'dark',
+        })).toBe(true);
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'dark',
+            themePreference: 'light',
+        })).toBe(false);
+    });
+
+    it('uses the system scheme only for adaptive mode', () => {
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'dark',
+            themePreference: 'adaptive',
+        })).toBe(true);
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'light',
+            themePreference: 'adaptive',
+        })).toBe(false);
+    });
+});
 
 describe('resolveStudioOverlayPresentation', () => {
     it('enables Studio overlay styling only for the packaged desktop runtime', () => {

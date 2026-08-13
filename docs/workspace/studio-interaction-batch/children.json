@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "feature": "studio-interaction-batch",
+  "children": [
+    {
+      "name": "studio-tool-presentation",
+      "branch": "feature/studio-tool-presentation",
+      "worktree": "/Users/myartings/workspace/happy/.dev/worktree/studio-tool-presentation",
+      "status": "ready"
+    },
+    {
+      "name": "studio-composer-states",
+      "branch": "feature/studio-composer-states",
+      "worktree": "/Users/myartings/workspace/happy/.dev/worktree/studio-composer-states",
+      "status": "ready"
+    },
+    {
+      "name": "studio-interaction-states",
+      "branch": "feature/studio-interaction-states",
+      "worktree": "/Users/myartings/workspace/happy/.dev/worktree/studio-interaction-states",
+      "status": "ready"
+    }
+  ]
+}
