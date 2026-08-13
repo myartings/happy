@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface ToolSectionViewProps {
     title?: string;
@@ -9,9 +10,22 @@ interface ToolSectionViewProps {
 }
 
 export const ToolSectionView = React.memo<ToolSectionViewProps>(({ title, children, fullWidth }) => {
+    const studioPresentation = useStudioToolPresentation();
+
     return (
-        <View style={[styles.section, fullWidth && styles.fullWidthSection]}>
-            {title && <Text style={styles.sectionTitle}>{title}</Text>}
+        <View style={[
+            styles.section,
+            fullWidth && styles.fullWidthSection,
+            studioPresentation && { marginBottom: studioPresentation.section.marginBottom },
+        ]}>
+            {title && <Text style={[
+                styles.sectionTitle,
+                studioPresentation && {
+                    fontSize: studioPresentation.section.titleFontSize,
+                    letterSpacing: studioPresentation.section.titleLetterSpacing,
+                    lineHeight: studioPresentation.section.titleLineHeight,
+                },
+            ]}>{title}</Text>}
             <View style={fullWidth ? styles.fullWidthContent : undefined}>
                 {children}
             </View>

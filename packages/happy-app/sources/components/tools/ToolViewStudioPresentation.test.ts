@@ -1,0 +1,138 @@
+import * as React from 'react';
+// @ts-expect-error react-test-renderer has no declarations in this workspace.
+import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { ToolCall } from '@/sync/typesMessage';
+
+const state = vi.hoisted(() => ({ compact: false }));
+const presentation = vi.hoisted(() => ({
+    current: {
+        compactRow: { fontSize: 14, gap: 8, lineHeight: 20, minHeight: 26, paddingHorizontal: 4, paddingVertical: 2 },
+        error: { backgroundColor: '#FFF8F7', borderColor: '#E9CFCC', borderRadius: 8, marginBottom: 10, padding: 10, textColor: '#973D37' },
+        header: { backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', descriptionFontSize: 12, minHeight: 42, paddingHorizontal: 12, paddingVertical: 9, titleFontSize: 13 },
+        section: { marginBottom: 10, titleFontSize: 11, titleLetterSpacing: 0.55, titleLineHeight: 16 },
+        shell: { backgroundColor: '#F7F7F6', borderColor: '#E7E6E3', borderRadius: 12, borderWidth: 1, marginVertical: 6 },
+        visualStyle: 'studio',
+    } as any,
+}));
+
+vi.mock('react-native', async () => {
+    const ReactModule = await import('react');
+    const host = (name: string) => (props: any) => ReactModule.createElement(name, props, props.children);
+    return {
+        ActivityIndicator: host('ActivityIndicator'),
+        Platform: { OS: 'web', select: (values: any) => values.default ?? values.web },
+        Text: host('Text'),
+        TouchableOpacity: host('TouchableOpacity'),
+        View: host('View'),
+    };
+});
+
+vi.mock('react-native-unistyles', () => ({
+    StyleSheet: { create: (factory: any) => typeof factory === 'function' ? factory({ colors: {
+        box: { error: { background: '#fee', border: '#fbb', text: '#900' }, warning: { text: '#a60' } },
+        surfaceHigh: '#eee', surfaceHighest: '#ddd', text: '#111', textSecondary: '#666', warning: '#a60',
+    } }) : factory },
+    useUnistyles: () => ({ theme: { colors: { text: '#111', textSecondary: '#666', warning: '#a60' } } }),
+}));
+
+vi.mock('@expo/vector-icons', async () => {
+    const ReactModule = await import('react');
+    const icon = (props: any) => ReactModule.createElement('Icon', props);
+    return { Ionicons: icon, Octicons: icon };
+});
+vi.mock('expo-router', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('@/sync/storage', () => ({ useSetting: () => state.compact }));
+vi.mock('@/hooks/useElapsedTime', () => ({ useElapsedTime: () => 1.2 }));
+vi.mock('@/text', () => ({ t: (key: string) => key }));
+vi.mock('@/utils/toolErrorParser', () => ({ parseToolUseError: () => ({ isToolUseError: false }) }));
+vi.mock('@/components/tools/knownTools', () => ({ knownTools: {} }));
+vi.mock('@/components/CodeView', async () => {
+    const ReactModule = await import('react');
+    return { CodeView: (props: any) => ReactModule.createElement('CodeView', props) };
+});
+vi.mock('./views/_all', async () => {
+    const ReactModule = await import('react');
+    return { getToolViewComponent: () => (props: any) => ReactModule.createElement('SpecificToolView', props) };
+});
+vi.mock('./PermissionFooter', () => ({ PermissionFooter: () => null }));
+vi.mock('@/features/studio-tool-presentation/useStudioToolPresentation', () => ({
+    useStudioToolPresentation: () => presentation.current,
+}));
+
+import { ToolView } from './ToolView';
+
+const originalConsoleError = console.error;
+beforeAll(() => {
+    (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...args: unknown[]) => {
+        if (typeof message === 'string' && message.startsWith('react-test-renderer is deprecated')) return;
+        originalConsoleError(message, ...args);
+    });
+});
+afterAll(() => vi.restoreAllMocks());
+
+function render(element: React.ReactElement): ReactTestRenderer {
+    let renderer!: ReactTestRenderer;
+    act(() => { renderer = create(element); });
+    return renderer;
+}
+
+function flattenStyle(style: unknown): Record<string, any> {
+    if (!Array.isArray(style)) return style && typeof style === 'object' ? style as Record<string, any> : {};
+    return Object.assign({}, ...style.map(flattenStyle));
+}
+
+function tool(name = 'Example'): ToolCall {
+    return {
+        name,
+        state: 'completed',
+        input: { value: 1 },
+        result: 'done',
+        createdAt: 1,
+        startedAt: 1,
+        completedAt: 2,
+        description: null,
+    };
+}
+
+describe('actual ToolView Studio wiring', () => {
+    it('uses the Studio contained shell and retains header press/content behavior', () => {
+        state.compact = false;
+        const onPress = vi.fn();
+        const renderer = render(React.createElement(ToolView, { metadata: null, onPress, tool: tool() }));
+        const root = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(root.props.style)).toMatchObject({
+            backgroundColor: '#F7F7F6', borderColor: '#E7E6E3', borderRadius: 12, borderWidth: 1, marginVertical: 6,
+        });
+        const header = renderer.root.findByType('TouchableOpacity' as any);
+        expect(flattenStyle(header.props.style)).toMatchObject({ minHeight: 42, paddingHorizontal: 12, paddingVertical: 9 });
+        act(() => header.props.onPress());
+        expect(onPress).toHaveBeenCalledOnce();
+        expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(1);
+    });
+
+    it('keeps compact activities unboxed and suppresses expanded content', () => {
+        state.compact = true;
+        const renderer = render(React.createElement(ToolView, { metadata: null, tool: tool('Read') }));
+        const root = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
+        const views = renderer.root.findAllByType('View' as any);
+        expect(views.some((node: { props: { style?: unknown } }) => flattenStyle(node.props.style).minHeight === 26)).toBe(true);
+        expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
+    });
+
+    it('retains the existing shell when Studio is inactive', () => {
+        state.compact = false;
+        presentation.current = null as any;
+        const renderer = render(React.createElement(ToolView, { metadata: null, tool: tool() }));
+        const root = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: '#eee', borderRadius: 8, marginVertical: 8 });
+        expect(flattenStyle(root.props.style).borderWidth).toBeUndefined();
+        presentation.current = {
+            compactRow: { fontSize: 14, gap: 8, lineHeight: 20, minHeight: 26, paddingHorizontal: 4, paddingVertical: 2 },
+            header: { backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', descriptionFontSize: 12, minHeight: 42, paddingHorizontal: 12, paddingVertical: 9, titleFontSize: 13 },
+            shell: { backgroundColor: '#F7F7F6', borderColor: '#E7E6E3', borderRadius: 12, borderWidth: 1, marginVertical: 6 },
+        } as any;
+    });
+});

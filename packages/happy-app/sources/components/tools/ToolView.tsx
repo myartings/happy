@@ -22,6 +22,7 @@ import {
     shouldUseCompactToolRow,
 } from '@/utils/toolDisplay';
 import { useSetting } from '@/sync/storage';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface ToolViewProps {
     metadata: Metadata | null;
@@ -37,6 +38,7 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     const router = useRouter();
     const { theme } = useUnistyles();
     const compactToolCalls = useSetting('compactToolCalls');
+    const studioPresentation = useStudioToolPresentation();
 
     // For file-editing tools, navigate to file route instead of message detail
     const fileEditTools = ['Edit', 'MultiEdit', 'Write'];
@@ -184,6 +186,19 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
             ? <PermissionFooter permission={tool.permission} sessionId={sessionId} toolName={tool.name} toolInput={tool.input} metadata={props.metadata} />
             : null
     );
+    const studioCompactHeaderStyle = studioPresentation ? {
+        minHeight: studioPresentation.compactRow.minHeight,
+        paddingHorizontal: studioPresentation.compactRow.paddingHorizontal,
+        paddingVertical: studioPresentation.compactRow.paddingVertical,
+    } : null;
+    const studioHeaderStyle = studioPresentation ? {
+        backgroundColor: studioPresentation.header.backgroundColor,
+        borderBottomColor: studioPresentation.header.borderColor,
+        borderBottomWidth: 1,
+        minHeight: studioPresentation.header.minHeight,
+        paddingHorizontal: studioPresentation.header.paddingHorizontal,
+        paddingVertical: studioPresentation.header.paddingVertical,
+    } : null;
 
     const renderHeaderContent = () => {
         if (isCompactActivityTool) {
@@ -192,7 +207,10 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
                     <View style={styles.compactIconContainer}>
                         {icon}
                     </View>
-                    <Text style={styles.compactActivityText} numberOfLines={1}>
+                    <Text style={[styles.compactActivityText, studioPresentation && {
+                        fontSize: studioPresentation.compactRow.fontSize,
+                        lineHeight: studioPresentation.compactRow.lineHeight,
+                    }]} numberOfLines={1}>
                         {activityLabel}
                     </Text>
                     {tool.state === 'running' && (
@@ -211,9 +229,9 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
                     {icon}
                 </View>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.toolName} numberOfLines={1}>{toolTitle}{status ? <Text style={styles.status}>{` ${status}`}</Text> : null}</Text>
+                    <Text style={[styles.toolName, studioPresentation && { fontSize: studioPresentation.header.titleFontSize }]} numberOfLines={1}>{toolTitle}{status ? <Text style={styles.status}>{` ${status}`}</Text> : null}</Text>
                     {description && (
-                        <Text style={styles.toolDescription} numberOfLines={1}>
+                        <Text style={[styles.toolDescription, studioPresentation && { fontSize: studioPresentation.header.descriptionFontSize }]} numberOfLines={1}>
                             {description}
                         </Text>
                     )}
@@ -229,14 +247,25 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     };
 
     return (
-        <View style={isCompactActivityTool ? styles.compactContainer : isInlineCodexPatch ? styles.inlineContainer : styles.container}>
+        <View style={isCompactActivityTool
+            ? styles.compactContainer
+            : isInlineCodexPatch
+                ? styles.inlineContainer
+                : [styles.container, studioPresentation && {
+                    backgroundColor: studioPresentation.shell.backgroundColor,
+                    borderColor: studioPresentation.shell.borderColor,
+                    borderRadius: studioPresentation.shell.borderRadius,
+                    borderWidth: studioPresentation.shell.borderWidth,
+                    marginVertical: studioPresentation.shell.marginVertical,
+                }]}
+        >
             {renderCardHeader ? (
                 isPressable ? (
-                    <TouchableOpacity style={isCompactActivityTool ? styles.compactHeader : styles.header} onPress={handlePress} activeOpacity={0.8}>
+                    <TouchableOpacity style={isCompactActivityTool ? [styles.compactHeader, studioCompactHeaderStyle] : [styles.header, studioHeaderStyle]} onPress={handlePress} activeOpacity={0.8}>
                         {renderHeaderContent()}
                     </TouchableOpacity>
                 ) : (
-                    <View style={isCompactActivityTool ? styles.compactHeader : styles.header}>
+                    <View style={isCompactActivityTool ? [styles.compactHeader, studioCompactHeaderStyle] : [styles.header, studioHeaderStyle]}>
                         {renderHeaderContent()}
                     </View>
                 )

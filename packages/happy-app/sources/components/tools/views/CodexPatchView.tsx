@@ -10,6 +10,7 @@ import { ToolDiffView } from '@/components/tools/ToolDiffView';
 import { getDiffStats, getPatchDiffStats } from '@/components/diff/calculateDiff';
 import { materializeUnifiedDiffPatch } from '@/utils/codexUnifiedDiff';
 import { t } from '@/text';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface CodexPatchViewProps {
     tool: ToolCall;
@@ -199,6 +200,7 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
 }) {
     const { file, change, metadata, permissionFooter } = props;
     const { theme } = useUnistyles();
+    const studioPresentation = useStudioToolPresentation();
     const [expanded, setExpanded] = React.useState(false);
 
     const filePath = resolvePath(file, metadata);
@@ -223,10 +225,18 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
                     onPress={() => setExpanded((value) => !value)}
                     style={({ pressed }) => [
                         styles.editToggle,
+                        studioPresentation && {
+                            minHeight: studioPresentation.disclosureRow.minHeight,
+                            paddingHorizontal: studioPresentation.disclosureRow.paddingHorizontal,
+                            paddingVertical: studioPresentation.disclosureRow.paddingVertical,
+                        },
                         pressed && styles.editTogglePressed,
                     ]}
                 >
-                    <Text style={styles.editToggleText} numberOfLines={1}>
+                    <Text style={[styles.editToggleText, studioPresentation && {
+                        fontSize: studioPresentation.disclosureRow.fontSize,
+                        lineHeight: studioPresentation.disclosureRow.lineHeight,
+                    }]} numberOfLines={1}>
                         {t('toolGroup.editedFile')}
                     </Text>
                     <Ionicons
@@ -236,20 +246,27 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
                     />
                 </Pressable>
                 {expanded ? (
-                    <View style={styles.patchContainer}>
-                        <View style={styles.fileHeader}>
+                    <View style={[styles.patchContainer, studioPresentation && {
+                        backgroundColor: studioPresentation.diff.backgroundColor,
+                        borderColor: studioPresentation.diff.borderColor,
+                        borderRadius: studioPresentation.diff.borderRadius,
+                    }]}>
+                        <View style={[styles.fileHeader, studioPresentation && {
+                            backgroundColor: studioPresentation.diff.backgroundColor,
+                            borderBottomColor: studioPresentation.diff.borderColor,
+                        }]}>
                             <View style={styles.fileHeaderMain}>
                                 <Octicons name="file-diff" size={16} color={theme.colors.textSecondary} />
-                                <Text style={styles.filePath}>{filePath}</Text>
-                                {kindLabel ? <Text style={styles.kindLabel}>{kindLabel}</Text> : null}
+                                <Text style={[styles.filePath, studioPresentation && { color: studioPresentation.diff.pathColor }]}>{filePath}</Text>
+                                {kindLabel ? <Text style={[styles.kindLabel, studioPresentation && { color: studioPresentation.diff.metadataColor }]}>{kindLabel}</Text> : null}
                                 {stats && (stats.additions > 0 || stats.deletions > 0) ? (
                                     <View style={styles.stats}>
-                                        {stats.additions > 0 ? <Text style={styles.added}>+{stats.additions}</Text> : null}
-                                        {stats.deletions > 0 ? <Text style={styles.removed}>-{stats.deletions}</Text> : null}
+                                        {stats.additions > 0 ? <Text style={[styles.added, studioPresentation && { color: studioPresentation.diff.addedColor }]}>+{stats.additions}</Text> : null}
+                                        {stats.deletions > 0 ? <Text style={[styles.removed, studioPresentation && { color: studioPresentation.diff.removedColor }]}>-{stats.deletions}</Text> : null}
                                     </View>
                                 ) : null}
                             </View>
-                            {movePath ? <Text style={styles.movePath}>{movePath}</Text> : null}
+                            {movePath ? <Text style={[styles.movePath, studioPresentation && { color: studioPresentation.diff.metadataColor }]}>{movePath}</Text> : null}
                         </View>
                         {displayPatch ? (
                             <ToolDiffView patch={displayPatch} fileName={fileName} />
