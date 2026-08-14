@@ -23,6 +23,8 @@ import {
 } from '@/utils/toolDisplay';
 import { useSetting } from '@/sync/storage';
 import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
+import { resolveStudioExecutionTranscript } from '@/features/studio-execution-transcript/studioExecutionTranscript';
+import { StudioExecutionTranscriptView } from '@/features/studio-execution-transcript/StudioExecutionTranscriptView';
 
 interface ToolViewProps {
     metadata: Metadata | null;
@@ -174,10 +176,13 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     }
 
     const terminalCommand = getTerminalToolCommand(tool);
-    const isCompactTerminalTool = terminalCommand !== null;
-    const isCompactActivityTool = shouldUseCompactToolRow(tool, compactToolCalls)
+    const studioExecutionTranscript = studioPresentation
+        ? resolveStudioExecutionTranscript(tool)
+        : null;
+    const isCompactTerminalTool = terminalCommand !== null && !studioExecutionTranscript;
+    const isCompactActivityTool = !studioExecutionTranscript && (shouldUseCompactToolRow(tool, compactToolCalls)
         || minimal
-        || isCompactTerminalTool;
+        || isCompactTerminalTool);
     const activityLabel = getToolActivityLabel(tool);
     const isInlineCodexPatch = Platform.OS === 'web' && tool.name === 'CodexPatch';
     const renderCardHeader = isCompactActivityTool || shouldRenderToolCardHeader(tool.name, Platform.OS);
@@ -279,6 +284,14 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
                 }
 
                 // Try to use a specific tool view component first
+                if (studioExecutionTranscript && studioPresentation) {
+                    return (
+                        <View style={styles.content}>
+                            <StudioExecutionTranscriptView tool={tool} presentation={studioPresentation} />
+                        </View>
+                    );
+                }
+
                 const SpecificToolView = getToolViewComponent(tool.name);
                 if (SpecificToolView) {
                     return (

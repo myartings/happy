@@ -55,6 +55,21 @@ describe('parseAnsiSgr', () => {
         });
     });
 
+    it('accepts ISO colon forms for indexed and truecolor SGR', () => {
+        expect(parseAnsiSgr('\u001B[38:5:208mindexed \u001B[48:2::12:34:56mRGB')).toEqual({
+            text: 'indexed RGB',
+            runs: [
+                { text: 'indexed ', role: 'body', style: { foreground: { mode: 'indexed', index: 208 } } },
+                {
+                    text: 'RGB', role: 'body', style: {
+                        foreground: { mode: 'indexed', index: 208 },
+                        background: { mode: 'rgb', red: 12, green: 34, blue: 56 },
+                    },
+                },
+            ],
+        });
+    });
+
     it.each([
         ['cursor and erase CSI', 'before\u001B[2J\u001B[10;4Hafter', 'beforeafter'],
         [
@@ -63,10 +78,23 @@ describe('parseAnsiSgr', () => {
             'open label safely',
         ],
         ['OSC 52 clipboard', 'before\u001B]52;c;c2VjcmV0\u0007after', 'beforeafter'],
+        ['C1 cursor and erase CSI', 'before\u009B2J\u009B10;4Hafter', 'beforeafter'],
+        ['C1 OSC hyperlink', 'open \u009D8;;https://example.com\u009Clabel\u009D8;;\u009C safely', 'open label safely'],
     ])('neutralizes %s controls', (_name, input, text) => {
         expect(parseAnsiSgr(input)).toEqual({
             text,
             runs: text.length > 0 ? [{ text, role: 'body' }] : [],
+        });
+    });
+
+    it('accepts C1 SGR colors without leaking control bytes', () => {
+        expect(parseAnsiSgr('plain \u009B32mgreen\u009B0m done')).toEqual({
+            text: 'plain green done',
+            runs: [
+                { text: 'plain ', role: 'body' },
+                { text: 'green', role: 'body', style: { foreground: { mode: 'standard', index: 2 } } },
+                { text: ' done', role: 'body' },
+            ],
         });
     });
 

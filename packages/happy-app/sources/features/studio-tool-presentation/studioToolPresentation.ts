@@ -59,6 +59,24 @@ export type StudioToolPresentation = Readonly<{
         removedColor: string;
         borderRadius: number;
     }>;
+    transcript: Readonly<{
+        dark: boolean;
+        backgroundColor: string;
+        borderColor: string;
+        commandColor: string;
+        promptColor: string;
+        stdoutColor: string;
+        stderrColor: string;
+        metadataColor: string;
+        successColor: string;
+        runningColor: string;
+        errorColor: string;
+        borderRadius: number;
+        paddingHorizontal: number;
+        paddingVertical: number;
+        fontSize: number;
+        lineHeight: number;
+    }>;
 }>;
 
 type ResolveStudioToolPresentationInput = Readonly<{
@@ -137,6 +155,24 @@ export function resolveStudioToolPresentation({
             addedColor: dark ? '#80B99D' : '#2E6A4F',
             removedColor: dark ? '#DC8A8A' : '#A23D3D',
             borderRadius: 10,
+        },
+        transcript: {
+            dark,
+            backgroundColor: dark ? '#232323' : '#FAFAF9',
+            borderColor: dark ? '#3B3B3B' : '#E7E6E3',
+            commandColor: dark ? '#E7E7E7' : '#2D2D2D',
+            promptColor: dark ? '#85C1C7' : '#327078',
+            stdoutColor: dark ? '#D8D8D8' : '#424242',
+            stderrColor: dark ? '#DC8A8A' : '#A23D3D',
+            metadataColor: dark ? '#A6A6A6' : '#707070',
+            successColor: dark ? '#80B99D' : '#2E6A4F',
+            runningColor: dark ? '#85C1C7' : '#327078',
+            errorColor: dark ? '#DC8A8A' : '#A23D3D',
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 10,
+            fontSize: 13,
+            lineHeight: 19,
         },
     };
 }

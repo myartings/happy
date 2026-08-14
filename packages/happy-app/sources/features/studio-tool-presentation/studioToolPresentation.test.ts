@@ -52,6 +52,16 @@ describe('Studio tool presentation', () => {
                 addedColor: '#2E6A4F',
                 removedColor: '#A23D3D',
             },
+            transcript: {
+                dark: false,
+                backgroundColor: '#FAFAF9',
+                commandColor: '#2D2D2D',
+                promptColor: '#327078',
+                successColor: '#2E6A4F',
+                errorColor: '#A23D3D',
+                fontSize: 13,
+                lineHeight: 19,
+            },
         });
     });
 
@@ -71,6 +81,7 @@ describe('Studio tool presentation', () => {
             shell: { backgroundColor: '#272727', borderColor: '#3B3B3B' },
             error: { backgroundColor: '#352929', borderColor: '#5A3A3A', textColor: '#DC8A8A' },
             diff: { backgroundColor: '#2C2C2C', addedColor: '#80B99D', removedColor: '#DC8A8A' },
+            transcript: { dark: true, backgroundColor: '#232323', commandColor: '#E7E7E7', successColor: '#80B99D', errorColor: '#DC8A8A' },
         });
         expect(dark?.shell.borderRadius).toBe(light?.shell.borderRadius);
         expect(dark?.compactRow).toEqual(light?.compactRow);

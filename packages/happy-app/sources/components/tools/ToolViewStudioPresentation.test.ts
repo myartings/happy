@@ -12,6 +12,7 @@ const presentation = vi.hoisted(() => ({
         header: { backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', descriptionFontSize: 12, minHeight: 42, paddingHorizontal: 12, paddingVertical: 9, titleFontSize: 13 },
         section: { marginBottom: 10, titleFontSize: 11, titleLetterSpacing: 0.55, titleLineHeight: 16 },
         shell: { backgroundColor: '#F7F7F6', borderColor: '#E7E6E3', borderRadius: 12, borderWidth: 1, marginVertical: 6 },
+        transcript: { dark: false, backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', borderRadius: 8, commandColor: '#2D2D2D', errorColor: '#A23D3D', fontSize: 13, lineHeight: 19, metadataColor: '#707070', paddingHorizontal: 12, paddingVertical: 10, promptColor: '#327078', runningColor: '#327078', stderrColor: '#A23D3D', stdoutColor: '#424242', successColor: '#2E6A4F' },
         visualStyle: 'studio',
     } as any,
 }));
@@ -122,6 +123,27 @@ describe('actual ToolView Studio wiring', () => {
         expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
     });
 
+    it('renders real Studio terminal tools as structured transcripts even when compact mode is enabled', () => {
+        state.compact = true;
+        const terminal = tool('Bash');
+        terminal.input = { command: 'pnpm typecheck', cwd: '/tmp/happy' };
+        terminal.result = { stdout: '\u001B[32m通过\u001B[0m', stderr: '' };
+        const renderer = render(React.createElement(ToolView, { metadata: null, tool: terminal }));
+        expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
+        const text = renderer.root.findAllByType('Text' as any).map((node: { props: { children?: unknown } }) => node.props.children).flat(Infinity).join('');
+        expect(text).toContain('pnpm typecheck');
+        expect(text).toContain('/tmp/happy');
+        expect(text).toContain('通过');
+        expect(text).not.toContain('\u001B');
+        const selectableText = renderer.root.findAllByType('Text' as any)
+            .filter((node: { props: { selectable?: boolean } }) => node.props.selectable === true);
+        expect(selectableText.length).toBeGreaterThanOrEqual(4);
+        const root = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(root.props.style)).toMatchObject({
+            backgroundColor: '#F7F7F6', borderColor: '#E7E6E3', borderRadius: 12,
+        });
+    });
+
     it('retains the existing shell when Studio is inactive', () => {
         state.compact = false;
         presentation.current = null as any;
@@ -133,6 +155,19 @@ describe('actual ToolView Studio wiring', () => {
             compactRow: { fontSize: 14, gap: 8, lineHeight: 20, minHeight: 26, paddingHorizontal: 4, paddingVertical: 2 },
             header: { backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', descriptionFontSize: 12, minHeight: 42, paddingHorizontal: 12, paddingVertical: 9, titleFontSize: 13 },
             shell: { backgroundColor: '#F7F7F6', borderColor: '#E7E6E3', borderRadius: 12, borderWidth: 1, marginVertical: 6 },
+            transcript: { dark: false, backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', borderRadius: 8, commandColor: '#2D2D2D', errorColor: '#A23D3D', fontSize: 13, lineHeight: 19, metadataColor: '#707070', paddingHorizontal: 12, paddingVertical: 10, promptColor: '#327078', runningColor: '#327078', stderrColor: '#A23D3D', stdoutColor: '#424242', successColor: '#2E6A4F' },
         } as any;
+    });
+
+    it('keeps non-Studio terminal tools on the existing compact path', () => {
+        state.compact = true;
+        presentation.current = null as any;
+        const terminal = tool('Bash');
+        terminal.input = { command: 'pnpm typecheck' };
+        terminal.result = { stdout: 'done', stderr: '' };
+        const renderer = render(React.createElement(ToolView, { metadata: null, tool: terminal }));
+        expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
+        const root = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
     });
 });

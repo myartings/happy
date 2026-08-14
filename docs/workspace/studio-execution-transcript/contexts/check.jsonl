@@ -1,0 +1,6 @@
+{"path":"docs/specs/studio-execution-transcript.md","reason":"Acceptance and compatibility verification source."}
+{"path":"docs/workspace/studio-execution-transcript/validation.md","reason":"Exact check and evidence ledger."}
+{"path":"packages/happy-app/sources/components/tools/ToolViewStudioPresentation.test.ts","reason":"Existing real ToolView mounted behavior coverage."}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/parseAnsiSgr.test.ts","reason":"Existing ANSI parser safety and semantics coverage."}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation/studioToolPresentation.test.ts","reason":"Existing light/dark and gating coverage."}
+{"path":"packages/happy-app/sources/components/tools/ToolDiffView.tsx","reason":"Confirm Pierre diff remains unchanged."}
