@@ -1,0 +1,11 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/PRD.md","reason":"Product outcome and compatibility commitments to verify"}
+{"path":"docs/specs/remote-workspace-project-discovery.md","reason":"Acceptance criteria and planned evidence map"}
+{"path":"docs/tasks/remote-workspace-project-discovery-tasks.md","reason":"Slice boundaries and closest deterministic checks"}
+{"path":"docs/workspace/remote-workspace-project-discovery/decisions.md","reason":"Risk controls and forbidden expansion surfaces"}
+{"path":"docs/workspace/remote-workspace-project-discovery/validation.md","reason":"Evidence ledger for exact check outcomes and gaps"}
+{"path":"packages/happy-cli/src/workspace/workspaceProjectScanner.ts","reason":"Verify traversal bounds, containment, markers, and privacy controls"}
+{"path":"packages/happy-cli/src/api/apiMachine.ts","reason":"Verify optional RPC stays daemon-local and does not alter spawn behavior"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.ts","reason":"Verify path semantics, compatibility fallback, cache, and stale response rejection"}
+{"path":"packages/happy-app/sources/sync/ops.ts","reason":"Verify typed encrypted Machine RPC invocation"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Verify New Session-only integration and preserved manual/Recent behavior"}

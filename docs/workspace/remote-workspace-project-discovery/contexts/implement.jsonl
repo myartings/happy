@@ -1,0 +1,16 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Protected paths, risk triggers, and package validation commands"}
+{"path":"docs/PRD.md","reason":"Accepted user outcome, scope, constraints, and non-goals"}
+{"path":"docs/specs/remote-workspace-project-discovery.md","reason":"Accepted scanner, RPC, App, compatibility, and acceptance contract"}
+{"path":"docs/tasks/remote-workspace-project-discovery-tasks.md","reason":"Dependency order and allowed scope for T1"}
+{"path":"docs/workspace/remote-workspace-project-discovery/decisions.md","reason":"Accepted UI scope, scan bounds, privacy controls, and stop conditions"}
+{"path":"packages/happy-cli/package.json","reason":"CLI package scripts and test environment for T1"}
+{"path":"packages/happy-cli/src/workspace/workspaceProjectScanner.ts","reason":"Bounded read-only scanner implementation"}
+{"path":"packages/happy-cli/src/workspace/workspaceProjectScanner.test.ts","reason":"Scanner behavior and bounds tests"}
+{"path":"packages/happy-cli/src/api/apiMachine.ts","reason":"Optional Machine RPC registration seam"}
+{"path":"packages/happy-cli/src/api/apiMachine.workspaceProjects.test.ts","reason":"Daemon-owned root and RPC registration test"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.ts","reason":"Picker data, request generation, timeout, and cache behavior"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.test.ts","reason":"Cross-platform dedup, search, fallback, stale response, timeout, and cache tests"}
+{"path":"packages/happy-app/sources/sync/ops.ts","reason":"Typed optional Machine RPC wrapper"}
+{"path":"packages/happy-app/sources/sync/ops.workspaceProjects.test.ts","reason":"App RPC boundary test"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Accepted V1 New Session picker integration"}

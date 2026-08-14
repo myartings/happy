@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "slug": "remote-workspace-project-discovery",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/remote-workspace-project-discovery.md",
+      "updated": "2026-08-14T11:07:21+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/decisions.md; docs/PRD.md",
+      "updated": "2026-08-14T11:05:47+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/context.md; docs/tasks/remote-workspace-project-discovery-tasks.md",
+      "updated": "2026-08-14T11:09:24+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/decisions.md; docs/specs/remote-workspace-project-discovery.md",
+      "updated": "2026-08-14T11:09:24+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Review findings R1 and R2 resolved in packages/happy-app/sources/utils/workspaceProjectDiscovery.ts and tests; docs/workspace/remote-workspace-project-discovery/review.md; docs/workspace/remote-workspace-project-discovery/validation.md",
+      "updated": "2026-08-14T11:54:04+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User accepted: unrelated Server attachment baseline failure, deferred active-daemon smoke, and unrelated full-App parallel 1MB blob timeout that passes in isolation; docs/workspace/remote-workspace-project-discovery/validation.md",
+      "updated": "2026-08-14T11:56:56+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/review.md; docs/workspace/remote-workspace-project-discovery/validation.md",
+      "updated": "2026-08-14T11:58:04+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/finish.md; docs/workspace/remote-workspace-project-discovery/validation.md; docs/workspace/remote-workspace-project-discovery/review.md",
+      "updated": "2026-08-14T11:59:21+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-14T10:55:50+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-14T10:57:55+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "blocked",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/decisions.md"
+    },
+    {
+      "at": "2026-08-14T11:05:47+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/decisions.md; docs/PRD.md"
+    },
+    {
+      "at": "2026-08-14T11:07:21+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/remote-workspace-project-discovery.md"
+    },
+    {
+      "at": "2026-08-14T11:09:24+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/decisions.md; docs/specs/remote-workspace-project-discovery.md"
+    },
+    {
+      "at": "2026-08-14T11:09:24+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/context.md; docs/tasks/remote-workspace-project-discovery-tasks.md"
+    },
+    {
+      "at": "2026-08-14T11:09:42+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement T1 bounded daemon-side project scanner with TDD"
+    },
+    {
+      "at": "2026-08-14T11:29:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "packages/happy-cli/src/workspace/workspaceProjectScanner.ts; packages/happy-cli/src/api/apiMachine.ts; packages/happy-app/sources/utils/workspaceProjectDiscovery.ts; packages/happy-app/sources/sync/ops.ts; packages/happy-app/sources/app/(app)/new/index.tsx; docs/workspace/remote-workspace-project-discovery/validation.md"
+    },
+    {
+      "at": "2026-08-14T11:29:10+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify targeted and complete applicable test families, benchmark, smoke availability, and forbidden surfaces"
+    },
+    {
+      "at": "2026-08-14T11:30:04+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-14T11:30:33+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "2 configured commands; 2 failures"
+    },
+    {
+      "at": "2026-08-14T11:35:22+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User accepted the unrelated happy-server attachmentRoutes baseline failure on 2026-08-14; docs/workspace/remote-workspace-project-discovery/validation.md"
+    },
+    {
+      "at": "2026-08-14T11:36:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User accepted the unrelated Server baseline failure and the active-daemon smoke gap on 2026-08-14; docs/workspace/remote-workspace-project-discovery/validation.md"
+    },
+    {
+      "at": "2026-08-14T11:38:40+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/review.md"
+    },
+    {
+      "at": "2026-08-14T11:51:38+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Address review findings R1 malformed RPC response and R2 home-relative deduplication"
+    },
+    {
+      "at": "2026-08-14T11:54:04+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review findings R1 and R2 resolved in packages/happy-app/sources/utils/workspaceProjectDiscovery.ts and tests; docs/workspace/remote-workspace-project-discovery/review.md; docs/workspace/remote-workspace-project-discovery/validation.md"
+    },
+    {
+      "at": "2026-08-14T11:54:04+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Re-run App family and whole-diff review after R1/R2 fixes"
+    },
+    {
+      "at": "2026-08-14T11:55:02+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "Post-fix full App suite passed 1166/1167; unrelated 1MB blob timeout passed immediately in isolation 9/9; user acceptance required; docs/workspace/remote-workspace-project-discovery/validation.md"
+    },
+    {
+      "at": "2026-08-14T11:56:56+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User accepted: unrelated Server attachment baseline failure, deferred active-daemon smoke, and unrelated full-App parallel 1MB blob timeout that passes in isolation; docs/workspace/remote-workspace-project-discovery/validation.md"
+    },
+    {
+      "at": "2026-08-14T11:58:04+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/review.md; docs/workspace/remote-workspace-project-discovery/validation.md"
+    },
+    {
+      "at": "2026-08-14T11:58:04+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Reconcile acceptance, accepted gaps, rollback, and archive readiness"
+    },
+    {
+      "at": "2026-08-14T11:59:21+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/remote-workspace-project-discovery/finish.md; docs/workspace/remote-workspace-project-discovery/validation.md; docs/workspace/remote-workspace-project-discovery/review.md"
+    },
+    {
+      "at": "2026-08-14T11:59:30+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and reviewed remote workspace project discovery for New Session with accepted Server, App parallel-timeout, and active-daemon smoke gaps; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-14T11:59:30+00:00",
+  "archivedAt": "2026-08-14T11:59:30+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and reviewed remote workspace project discovery for New Session with accepted Server, App parallel-timeout, and active-daemon smoke gaps",
+  "archiveFollowUp": "None"
+}

@@ -37,7 +37,12 @@ import { useAllMachines, useLocalSetting, useSessions, useSetting, storage } fro
 import type { NewSessionAgentType } from '@/sync/persistence';
 import { sync } from '@/sync/sync';
 import { isMachineOnline } from '@/utils/machineUtils';
-import { machineSpawnNewSession, sessionSetAgentModes, type SessionAgentModesPatch } from '@/sync/ops';
+import {
+    listWorkspaceProjects as requestWorkspaceProjects,
+    machineSpawnNewSession,
+    sessionSetAgentModes,
+    type SessionAgentModesPatch,
+} from '@/sync/ops';
 import { createWorktree, listWorktrees } from '@/utils/worktree';
 import { resolveAbsolutePath } from '@/utils/pathUtils';
 import { formatPathRelativeToHome, formatLastSeen } from '@/utils/sessionUtils';
@@ -87,6 +92,11 @@ import {
     AnimatedPopup,
     LocalBlurHalo,
 } from '@/components/AnimatedOverlay';
+import {
+    WorkspaceProjectDiscoveryLoader,
+    buildWorkspaceProjectSections,
+    type ListWorkspaceProjectsResult,
+} from '@/utils/workspaceProjectDiscovery';
 
 // Agent icon assets
 const agentIcons = {
@@ -107,7 +117,13 @@ const ALL_AGENTS: { key: AgentKey; label: string }[] = [
     { key: 'agy', label: 'agy' },
 ];
 
-type PickerItem = { key: string; label: string; subtitle?: string; dimmed?: boolean };
+type PickerItem = {
+    key: string;
+    label: string;
+    subtitle?: string;
+    dimmed?: boolean;
+    selectionValue?: string;
+};
 
 type PickerType = 'machine' | 'path' | 'worktree' | 'agent' | 'model' | 'effort' | 'permission' | 'settings';
 
@@ -476,7 +492,12 @@ function ComposerSettingsPickerContent({
 
 function PathPickerContent({
     title,
-    items,
+    recentItems,
+    workspaceItems,
+    discoveryStatus,
+    discoveryTruncated,
+    searchQuery,
+    onChangeSearchQuery,
     value,
     homeDir,
     onChangeValue,
@@ -484,7 +505,12 @@ function PathPickerContent({
     embedded = false,
 }: {
     title: string;
-    items: PickerItem[];
+    recentItems: PickerItem[];
+    workspaceItems: PickerItem[];
+    discoveryStatus: 'idle' | 'loading' | 'ready' | 'unavailable';
+    discoveryTruncated: boolean;
+    searchQuery: string;
+    onChangeSearchQuery: (value: string) => void;
     value: string | null;
     homeDir?: string;
     onChangeValue: (value: string) => void;
@@ -517,15 +543,15 @@ function PathPickerContent({
             return null;
         }
 
-        const match = items.find((item) =>
+        const match = [...recentItems, ...workspaceItems].find((item) =>
             normalizePathForComparison(item.key, homeDir) === normalizedValue,
         );
 
         return match?.key ?? null;
-    }, [currentValue, homeDir, items]);
+    }, [currentValue, homeDir, recentItems, workspaceItems]);
 
     const handleSuggestionPress = React.useCallback((item: PickerItem) => {
-        const nextValue = item.label;
+        const nextValue = item.selectionValue ?? item.label;
         const nextSelection = { start: nextValue.length, end: nextValue.length };
 
         onChangeValue(nextValue);
@@ -628,7 +654,7 @@ function PathPickerContent({
                 contentContainerStyle={embedded && pickerStyles.embeddedOptionListContent}
                 keyboardShouldPersistTaps="handled"
             >
-                {items.map((item) => {
+                {recentItems.map((item) => {
                     const isSelected = item.key === matchedItemKey;
 
                     return (
@@ -663,9 +689,82 @@ function PathPickerContent({
                     );
                 })}
 
-                {items.length === 0 && (
+                {recentItems.length === 0 && (
                     <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
                         no recent projects yet
+                    </Text>
+                )}
+
+                <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
+                    Workspace Projects
+                </Text>
+
+                <View style={[pickerStyles.pathInputRow, { borderColor: theme.colors.divider }]}>
+                    <Ionicons name="search-outline" size={16} color={theme.colors.textSecondary} />
+                    <TextInput
+                        value={searchQuery}
+                        onChangeText={onChangeSearchQuery}
+                        placeholder="Search workspace projects"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                    />
+                </View>
+
+                {discoveryStatus === 'loading' && (
+                    <View style={pickerStyles.discoveryStatusRow}>
+                        <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+                        <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
+                            scanning workspace projects…
+                        </Text>
+                    </View>
+                )}
+
+                {discoveryStatus === 'unavailable' && (
+                    <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
+                        workspace projects unavailable; recent and custom paths still work
+                    </Text>
+                )}
+
+                {discoveryStatus === 'ready' && workspaceItems.map((item) => {
+                    const isSelected = item.key === matchedItemKey;
+                    return (
+                        <BubblePressable
+                            key={item.key}
+                            scaleFeedback={false}
+                            style={(p) => [
+                                pickerStyles.option,
+                                embedded && pickerStyles.embeddedOption,
+                                p.pressed && pickerStyles.optionPressed,
+                            ]}
+                            onPress={() => handleSuggestionPress(item)}
+                        >
+                            <Ionicons name="folder-open-outline" size={16} color={theme.colors.textSecondary} />
+                            <View style={{ flex: 1, minWidth: 0 }}>
+                                <Text style={[pickerStyles.optionText, { color: theme.colors.text }]} numberOfLines={1}>
+                                    {item.label}
+                                </Text>
+                                {!!item.subtitle && (
+                                    <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+                                        {item.subtitle}
+                                    </Text>
+                                )}
+                            </View>
+                            {isSelected && <Ionicons name="checkmark-circle" size={18} color={theme.colors.text} />}
+                        </BubblePressable>
+                    );
+                })}
+
+                {discoveryStatus === 'ready' && workspaceItems.length === 0 && (
+                    <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
+                        {searchQuery.trim() ? 'no matching workspace projects' : 'no workspace projects found'}
+                    </Text>
+                )}
+
+                {discoveryStatus === 'ready' && discoveryTruncated && (
+                    <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
+                        showing the first discovered projects; refine your search if needed
                     </Text>
                 )}
             </ScrollView>
@@ -830,8 +929,7 @@ function NewSessionScreen() {
         }));
     }, [allMachines]);
 
-    // Build path items from session history for selected machine
-    const pathItems = React.useMemo<PickerItem[]>(() => {
+    const recentPaths = React.useMemo<string[]>(() => {
         if (!selectedMachineId || !sessions) return [];
         const paths = new Set<string>();
         for (const s of sessions) {
@@ -841,12 +939,66 @@ function NewSessionScreen() {
                 paths.add(session.metadata.path);
             }
         }
-        const homeDir = selectedMachine?.metadata?.homeDir;
-        return Array.from(paths).sort().map(p => ({
-            key: p,
-            label: formatPathRelativeToHome(p, homeDir),
-        }));
-    }, [selectedMachineId, sessions, selectedMachine]);
+        return Array.from(paths).sort();
+    }, [selectedMachineId, sessions]);
+
+    const discoveryLoader = React.useMemo(() => new WorkspaceProjectDiscoveryLoader({
+        request: requestWorkspaceProjects,
+    }), []);
+    const [discoveryStatus, setDiscoveryStatus] = React.useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+    const [discoveryResult, setDiscoveryResult] = React.useState<ListWorkspaceProjectsResult | null>(null);
+    const [workspaceSearchQuery, setWorkspaceSearchQuery] = React.useState('');
+
+    React.useEffect(() => {
+        setWorkspaceSearchQuery('');
+    }, [selectedMachineId]);
+
+    React.useEffect(() => {
+        if (activePicker !== 'path' || !selectedMachineId || !selectedMachine || !isMachineOnline(selectedMachine)) {
+            discoveryLoader.reset();
+            setDiscoveryStatus('idle');
+            setDiscoveryResult(null);
+            return;
+        }
+
+        let disposed = false;
+        setDiscoveryStatus('loading');
+        setDiscoveryResult(null);
+        void discoveryLoader.load(selectedMachineId).then((outcome) => {
+            if (disposed || !outcome) return;
+            if (outcome.status === 'ready') {
+                setDiscoveryResult(outcome.result);
+                setDiscoveryStatus('ready');
+            } else {
+                setDiscoveryStatus('unavailable');
+            }
+        });
+
+        return () => {
+            disposed = true;
+            discoveryLoader.reset();
+        };
+    }, [activePicker, discoveryLoader, selectedMachine, selectedMachineId]);
+
+    const projectSections = React.useMemo(() => buildWorkspaceProjectSections({
+        recentPaths,
+        discoveredProjects: discoveryResult?.projects ?? [],
+        homeDir: selectedHomeDir,
+        platform: selectedMachine?.metadata?.platform === 'win32' ? 'win32' : 'unix',
+        query: workspaceSearchQuery,
+    }), [discoveryResult?.projects, recentPaths, selectedHomeDir, selectedMachine?.metadata?.platform, workspaceSearchQuery]);
+
+    const recentPathItems = React.useMemo<PickerItem[]>(() => projectSections.recent.map((item) => ({
+        key: item.path,
+        label: formatPathRelativeToHome(item.path, selectedHomeDir),
+    })), [projectSections.recent, selectedHomeDir]);
+
+    const workspacePathItems = React.useMemo<PickerItem[]>(() => projectSections.workspaceProjects.map((item) => ({
+        key: item.path,
+        label: item.name,
+        subtitle: item.relativePath,
+        selectionValue: item.path,
+    })), [projectSections.workspaceProjects]);
 
     // Auto-select first path when machine changes
     React.useEffect(() => {
@@ -854,8 +1006,8 @@ function NewSessionScreen() {
             return;
         }
 
-        setSelectedPath(pathItems[0]?.label ?? '~');
-    }, [selectedMachineId, pathItems, selectedPath, setSelectedPath]);
+        setSelectedPath(recentPathItems[0]?.label ?? '~');
+    }, [selectedMachineId, recentPathItems, selectedPath, setSelectedPath]);
 
     const resolvedSelectedPath = React.useMemo(() => {
         return normalizePathForComparison(selectedPath, selectedHomeDir);
@@ -1488,7 +1640,12 @@ function NewSessionScreen() {
         const content = type === 'path' ? (
             <PathPickerContent
                 title="Project"
-                items={pathItems}
+                recentItems={recentPathItems}
+                workspaceItems={workspacePathItems}
+                discoveryStatus={discoveryStatus}
+                discoveryTruncated={discoveryResult?.truncated ?? false}
+                searchQuery={workspaceSearchQuery}
+                onChangeSearchQuery={setWorkspaceSearchQuery}
                 value={selectedPath}
                 homeDir={selectedHomeDir}
                 onChangeValue={setSelectedPath}
@@ -1517,13 +1674,17 @@ function NewSessionScreen() {
         activePicker,
         closePicker,
         handlePickerSelect,
-        pathItems,
+        discoveryResult?.truncated,
+        discoveryStatus,
         pickerData,
+        recentPathItems,
         selectedHomeDir,
         selectedPath,
         setSelectedPath,
         sidebarLayout.showSidebar,
         theme.colors.header.background,
+        workspacePathItems,
+        workspaceSearchQuery,
     ]);
 
     const nativePickerContent = activePicker === 'settings' ? (
@@ -1548,7 +1709,12 @@ function NewSessionScreen() {
     ) : activePicker === 'path' ? (
         <PathPickerContent
             title="Project"
-            items={pathItems}
+            recentItems={recentPathItems}
+            workspaceItems={workspacePathItems}
+            discoveryStatus={discoveryStatus}
+            discoveryTruncated={discoveryResult?.truncated ?? false}
+            searchQuery={workspaceSearchQuery}
+            onChangeSearchQuery={setWorkspaceSearchQuery}
             value={selectedPath}
             homeDir={selectedHomeDir}
             onChangeValue={setSelectedPath}
@@ -2192,7 +2358,12 @@ function NewSessionScreen() {
                     {activePicker === 'path' ? (
                         <PathPickerContent
                             title="Project"
-                            items={pathItems}
+                            recentItems={recentPathItems}
+                            workspaceItems={workspacePathItems}
+                            discoveryStatus={discoveryStatus}
+                            discoveryTruncated={discoveryResult?.truncated ?? false}
+                            searchQuery={workspaceSearchQuery}
+                            onChangeSearchQuery={setWorkspaceSearchQuery}
                             value={selectedPath}
                             homeDir={selectedHomeDir}
                             onChangeValue={setSelectedPath}
@@ -2863,6 +3034,12 @@ const pickerStyles = {
         ...Typography.default(),
         ...Platform.select({ web: { userSelect: 'none' } as any, default: {} }),
     } as const,
+    discoveryStatusRow: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        gap: 8,
+        paddingHorizontal: 4,
+    },
     sectionLabel: {
         fontSize: 13,
         paddingHorizontal: 4,
