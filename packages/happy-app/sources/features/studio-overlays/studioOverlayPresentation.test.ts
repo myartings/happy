@@ -115,10 +115,10 @@ describe('resolveStudioOverlayPresentation', () => {
             isDark: false,
             isTauriRuntime: true,
             requestedStyle: 'default',
-        }).isStudio).toBe(false);
+        }).isStudio).toBe(true);
     });
 
-    it('honors the existing preview override and keeps the provisional modal tier distinct', () => {
+    it('keeps the provisional modal tier distinct and ignores stale preview preferences', () => {
         const presentation = resolveStudioOverlayPresentation({
             isDark: true,
             isTauriRuntime: true,
@@ -138,7 +138,7 @@ describe('resolveStudioOverlayPresentation', () => {
             isTauriRuntime: true,
             previewStyle: 'default',
             requestedStyle: 'studio',
-        }).isStudio).toBe(false);
+        }).isStudio).toBe(true);
     });
 });
 

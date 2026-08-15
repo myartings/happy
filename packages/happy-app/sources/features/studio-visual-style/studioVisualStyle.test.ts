@@ -10,17 +10,17 @@ import {
 } from './studioVisualStyle';
 
 describe('Studio desktop visual style', () => {
-    it('keeps the existing Default sidebar formula unchanged', () => {
+    it('forces the Studio sidebar when a packaged desktop still requests Default', () => {
         expect(resolveDesktopSidebarFrame({
             windowWidth: 1470,
             isTauriRuntime: true,
             requestedStyle: 'default',
         })).toMatchObject({
-            visualStyle: 'default',
-            width: 360,
-            sidebarBackground: '#FFFFFF',
+            visualStyle: 'studio',
+            width: 316,
+            sidebarBackground: '#F6F7F7',
             canvasBackground: '#FFFFFF',
-            dividerWidth: 0,
+            dividerWidth: 1,
         });
     });
 
@@ -60,11 +60,11 @@ describe('Studio desktop visual style', () => {
         })).toBe('default');
     });
 
-    it('allows an explicit packaged-desktop preview to override persistence', () => {
+    it('keeps packaged desktop on Studio even with a stale Default preview', () => {
         expect(resolveDesktopVisualStyle({
             isTauriRuntime: true,
             requestedStyle: 'default',
-            previewStyle: 'studio',
+            previewStyle: 'default',
         })).toBe('studio');
     });
 
@@ -96,9 +96,9 @@ describe('Studio desktop visual style', () => {
         });
     });
 
-    it('keeps Default and non-Tauri session rows on their existing style path', () => {
+    it('keeps non-Tauri session rows on their existing Default style path', () => {
         expect(resolveDesktopSessionRowStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         })).toMatchObject({
             visualStyle: 'default',
@@ -134,9 +134,9 @@ describe('Studio desktop visual style', () => {
         });
     });
 
-    it('keeps Default and non-Tauri top controls on their existing style path', () => {
+    it('keeps non-Tauri top controls on their existing style path', () => {
         expect(resolveDesktopTopControlsStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         })).toMatchObject({
             controlHeight: null,
@@ -166,9 +166,9 @@ describe('Studio desktop visual style', () => {
         });
     });
 
-    it('keeps Default and non-Tauri Todo rows on their existing style path', () => {
+    it('keeps non-Tauri Todo rows on their existing style path', () => {
         expect(resolveDesktopTodoRowStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         })).toMatchObject({
             height: null,
@@ -197,9 +197,9 @@ describe('Studio desktop visual style', () => {
         });
     });
 
-    it('keeps Default and non-Tauri section headers on their existing style path', () => {
+    it('keeps non-Tauri section headers on their existing style path', () => {
         expect(resolveDesktopSectionHeaderStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         }).fontSize).toBeNull();
         expect(resolveDesktopSectionHeaderStyle({
@@ -223,9 +223,9 @@ describe('Studio desktop visual style', () => {
         });
     });
 
-    it('keeps Default and non-Tauri sidebar footers on their existing style path', () => {
+    it('keeps non-Tauri sidebar footers on their existing style path', () => {
         expect(resolveDesktopSidebarFooterStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         }).height).toBeNull();
         expect(resolveDesktopSidebarFooterStyle({

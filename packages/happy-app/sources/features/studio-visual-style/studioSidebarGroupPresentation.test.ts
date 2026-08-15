@@ -16,9 +16,9 @@ describe('Studio sidebar group presentation', () => {
         expect(resolveStudioSidebarGroupPresentation(studioStyle)).toBe('unboxed');
     });
 
-    it('keeps the existing card group for Default and non-Tauri clients', () => {
+    it('keeps the existing card group for non-Tauri clients', () => {
         const defaultStyle = resolveDesktopSessionRowStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         });
         const standaloneWebStyle = resolveDesktopSessionRowStyle({
@@ -84,7 +84,7 @@ describe('Studio sidebar group presentation', () => {
 
     it('retains Default container, position shape, clipping, and divider behavior', () => {
         const defaultStyle = resolveDesktopSessionRowStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         });
 

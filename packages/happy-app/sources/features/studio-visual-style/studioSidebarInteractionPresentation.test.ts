@@ -32,7 +32,7 @@ describe('Studio sidebar interaction presentation', () => {
         expect(dark.focusRingColor).not.toBe(dark.rowSelectedColor);
     });
 
-    it('keeps Default and non-Tauri paths inert', () => {
+    it('keeps non-Tauri paths inert and ignores stale Tauri preferences', () => {
         expect(resolveStudioSidebarInteractionPresentation({
             isDark: true,
             isTauriRuntime: false,
@@ -42,7 +42,7 @@ describe('Studio sidebar interaction presentation', () => {
             isDark: false,
             isTauriRuntime: true,
             requestedStyle: 'default',
-        })).toMatchObject({ isStudio: false, rowHoverColor: 'transparent' });
+        })).toMatchObject({ isStudio: true, rowHoverColor: 'rgba(26, 28, 31, 0.048)' });
     });
 
     it('keeps selected state identifiable while layering hover and press', () => {

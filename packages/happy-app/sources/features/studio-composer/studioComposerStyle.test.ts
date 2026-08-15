@@ -30,9 +30,9 @@ describe('Studio desktop composer style', () => {
         });
     });
 
-    it('keeps Default and non-Tauri clients on the existing presentation path', () => {
+    it('keeps non-Tauri clients on the existing presentation path', () => {
         expect(resolveDesktopComposerStyle({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
         })).toMatchObject({
             visualStyle: 'default',
