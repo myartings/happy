@@ -127,7 +127,7 @@ describe('Studio tool presentation', () => {
         expect(resolveStudioActivityColor(presentation, null, 'completed')).toBe('#707070');
     });
 
-    it('fails closed outside packaged Studio and honors the preview override', () => {
+    it('fails closed outside packaged Studio and ignores stale desktop preferences', () => {
         expect(resolveStudioToolPresentation({
             dark: false,
             isTauriRuntime: false,
@@ -137,12 +137,12 @@ describe('Studio tool presentation', () => {
             dark: false,
             isTauriRuntime: true,
             requestedStyle: 'default',
-        })).toBeNull();
+        })?.visualStyle).toBe('studio');
         expect(resolveStudioToolPresentation({
             dark: false,
             isTauriRuntime: true,
-            requestedStyle: 'default',
-            previewStyle: 'studio',
+            requestedStyle: 'studio',
+            previewStyle: 'default',
         })?.visualStyle).toBe('studio');
     });
 });

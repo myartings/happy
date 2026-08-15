@@ -90,9 +90,9 @@ describe('resolveStudioSemanticTextPresentation', () => {
         });
     });
 
-    it('keeps Default, mobile, and standalone web rendering unchanged', () => {
+    it('keeps mobile and standalone web rendering unchanged', () => {
         expect(resolveStudioSemanticTextPresentation({
-            isTauriRuntime: true,
+            isTauriRuntime: false,
             requestedStyle: 'default',
             dark: false,
         })).toBeNull();
@@ -103,11 +103,11 @@ describe('resolveStudioSemanticTextPresentation', () => {
         })).toBeNull();
     });
 
-    it('supports the desktop preview override without exposing Studio elsewhere', () => {
+    it('forces Studio on desktop without exposing it elsewhere', () => {
         expect(resolveStudioSemanticTextPresentation({
             isTauriRuntime: true,
-            requestedStyle: 'default',
-            previewStyle: 'studio',
+            requestedStyle: 'studio',
+            previewStyle: 'default',
             dark: true,
         })?.roles.body.color).toBe('#E7E7E7');
         expect(resolveStudioSemanticTextPresentation({

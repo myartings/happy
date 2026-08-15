@@ -1,0 +1,14 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/layout-core.md","reason":"Accepted client layout and presentation boundaries"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Central packaged-desktop visual-style policy."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.test.ts","reason":"Focused policy behavior tests."}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Device-local compatibility default and schema description."}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Legacy and new settings compatibility tests."}
+{"path":"packages/happy-app/src-tauri/tauri.conf.json","reason":"Production frontend export command embedded by Tauri."}
+{"path":"packages/happy-app/sources/features/studio-overlays/studioDesktopBuildConfiguration.test.ts","reason":"Static behavior check for the production export contract."}
+{"path":"packages/happy-app/sources/features/studio-composer/studioComposerStyle.test.ts","reason":"Align composer regression coverage with forced packaged-Tauri Studio policy."}
+{"path":"packages/happy-app/sources/features/studio-overlays/studioOverlayPresentation.test.ts","reason":"Align overlay regression coverage with forced packaged-Tauri Studio policy."}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/studioSemanticTextPresentation.test.ts","reason":"Align semantic-text regression coverage with forced packaged-Tauri Studio policy."}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation/studioToolPresentation.test.ts","reason":"Align tool-presentation regression coverage with forced packaged-Tauri Studio policy."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarGroupPresentation.test.ts","reason":"Align sidebar group compatibility coverage with non-Tauri Default policy."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarInteractionPresentation.test.ts","reason":"Align sidebar interaction coverage with forced packaged-Tauri Studio policy."}

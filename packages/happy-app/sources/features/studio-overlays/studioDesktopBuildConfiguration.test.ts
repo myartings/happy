@@ -9,7 +9,7 @@ describe('Studio desktop build configuration', () => {
         ));
 
         expect(config.build.beforeBuildCommand).toBe(
-            'pnpm exec expo export --platform web --output-dir dist --clear',
+            'pnpm exec cross-env EXPO_PUBLIC_HAPPY_VISUAL_STYLE=studio pnpm exec expo export --platform web --output-dir dist --clear',
         );
     });
 });
