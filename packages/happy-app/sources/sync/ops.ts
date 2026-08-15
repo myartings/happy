@@ -17,6 +17,7 @@ import {
     rigCanWriteFiles,
     rigHasRpcMethod,
 } from './rig';
+import type { ListWorkspaceProjectsResult } from '@/utils/workspaceProjectDiscovery';
 
 export type { SessionAgentModesPatch };
 
@@ -266,6 +267,14 @@ export type CreatedWorktreeSnapshot = WorktreeSnapshotInspection & {
     branchName: string;
     cleanupToken: string;
 };
+
+export async function listWorkspaceProjects(machineId: string): Promise<ListWorkspaceProjectsResult> {
+    return apiSocket.machineRPC<ListWorkspaceProjectsResult, Record<string, never>>(
+        machineId,
+        'list-workspace-projects',
+        {},
+    );
+}
 
 export async function inspectSessionWorktree(machineId: string, directory: string): Promise<WorktreeSnapshotInspection> {
     return apiSocket.machineRPC<WorktreeSnapshotInspection, { directory: string }>(

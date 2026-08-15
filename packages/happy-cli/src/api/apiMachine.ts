@@ -35,6 +35,9 @@ import {
     inspectWorktreeSnapshot,
     type CreatedWorktreeSnapshot,
 } from '@/git/worktreeSnapshot';
+import { listWorkspaceProjects } from '@/workspace/workspaceProjectScanner';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -178,6 +181,10 @@ export class ApiMachineClient {
                     throw new Error(result.errorMessage);
             }
         });
+
+        this.rpcHandlerManager.registerHandler('list-workspace-projects', async () => (
+            listWorkspaceProjects({ root: join(homedir(), 'workspace') })
+        ));
 
         this.syncResumeSessionRpcRegistration();
 
