@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-panel-resize-joint-projection/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/workspace/studio-panel-resize-joint-projection/validation.md","reason":"Exact verification and acceptance mapping."}
+{"path":"packages/happy-app/sources/features/studio-panel-resize","reason":"Review final policy, interaction semantics, and behavior tests."}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"Verify left host consumes shared actual pair."}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Verify right host consumes shared actual pair."}

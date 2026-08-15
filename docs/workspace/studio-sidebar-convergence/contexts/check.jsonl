@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Acceptance criteria AC4 AC5 and AC8"}
+{"path":"docs/tasks/studio-visual-convergence-tasks.md","reason":"Track B completion and ownership boundary"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.test.ts","reason":"Studio density and compatibility assertions"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarInteractionPresentation.test.ts","reason":"Interaction-state regression coverage"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarWiring.test.ts","reason":"Actual component wiring and behavior-contract coverage"}
+{"path":"docs/workspace/studio-sidebar-convergence/validation.md","reason":"Evidence ledger for exact check outcomes"}

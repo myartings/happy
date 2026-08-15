@@ -18,6 +18,8 @@ import { t } from '@/text';
 import { Message, ToolCallMessage } from '@/sync/typesMessage';
 import { getToolActivityLabel, getToolSummaryCategory, ToolSummaryCategory } from '@/utils/toolDisplay';
 import { useRouter } from 'expo-router';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
+import { resolveStudioActivityColor } from '@/features/studio-tool-presentation/studioToolPresentation';
 
 interface ToolGroupViewProps {
     group: ToolGroupItem;
@@ -36,6 +38,7 @@ export const ToolGroupView = React.memo<ToolGroupViewProps>((props) => {
     const summary = React.useMemo(() => generateGroupSummary(group.messages), [group.messages]);
     const summaryCategory = React.useMemo(() => getGroupSummaryCategory(group.messages), [group.messages]);
     const hasRunning = !forceCompleted && group.hasRunning;
+    const hasError = group.messages.some((message) => message.kind === 'tool-call' && message.tool.state === 'error');
     const suppressChildren = hideSingleToolChildren && group.messages.length === 1 && group.messages[0]?.kind === 'tool-call';
     const singleToolMessage = suppressChildren && group.messages[0]?.kind === 'tool-call'
         ? group.messages[0]
@@ -71,6 +74,7 @@ export const ToolGroupView = React.memo<ToolGroupViewProps>((props) => {
                 label={summary}
                 onPress={singleToolMessage ? handleSingleToolPress : onToggle}
                 category={summaryCategory}
+                state={hasRunning ? 'running' : hasError ? 'error' : 'completed'}
                 showChevron
             />
             {expanded && !suppressChildren && (
@@ -202,6 +206,7 @@ export const AgentWorkGroupView = React.memo<AgentWorkGroupViewProps>((props) =>
                     hasRunning={!isCompleted && group.hasRunning}
                     label={label}
                     onPress={onToggle}
+                    state={!isCompleted && group.hasRunning ? 'running' : 'completed'}
                 />
                 {expanded && (
                     <View style={styles.content}>
@@ -219,25 +224,30 @@ function CollapseHeader(props: {
     label: string;
     onPress: () => void;
     category?: ToolSummaryCategory | null;
+    state?: 'running' | 'completed' | 'error';
     showChevron?: boolean;
     disabled?: boolean;
 }) {
     const { theme } = useUnistyles();
+    const studioPresentation = useStudioToolPresentation();
     const showChevron = props.showChevron ?? true;
+    const semanticColor = studioPresentation
+        ? resolveStudioActivityColor(studioPresentation, props.category ?? null, props.state ?? 'completed')
+        : theme.colors.textSecondary;
     const content = (
         <>
             {props.category ? (
                 <View style={styles.headerIcon}>
-                    <ToolSummaryIcon category={props.category} color={theme.colors.textSecondary} />
+                    <ToolSummaryIcon category={props.category} color={semanticColor} />
                 </View>
             ) : null}
-            <Text style={styles.summaryText} numberOfLines={1}>
+            <Text style={[styles.summaryText, studioPresentation && { color: semanticColor }]} numberOfLines={1}>
                 {props.label}
             </Text>
             {props.hasRunning && (
                 <ActivityIndicator
                     size="small"
-                    color={theme.colors.textSecondary}
+                    color={semanticColor}
                     style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
                 />
             )}
@@ -312,9 +322,13 @@ function ToolSummaryRow(props: {
     sessionId: string;
 }) {
     const { theme } = useUnistyles();
+    const studioPresentation = useStudioToolPresentation();
     const router = useRouter();
     const { tool } = props.message;
     const category = getToolSummaryCategory(tool.name);
+    const semanticColor = studioPresentation
+        ? resolveStudioActivityColor(studioPresentation, category, tool.state)
+        : theme.colors.textSecondary;
     const label = getToolActivityLabel(tool);
     const filePath = isFileEditTool(tool.name) && typeof tool.input?.file_path === 'string'
         ? tool.input.file_path
@@ -333,12 +347,12 @@ function ToolSummaryRow(props: {
             <View style={styles.toolSummaryIcon}>
                 <ToolSummaryIcon
                     category={category}
-                    color={theme.colors.textSecondary}
+                    color={semanticColor}
                     size={18}
                     toolName={tool.name}
                 />
             </View>
-            <Text style={styles.toolSummaryLabel} numberOfLines={1}>
+            <Text style={[styles.toolSummaryLabel, studioPresentation && { color: semanticColor }]} numberOfLines={1}>
                 {label}
             </Text>
         </>

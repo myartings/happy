@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-rich-text-review-fixes/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/components/markdown/parseMarkdown.test.ts","reason":"Studio extension compatibility behavior"}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/studioSemanticTextPresentation.test.ts","reason":"Production semantic role behavior and runtime gating"}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/studioRichTextWiring.test.ts","reason":"Supporting host wiring preservation evidence"}

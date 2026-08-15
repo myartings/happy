@@ -10,20 +10,30 @@ import {
     useWindowDimensions,
 } from 'react-native';
 import { LocalBlurHalo } from '@/components/AnimatedOverlay';
-import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
+import {
+    StudioOverlayPresentationProvider,
+    StudioOverlayPresentationSnapshotProvider,
+    useStudioOverlayPresentation,
+} from '@/features/studio-overlays/useStudioOverlayPresentation';
+import type { StudioOverlayPresentation } from '@/features/studio-overlays/studioOverlayPresentation';
 
 interface CommandPaletteModalProps {
     visible: boolean;
     onClose?: () => void;
     children: React.ReactNode;
+    studioIsDark?: boolean;
+    studioPresentation?: StudioOverlayPresentation;
 }
 
 export function CommandPaletteModal({
     visible,
     onClose,
-    children
+    children,
+    studioIsDark,
+    studioPresentation,
 }: CommandPaletteModalProps) {
-    const overlayPresentation = useStudioOverlayPresentation();
+    const resolvedPresentation = useStudioOverlayPresentation(studioIsDark);
+    const overlayPresentation = studioPresentation ?? resolvedPresentation;
     const { width: viewportWidth } = useWindowDimensions();
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -80,6 +90,57 @@ export function CommandPaletteModal({
         return null;
     }
 
+    const modalContent = (
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <TouchableWithoutFeedback onPress={handleBackdropPress}>
+                <Animated.View
+                    style={[
+                        Platform.OS === 'web' ? styles.backdrop : styles.nativeBackdrop,
+                        overlayPresentation.isStudio && {
+                            backgroundColor: overlayPresentation.modal.scrimColor,
+                        },
+                        {
+                            opacity: fadeAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [
+                                    0,
+                                    overlayPresentation.isStudio
+                                        ? overlayPresentation.commandPalette.backdropPeakOpacity
+                                        : 0.7,
+                                ]
+                            })
+                        }
+                    ]}
+                >
+                    {Platform.OS !== 'web' && <View pointerEvents="none" style={styles.backdropScrim} />}
+                </Animated.View>
+            </TouchableWithoutFeedback>
+
+            <Animated.View
+                style={[
+                    styles.content,
+                    {
+                        opacity: fadeAnim,
+                        transform: [{ scale: scaleAnim }]
+                    },
+                    overlayPresentation.isStudio && {
+                        maxWidth: overlayPresentation.commandPalette.contentMaxWidth,
+                        width: Math.min(
+                            viewportWidth * 0.9,
+                            overlayPresentation.commandPalette.contentMaxWidth,
+                        ),
+                    },
+                ]}
+            >
+                {Platform.OS !== 'web' && <LocalBlurHalo borderRadius={24} expansion={18} blurIntensity={38} />}
+                {children}
+            </Animated.View>
+        </KeyboardAvoidingView>
+    );
+
     return (
         <Modal
             visible={isModalVisible}
@@ -87,54 +148,15 @@ export function CommandPaletteModal({
             animationType="none"
             onRequestClose={handleClose}
         >
-            <KeyboardAvoidingView 
-                style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                <TouchableWithoutFeedback onPress={handleBackdropPress}>
-                    <Animated.View 
-                        style={[
-                            Platform.OS === 'web' ? styles.backdrop : styles.nativeBackdrop,
-                            overlayPresentation.isStudio && {
-                                backgroundColor: overlayPresentation.modal.scrimColor,
-                            },
-                            {
-                                opacity: fadeAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [
-                                        0,
-                                        overlayPresentation.isStudio
-                                            ? overlayPresentation.commandPalette.backdropPeakOpacity
-                                            : 0.7,
-                                    ]
-                                })
-                            }
-                        ]}
-                    >
-                        {Platform.OS !== 'web' && <View pointerEvents="none" style={styles.backdropScrim} />}
-                    </Animated.View>
-                </TouchableWithoutFeedback>
-                
-                <Animated.View
-                    style={[
-                        styles.content,
-                        {
-                            opacity: fadeAnim,
-                            transform: [{ scale: scaleAnim }]
-                        },
-                        overlayPresentation.isStudio && {
-                            maxWidth: overlayPresentation.commandPalette.contentMaxWidth,
-                            width: Math.min(
-                                viewportWidth * 0.9,
-                                overlayPresentation.commandPalette.contentMaxWidth,
-                            ),
-                        },
-                    ]}
-                >
-                    {Platform.OS !== 'web' && <LocalBlurHalo borderRadius={24} expansion={18} blurIntensity={38} />}
-                    {children}
-                </Animated.View>
-            </KeyboardAvoidingView>
+            {studioPresentation ? (
+                <StudioOverlayPresentationSnapshotProvider presentation={studioPresentation}>
+                    {modalContent}
+                </StudioOverlayPresentationSnapshotProvider>
+            ) : typeof studioIsDark === 'boolean' ? (
+                <StudioOverlayPresentationProvider isDark={studioIsDark}>
+                    {modalContent}
+                </StudioOverlayPresentationProvider>
+            ) : modalContent}
         </Modal>
     );
 }

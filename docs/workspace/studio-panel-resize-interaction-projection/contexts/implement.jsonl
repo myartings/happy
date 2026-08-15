@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/features/studio-panel-resize","reason":"Interaction and joint projection behavior."}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"Left target/rendered/active seam."}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Right target/rendered/active seam."}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Persist last active side."}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Backward-compatible active-side default."}

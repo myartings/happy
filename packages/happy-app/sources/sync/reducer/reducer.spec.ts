@@ -1,10 +1,94 @@
 import { describe, it, expect } from 'vitest';
-import { NormalizedMessage } from '../typesRaw';
+import { NormalizedMessage, normalizeRawMessage } from '../typesRaw';
 import { createReducer } from './reducer';
 import { reducer } from './reducer';
 import { AgentState } from '../storageTypes';
+import { resolveStudioExecutionTranscript } from '@/features/studio-execution-transcript/studioExecutionTranscript';
 
 describe('reducer', () => {
+    it('joins an enriched session completion onto the matching Codex tool call', () => {
+        const state = createReducer();
+        const rawEvents = [
+            {
+                id: 'db-start',
+                createdAt: 1000,
+                data: {
+                    role: 'session',
+                    content: {
+                        id: 'env-start',
+                        time: 1000,
+                        role: 'agent',
+                        turn: 'turn-1',
+                        ev: {
+                            t: 'tool-call-start',
+                            call: 'call-1',
+                            name: 'CodexBash',
+                            title: 'Run tests',
+                            description: 'Run tests',
+                            args: { command: 'pnpm test' },
+                        },
+                    },
+                },
+            },
+            {
+                id: 'db-end',
+                createdAt: 2250,
+                data: {
+                    role: 'session',
+                    content: {
+                        id: 'env-end',
+                        time: 2250,
+                        role: 'agent',
+                        turn: 'turn-1',
+                        ev: {
+                            t: 'tool-call-end',
+                            call: 'call-1',
+                            output: '1 failed\n',
+                            exitCode: 1,
+                            durationMs: 1250,
+                            status: 'failed',
+                            truncated: false,
+                            isError: true,
+                        },
+                    },
+                },
+            },
+        ];
+        const normalized = rawEvents.map(({ id, createdAt, data }) => (
+            normalizeRawMessage(id, null, createdAt, data as any)
+        )).filter((message): message is NormalizedMessage => message !== null);
+
+        const result = reducer(state, normalized);
+
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages[0]).toMatchObject({
+            kind: 'tool-call',
+            tool: {
+                name: 'CodexBash',
+                state: 'error',
+                input: { command: 'pnpm test' },
+                result: {
+                    output: '1 failed\n',
+                    exitCode: 1,
+                    durationMs: 1250,
+                    status: 'failed',
+                    truncated: false,
+                },
+                completedAt: 2250,
+            },
+        });
+        const message = result.messages[0];
+        expect(message.kind).toBe('tool-call');
+        if (message.kind === 'tool-call') {
+            expect(resolveStudioExecutionTranscript(message.tool)).toMatchObject({
+                command: 'pnpm test',
+                state: 'error',
+                durationMs: 1250,
+                stdout: { text: '1 failed\n' },
+            });
+        }
+    });
+
     // it('should process golden cases', () => {
     //     for (let i = 0; i <= 3; i++) {
 

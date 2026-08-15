@@ -19,9 +19,18 @@ interface AgentInputAttachmentStripProps {
     onRemove: (id: string) => void;
     studio?: boolean;
     thumbnailSize?: number;
+    surfaceBackground?: string;
+    surfaceBorderColor?: string;
 }
 
-export function AgentInputAttachmentStrip({ images, onRemove, studio = false, thumbnailSize = THUMB_SIZE }: AgentInputAttachmentStripProps) {
+export function AgentInputAttachmentStrip({
+    images,
+    onRemove,
+    studio = false,
+    thumbnailSize = THUMB_SIZE,
+    surfaceBackground,
+    surfaceBorderColor,
+}: AgentInputAttachmentStripProps) {
     const { theme } = useUnistyles();
 
     if (images.length === 0) return null;
@@ -30,7 +39,14 @@ export function AgentInputAttachmentStrip({ images, onRemove, studio = false, th
         <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={[styles.strip, studio && styles.stripStudio]}
+            style={[
+                styles.strip,
+                studio && styles.stripStudio,
+                studio && {
+                    backgroundColor: surfaceBackground,
+                    borderColor: surfaceBorderColor,
+                },
+            ]}
             contentContainerStyle={[styles.stripContent, studio && styles.stripContentStudio]}
             keyboardShouldPersistTaps="always"
         >
@@ -109,6 +125,8 @@ const styles = StyleSheet.create(() => ({
     stripStudio: {
         marginBottom: 6,
         marginHorizontal: 4,
+        borderRadius: 12,
+        borderWidth: 1,
     },
     stripContent: {
         flexDirection: 'row',
@@ -117,8 +135,8 @@ const styles = StyleSheet.create(() => ({
     },
     stripContentStudio: {
         gap: 6,
-        paddingHorizontal: 0,
-        paddingTop: 2,
+        paddingHorizontal: 7,
+        paddingVertical: 7,
     },
     thumbContainer: {
         width: THUMB_SIZE,

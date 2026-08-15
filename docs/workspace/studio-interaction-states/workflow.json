@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-interaction-states",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent cherry-picks, runs unified integration checks, and verifies fresh-launch dark Command Palette appearance before user acceptance.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User-approved continuation is captured in docs/specs/studio-interaction-states.md with packaged Tauri light/dark and state evidence criteria.",
+      "updated": "2026-08-13T10:06:04+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D5 in decisions.md fix the existing theme signal, geometry invariants, state priority, runtime boundary, and isolated delivery.",
+      "updated": "2026-08-13T10:06:04+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready Feature in isolated worktree with parent-assigned sidebar/overlay ownership, stop conditions, focused component tests, App typecheck, package evidence, and local-only coordination recorded.",
+      "updated": "2026-08-13T10:06:04+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "UI-only Studio presentation changes; no authentication, authorization, migration, privacy, deployment, session protocol, destructive, or synchronization trigger.",
+      "updated": "2026-08-13T10:06:04+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Studio-only light/dark presentation contracts and actual sidebar/menu/Palette state wiring implemented; App typecheck and 27 focused tests pass.",
+      "updated": "2026-08-13T10:24:58+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "All assigned acceptance criteria pass: App typecheck, 27 focused tests, final packaged Tauri build, and light/dark/interaction screenshots. Fresh-launch modal appearance is a reported parent integration follow-up outside assigned scope.",
+      "updated": "2026-08-13T10:27:12+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking in-scope regression: Studio/Tauri guards preserve Default/native paths; command/navigation/menu behavior and accepted Palette geometry are unchanged.",
+      "updated": "2026-08-13T10:25:51+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records summary, complete acceptance coverage, verification, whole-diff review, rollback, lessons, and parent-owned fresh-launch modal follow-up.",
+      "updated": "2026-08-13T10:27:12+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T10:02:29+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T10:06:04+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User-approved continuation is captured in docs/specs/studio-interaction-states.md with packaged Tauri light/dark and state evidence criteria."
+    },
+    {
+      "at": "2026-08-13T10:06:04+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D5 in decisions.md fix the existing theme signal, geometry invariants, state priority, runtime boundary, and isolated delivery."
+    },
+    {
+      "at": "2026-08-13T10:06:04+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "UI-only Studio presentation changes; no authentication, authorization, migration, privacy, deployment, session protocol, destructive, or synchronization trigger."
+    },
+    {
+      "at": "2026-08-13T10:06:04+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready Feature in isolated worktree with parent-assigned sidebar/overlay ownership, stop conditions, focused component tests, App typecheck, package evidence, and local-only coordination recorded."
+    },
+    {
+      "at": "2026-08-13T10:06:20+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement T1 presentation contracts and focused resolver tests"
+    },
+    {
+      "at": "2026-08-13T10:24:58+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Studio-only light/dark presentation contracts and actual sidebar/menu/Palette state wiring implemented; App typecheck and 27 focused tests pass."
+    },
+    {
+      "at": "2026-08-13T10:24:58+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run workflow validation, strict audit, whole-diff review, and staged CI"
+    },
+    {
+      "at": "2026-08-13T10:25:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "App typecheck, 27 focused tests, final packaged Tauri build, and light/dark interaction screenshots pass; accepted parent-owned follow-up is fresh-launch modal theme propagation verification documented in validation.md."
+    },
+    {
+      "at": "2026-08-13T10:25:51+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking in-scope regression: Studio/Tauri guards preserve Default/native paths; command/navigation/menu behavior and accepted Palette geometry are unchanged."
+    },
+    {
+      "at": "2026-08-13T10:25:51+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive, stage product and evidence, run staged workflow CI, and create local commit"
+    },
+    {
+      "at": "2026-08-13T10:27:12+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "All assigned acceptance criteria pass: App typecheck, 27 focused tests, final packaged Tauri build, and light/dark/interaction screenshots. Fresh-launch modal appearance is a reported parent integration follow-up outside assigned scope."
+    },
+    {
+      "at": "2026-08-13T10:27:12+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records summary, complete acceptance coverage, verification, whole-diff review, rollback, lessons, and parent-owned fresh-launch modal follow-up."
+    },
+    {
+      "at": "2026-08-13T10:27:12+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Add Studio-only light/dark sidebar and overlay hover, pressed, focus-visible, selected, and keyboard-selection presentation.; commit: pending; follow-up: Parent cherry-picks, runs unified integration checks, and verifies fresh-launch dark Command Palette appearance before user acceptance."
+    }
+  ],
+  "updated": "2026-08-13T10:27:12+00:00",
+  "archivedAt": "2026-08-13T10:27:12+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Add Studio-only light/dark sidebar and overlay hover, pressed, focus-visible, selected, and keyboard-selection presentation.",
+  "archiveFollowUp": "Parent cherry-picks, runs unified integration checks, and verifies fresh-launch dark Command Palette appearance before user acceptance."
+}

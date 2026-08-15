@@ -10,6 +10,7 @@ import { ToolDiffView } from '@/components/tools/ToolDiffView';
 import { getDiffStats, getPatchDiffStats } from '@/components/diff/calculateDiff';
 import { materializeUnifiedDiffPatch } from '@/utils/codexUnifiedDiff';
 import { t } from '@/text';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface CodexPatchViewProps {
     tool: ToolCall;
@@ -48,15 +49,27 @@ function getPatchChanges(input: any): Record<string, CodexPatchEntry> | null {
         return normalizePatchChangeList(input.changes);
     }
     if (input?.changes && typeof input.changes === 'object') {
-        return input.changes as Record<string, CodexPatchEntry>;
+        return normalizePatchChangeRecord(input.changes as Record<string, unknown>);
     }
     if (Array.isArray(input?.fileChanges)) {
         return normalizePatchChangeList(input.fileChanges);
     }
     if (input?.fileChanges && typeof input.fileChanges === 'object') {
-        return input.fileChanges as Record<string, CodexPatchEntry>;
+        return normalizePatchChangeRecord(input.fileChanges as Record<string, unknown>);
     }
     return null;
+}
+
+function normalizePatchChangeRecord(changes: Record<string, unknown>): Record<string, CodexPatchEntry> | null {
+    const normalized: Record<string, CodexPatchEntry> = {};
+
+    for (const [path, value] of Object.entries(changes)) {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+        const entry = value as CodexPatchEntry;
+        if (hasRenderablePatchInput(entry)) normalized[path] = entry;
+    }
+
+    return Object.keys(normalized).length > 0 ? normalized : null;
 }
 
 function normalizePatchChangeList(changes: unknown[]): Record<string, CodexPatchEntry> | null {
@@ -104,7 +117,7 @@ function normalizePatchChangeList(changes: unknown[]): Record<string, CodexPatch
             entry.delete = { content: changeRecord.content };
         }
 
-        normalized[path] = entry;
+        if (hasRenderablePatchInput(entry)) normalized[path] = entry;
     }
 
     return Object.keys(normalized).length > 0 ? normalized : null;
@@ -122,27 +135,47 @@ function getPatchInput(change: CodexPatchEntry): PatchInput | null {
         return { kind: 'patch', patch: change.unified_diff };
     }
     if (change.modify) {
-        return { kind: 'pair', oldText: change.modify.old_content || '', newText: change.modify.new_content || '' };
+        if (typeof change.modify !== 'object' || Array.isArray(change.modify)) return null;
+        const oldText = change.modify.old_content;
+        const newText = change.modify.new_content;
+        if ((oldText !== undefined && typeof oldText !== 'string')
+            || (newText !== undefined && typeof newText !== 'string')) return null;
+        return { kind: 'pair', oldText: oldText ?? '', newText: newText ?? '' };
     }
-    if (typeof change.oldContent === 'string' || typeof change.newContent === 'string') {
-        return { kind: 'pair', oldText: change.oldContent || '', newText: change.newContent || '' };
+    if (change.oldContent !== undefined || change.newContent !== undefined) {
+        if ((change.oldContent !== undefined && typeof change.oldContent !== 'string')
+            || (change.newContent !== undefined && typeof change.newContent !== 'string')) return null;
+        return { kind: 'pair', oldText: change.oldContent ?? '', newText: change.newContent ?? '' };
     }
-    if (typeof change.old_content === 'string' || typeof change.new_content === 'string') {
-        return { kind: 'pair', oldText: change.old_content || '', newText: change.new_content || '' };
+    if (change.old_content !== undefined || change.new_content !== undefined) {
+        if ((change.old_content !== undefined && typeof change.old_content !== 'string')
+            || (change.new_content !== undefined && typeof change.new_content !== 'string')) return null;
+        return { kind: 'pair', oldText: change.old_content ?? '', newText: change.new_content ?? '' };
     }
     if (change.add) {
-        return { kind: 'pair', oldText: '', newText: change.add.content || '' };
+        if (typeof change.add !== 'object' || Array.isArray(change.add)) return null;
+        if (change.add.content !== undefined && typeof change.add.content !== 'string') return null;
+        return { kind: 'pair', oldText: '', newText: change.add.content ?? '' };
     }
     if (getPatchKindType(change) === 'add' && typeof change.content === 'string') {
         return { kind: 'pair', oldText: '', newText: change.content };
     }
     if (change.delete) {
-        return { kind: 'pair', oldText: change.delete.content || '', newText: '' };
+        if (typeof change.delete !== 'object' || Array.isArray(change.delete)) return null;
+        if (change.delete.content !== undefined && typeof change.delete.content !== 'string') return null;
+        return { kind: 'pair', oldText: change.delete.content ?? '', newText: '' };
     }
     if (getPatchKindType(change) === 'delete' && typeof change.content === 'string') {
         return { kind: 'pair', oldText: change.content, newText: '' };
     }
     return null;
+}
+
+function hasRenderablePatchInput(change: CodexPatchEntry): boolean {
+    const input = getPatchInput(change);
+    if (!input) return false;
+    if (input.kind === 'patch') return input.patch.trim().length > 0;
+    return input.oldText.length > 0 || input.newText.length > 0;
 }
 
 function getPatchKindType(change: CodexPatchEntry): string | null {
@@ -163,7 +196,13 @@ function getPatchKindLabel(change: CodexPatchEntry): string | null {
 }
 
 function getPatchMovePath(change: CodexPatchEntry): string | null {
-    return change.kind?.move_path ?? change.move_path ?? null;
+    if (typeof change.kind?.move_path === 'string') return change.kind.move_path;
+    if (typeof change.move_path === 'string') return change.move_path;
+    return null;
+}
+
+export function hasRenderableCodexPatchInput(input: unknown): boolean {
+    return getPatchChanges(input) !== null;
 }
 
 export const CodexPatchView = React.memo<CodexPatchViewProps>(({ tool, metadata, permissionFooter }) => {
@@ -199,7 +238,8 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
 }) {
     const { file, change, metadata, permissionFooter } = props;
     const { theme } = useUnistyles();
-    const [expanded, setExpanded] = React.useState(false);
+    const studioPresentation = useStudioToolPresentation();
+    const [expanded, setExpanded] = React.useState(() => studioPresentation !== null);
 
     const filePath = resolvePath(file, metadata);
     const diffInput = getPatchInput(change);
@@ -223,12 +263,36 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
                     onPress={() => setExpanded((value) => !value)}
                     style={({ pressed }) => [
                         styles.editToggle,
+                        studioPresentation && {
+                            minHeight: studioPresentation.disclosureRow.minHeight,
+                            paddingHorizontal: studioPresentation.disclosureRow.paddingHorizontal,
+                            paddingVertical: studioPresentation.disclosureRow.paddingVertical,
+                        },
                         pressed && styles.editTogglePressed,
                     ]}
                 >
-                    <Text style={styles.editToggleText} numberOfLines={1}>
-                        {t('toolGroup.editedFile')}
-                    </Text>
+                    {studioPresentation ? (
+                        <View style={[styles.fileHeaderMain, styles.studioToggleMain]}>
+                            <Octicons name="file-diff" size={15} color={studioPresentation.diff.metadataColor} />
+                            <Text
+                                style={[styles.filePath, { color: studioPresentation.diff.pathColor }]}
+                                numberOfLines={1}
+                            >
+                                {filePath}
+                            </Text>
+                            {kindLabel ? <Text style={[styles.kindLabel, { color: studioPresentation.diff.metadataColor }]}>{kindLabel}</Text> : null}
+                            {stats && (stats.additions > 0 || stats.deletions > 0) ? (
+                                <View style={styles.stats}>
+                                    {stats.additions > 0 ? <Text style={[styles.added, { color: studioPresentation.diff.addedColor }]}>+{stats.additions}</Text> : null}
+                                    {stats.deletions > 0 ? <Text style={[styles.removed, { color: studioPresentation.diff.removedColor }]}>-{stats.deletions}</Text> : null}
+                                </View>
+                            ) : null}
+                        </View>
+                    ) : (
+                        <Text style={styles.editToggleText} numberOfLines={1}>
+                            {t('toolGroup.editedFile')}
+                        </Text>
+                    )}
                     <Ionicons
                         name={expanded ? 'chevron-down' : 'chevron-forward'}
                         size={14}
@@ -236,21 +300,29 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
                     />
                 </Pressable>
                 {expanded ? (
-                    <View style={styles.patchContainer}>
-                        <View style={styles.fileHeader}>
-                            <View style={styles.fileHeaderMain}>
-                                <Octicons name="file-diff" size={16} color={theme.colors.textSecondary} />
-                                <Text style={styles.filePath}>{filePath}</Text>
-                                {kindLabel ? <Text style={styles.kindLabel}>{kindLabel}</Text> : null}
-                                {stats && (stats.additions > 0 || stats.deletions > 0) ? (
-                                    <View style={styles.stats}>
-                                        {stats.additions > 0 ? <Text style={styles.added}>+{stats.additions}</Text> : null}
-                                        {stats.deletions > 0 ? <Text style={styles.removed}>-{stats.deletions}</Text> : null}
-                                    </View>
-                                ) : null}
+                    <View style={[styles.patchContainer, studioPresentation && {
+                        backgroundColor: studioPresentation.diff.backgroundColor,
+                        borderRadius: studioPresentation.diff.borderRadius,
+                        borderWidth: 0,
+                    }]}>
+                        {!studioPresentation ? (
+                            <View style={styles.fileHeader}>
+                                <View style={styles.fileHeaderMain}>
+                                    <Octicons name="file-diff" size={16} color={theme.colors.textSecondary} />
+                                    <Text style={styles.filePath}>{filePath}</Text>
+                                    {kindLabel ? <Text style={styles.kindLabel}>{kindLabel}</Text> : null}
+                                    {stats && (stats.additions > 0 || stats.deletions > 0) ? (
+                                        <View style={styles.stats}>
+                                            {stats.additions > 0 ? <Text style={styles.added}>+{stats.additions}</Text> : null}
+                                            {stats.deletions > 0 ? <Text style={styles.removed}>-{stats.deletions}</Text> : null}
+                                        </View>
+                                    ) : null}
+                                </View>
+                                {movePath ? <Text style={styles.movePath}>{movePath}</Text> : null}
                             </View>
-                            {movePath ? <Text style={styles.movePath}>{movePath}</Text> : null}
-                        </View>
+                        ) : movePath ? (
+                            <Text style={[styles.movePath, styles.studioMovePath, { color: studioPresentation.diff.metadataColor }]}>{movePath}</Text>
+                        ) : null}
                         {displayPatch ? (
                             <ToolDiffView patch={displayPatch} fileName={fileName} />
                         ) : diffInput?.kind === 'pair' && (diffInput.oldText.length > 0 || diffInput.newText.length > 0) ? (
@@ -294,6 +366,10 @@ const styles = StyleSheet.create((theme) => ({
         fontSize: 14,
         color: theme.colors.textSecondary,
     },
+    studioToggleMain: {
+        flex: 1,
+        minWidth: 0,
+    },
     patchContainer: {
         backgroundColor: theme.colors.surface,
         overflow: 'hidden',
@@ -335,6 +411,10 @@ const styles = StyleSheet.create((theme) => ({
         fontSize: 12,
         color: theme.colors.textSecondary,
         fontFamily: 'monospace',
+    },
+    studioMovePath: {
+        paddingHorizontal: 12,
+        paddingBottom: 6,
     },
     stats: {
         flexDirection: 'row',

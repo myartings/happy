@@ -1,0 +1,9 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-panel-resize/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Map AC2, AC3, and AC8 to evidence."}
+{"path":"docs/tasks/studio-visual-convergence-tasks.md","reason":"Verify Track A completion and ownership boundary."}
+{"path":"packages/happy-app/sources/features","reason":"Review the new studio-panel-resize pure policy, handle, and focused tests."}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"Verify actual left host wiring and non-Studio fallback."}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Verify actual right host wiring and collapse restoration."}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Verify device-local schema/defaults."}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Verify backward-compatible parsing and independent width updates."}

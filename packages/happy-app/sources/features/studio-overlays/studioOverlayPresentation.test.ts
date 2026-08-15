@@ -1,9 +1,52 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    resolveCommandPaletteDarkSnapshot,
     resolveSessionActionsMenuPosition,
+    resolveStudioOverlayDarkMode,
     resolveStudioOverlayPresentation,
 } from './studioOverlayPresentation';
+
+describe('resolveCommandPaletteDarkSnapshot', () => {
+    it('honors the persisted preference read when the palette opens', () => {
+        expect(resolveCommandPaletteDarkSnapshot({
+            currentThemeIsDark: false,
+            themePreference: 'dark',
+        })).toBe(true);
+        expect(resolveCommandPaletteDarkSnapshot({
+            currentThemeIsDark: true,
+            themePreference: 'light',
+        })).toBe(false);
+        expect(resolveCommandPaletteDarkSnapshot({
+            currentThemeIsDark: true,
+            themePreference: 'adaptive',
+        })).toBe(true);
+    });
+});
+
+describe('resolveStudioOverlayDarkMode', () => {
+    it('uses the persisted fixed preference across modal roots', () => {
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'light',
+            themePreference: 'dark',
+        })).toBe(true);
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'dark',
+            themePreference: 'light',
+        })).toBe(false);
+    });
+
+    it('uses the system scheme only for adaptive mode', () => {
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'dark',
+            themePreference: 'adaptive',
+        })).toBe(true);
+        expect(resolveStudioOverlayDarkMode({
+            runtimeThemeName: 'light',
+            themePreference: 'adaptive',
+        })).toBe(false);
+    });
+});
 
 describe('resolveStudioOverlayPresentation', () => {
     it('enables Studio overlay styling only for the packaged desktop runtime', () => {
@@ -47,10 +90,12 @@ describe('resolveStudioOverlayPresentation', () => {
                 shadowRadius: 24,
                 surfaceColor: 'rgba(255, 255, 255, 0.96)',
             },
+            focusRingColor: 'rgba(70, 111, 226, 0.82)',
             modal: {
                 radius: 16,
                 scrimColor: 'rgba(0, 0, 0, 0.10)',
             },
+            selectedBorderColor: 'rgba(70, 111, 226, 0.34)',
         });
 
         expect(resolveStudioOverlayPresentation({
@@ -82,6 +127,8 @@ describe('resolveStudioOverlayPresentation', () => {
         });
 
         expect(presentation.isStudio).toBe(true);
+        expect(presentation.focusRingColor).toBe('rgba(132, 168, 255, 0.88)');
+        expect(presentation.selectedBorderColor).toBe('rgba(132, 168, 255, 0.52)');
         expect(presentation.modal.shadowRadius).not.toBe(presentation.floating.shadowRadius);
         expect(presentation.modal.scrimColor).toBe('rgba(0, 0, 0, 0.24)');
         expect(presentation.floating.clickAwayColor).toBe('transparent');

@@ -1,0 +1,10 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Accepted Track C observable behavior and compatibility contract"}
+{"path":"docs/tasks/studio-visual-convergence-tasks.md","reason":"Track C ownership, tasks, and blocked boundaries"}
+{"path":"docs/workspace/studio-visual-convergence/integration.md","reason":"Parent merge order and child isolation contract"}
+{"path":"packages/happy-app/sources/components/markdown/MarkdownView.tsx","reason":"Existing Markdown renderer and preserved interaction behaviors"}
+{"path":"packages/happy-app/sources/components/markdown/parseMarkdown.ts","reason":"Public parsed block and span contract"}
+{"path":"packages/happy-app/sources/components/markdown/parseMarkdownBlock.ts","reason":"Accepted block parsing seam"}
+{"path":"packages/happy-app/sources/components/markdown/parseMarkdownSpans.ts","reason":"Accepted inline construct parsing seam"}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/studioSemanticTextPresentation.ts","reason":"Studio-only light/dark presentation resolver"}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/semanticTextFixtures.ts","reason":"Deterministic rich-text fixture seam"}

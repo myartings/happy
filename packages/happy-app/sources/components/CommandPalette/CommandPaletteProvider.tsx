@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Platform } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Modal } from '@/modal';
 import { CommandPalette } from './CommandPalette';
@@ -18,6 +18,10 @@ import { isTauri } from '@/utils/isTauri';
 import { useVisibleSessionListViewData } from '@/hooks/useVisibleSessionListViewData';
 import { getSessionShortcutIdsInDisplayOrder } from '@/utils/sessionDisplayOrder';
 import { t } from '@/text';
+import {
+    resolveCommandPaletteDarkSnapshot,
+    resolveStudioOverlayPresentation,
+} from '@/features/studio-overlays/studioOverlayPresentation';
 
 const EMPTY_SESSION_IDS: readonly string[] = [];
 
@@ -149,11 +153,25 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
 
     const showCommandPalette = useCallback(() => {
         if (Platform.OS !== 'web' || !isAuthenticated || !commandPaletteEnabled) return;
-        
+
+        const currentThemePreference = storage.getState().localSettings.themePreference;
+        const studioIsDark = resolveCommandPaletteDarkSnapshot({
+            currentThemeIsDark: Appearance.getColorScheme() === 'dark',
+            themePreference: currentThemePreference,
+        });
+        const studioPresentation = resolveStudioOverlayPresentation({
+            isDark: studioIsDark,
+            isTauriRuntime: isTauri(),
+            previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
+            requestedStyle: storage.getState().localSettings.visualStyle,
+        });
+
         Modal.show({
             component: CommandPalette,
             props: {
                 commands,
+                studioIsDark,
+                studioPresentation,
             }
         } as any);
     }, [commands, commandPaletteEnabled, isAuthenticated]);

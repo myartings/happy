@@ -1,0 +1,6 @@
+{"path":"packages/happy-app/sources/components/tools","reason":"Owned host components for tool shell, hierarchy, errors, and Codex patch/diff presentation."}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation","reason":"Feature-owned Studio resolver, hook, and tests."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Read-only packaged Desktop Studio activation contract."}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/studioSemanticTextPresentation.ts","reason":"Read-only semantic color reference."}
+{"path":"docs/specs/studio-tool-presentation.md","reason":"Accepted observable behavior and compatibility contract."}
+{"path":"docs/tasks/studio-tool-presentation-tasks.md","reason":"Owned slice, dependency, validation, and stop boundaries."}

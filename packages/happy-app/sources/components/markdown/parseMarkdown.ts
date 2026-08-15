@@ -1,11 +1,18 @@
 import { parseMarkdownBlock } from "./parseMarkdownBlock"
 
+export type ParseMarkdownOptions = Readonly<{
+    enableStudioExtensions?: boolean;
+}>;
+
 export type MarkdownBlock = {
     type: 'text'
     content: MarkdownSpan[]
 } | {
     type: 'header'
     level: 1 | 2 | 3 | 4 | 5 | 6
+    content: MarkdownSpan[]
+} | {
+    type: 'blockquote'
     content: MarkdownSpan[]
 } | {
     type: 'list',
@@ -36,11 +43,11 @@ export type MarkdownBlock = {
 }
 
 export type MarkdownSpan = {
-    styles: ('italic' | 'bold' | 'semibold' | 'code')[],
+    styles: ('italic' | 'bold' | 'semibold' | 'strikethrough' | 'code')[],
     text: string,
     url: string | null
 }
 
-export function parseMarkdown(markdown: string) {
-    return parseMarkdownBlock(markdown);
+export function parseMarkdown(markdown: string, options: ParseMarkdownOptions = {}) {
+    return parseMarkdownBlock(markdown, options);
 }

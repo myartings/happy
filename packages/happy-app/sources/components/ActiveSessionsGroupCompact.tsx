@@ -33,6 +33,11 @@ import {
     resolveStudioSidebarGroupPresentation,
     resolveStudioSidebarRowChrome,
 } from '@/features/studio-visual-style/studioSidebarGroupPresentation';
+import {
+    resolveStudioSidebarInteractionPresentation,
+    resolveStudioSidebarStateBackground,
+} from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -68,12 +73,17 @@ function useSectionGitInfo(sessionId: string) {
 
 // Section header: avatar | project + line changes | + button.
 // Branch and worktree identity live on each session row below.
-const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRowData; displayPath: string }) => {
+const SectionHeader = React.memo(({ session, displayPath, sessionRowStyle }: {
+    session: SessionRowData;
+    displayPath: string;
+    sessionRowStyle: DesktopSessionRowStyle;
+}) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const router = useRouter();
     const draft = useNewSessionDraft();
     const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
+    const isStudio = sessionRowStyle.visualStyle === 'studio';
 
     const sessionPath = session.path || '';
     const isWorktree = isWorktreePath(sessionPath);
@@ -106,7 +116,14 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
 
     return (
         <View
-            style={showOfficialBranchHeader || showEnhancedWorktreeHeader ? styles.sectionHeader : styles.sectionHeaderSingleLine}
+            style={[
+                showOfficialBranchHeader || showEnhancedWorktreeHeader ? styles.sectionHeader : styles.sectionHeaderSingleLine,
+                isStudio && {
+                    paddingHorizontal: 18,
+                    paddingTop: 7,
+                    paddingBottom: 3,
+                },
+            ]}
             // @ts-ignore - Web only events
             onMouseEnter={() => setIsHovered(true)}
             // @ts-ignore - Web only events
@@ -114,12 +131,20 @@ const SectionHeader = React.memo(({ session, displayPath }: { session: SessionRo
         >
             {/* Avatar — vertically centered */}
             <View style={styles.sectionHeaderAvatar}>
-                <Avatar id={session.avatarId} size={24} flavor={null} />
+                <Avatar id={session.avatarId} size={isStudio ? 20 : 24} flavor={null} />
             </View>
 
             {/* Project name + aggregate changes */}
             <View style={styles.sectionHeaderContent}>
-                <Text style={styles.sectionHeaderPath} numberOfLines={1}>
+                <Text style={[
+                    styles.sectionHeaderPath,
+                    isStudio && {
+                        fontSize: 12,
+                        lineHeight: 16,
+                        fontWeight: '400',
+                        ...Typography.default(),
+                    },
+                ]} numberOfLines={1}>
                     {repoFolderName}
                 </Text>
                 {showEnhancedWorktreeHeader && environment?.worktreeName ? (
@@ -245,6 +270,7 @@ export function ActiveSessionsGroupCompact({ sessions, selectedSessionId, sessio
                                     <SectionHeader
                                         session={firstSession}
                                         displayPath={projectGroup.displayPath}
+                                        sessionRowStyle={sessionRowStyle}
                                     />
                                     <View style={groupContainerStyle}>
                                         {projectGroup.sessions.map((session, index) => (
@@ -279,6 +305,12 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const isStudio = sessionRowStyle.visualStyle === 'studio';
+    const interactionPresentation = React.useMemo(() => resolveStudioSidebarInteractionPresentation({
+        isDark: theme.dark,
+        isTauriRuntime: isStudio,
+        requestedStyle: isStudio ? 'studio' : 'default',
+    }), [isStudio, theme.dark]);
+    const interactionState = useStudioInteractionState(isStudio);
     const rowChrome = resolveStudioSidebarRowChrome(sessionRowStyle, {
         selected: !!selected,
         showDivider: !!showBorder,
@@ -384,7 +416,10 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
 
     const itemContent = (
         <Pressable
-            style={[
+            accessibilityRole="button"
+            accessibilityState={{ selected: !!selected }}
+            {...interactionState.interactionProps}
+            style={({ pressed }) => [
                 styles.sessionRow,
                 rowChrome.showDivider && styles.sessionRowWithBorder,
                 rowChrome.backgroundRole === 'selected' && !isStudio && styles.sessionRowSelected,
@@ -395,11 +430,19 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     marginBottom: sessionRowStyle.gap!,
                     paddingHorizontal: sessionRowStyle.horizontalPadding!,
                     paddingVertical: sessionRowStyle.verticalPadding!,
-                    borderRadius: rowChrome.cornerRadius!,
+                    borderRadius: sessionRowStyle.cornerRadius!,
                     borderWidth: 0,
-                    backgroundColor: rowChrome.backgroundRole === 'selected'
-                        ? sessionRowStyle.selectedBackground!
-                        : 'transparent',
+                    backgroundColor: resolveStudioSidebarStateBackground(interactionPresentation, {
+                        hovered: interactionState.hovered,
+                        pressed,
+                        selected: !!selected,
+                    }),
+                    ...(Platform.OS === 'web' && interactionState.focused ? {
+                        outlineColor: interactionPresentation.focusRingColor,
+                        outlineOffset: -2,
+                        outlineStyle: 'solid',
+                        outlineWidth: 2,
+                    } as any : {}),
                     overflow: rowChrome.clipToRowShape ? 'hidden' : 'visible',
                     shadowOpacity: 0,
                     elevation: 0,
@@ -420,7 +463,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                                 fontSize: sessionRowStyle.titleFontSize!,
                                 lineHeight: sessionRowStyle.titleLineHeight!,
                                 fontWeight: sessionRowStyle.titleFontWeight!,
-                                ...Typography.default('semiBold'),
+                                ...Typography.default(),
                             },
                         ]}
                         numberOfLines={isStudio ? 1 : 2}

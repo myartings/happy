@@ -17,8 +17,9 @@ import { MermaidRenderer } from './MermaidRenderer';
 import { t } from '@/text';
 import { isHttpMarkdownLink } from './linkUtils';
 import { openExternalUrl } from '@/utils/openExternalUrl';
-import { resolveMarkdownSpanRoles, type StudioSemanticTextPresentation } from '@/features/studio-semantic-text/studioSemanticTextPresentation';
+import { resolveMarkdownSpanPresentationStyles, resolveStudioMarkdownOptionState, type StudioSemanticTextPresentation } from '@/features/studio-semantic-text/studioSemanticTextPresentation';
 import { useStudioSemanticTextPresentation } from '@/features/studio-semantic-text/useStudioSemanticTextPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 // Option type for callback
 export type Option = {
@@ -30,8 +31,6 @@ export const MarkdownView = React.memo((props: {
     onOptionPress?: (option: Option) => void;
     sessionId?: string;
 }) => {
-    const blocks = React.useMemo(() => parseMarkdown(props.markdown), [props.markdown]);
-    
     // Backwards compatibility: The original version just returned the view, wrapping the list of blocks.
     // It made each of the individual text elements selectable. When we enable the markdownCopyV2 feature,
     // we disable the selectable property on individual text segments on mobile only. Instead, the long press
@@ -41,6 +40,10 @@ export const MarkdownView = React.memo((props: {
     const selectable = Platform.OS === 'web' || !markdownCopyV2;
     const router = useRouter();
     const studioPresentation = useStudioSemanticTextPresentation();
+    const enableStudioExtensions = studioPresentation !== null;
+    const blocks = React.useMemo(() => parseMarkdown(props.markdown, {
+        enableStudioExtensions,
+    }), [props.markdown, enableStudioExtensions]);
 
     const handleLinkPress = React.useCallback((url: string) => {
         if (!isHttpMarkdownLink(url)) {
@@ -67,8 +70,14 @@ export const MarkdownView = React.memo((props: {
                         return <RenderTextBlock spans={block.content} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'header') {
                         return <RenderHeaderBlock level={block.level} spans={block.content} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
+                    } else if (block.type === 'blockquote') {
+                        return <RenderBlockquoteBlock spans={block.content} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'horizontal-rule') {
-                        return <View style={style.horizontalRule} key={index} />;
+                        return <View style={[style.horizontalRule, studioPresentation?.horizontalRule && {
+                            backgroundColor: studioPresentation.horizontalRule.backgroundColor,
+                            marginTop: studioPresentation.horizontalRule.marginVertical,
+                            marginBottom: studioPresentation.horizontalRule.marginVertical,
+                        }]} key={index} />;
                     } else if (block.type === 'list') {
                         return <RenderListBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onLinkPress={handleLinkPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'numbered-list') {
@@ -78,7 +87,7 @@ export const MarkdownView = React.memo((props: {
                     } else if (block.type === 'mermaid') {
                         return <MermaidRenderer content={block.content} key={index} />;
                     } else if (block.type === 'options') {
-                        return <RenderOptionsBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onOptionPress={props.onOptionPress} />;
+                        return <RenderOptionsBlock items={block.items} key={index} first={index === 0} last={index === blocks.length - 1} selectable={selectable} onOptionPress={props.onOptionPress} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'table') {
                         return <RenderTableBlock headers={block.headers} rows={block.rows} onLinkPress={handleLinkPress} selectable={selectable} key={index} first={index === 0} last={index === blocks.length - 1} studioPresentation={studioPresentation} />;
                     } else if (block.type === 'image') {
@@ -136,15 +145,28 @@ function RenderHeaderBlock(props: { level: 1 | 2 | 3 | 4 | 5 | 6, spans: Markdow
     return <Text selectable={props.selectable} style={headerStyle}><RenderSpans spans={props.spans} baseStyle={headerStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} /></Text>;
 }
 
+function RenderBlockquoteBlock(props: { spans: MarkdownSpan[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void, studioPresentation: StudioSemanticTextPresentation | null }) {
+    const textStyle = [style.text, style.blockquoteText, props.studioPresentation?.body, props.studioPresentation?.roles.body];
+    const quotePresentation = props.studioPresentation?.blockquote;
+    return (
+        <View style={[style.blockquote, quotePresentation, quotePresentation && { borderLeftColor: quotePresentation.borderColor }, props.first && style.first, props.last && style.last]}>
+            <Text selectable={props.selectable} style={textStyle}>
+                <RenderSpans spans={props.spans} baseStyle={textStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} />
+            </Text>
+        </View>
+    );
+}
+
 const BULLETS = ['•', '◦', '▪'] as const;
 
 function RenderListBlock(props: { items: { depth: number, spans: MarkdownSpan[] }[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void, studioPresentation: StudioSemanticTextPresentation | null }) {
     const listStyle = [style.text, style.list, props.studioPresentation?.body, props.studioPresentation?.roles.body];
+    const listPresentation = props.studioPresentation?.list;
     return (
-        <View style={{ flexDirection: 'column', marginBottom: 8, gap: 6 }}>
+        <View style={[style.listContainer, listPresentation && { gap: listPresentation.gap }]}>
             {props.items.map((item, index) => (
-                <View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingLeft: item.depth * 16 }}>
-                    <Text selectable={false} style={[listStyle, { marginRight: 8, marginTop: 1 }]}>{BULLETS[Math.min(item.depth, BULLETS.length - 1)]}</Text>
+                <View key={index} style={[style.listRow, { paddingLeft: item.depth * (listPresentation?.indent ?? 16) }]}>
+                    <Text selectable={false} style={[listStyle, style.listMarker, listPresentation && { color: listPresentation.markerColor }]}>{BULLETS[Math.min(item.depth, BULLETS.length - 1)]}</Text>
                     <Text selectable={props.selectable} style={[listStyle, { flex: 1 }]}><RenderSpans spans={item.spans} baseStyle={listStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} /></Text>
                 </View>
             ))}
@@ -154,11 +176,12 @@ function RenderListBlock(props: { items: { depth: number, spans: MarkdownSpan[] 
 
 function RenderNumberedListBlock(props: { items: { number: number, depth: number, spans: MarkdownSpan[] }[], first: boolean, last: boolean, selectable: boolean, onLinkPress: (url: string) => void, studioPresentation: StudioSemanticTextPresentation | null }) {
     const listStyle = [style.text, style.list, props.studioPresentation?.body, props.studioPresentation?.roles.body];
+    const listPresentation = props.studioPresentation?.list;
     return (
-        <View style={{ flexDirection: 'column', marginBottom: 8, gap: 6 }}>
+        <View style={[style.listContainer, listPresentation && { gap: listPresentation.gap }]}>
             {props.items.map((item, index) => (
-                <View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingLeft: item.depth * 16 }}>
-                    <Text selectable={false} style={[listStyle, { marginRight: 8, marginTop: 1 }]}>{item.number}.</Text>
+                <View key={index} style={[style.listRow, { paddingLeft: item.depth * (listPresentation?.indent ?? 16) }]}>
+                    <Text selectable={false} style={[listStyle, style.listMarker, listPresentation && { color: listPresentation.markerColor }]}>{item.number}.</Text>
                     <Text selectable={props.selectable} style={[listStyle, { flex: 1 }]}><RenderSpans spans={item.spans} baseStyle={listStyle} selectable={props.selectable} onLinkPress={props.onLinkPress} studioPresentation={props.studioPresentation} /></Text>
                 </View>
             ))}
@@ -168,6 +191,7 @@ function RenderNumberedListBlock(props: { items: { number: number, depth: number
 
 function RenderCodeBlock(props: { content: string, language: string | null, first: boolean, last: boolean, selectable: boolean, studioPresentation: StudioSemanticTextPresentation | null }) {
     const [isHovered, setIsHovered] = React.useState(false);
+    const codeChrome = props.studioPresentation?.codeChrome;
 
     const copyCode = React.useCallback(async () => {
         try {
@@ -187,7 +211,7 @@ function RenderCodeBlock(props: { content: string, language: string | null, firs
             // @ts-ignore - Web only events
             onMouseLeave={() => setIsHovered(false)}
         >
-            {props.language && <Text selectable={props.selectable} style={[style.codeLanguage, props.studioPresentation?.roles.statusSecondary, props.studioPresentation?.metadata]}>{props.language}</Text>}
+            {props.language && <Text selectable={props.selectable} style={[style.codeLanguage, props.studioPresentation?.roles.statusSecondary, props.studioPresentation?.metadata, codeChrome && { color: codeChrome.labelColor }]}>{props.language}</Text>}
             <HorizontalScrollView
                 contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
             >
@@ -202,10 +226,12 @@ function RenderCodeBlock(props: { content: string, language: string | null, firs
                 {...(Platform.OS === 'web' ? ({ className: 'copy-button-wrapper' } as any) : {})}
             >
                 <Pressable
-                    style={style.copyButton}
+                    style={[style.copyButton, codeChrome && { backgroundColor: codeChrome.copyBackgroundColor, borderColor: codeChrome.copyBorderColor }]}
                     onPress={copyCode}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('common.copy')}
                 >
-                    <Text style={style.copyButtonText}>{t('common.copy')}</Text>
+                    <Text style={[style.copyButtonText, codeChrome && { color: codeChrome.copyTextColor }]}>{t('common.copy')}</Text>
                 </Pressable>
             </View>
         </View>
@@ -235,29 +261,47 @@ function RenderOptionsBlock(props: {
     first: boolean, 
     last: boolean, 
     selectable: boolean,
-    onOptionPress?: (option: Option) => void 
+    onOptionPress?: (option: Option) => void,
+    studioPresentation: StudioSemanticTextPresentation | null,
 }) {
+    const optionPresentation = props.studioPresentation?.options;
+    const containerPresentation = optionPresentation ? {
+        gap: optionPresentation.gap,
+        marginVertical: optionPresentation.marginVertical,
+    } : null;
+    const itemPresentation = optionPresentation ? {
+        minHeight: optionPresentation.minHeight,
+        justifyContent: 'center' as const,
+        paddingHorizontal: optionPresentation.paddingHorizontal,
+        paddingVertical: optionPresentation.paddingVertical,
+        borderRadius: optionPresentation.borderRadius,
+        borderWidth: optionPresentation.borderWidth,
+        borderColor: optionPresentation.borderColor,
+        backgroundColor: optionPresentation.backgroundColor,
+    } : null;
+    const textPresentation = optionPresentation ? {
+        color: optionPresentation.textColor,
+        fontSize: optionPresentation.fontSize,
+        lineHeight: optionPresentation.lineHeight,
+    } : null;
+
     return (
-        <View style={[style.optionsContainer, props.first && style.first, props.last && style.last]}>
+        <View style={[style.optionsContainer, containerPresentation, props.first && style.first, props.last && style.last]}>
             {props.items.map((item, index) => {
                 if (props.onOptionPress) {
                     return (
-                        <Pressable 
-                            key={index} 
-                            style={({ pressed }) => [
-                                style.optionPressable,
-                                style.optionItem,
-                                pressed && style.optionItemPressed
-                            ]}
+                        <StudioMarkdownOption
+                            item={item}
+                            key={index}
+                            selectable={props.selectable}
+                            studioPresentation={props.studioPresentation}
                             onPress={() => props.onOptionPress?.({ title: item })}
-                        >
-                            <Text selectable={props.selectable} style={style.optionText}>{item}</Text>
-                        </Pressable>
+                        />
                     );
                 } else {
                     return (
-                        <View key={index} style={style.optionItem}>
-                            <Text selectable={props.selectable} style={style.optionText}>{item}</Text>
+                        <View key={index} style={[style.optionItem, itemPresentation]}>
+                            <Text selectable={props.selectable} style={[style.optionText, textPresentation]}>{item}</Text>
                         </View>
                     );
                 }
@@ -266,15 +310,60 @@ function RenderOptionsBlock(props: {
     );
 }
 
+function StudioMarkdownOption(props: {
+    item: string;
+    selectable: boolean;
+    studioPresentation: StudioSemanticTextPresentation | null;
+    onPress: () => void;
+}) {
+    const optionPresentation = props.studioPresentation?.options;
+    const interaction = useStudioInteractionState(optionPresentation !== undefined);
+
+    return (
+        <Pressable
+            {...interaction.interactionProps}
+            accessibilityRole={optionPresentation ? 'button' : undefined}
+            style={({ pressed }) => [
+                style.optionPressable,
+                style.optionItem,
+                optionPresentation && {
+                    minHeight: optionPresentation.minHeight,
+                    justifyContent: 'center' as const,
+                    paddingHorizontal: optionPresentation.paddingHorizontal,
+                    paddingVertical: optionPresentation.paddingVertical,
+                    borderRadius: optionPresentation.borderRadius,
+                    borderWidth: optionPresentation.borderWidth,
+                },
+                pressed && !optionPresentation && style.optionItemPressed,
+                optionPresentation && resolveStudioMarkdownOptionState(props.studioPresentation!, {
+                    focused: interaction.focused,
+                    hovered: interaction.hovered,
+                    pressed,
+                }),
+            ]}
+            onPress={props.onPress}
+        >
+            <Text selectable={props.selectable} style={[
+                style.optionText,
+                optionPresentation && {
+                    color: optionPresentation.textColor,
+                    fontSize: optionPresentation.fontSize,
+                    lineHeight: optionPresentation.lineHeight,
+                },
+            ]}>{props.item}</Text>
+        </Pressable>
+    );
+}
+
 function RenderSpans(props: RenderSpanProps) {
     return (<>
         {props.spans.map((span, index) => {
             const isExternalLink = span.url ? isHttpMarkdownLink(span.url) : false;
-            const semanticStyles = resolveMarkdownSpanRoles(span, isExternalLink).map((role) => (
-                role === 'inlineCode'
-                    ? [props.studioPresentation?.roles[role], props.studioPresentation?.inlineCode]
-                    : props.studioPresentation?.roles[role]
-            ));
+            const semanticStyles = resolveMarkdownSpanPresentationStyles(
+                span,
+                isExternalLink,
+                props.studioPresentation,
+            );
             if (span.url) {
                 return (
                     <Text
@@ -331,6 +420,13 @@ function RenderTableBlock(props: {
     const rowCount = props.rows.length;
     const isLastCol = (colIndex: number) => colIndex === columnCount - 1;
     const isLastRow = (rowIndex: number) => rowIndex === rowCount - 1;
+    const tablePresentation = props.studioPresentation?.table;
+    const bottomBorderStyle = tablePresentation && { borderBottomColor: tablePresentation.borderColor };
+    const rightBorderStyle = tablePresentation && { borderRightColor: tablePresentation.borderColor };
+    const cellStyle = tablePresentation && {
+        paddingHorizontal: tablePresentation.cellPaddingHorizontal,
+        paddingVertical: tablePresentation.cellPaddingVertical,
+    };
 
     const columnWidths = React.useMemo(() => {
         const widths = new Array(columnCount).fill(0);
@@ -346,21 +442,21 @@ function RenderTableBlock(props: {
     }, [props.headers, props.rows, columnCount]);
 
     return (
-        <View style={[style.tableContainer, props.first && style.first, props.last && style.last]}>
+        <View style={[style.tableContainer, tablePresentation && { borderColor: tablePresentation.borderColor, borderRadius: tablePresentation.borderRadius }, props.first && style.first, props.last && style.last]}>
             {/* flexGrow:0 stops iOS from stretching the horizontal ScrollView
                 vertically to fill the parent — the cause of the table's frame
                 extending down past the last row into empty space. */}
             <HorizontalScrollView style={{ flexGrow: 0 }}>
                 <View>
                     {/* Header row */}
-                    <View style={[style.tableRow, style.tableHeaderRow]}>
+                    <View style={[style.tableRow, style.tableHeaderRow, bottomBorderStyle]}>
                         {props.headers.map((header, colIndex) => (
                             <View
                                 key={`header-${colIndex}`}
-                                style={[style.tableCell, style.tableHeaderCell, { width: columnWidths[colIndex] }, !isLastCol(colIndex) && style.tableCellBorderRight]}
+                                style={[style.tableCell, style.tableHeaderCell, cellStyle, tablePresentation && { backgroundColor: tablePresentation.headerBackgroundColor }, { width: columnWidths[colIndex] }, !isLastCol(colIndex) && style.tableCellBorderRight, !isLastCol(colIndex) && rightBorderStyle]}
                             >
-                                <Text style={style.tableHeaderText}>
-                                    <RenderSpans spans={header} baseStyle={[style.tableHeaderText, props.studioPresentation?.roles.heading]} onLinkPress={props.onLinkPress} selectable={props.selectable} studioPresentation={props.studioPresentation} />
+                                <Text style={[style.tableHeaderText, tablePresentation && { fontSize: tablePresentation.headerFontSize, lineHeight: tablePresentation.lineHeight }]}>
+                                    <RenderSpans spans={header} baseStyle={[style.tableHeaderText, tablePresentation && { fontSize: tablePresentation.headerFontSize, lineHeight: tablePresentation.lineHeight }, props.studioPresentation?.roles.heading]} onLinkPress={props.onLinkPress} selectable={props.selectable} studioPresentation={props.studioPresentation} />
                                 </Text>
                             </View>
                         ))}
@@ -369,15 +465,15 @@ function RenderTableBlock(props: {
                     {props.rows.map((row, rowIndex) => (
                         <View
                             key={`row-${rowIndex}`}
-                            style={[style.tableRow, !isLastRow(rowIndex) && style.tableRowBorderBottom]}
+                            style={[style.tableRow, !isLastRow(rowIndex) && style.tableRowBorderBottom, !isLastRow(rowIndex) && bottomBorderStyle]}
                         >
                             {props.headers.map((_, colIndex) => (
                                 <View
                                     key={`cell-${rowIndex}-${colIndex}`}
-                                    style={[style.tableCell, { width: columnWidths[colIndex] }, !isLastCol(colIndex) && style.tableCellBorderRight]}
+                                    style={[style.tableCell, cellStyle, { width: columnWidths[colIndex] }, !isLastCol(colIndex) && style.tableCellBorderRight, !isLastCol(colIndex) && rightBorderStyle]}
                                 >
-                                    <Text style={style.tableCellText}>
-                                        <RenderSpans spans={row[colIndex] ?? []} baseStyle={[style.tableCellText, props.studioPresentation?.roles.body]} onLinkPress={props.onLinkPress} selectable={props.selectable} studioPresentation={props.studioPresentation} />
+                                    <Text style={[style.tableCellText, tablePresentation && { fontSize: tablePresentation.bodyFontSize, lineHeight: tablePresentation.lineHeight }]}>
+                                        <RenderSpans spans={row[colIndex] ?? []} baseStyle={[style.tableCellText, tablePresentation && { fontSize: tablePresentation.bodyFontSize, lineHeight: tablePresentation.lineHeight }, props.studioPresentation?.roles.body]} onLinkPress={props.onLinkPress} selectable={props.selectable} studioPresentation={props.studioPresentation} />
                                     </Text>
                                 </View>
                             ))}
@@ -414,6 +510,9 @@ const style = StyleSheet.create((theme) => ({
     semibold: {
         ...Typography.default('semiBold'),
         fontWeight: '600',
+    },
+    strikethrough: {
+        textDecorationLine: 'line-through',
     },
     code: {
         ...Typography.mono(),
@@ -481,6 +580,31 @@ const style = StyleSheet.create((theme) => ({
     list: {
         ...Typography.default(),
         color: theme.colors.text,
+        marginTop: 0,
+        marginBottom: 0,
+    },
+    listContainer: {
+        flexDirection: 'column',
+        marginBottom: 8,
+        gap: 6,
+    },
+    listRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    listMarker: {
+        marginRight: 8,
+        marginTop: 1,
+    },
+
+    blockquote: {
+        borderLeftWidth: 3,
+        borderLeftColor: theme.colors.divider,
+        marginVertical: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    blockquoteText: {
         marginTop: 0,
         marginBottom: 0,
     },

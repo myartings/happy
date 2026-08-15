@@ -42,15 +42,44 @@ export type StudioOverlayPresentation = {
     };
     dividerColor: string;
     floating: StudioOverlayLevelStyle & { clickAwayColor: 'transparent' };
+    focusRingColor: string;
     hoverColor: string;
     inputSurfaceColor: string;
     isStudio: boolean;
     modal: StudioOverlayLevelStyle & { scrimColor: string };
     pressedColor: string;
+    selectedBorderColor: string;
     selectedColor: string;
     textColor: string;
     textSecondaryColor: string;
 };
+
+export function resolveStudioOverlayDarkMode({
+    runtimeThemeName,
+    themePreference,
+}: {
+    runtimeThemeName: string | null | undefined;
+    themePreference: 'adaptive' | 'dark' | 'light';
+}): boolean {
+    if (themePreference === 'dark') {
+        return true;
+    }
+    if (themePreference === 'light') {
+        return false;
+    }
+    return runtimeThemeName === 'dark';
+}
+
+export function resolveCommandPaletteDarkSnapshot({
+    currentThemeIsDark,
+    themePreference,
+}: {
+    currentThemeIsDark: boolean;
+    themePreference: 'adaptive' | 'dark' | 'light';
+}): boolean {
+    return themePreference === 'dark'
+        || (themePreference === 'adaptive' && currentThemeIsDark);
+}
 
 type ResolveStudioOverlayPresentationInput = {
     isDark: boolean;
@@ -97,6 +126,7 @@ const DEFAULT_PRESENTATION: StudioOverlayPresentation = {
         shadowRadius: 0,
         surfaceColor: 'transparent',
     },
+    focusRingColor: 'transparent',
     hoverColor: 'transparent',
     inputSurfaceColor: 'transparent',
     isStudio: false,
@@ -111,6 +141,7 @@ const DEFAULT_PRESENTATION: StudioOverlayPresentation = {
         surfaceColor: 'transparent',
     },
     pressedColor: 'transparent',
+    selectedBorderColor: 'transparent',
     selectedColor: 'transparent',
     textColor: 'transparent',
     textSecondaryColor: 'transparent',
@@ -137,10 +168,12 @@ export function resolveStudioOverlayPresentation({
             border: 'rgba(255, 255, 255, 0.14)',
             divider: 'rgba(255, 255, 255, 0.10)',
             floating: 'rgba(35, 36, 38, 0.96)',
+            focusRing: 'rgba(132, 168, 255, 0.88)',
             hover: 'rgba(255, 255, 255, 0.07)',
             input: '#292A2D',
             modal: '#232426',
             pressed: 'rgba(255, 255, 255, 0.12)',
+            selectedBorder: 'rgba(132, 168, 255, 0.52)',
             selected: 'rgba(255, 255, 255, 0.10)',
             text: '#F5F5F5',
             textSecondary: '#A4A7AC',
@@ -149,10 +182,12 @@ export function resolveStudioOverlayPresentation({
             border: '#DDDDDE',
             divider: '#E4E4E5',
             floating: 'rgba(255, 255, 255, 0.96)',
+            focusRing: 'rgba(70, 111, 226, 0.82)',
             hover: 'rgba(26, 28, 31, 0.05)',
             input: '#FAFAFA',
             modal: '#FFFFFF',
             pressed: 'rgba(26, 28, 31, 0.10)',
+            selectedBorder: 'rgba(70, 111, 226, 0.34)',
             selected: '#F0F1F1',
             text: '#1A1C1F',
             textSecondary: '#6F7277',
@@ -196,6 +231,7 @@ export function resolveStudioOverlayPresentation({
             shadowRadius: 24,
             surfaceColor: palette.floating,
         },
+        focusRingColor: palette.focusRing,
         hoverColor: palette.hover,
         inputSurfaceColor: palette.input,
         isStudio: true,
@@ -210,6 +246,7 @@ export function resolveStudioOverlayPresentation({
             surfaceColor: palette.modal,
         },
         pressedColor: palette.pressed,
+        selectedBorderColor: palette.selectedBorder,
         selectedColor: palette.selected,
         textColor: palette.text,
         textSecondaryColor: palette.textSecondary,

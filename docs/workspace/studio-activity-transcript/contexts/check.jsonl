@@ -1,0 +1,16 @@
+{"path":"AGENTS.md","reason":"Formal Happy lifecycle and finish constraints"}
+{"path":".ai/project.json","reason":"Complete applicable verification commands"}
+{"path":"docs/specs/studio-activity-transcript.md","reason":"Acceptance criteria and rollback contract"}
+{"path":"docs/tasks/studio-activity-transcript-tasks.md","reason":"Whole-scope completion checklist"}
+{"path":"docs/workspace/studio-activity-transcript/validation.md","reason":"Acceptance-to-evidence ledger"}
+{"path":"packages/happy-wire/src/sessionProtocol.test.ts","reason":"Legacy and enriched wire evidence"}
+{"path":"packages/happy-cli/src/codex/__tests__/sessionProtocolMapper.test.ts","reason":"Producer result and bound evidence"}
+{"path":"packages/happy-app/sources/sync/typesRaw.spec.ts","reason":"App normalization compatibility evidence"}
+{"path":"packages/happy-app/sources/sync/reducer/reducer.spec.ts","reason":"End-to-end result/state join evidence"}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/studioExecutionTranscript.test.ts","reason":"Transcript rendering data evidence"}
+{"path":"packages/happy-app/sources/components/ToolGroupView.tsx","reason":"Actual Studio group/row wiring review"}
+{"path":"packages/happy-app/sources/components/ToolGroupViewStudioPresentation.test.ts","reason":"Mounted Studio and Default activity evidence"}
+{"path":"packages/happy-app/sources/components/tools/views/CodexPatchView.tsx","reason":"Studio inline edit diff behavior review"}
+{"path":"packages/happy-app/sources/components/tools/views/CodexPatchStudioPresentation.test.ts","reason":"Mounted Studio/non-Studio disclosure regression evidence"}
+{"path":"packages/happy-app/sources/components/tools/ToolDiffView.tsx","reason":"Unified diff adapter compatibility review"}
+{"path":"packages/happy-app/sources/components/diff/PierreDiffView.tsx","reason":"Desktop green/red diff renderer compatibility boundary"}

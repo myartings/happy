@@ -4,6 +4,7 @@ import type { ReasoningOutput } from './reasoningProcessor';
 import type { DiffToolCall, DiffToolResult } from './diffProcessor';
 import {
     createEnvelope,
+    SESSION_TOOL_OUTPUT_LIMIT,
     stripLeadingTaskNotificationWrappers,
     type CreateEnvelopeOptions,
     type SessionEnvelope,
@@ -45,6 +46,50 @@ type LegacyToolLikeMessage = {
 };
 
 type TurnEndStatus = 'completed' | 'failed' | 'cancelled';
+
+const truncatedToolOutputSuffix = '\n… output truncated';
+const failedCommandStatuses = new Set(['failed', 'error', 'cancelled', 'canceled', 'aborted', 'interrupted']);
+
+function boundToolOutput(value: unknown): { output?: string; truncated: boolean } {
+    if (typeof value !== 'string') return { truncated: false };
+    if (value.length <= SESSION_TOOL_OUTPUT_LIMIT) return { output: value, truncated: false };
+
+    let boundary = SESSION_TOOL_OUTPUT_LIMIT - truncatedToolOutputSuffix.length;
+    const previousCodeUnit = value.charCodeAt(boundary - 1);
+    if (previousCodeUnit >= 0xD800 && previousCodeUnit <= 0xDBFF) boundary -= 1;
+    return {
+        output: `${value.slice(0, boundary)}${truncatedToolOutputSuffix}`,
+        truncated: true,
+    };
+}
+
+function commandCompletionMetadata(message: Record<string, unknown>) {
+    const bounded = boundToolOutput(message.output);
+    const hasExitCode = message.exit_code !== undefined || message.exitCode !== undefined;
+    const rawExitCode = message.exit_code !== undefined ? message.exit_code : message.exitCode;
+    const exitCode = typeof rawExitCode === 'number' && Number.isInteger(rawExitCode)
+        ? rawExitCode
+        : null;
+    const malformedExitCode = hasExitCode && rawExitCode !== null && exitCode === null;
+    const rawDurationMs = message.duration_ms !== undefined ? message.duration_ms : message.durationMs;
+    const durationMs = typeof rawDurationMs === 'number' && Number.isFinite(rawDurationMs) && rawDurationMs >= 0
+        ? rawDurationMs
+        : null;
+    const status = typeof message.status === 'string' && message.status.length <= 64
+        ? message.status
+        : undefined;
+    const isError = exitCode !== null
+        ? exitCode !== 0
+        : malformedExitCode || (status !== undefined && failedCommandStatuses.has(status.toLowerCase()));
+
+    return {
+        ...bounded,
+        exitCode,
+        durationMs,
+        ...(status !== undefined ? { status } : {}),
+        isError,
+    };
+}
 
 function getStartedSubagents(state: CodexTurnState): Set<string> {
     return state.startedSubagents ?? new Set<string>();
@@ -586,7 +631,8 @@ function emitHistoricalToolCall(
     name: string,
     title: string,
     args: Record<string, unknown>,
-    output: string | null,
+    completion: ReturnType<typeof commandCompletionMetadata> | undefined,
+    legacyThinkingOutput: string | null,
     timestamps?: {
         startedAt: number;
         completedAt: number;
@@ -606,10 +652,10 @@ function emitHistoricalToolCall(
         id: `${item.id}:start`,
     }));
 
-    if (output && output.trim().length > 0) {
+    if (legacyThinkingOutput && legacyThinkingOutput.trim().length > 0) {
         envelopes.push(createEnvelope('agent', {
             t: 'text',
-            text: output,
+            text: legacyThinkingOutput,
             thinking: true,
         }, {
             ...opts,
@@ -620,6 +666,7 @@ function emitHistoricalToolCall(
     envelopes.push(createEnvelope('agent', {
         t: 'tool-call-end',
         call: item.id,
+        ...(completion ?? {}),
     }, {
         ...opts,
         id: `${item.id}:end`,
@@ -707,7 +754,13 @@ export function mapCodexThreadItemToSessionEnvelopes(
                 'CodexBash',
                 commandToTitle(command),
                 { command, cwd: item.cwd },
-                typeof item.aggregatedOutput === 'string' ? item.aggregatedOutput : null,
+                commandCompletionMetadata({
+                    output: item.aggregatedOutput,
+                    exitCode: item.exitCode,
+                    durationMs: item.durationMs,
+                    status: item.status,
+                }),
+                null,
                 { startedAt, completedAt },
             );
             return envelopes;
@@ -721,6 +774,7 @@ export function mapCodexThreadItemToSessionEnvelopes(
                 'CodexPatch',
                 'Apply patch',
                 { changes: item.changes, status: item.status },
+                undefined,
                 null,
                 { startedAt, completedAt },
             );
@@ -743,6 +797,7 @@ export function mapCodexThreadItemToSessionEnvelopes(
                     tool: item.tool,
                     arguments: item.arguments,
                 },
+                undefined,
                 output,
                 { startedAt, completedAt },
             );
@@ -1243,7 +1298,11 @@ export function mapCodexMcpMessageToSessionEnvelopes(message: Record<string, unk
         const call = pickCallId(message);
         const envelopes: SessionEnvelope[] = [];
         maybeEmitSubagentStart(subagent, opts, startedSubagents, activeSubagents, subagentTitles, envelopes);
-        envelopes.push(createEnvelope('agent', { t: 'tool-call-end', call }, opts));
+        envelopes.push(createEnvelope('agent', {
+            t: 'tool-call-end',
+            call,
+            ...commandCompletionMetadata(message),
+        }, opts));
         return {
             currentTurnId: state.currentTurnId,
             startedSubagents,

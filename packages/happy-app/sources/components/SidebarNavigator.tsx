@@ -4,7 +4,7 @@ import { Drawer } from 'expo-router/drawer';
 import { useIsTablet, useHeaderHeight } from '@/utils/responsive';
 import { SidebarView } from './SidebarView';
 import { useWindowDimensions, View, Pressable, Platform } from 'react-native';
-import { useLocalSetting, useLocalSettingMutable } from '@/sync/storage';
+import { storage, useLocalSetting, useLocalSettingMutable } from '@/sync/storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -17,6 +17,9 @@ import { DEFAULT_APP_ZOOM } from '@/hooks/useTauriZoom';
 import { canRouteForward, canUseRouteBack, getNavigatorCanGoBack } from '@/navigation/browserNavigation';
 import { useBrowserNavigationStore } from '@/navigation/browserNavigationStore';
 import { resolveDesktopSidebarFrame } from '@/features/studio-visual-style/studioVisualStyle';
+import { StudioPanelResizeHandle } from '@/features/studio-panel-resize/StudioPanelResizeHandle';
+import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioPanelResizePolicy';
+import { useStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 
 const TAURI_HEADER_CONTROL_LEFT = Math.ceil(92 / DEFAULT_APP_ZOOM);
 
@@ -28,6 +31,10 @@ export const SidebarNavigator = React.memo(() => {
     const showSidebar = isDesktopLayout && !zenMode;
     const { width: windowWidth } = useWindowDimensions();
     const requestedVisualStyle = useLocalSetting('visualStyle');
+    const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
+    const persistedRightPanelWidth = useLocalSetting('studioRightPanelWidth');
+    const lastResizedPanel = useLocalSetting('studioLastResizedPanel');
+    const rightPanelVisible = useStudioRightPanelVisible();
     const inTauri = isTauri();
 
     const sidebarFrame = React.useMemo(() => resolveDesktopSidebarFrame({
@@ -36,7 +43,22 @@ export const SidebarNavigator = React.memo(() => {
         requestedStyle: requestedVisualStyle,
         previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
     }), [inTauri, requestedVisualStyle, windowWidth]);
-    const fullDrawerWidth = isDesktopLayout ? sidebarFrame.width : 280;
+    const studioPanelResizeEnabled = isDesktopLayout
+        && inTauri
+        && sidebarFrame.visualStyle === 'studio';
+    const panelWidths = React.useMemo(() => projectStudioPanelWidths({
+        storedLeftWidth: persistedLeftPanelWidth,
+        storedRightWidth: persistedRightPanelWidth,
+        windowWidth,
+        leftVisible: showSidebar,
+        rightVisible: rightPanelVisible,
+        activeSide: lastResizedPanel,
+    }), [lastResizedPanel, persistedLeftPanelWidth, persistedRightPanelWidth, rightPanelVisible, showSidebar, windowWidth]);
+    const fullDrawerWidth = isDesktopLayout
+        ? studioPanelResizeEnabled
+            ? panelWidths.leftWidth
+            : sidebarFrame.width
+        : 280;
     const drawerWidth = showSidebar ? fullDrawerWidth : 0;
 
     const drawerNavigationOptions = React.useMemo(() => {
@@ -91,6 +113,28 @@ export const SidebarNavigator = React.memo(() => {
                 screenOptions={drawerNavigationOptions}
                 drawerContent={isDesktopLayout ? drawerContent : undefined}
             />
+            {studioPanelResizeEnabled && showSidebar && (
+                <StudioPanelResizeHandle
+                    side="left"
+                    targetWidth={persistedLeftPanelWidth}
+                    renderedWidth={panelWidths.leftWidth}
+                    windowWidth={windowWidth}
+                    oppositeWidth={panelWidths.rightWidth}
+                    oppositeVisible={rightPanelVisible}
+                    label="Resize navigation panel"
+                    onWidthChange={(width) => storage.getState().applyLocalSettings({
+                        studioLeftPanelWidth: width,
+                        studioLastResizedPanel: 'left',
+                    })}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        left: fullDrawerWidth - 4,
+                        zIndex: 1090,
+                    }}
+                />
+            )}
             {/* Persistent header overlay — always visible on desktop, same position regardless of zen mode */}
             {isDesktopLayout && (
                 <PersistentHeader />

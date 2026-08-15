@@ -68,26 +68,26 @@ describe('Studio desktop visual style', () => {
         })).toBe('studio');
     });
 
-    it('resolves the accepted fill-only 62 point Studio session row', () => {
+    it('resolves a compact regular-weight Studio session row', () => {
         expect(resolveDesktopSessionRowStyle({
             isTauriRuntime: true,
             requestedStyle: 'studio',
         })).toEqual({
             visualStyle: 'studio',
-            height: 62,
+            height: 58,
             horizontalInset: 12,
             horizontalPadding: 12,
-            verticalPadding: 6,
-            gap: 4,
+            verticalPadding: 4,
+            gap: 2,
             leadingIndicatorWidth: 10,
             leadingIndicatorGap: 6,
             metadataInset: 16,
             titleFontSize: 13,
             titleLineHeight: 17,
-            titleFontWeight: '600',
+            titleFontWeight: '400',
             primaryMetadataFontSize: 11,
             secondaryMetadataFontSize: 10,
-            cornerRadius: 9,
+            cornerRadius: 7,
             selectedBackground: '#E8EAEA',
             showCardSurface: false,
             showGroupShellBoundary: false,
@@ -116,18 +116,20 @@ describe('Studio desktop visual style', () => {
         }).visualStyle).toBe('default');
     });
 
-    it('resolves the accepted compact Studio top-control geometry', () => {
+    it('resolves transparent compact Studio top-navigation rows', () => {
         expect(resolveDesktopTopControlsStyle({
             isTauriRuntime: true,
             requestedStyle: 'studio',
         })).toEqual({
             visualStyle: 'studio',
-            controlHeight: 38,
-            archiveWidth: 38,
-            cornerRadius: 10,
-            groupGap: 6,
+            controlHeight: 36,
+            archiveWidth: 36,
+            cornerRadius: 7,
+            groupGap: 2,
             contentGap: 6,
             horizontalPadding: 12,
+            showRestingBorder: false,
+            showRestingSurface: false,
             showShadow: false,
         });
     });
@@ -136,7 +138,11 @@ describe('Studio desktop visual style', () => {
         expect(resolveDesktopTopControlsStyle({
             isTauriRuntime: true,
             requestedStyle: 'default',
-        }).controlHeight).toBeNull();
+        })).toMatchObject({
+            controlHeight: null,
+            showRestingBorder: true,
+            showRestingSurface: true,
+        });
         expect(resolveDesktopTopControlsStyle({
             isTauriRuntime: false,
             requestedStyle: 'studio',
@@ -144,16 +150,18 @@ describe('Studio desktop visual style', () => {
         }).visualStyle).toBe('default');
     });
 
-    it('resolves the accepted compact Studio Todo utility geometry', () => {
+    it('resolves the Todo action with the same transparent navigation grammar', () => {
         expect(resolveDesktopTodoRowStyle({
             isTauriRuntime: true,
             requestedStyle: 'studio',
         })).toEqual({
             visualStyle: 'studio',
             height: 36,
-            cornerRadius: 10,
+            cornerRadius: 7,
             horizontalPadding: 12,
             contentGap: 4,
+            showRestingBorder: false,
+            showRestingSurface: false,
             showShadow: false,
         });
     });
@@ -162,7 +170,11 @@ describe('Studio desktop visual style', () => {
         expect(resolveDesktopTodoRowStyle({
             isTauriRuntime: true,
             requestedStyle: 'default',
-        }).height).toBeNull();
+        })).toMatchObject({
+            height: null,
+            showRestingBorder: true,
+            showRestingSurface: true,
+        });
         expect(resolveDesktopTodoRowStyle({
             isTauriRuntime: false,
             requestedStyle: 'studio',
@@ -176,12 +188,12 @@ describe('Studio desktop visual style', () => {
             requestedStyle: 'studio',
         })).toEqual({
             visualStyle: 'studio',
-            fontSize: 12,
-            lineHeight: 16,
+            fontSize: 11,
+            lineHeight: 15,
             fontWeight: '500',
             horizontalPadding: 18,
-            topPadding: 14,
-            bottomPadding: 6,
+            topPadding: 10,
+            bottomPadding: 4,
         });
     });
 

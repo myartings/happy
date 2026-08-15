@@ -4,15 +4,58 @@ import { CommandPaletteInput } from './CommandPaletteInput';
 import { CommandPaletteResults } from './CommandPaletteResults';
 import { useCommandPalette } from './useCommandPalette';
 import { Command } from './types';
-import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
+import {
+    StudioOverlayPresentationProvider,
+    StudioOverlayPresentationSnapshotProvider,
+    useStudioOverlayPresentation,
+} from '@/features/studio-overlays/useStudioOverlayPresentation';
+import type { StudioOverlayPresentation } from '@/features/studio-overlays/studioOverlayPresentation';
 
 interface CommandPaletteProps {
     commands: Command[];
     onClose: () => void;
+    studioIsDark?: boolean;
+    studioPresentation?: StudioOverlayPresentation;
 }
 
-export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
-    const overlayPresentation = useStudioOverlayPresentation();
+export function CommandPalette({
+    commands,
+    onClose,
+    studioIsDark,
+    studioPresentation,
+}: CommandPaletteProps) {
+    const content = (
+        <CommandPaletteContent
+            commands={commands}
+            onClose={onClose}
+            presentation={studioPresentation}
+        />
+    );
+
+    if (studioPresentation) {
+        return (
+            <StudioOverlayPresentationSnapshotProvider presentation={studioPresentation}>
+                {content}
+            </StudioOverlayPresentationSnapshotProvider>
+        );
+    }
+
+    return typeof studioIsDark === 'boolean' ? (
+        <StudioOverlayPresentationProvider isDark={studioIsDark}>
+            {content}
+        </StudioOverlayPresentationProvider>
+    ) : content;
+}
+
+function CommandPaletteContent({
+    commands,
+    onClose,
+    presentation,
+}: Omit<CommandPaletteProps, 'studioIsDark' | 'studioPresentation'> & {
+    presentation?: StudioOverlayPresentation;
+}) {
+    const resolvedPresentation = useStudioOverlayPresentation();
+    const overlayPresentation = presentation ?? resolvedPresentation;
     const {
         searchQuery,
         selectedIndex,
@@ -52,12 +95,14 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
                 onChangeText={handleSearchChange}
                 onKeyPress={handleKeyPress}
                 inputRef={inputRef}
+                presentation={overlayPresentation}
             />
             <CommandPaletteResults
                 categories={filteredCategories}
                 selectedIndex={selectedIndex}
                 onSelectCommand={handleSelectCommand}
                 onSelectionChange={setSelectedIndex}
+                presentation={overlayPresentation}
             />
         </View>
     );
