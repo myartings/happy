@@ -1,0 +1,12 @@
+{"path":"docs/PRD.md","reason":"Accepted product outcome and compatibility boundary."}
+{"path":"docs/specs/studio-execution-transcript.md","reason":"Observable behavior and edge-case contract."}
+{"path":"docs/tasks/studio-execution-transcript-tasks.md","reason":"Dependency-aware implementation slices."}
+{"path":"packages/happy-app/sources/components/tools/ToolView.tsx","reason":"Real shell tool host renderer and behavior preservation seam."}
+{"path":"packages/happy-app/sources/components/CodeView.tsx","reason":"Existing generic output presentation seam to inspect before selecting bounded integration."}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation/studioToolPresentation.ts","reason":"Studio-only tool and transcript presentation resolver."}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/parseAnsiSgr.ts","reason":"Existing safe ANSI SGR parser to extend only for accepted gaps."}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/semanticText.ts","reason":"Existing semantic run types."}
+{"path":"packages/happy-app/sources/components/tools/knownTools.tsx","reason":"Observed provider tool data shapes and command extraction."}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/studioExecutionTranscript.ts","reason":"Feature-local structured transcript model and safe ANSI presentation mapping."}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/StudioExecutionTranscriptView.tsx","reason":"Packaged-Studio read-only transcript renderer."}
+{"path":"packages/happy-app/sources/app/(app)/dev/messages-demo-data.ts","reason":"Deterministic visual fixture using existing dev demo infrastructure."}

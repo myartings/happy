@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVisibleSessionListViewData } from '@/hooks/useVisibleSessionListViewData';
 import { Typography } from '@/constants/Typography';
 import { StatusDot } from './StatusDot';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useIsTablet } from '@/utils/responsive';
 import { requestReview } from '@/utils/requestReview';
 import { UpdateBanner } from './UpdateBanner';
@@ -34,6 +34,11 @@ import {
     resolveSidebarSessionRowStyle,
     resolveStudioSidebarRowChrome,
 } from '@/features/studio-visual-style/studioSidebarGroupPresentation';
+import {
+    resolveStudioSidebarInteractionPresentation,
+    resolveStudioSidebarStateBackground,
+} from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
@@ -455,11 +460,17 @@ export function SessionsList({
 
             case 'project-group':
                 return (
-                    <View style={styles.projectGroup}>
-                        <Text style={styles.projectGroupTitle}>
+                    <View style={[
+                        styles.projectGroup,
+                        isStudioSectionHeader && { paddingHorizontal: 18, paddingVertical: 6, backgroundColor: 'transparent' },
+                    ]}>
+                        <Text style={[
+                            styles.projectGroupTitle,
+                            isStudioSectionHeader && { fontWeight: '400', ...Typography.default() },
+                        ]}>
                             {item.displayPath}
                         </Text>
-                        <Text style={styles.projectGroupSubtitle}>
+                        <Text style={[styles.projectGroupSubtitle, isStudioSectionHeader && { marginTop: 0 }]}>
                             {item.machine.metadata?.displayName || item.machine.metadata?.host || item.machine.id}
                         </Text>
                     </View>
@@ -548,7 +559,14 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
     const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
     const styles = stylesheet;
+    const { theme } = useUnistyles();
     const isStudio = sessionRowStyle.visualStyle === 'studio';
+    const interactionPresentation = React.useMemo(() => resolveStudioSidebarInteractionPresentation({
+        isDark: theme.dark,
+        isTauriRuntime: isStudio,
+        requestedStyle: isStudio ? 'studio' : 'default',
+    }), [isStudio, theme.dark]);
+    const interactionState = useStudioInteractionState(isStudio);
     const rowChrome = resolveStudioSidebarRowChrome(sessionRowStyle, {
         selected: !!selected,
         showDivider: !isLast && !isSingle,
@@ -617,7 +635,10 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
             },
         ]}>
         <Pressable
-            style={[
+            accessibilityRole="button"
+            accessibilityState={{ selected: !!selected }}
+            {...interactionState.interactionProps}
+            style={({ pressed }) => [
                 styles.sessionItem,
                 rowChrome.backgroundRole === 'selected' && !isStudio && styles.sessionItemSelected,
                 rowChrome.useGroupPositionShape && (
@@ -628,10 +649,18 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                 isStudio && {
                     height: sessionRowStyle.height!,
                     paddingHorizontal: sessionRowStyle.horizontalPadding!,
-                    borderRadius: rowChrome.cornerRadius!,
-                    backgroundColor: rowChrome.backgroundRole === 'selected'
-                        ? sessionRowStyle.selectedBackground!
-                        : 'transparent',
+                    borderRadius: sessionRowStyle.cornerRadius!,
+                    backgroundColor: resolveStudioSidebarStateBackground(interactionPresentation, {
+                        hovered: interactionState.hovered,
+                        pressed,
+                        selected: !!selected,
+                    }),
+                    ...(Platform.OS === 'web' && interactionState.focused ? {
+                        outlineColor: interactionPresentation.focusRingColor,
+                        outlineOffset: -2,
+                        outlineStyle: 'solid',
+                        outlineWidth: 2,
+                    } as any : {}),
                 },
             ]}
             onPress={handlePress}
@@ -664,7 +693,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                             fontSize: sessionRowStyle.titleFontSize!,
                             lineHeight: sessionRowStyle.titleLineHeight!,
                             fontWeight: sessionRowStyle.titleFontWeight!,
-                            ...Typography.default('semiBold'),
+                            ...Typography.default(),
                         },
                     ]} numberOfLines={1}>
                         {session.name}

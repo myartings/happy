@@ -171,6 +171,22 @@ Inline code now renders as \`happy render\` without a background highlight.
         children: []
     },
 
+    // Studio transcript fixture: ANSI, CJK, emoji, tabs, cwd, and semantic status.
+    {
+        id: 'bash-studio-transcript',
+        localId: null,
+        createdAt: Date.now() - 165000,
+        kind: 'tool-call',
+        tool: createToolCall('Bash', 'completed', {
+            command: 'pnpm --filter happy-app typecheck',
+            cwd: '/Users/demo/workspace/happy/packages/happy-app',
+        }, {
+            stdout: '\u001B[32mPASS\u001B[0m 137 files / 1220 tests\n中文输出\t路径 /tmp/happy/report.json\nemoji 👩🏽‍💻',
+            stderr: '\u001B[33mwarning:\u001B[0m one optional check was skipped',
+        }, 'Verify Happy App'),
+        children: [],
+    },
+
     // Bash tool - error
     {
         id: 'bash-error',

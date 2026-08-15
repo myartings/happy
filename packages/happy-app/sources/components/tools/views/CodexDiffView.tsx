@@ -7,6 +7,7 @@ import { ToolDiffView } from '@/components/tools/ToolDiffView';
 import { Metadata } from '@/sync/storageTypes';
 import { parseUnifiedDiff } from '@/utils/codexUnifiedDiff';
 import { getPatchDiffStats } from '@/components/diff/calculateDiff';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface CodexDiffViewProps {
     tool: ToolCall;
@@ -14,6 +15,7 @@ interface CodexDiffViewProps {
 }
 
 export const CodexDiffView = React.memo<CodexDiffViewProps>(({ tool, metadata }) => {
+    const studioPresentation = useStudioToolPresentation();
     const { input } = tool;
     const patch = typeof input?.unified_diff === 'string' ? input.unified_diff : undefined;
     const fileName = patch ? parseUnifiedDiff(patch).fileName : undefined;
@@ -24,24 +26,41 @@ export const CodexDiffView = React.memo<CodexDiffViewProps>(({ tool, metadata })
     return (
         <>
             {fileName ? (
-                <View style={styles.fileHeader}>
-                    <Text style={styles.fileName} numberOfLines={1}>{fileName}</Text>
+                <View style={[styles.fileHeader, studioPresentation && {
+                    backgroundColor: studioPresentation.diff.backgroundColor,
+                    borderBottomColor: studioPresentation.diff.borderColor,
+                }]}>
+                    <Text style={[styles.fileName, studioPresentation && { color: studioPresentation.diff.pathColor }]} numberOfLines={1}>{fileName}</Text>
                     {stats && (stats.additions > 0 || stats.deletions > 0) ? (
-                        <DiffStats additions={stats.additions} deletions={stats.deletions} />
+                        <DiffStats
+                            additions={stats.additions}
+                            deletions={stats.deletions}
+                            addedColor={studioPresentation?.diff.addedColor}
+                            removedColor={studioPresentation?.diff.removedColor}
+                        />
                     ) : null}
                 </View>
             ) : null}
             <ToolSectionView fullWidth>
-                <ToolDiffView patch={patch} fileName={fileName} />
+                <ToolDiffView
+                    patch={patch}
+                    fileName={fileName}
+                    style={studioPresentation ? { backgroundColor: studioPresentation.diff.backgroundColor } : undefined}
+                />
             </ToolSectionView>
         </>
     );
 });
 
-const DiffStats = React.memo<{ additions: number; deletions: number }>(({ additions, deletions }) => (
+const DiffStats = React.memo<{
+    additions: number;
+    deletions: number;
+    addedColor?: string;
+    removedColor?: string;
+}>(({ additions, deletions, addedColor, removedColor }) => (
     <View style={styles.stats}>
-        {additions > 0 ? <Text style={styles.added}>+{additions}</Text> : null}
-        {deletions > 0 ? <Text style={styles.removed}>-{deletions}</Text> : null}
+        {additions > 0 ? <Text style={[styles.added, addedColor ? { color: addedColor } : null]}>+{additions}</Text> : null}
+        {deletions > 0 ? <Text style={[styles.removed, removedColor ? { color: removedColor } : null]}>-{deletions}</Text> : null}
     </View>
 ));
 

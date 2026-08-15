@@ -1,0 +1,8 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-rich-text/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Acceptance criteria AC6 through AC8"}
+{"path":"docs/tasks/studio-visual-convergence-tasks.md","reason":"Track C scope and compatibility checklist"}
+{"path":"packages/happy-app/sources/components/markdown/parseMarkdown.test.ts","reason":"Parser behavior coverage"}
+{"path":"packages/happy-app/sources/components/markdown/parseMarkdownBlock.test.ts","reason":"Block parser regression coverage"}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/semanticTextFixtures.test.ts","reason":"Fixture role and construct coverage"}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/studioSemanticTextPresentation.test.ts","reason":"Studio-only presentation resolver coverage"}

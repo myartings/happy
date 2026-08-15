@@ -7,7 +7,7 @@
     "frontendDist": "../dist",
     "devUrl": "http://localhost:8081",
     "beforeDevCommand": "pnpm start",
-    "beforeBuildCommand": "pnpm exec expo export --platform web --output-dir dist"
+    "beforeBuildCommand": "pnpm exec expo export --platform web --output-dir dist --clear"
   },
   "app": {
     "windows": [

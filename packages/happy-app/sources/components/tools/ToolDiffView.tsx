@@ -2,6 +2,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 import { PierreDiffView } from '@/components/diff/PierreDiffView';
 import { useSetting } from '@/sync/storage';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface ToolDiffViewProps {
     /** Pre-built unified-diff patch string. Preferred when available. */
@@ -28,6 +29,7 @@ export const ToolDiffView = React.memo<ToolDiffViewProps>(({
 }) => {
     const wrapLines = useSetting('wrapLinesInDiffs');
     const showLineNumbersInToolViews = useSetting('showLineNumbersInToolViews');
+    const studioPresentation = useStudioToolPresentation();
 
     const effectiveFileName = fileName ?? 'file.txt';
 
@@ -42,14 +44,30 @@ export const ToolDiffView = React.memo<ToolDiffViewProps>(({
 
     if (patch) {
         return (
-            <View style={[{ flex: 1 }, style]}>
+            <View style={[
+                { flex: 1 },
+                studioPresentation && {
+                    backgroundColor: studioPresentation.diff.backgroundColor,
+                    borderRadius: studioPresentation.diff.borderRadius,
+                    overflow: 'hidden',
+                },
+                style,
+            ]}>
                 <PierreDiffView patch={patch} {...common} />
             </View>
         );
     }
 
     return (
-        <View style={[{ flex: 1 }, style]}>
+        <View style={[
+            { flex: 1 },
+            studioPresentation && {
+                backgroundColor: studioPresentation.diff.backgroundColor,
+                borderRadius: studioPresentation.diff.borderRadius,
+                overflow: 'hidden',
+            },
+            style,
+        ]}>
             <PierreDiffView
                 oldFile={{ name: effectiveFileName, contents: oldText ?? '' }}
                 newFile={{ name: effectiveFileName, contents: newText ?? '' }}

@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-interaction-states/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-interaction-states.md","reason":"Acceptance criteria for verification mapping"}
+{"path":"docs/tasks/studio-interaction-states-tasks.md","reason":"Completed scope and checks"}
+{"path":"docs/workspace/studio-interaction-states/decisions.md","reason":"Behavior and geometry invariants for whole-diff review"}

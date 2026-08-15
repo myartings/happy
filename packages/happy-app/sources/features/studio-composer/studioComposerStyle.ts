@@ -23,6 +23,47 @@ export type DesktopComposerStyle = {
     showElevation: boolean;
 };
 
+export type StudioComposerInteractionState =
+    | 'empty'
+    | 'ready'
+    | 'attachment'
+    | 'autocomplete'
+    | 'picker'
+    | 'blocked'
+    | 'sending'
+    | 'abort'
+    | 'aborting';
+
+export type StudioComposerStatePresentation = {
+    state: StudioComposerInteractionState;
+    shellBorder: string;
+    shellBackground: string;
+    shellShadowOpacity: number;
+    shellShadowRadius: number;
+    primaryActionBackground: string;
+    primaryActionForeground: string;
+    primaryActionBorder: string;
+    secondaryActiveBackground: string;
+    attachmentBackground: string;
+    attachmentBorder: string;
+    autocompleteSelectedBackground: string;
+    autocompletePressedBackground: string;
+    abortActionBackground: string;
+    abortActionForeground: string;
+};
+
+type ResolveStudioComposerStatePresentationInput = {
+    isStudio: boolean;
+    hasText: boolean;
+    hasAttachments: boolean;
+    hasSuggestions: boolean;
+    pickerOpen: boolean;
+    isSending: boolean;
+    showAbortButton: boolean;
+    isAborting: boolean;
+    isSendBlocked: boolean;
+};
+
 type ResolveDesktopComposerStyleInput = {
     isTauriRuntime: boolean;
     requestedStyle: VisualStyle;
@@ -80,5 +121,57 @@ export function resolveDesktopComposerStyle({
         autocompleteRowHeight: null,
         autocompleteRadius: null,
         showElevation: false,
+    };
+}
+
+export function resolveStudioComposerStatePresentation({
+    isStudio,
+    hasText,
+    hasAttachments,
+    hasSuggestions,
+    pickerOpen,
+    isSending,
+    showAbortButton,
+    isAborting,
+    isSendBlocked,
+}: ResolveStudioComposerStatePresentationInput): StudioComposerStatePresentation | null {
+    if (!isStudio) return null;
+
+    let state: StudioComposerInteractionState = 'empty';
+    if (hasText) state = 'ready';
+    if (hasAttachments) state = 'attachment';
+    if (isSendBlocked && (hasText || hasAttachments)) state = 'blocked';
+    if (hasSuggestions) state = 'autocomplete';
+    if (pickerOpen) state = 'picker';
+    if (isSending) state = 'sending';
+    if (showAbortButton) state = 'abort';
+    if (isAborting) state = 'aborting';
+
+    const hasReadyContent = hasText || hasAttachments;
+    const readyPrimaryAction = hasReadyContent && !isSendBlocked;
+    const shellIsEngaged = state !== 'empty';
+
+    return {
+        state,
+        shellBorder: shellIsEngaged ? '#D2D2D4' : '#E1E1E2',
+        shellBackground: '#FFFFFF',
+        shellShadowOpacity: shellIsEngaged ? 0.11 : 0.08,
+        shellShadowRadius: shellIsEngaged ? 24 : 20,
+        primaryActionBackground: isSending
+            ? '#4C4C50'
+            : isSendBlocked && hasReadyContent
+                ? '#F0F0F1'
+                : readyPrimaryAction
+                    ? '#242426'
+                    : '#E7E7E8',
+        primaryActionForeground: readyPrimaryAction || isSending ? '#FFFFFF' : '#858589',
+        primaryActionBorder: isSendBlocked && hasReadyContent ? '#D7D7D9' : 'transparent',
+        secondaryActiveBackground: '#EEEEEF',
+        attachmentBackground: '#F6F6F6',
+        attachmentBorder: '#E4E4E5',
+        autocompleteSelectedBackground: '#ECEDEE',
+        autocompletePressedBackground: '#E5E6E7',
+        abortActionBackground: '#F2ECEB',
+        abortActionForeground: '#8E3F37',
     };
 }

@@ -4,21 +4,25 @@ import { Command, CommandCategory } from './types';
 import { CommandPaletteItem } from './CommandPaletteItem';
 import { Typography } from '@/constants/Typography';
 import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
+import type { StudioOverlayPresentation } from '@/features/studio-overlays/studioOverlayPresentation';
 
 interface CommandPaletteResultsProps {
     categories: CommandCategory[];
     selectedIndex: number;
     onSelectCommand: (command: Command) => void;
     onSelectionChange: (index: number) => void;
+    presentation?: StudioOverlayPresentation;
 }
 
 export function CommandPaletteResults({ 
     categories, 
     selectedIndex, 
     onSelectCommand, 
-    onSelectionChange 
+    onSelectionChange,
+    presentation,
 }: CommandPaletteResultsProps) {
-    const overlayPresentation = useStudioOverlayPresentation();
+    const resolvedPresentation = useStudioOverlayPresentation();
+    const overlayPresentation = presentation ?? resolvedPresentation;
     const scrollViewRef = useRef<ScrollView>(null);
     const itemRefs = useRef<{ [key: number]: View | null }>({});
     
@@ -102,6 +106,7 @@ export function CommandPaletteResults({
                                 isSelected={isSelected}
                                 onPress={() => onSelectCommand(command)}
                                 onHover={() => onSelectionChange(commandIndex)}
+                                presentation={overlayPresentation}
                             />
                         </View>
                     );

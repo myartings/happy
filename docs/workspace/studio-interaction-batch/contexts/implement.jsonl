@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-ui-parallel-integration.md","reason":"Accepted predecessor visual and functional-layout boundary."}
+{"path":"docs/specs/studio-interaction-batch.md","reason":"Accepted observable behavior and platform contract."}
+{"path":"docs/tasks/studio-interaction-batch-tasks.md","reason":"Parallel ownership and integration queue."}
+{"path":"docs/workspace/studio-interaction-batch/children.md","reason":"Writer branch/worktree boundaries and return contracts."}

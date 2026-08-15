@@ -35,6 +35,9 @@ function findOscEnd(input: string, start: number): number {
         if (input[index] === '\u001B' && input[index + 1] === '\\') {
             return index + 2;
         }
+        if (input.charCodeAt(index) === 0x9C) {
+            return index + 1;
+        }
     }
     return input.length;
 }
@@ -98,6 +101,34 @@ function applySgrCodes(style: MutableAnsiTextStyle, codes: readonly number[]): M
     return next;
 }
 
+function parseSgrParameters(parameters: string): number[] | null {
+    if (!/^[0-9;:]*$/.test(parameters)) return null;
+    if (parameters.length === 0) return [0];
+    const codes: number[] = [];
+    for (const segment of parameters.split(';')) {
+        if (!segment.includes(':')) {
+            codes.push(Number(segment));
+            continue;
+        }
+        const parts = segment.split(':');
+        const target = Number(parts[0]);
+        const mode = Number(parts[1]);
+        if ((target === 38 || target === 48) && mode === 5 && parts.length === 3) {
+            codes.push(target, mode, Number(parts[2]));
+            continue;
+        }
+        if ((target === 38 || target === 48) && mode === 2) {
+            const channels = parts.slice(2).filter((part) => part.length > 0).map(Number);
+            if (channels.length === 3) {
+                codes.push(target, mode, ...channels);
+                continue;
+            }
+        }
+        return null;
+    }
+    return codes;
+}
+
 export function parseAnsiSgr(input: string): ParsedSemanticText {
     const runs: StyledSemanticTextRun[] = [];
     let style: MutableAnsiTextStyle = {};
@@ -120,13 +151,32 @@ export function parseAnsiSgr(input: string): ParsedSemanticText {
     };
 
     while (inputOffset < input.length) {
-        const escapeOffset = input.indexOf('\u001B', inputOffset);
+        const escOffset = input.indexOf('\u001B', inputOffset);
+        const c1CsiOffset = input.indexOf('\u009B', inputOffset);
+        const c1OscOffset = input.indexOf('\u009D', inputOffset);
+        const candidates = [escOffset, c1CsiOffset, c1OscOffset].filter((offset) => offset >= 0);
+        const escapeOffset = candidates.length > 0 ? Math.min(...candidates) : -1;
         if (escapeOffset === -1) {
             appendText(input.slice(inputOffset));
             break;
         }
 
         appendText(input.slice(inputOffset, escapeOffset));
+        if (input[escapeOffset] === '\u009B') {
+            const finalOffset = findCsiEnd(input, escapeOffset + 1);
+            if (finalOffset === input.length) break;
+            const parameters = input.slice(escapeOffset + 1, finalOffset);
+            const codes = input[finalOffset] === 'm' ? parseSgrParameters(parameters) : null;
+            if (codes) {
+                style = applySgrCodes(style, codes);
+            }
+            inputOffset = finalOffset + 1;
+            continue;
+        }
+        if (input[escapeOffset] === '\u009D') {
+            inputOffset = findOscEnd(input, escapeOffset + 1);
+            continue;
+        }
         const introducer = input[escapeOffset + 1];
 
         if (introducer === '[') {
@@ -136,10 +186,8 @@ export function parseAnsiSgr(input: string): ParsedSemanticText {
             }
 
             const parameters = input.slice(escapeOffset + 2, finalOffset);
-            if (input[finalOffset] === 'm' && /^[0-9;]*$/.test(parameters)) {
-                const codes = parameters.length === 0
-                    ? [0]
-                    : parameters.split(';').map(Number);
+            const codes = input[finalOffset] === 'm' ? parseSgrParameters(parameters) : null;
+            if (codes) {
                 style = applySgrCodes(style, codes);
             }
             inputOffset = finalOffset + 1;

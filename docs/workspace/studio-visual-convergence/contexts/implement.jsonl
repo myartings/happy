@@ -1,0 +1,4 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Accepted observable behavior and compatibility contract"}
+{"path":"docs/tasks/studio-visual-convergence-tasks.md","reason":"Dependency, ownership, and validation boundaries"}
+{"path":"docs/workspace/studio-visual-convergence/integration.md","reason":"Parent merge order and child isolation contract"}

@@ -40,6 +40,12 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | `2026-08-14` | `pnpm --filter happy-app exec vitest run sources/encryption/blob.test.ts` | passed, 9/9 | Immediate isolated reproduction passed; 1MB case completed in 2.431s. |
 | `2026-08-14` | `git diff --check` | passed | Post-review-fix whitespace check; only repository line-ending notices. |
 | `2026-08-14` | `py -3 scripts/workflow-audit.py --strict --require-active remote-workspace-project-discovery` | pass-with-gaps | Post-review-fix audit; check, review, and finish receipts remain. |
+| `2026-08-15` | merge `origin/dev` at `c5d08175` | conflicts resolved | Preserved both PRD documents and all archive rows; retained the newer empty ACTIVE-workflow date. No product-code conflict occurred. |
+| `2026-08-15` | targeted CLI scanner/RPC Vitest suites | passed, 7/7 | Post-merge regression in the independent feature worktree. |
+| `2026-08-15` | targeted App discovery/RPC-wrapper Vitest suites | passed, 13/13 | Post-merge regression in the independent feature worktree. |
+| `2026-08-15` | `pnpm --filter happy typecheck` and `pnpm --filter happy-app typecheck` | passed | Post-merge CLI and App typechecks. |
+| `2026-08-15` | workflow validator, core tests, CI tests, and staged workflow CI | passed | Core and CI test scripts passed 14/14 each; staged workflow CI passed. |
+| `2026-08-15` | full Happy App Vitest family | failed, one unrelated test | `studioSidebarWiring.test.ts` has a Windows CRLF-sensitive source-string assertion; it fails 1/6 in isolation and both involved files are byte-for-byte the `origin/dev` versions. Workspace Project Discovery tests passed. User accepted this dev baseline gap on 2026-08-16. |
 
 ## Acceptance coverage
 
@@ -73,3 +79,8 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 - The post-fix full App family again exposed only the unrelated parallel-load
   1MB blob timeout; its immediate isolated suite passed 9/9 and the user
   explicitly accepted this gap.
+- After merging `origin/dev` at `c5d08175`, the full App family exposed one
+  unrelated Windows CRLF-sensitive Studio source-string assertion. The test
+  and its inspected source file have no feature-branch delta from `origin/dev`,
+  the failure reproduces alone, and the user accepted this dev baseline gap on
+  2026-08-16.

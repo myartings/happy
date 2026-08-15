@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-sidebar-convergence",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Parent spec Track B and AC4/AC5/AC8 plus task file define accepted behavior and exclusive scope",
+      "updated": "2026-08-13T17:01:10+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D5 resolve ownership, compatibility, metadata retention, navigation-row grammar, and risk classification",
+      "updated": "2026-08-13T17:01:10+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature child is isolated at d54c2fea with fixed allowed files and resolver+wiring+typecheck validation seam",
+      "updated": "2026-08-13T17:01:10+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Studio-only presentation changes do not trigger authentication, authorization, permissions, migration, privacy, security, deployment, protocol, or synchronization gates",
+      "updated": "2026-08-13T17:01:10+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Focused TDD reached green: 31 Studio sidebar tests and Happy App typecheck pass; changes remain within Track B product boundary",
+      "updated": "2026-08-13T17:07:57+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures",
+      "updated": "2026-08-13T17:11:03+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues; Studio gating, callbacks, accessibility, interaction states, metadata retention, and exclusive ownership verified",
+      "updated": "2026-08-13T17:11:39+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish record covers outcome, verification, whole-diff review, rollback, learning disposition, parent integration, and packaged visual uncertainty",
+      "updated": "2026-08-13T17:12:17+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T16:58:57+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T17:01:10+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Parent spec Track B and AC4/AC5/AC8 plus task file define accepted behavior and exclusive scope"
+    },
+    {
+      "at": "2026-08-13T17:01:10+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D5 resolve ownership, compatibility, metadata retention, navigation-row grammar, and risk classification"
+    },
+    {
+      "at": "2026-08-13T17:01:10+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Studio-only presentation changes do not trigger authentication, authorization, permissions, migration, privacy, security, deployment, protocol, or synchronization gates"
+    },
+    {
+      "at": "2026-08-13T17:01:10+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature child is isolated at d54c2fea with fixed allowed files and resolver+wiring+typecheck validation seam"
+    },
+    {
+      "at": "2026-08-13T17:01:19+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add focused failing tests for sidebar density and navigation-row resting presentation"
+    },
+    {
+      "at": "2026-08-13T17:07:57+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Focused TDD reached green: 31 Studio sidebar tests and Happy App typecheck pass; changes remain within Track B product boundary"
+    },
+    {
+      "at": "2026-08-13T17:07:58+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run focused feature suite, Happy App typecheck, workflow checks, diff check, and acceptance review"
+    },
+    {
+      "at": "2026-08-13T17:11:03+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:11:39+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues; Studio gating, callbacks, accessibility, interaction states, metadata retention, and exclusive ownership verified"
+    },
+    {
+      "at": "2026-08-13T17:11:39+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish record, strict audit, archive pending, staged workflow CI, and local commit"
+    },
+    {
+      "at": "2026-08-13T17:12:17+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish record covers outcome, verification, whole-diff review, rollback, learning disposition, parent integration, and packaged visual uncertainty"
+    },
+    {
+      "at": "2026-08-13T17:12:17+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Completed Studio sidebar density and hierarchy Track B with 31 focused tests, configured typechecks, workflow checks, and whole-diff review passing; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-13T17:12:17+00:00",
+  "previousActive": {
+    "feature": "studio-visual-convergence",
+    "phase": "implementation",
+    "updated": "2026-08-14",
+    "next": "Commit Batch 0, fork three isolated writers, then integrate validated child commits.",
+    "branch / worktree": "feature/studio-visual-convergence"
+  },
+  "archivedAt": "2026-08-13T17:12:17+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Completed Studio sidebar density and hierarchy Track B with 31 focused tests, configured typechecks, workflow checks, and whole-diff review passing",
+  "archiveFollowUp": "None"
+}

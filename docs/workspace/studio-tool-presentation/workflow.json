@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-tool-presentation",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Cherry-pick into the parent integration branch, capture collapsed and expanded real tool states in the packaged Desktop, and obtain explicit user acceptance.",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User authorized the next parallel Studio UI batch on 2026-08-13; docs/specs/studio-tool-presentation.md bounds this tool-region slice and preserves explicit packaged visual review.",
+      "updated": "2026-08-13T10:03:40+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "Activation, ownership, compatibility, callback preservation, and parent visual acceptance boundary are resolved in decisions.md and the accepted spec.",
+      "updated": "2026-08-13T10:03:40+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: isolated branch/worktree and local-only tracker boundary confirmed; batch-plan.md records allowed and blocked paths, dependencies, test seam, stop conditions, return contract, and parent merge ownership.",
+      "updated": "2026-08-13T10:03:40+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only packaged Desktop styling; no authentication, authorization, protocol, persistence, privacy, destructive, migration, or cross-device trigger.",
+      "updated": "2026-08-13T10:03:40+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Implemented the feature-owned fail-closed Studio tool presentation and wired it through owned actual tool shell, compact row, section, error, status, full-view, Codex Bash/diff/patch components; callbacks, parsing, permission/footer order, collapse state, and non-Studio defaults remain intact.",
+      "updated": "2026-08-13T10:13:24+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Focused tool family tests pass 32/32, actual component behavior tests cover press/collapse/error/footer behavior, happy-app typecheck and workflow validation/test suites pass. The parent-owned integrated packaged screenshot and explicit visual acceptance remain intentionally deferred by the parallel batch contract.",
+      "updated": "2026-08-13T10:15:38+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking findings after increasing the nested patch disclosure inset/target; product writes remain inside the assigned tools and feature module, activation fails closed, and parsing, navigation, permissions, callbacks, collapse state, diff semantics, and non-Studio defaults are unchanged.",
+      "updated": "2026-08-13T10:15:38+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish record, rollback, whole-diff result, session handoff, exact verification, local-only tracker reconciliation, and parent-owned packaged screenshot instructions are complete; local commit is authorized, with no push or merge.",
+      "updated": "2026-08-13T10:16:36+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T10:01:43+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T10:03:40+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User authorized the next parallel Studio UI batch on 2026-08-13; docs/specs/studio-tool-presentation.md bounds this tool-region slice and preserves explicit packaged visual review."
+    },
+    {
+      "at": "2026-08-13T10:03:40+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "Activation, ownership, compatibility, callback preservation, and parent visual acceptance boundary are resolved in decisions.md and the accepted spec."
+    },
+    {
+      "at": "2026-08-13T10:03:40+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only packaged Desktop styling; no authentication, authorization, protocol, persistence, privacy, destructive, migration, or cross-device trigger."
+    },
+    {
+      "at": "2026-08-13T10:03:40+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: isolated branch/worktree and local-only tracker boundary confirmed; batch-plan.md records allowed and blocked paths, dependencies, test seam, stop conditions, return contract, and parent merge ownership."
+    },
+    {
+      "at": "2026-08-13T10:04:26+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED resolver and actual component behavior tests, implement the Studio-only tool presentation, then run focused verification"
+    },
+    {
+      "at": "2026-08-13T10:13:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented the feature-owned fail-closed Studio tool presentation and wired it through owned actual tool shell, compact row, section, error, status, full-view, Codex Bash/diff/patch components; callbacks, parsing, permission/footer order, collapse state, and non-Studio defaults remain intact."
+    },
+    {
+      "at": "2026-08-13T10:13:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run workflow checks, rerun focused tests/typecheck, inspect the whole diff, then record check and review receipts"
+    },
+    {
+      "at": "2026-08-13T10:15:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Focused tool family tests pass 32/32, actual component behavior tests cover press/collapse/error/footer behavior, happy-app typecheck and workflow validation/test suites pass. The parent-owned integrated packaged screenshot and explicit visual acceptance remain intentionally deferred by the parallel batch contract."
+    },
+    {
+      "at": "2026-08-13T10:15:38+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking findings after increasing the nested patch disclosure inset/target; product writes remain inside the assigned tools and feature module, activation fails closed, and parsing, navigation, permissions, callbacks, collapse state, diff semantics, and non-Studio defaults are unchanged."
+    },
+    {
+      "at": "2026-08-13T10:15:38+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record isolated-worktree handoff and rollback, archive pending commit, run staged workflow CI, and commit locally"
+    },
+    {
+      "at": "2026-08-13T10:16:36+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish record, rollback, whole-diff result, session handoff, exact verification, local-only tracker reconciliation, and parent-owned packaged screenshot instructions are complete; local commit is authorized, with no push or merge."
+    },
+    {
+      "at": "2026-08-13T10:16:36+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and verified the isolated Studio tool presentation batch; ready for parent integration, with packaged visual acceptance deferred.; commit: pending; follow-up: Cherry-pick into the parent integration branch, capture collapsed and expanded real tool states in the packaged Desktop, and obtain explicit user acceptance."
+    }
+  ],
+  "updated": "2026-08-13T10:16:36+00:00",
+  "archivedAt": "2026-08-13T10:16:36+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and verified the isolated Studio tool presentation batch; ready for parent integration, with packaged visual acceptance deferred.",
+  "archiveFollowUp": "Cherry-pick into the parent integration branch, capture collapsed and expanded real tool states in the packaged Desktop, and obtain explicit user acceptance."
+}

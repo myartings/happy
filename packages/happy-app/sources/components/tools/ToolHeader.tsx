@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ToolCall } from '@/sync/typesMessage';
 import { knownTools } from '@/components/tools/knownTools';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface ToolHeaderProps {
     tool: ToolCall;
@@ -11,6 +12,7 @@ interface ToolHeaderProps {
 
 export function ToolHeader({ tool }: ToolHeaderProps) {
     const { theme } = useUnistyles();
+    const studioPresentation = useStudioToolPresentation();
     const knownTool = knownTools[tool.name as keyof typeof knownTools] as any;
 
     // Extract status first for Bash tool to potentially use as title
@@ -48,10 +50,16 @@ export function ToolHeader({ tool }: ToolHeaderProps) {
             <View style={styles.titleContainer}>
                 <View style={styles.titleRow}>
                     {icon}
-                    <Text style={styles.title} numberOfLines={1}>{toolTitle}</Text>
+                    <Text style={[styles.title, studioPresentation && {
+                        color: studioPresentation.diff.pathColor,
+                        fontSize: studioPresentation.header.titleFontSize,
+                    }]} numberOfLines={1}>{toolTitle}</Text>
                 </View>
                 {subtitle && (
-                    <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
+                    <Text style={[styles.subtitle, studioPresentation && {
+                        color: studioPresentation.diff.metadataColor,
+                        fontSize: studioPresentation.header.descriptionFontSize,
+                    }]} numberOfLines={1}>{subtitle}</Text>
                 )}
             </View>
         </View>

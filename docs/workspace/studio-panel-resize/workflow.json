@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-panel-resize",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent cherry-picks locally, integrates Tracks B/C, builds/installs packaged macOS Desktop, captures 1470pt default/resized/reset/collapse states, and obtains user visual acceptance",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Parent spec docs/specs/studio-visual-convergence.md and Track A tasks define AC2/AC3/AC8, exclusive files, packaged-Studio-only compatibility, and parent-owned visual acceptance",
+      "updated": "2026-08-13T17:00:15+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md resolves left 275/right 360 defaults, bounds, 600pt main protection, persisted collapse semantics, runtime gating, and accessible drag/reset behavior",
+      "updated": "2026-08-13T17:00:15+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: clean isolated child branch/worktree, explicit allowed/blocked files and stop/return contract, pure-policy TDD seam, local-settings tests, typecheck, workflow checks, and parent integration gate are durable",
+      "updated": "2026-08-13T17:00:15+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Device-local UI geometry only; no authentication, authorization, privacy, migration, destructive operation, protocol, backend, deployment, or cross-device synchronization trigger",
+      "updated": "2026-08-13T17:00:15+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD pure width policy, device-local defaults/schema, accessible pointer/keyboard/double-click handle, and packaged-Studio-only left/right host seams implemented; focused 4 files/24 tests and Happy App typecheck pass",
+      "updated": "2026-08-13T17:09:52+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-13T17:15:53+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff semantic review found and fixed actual right-panel visibility coordination for picker-open state; final review confirms packaged-Studio-only activation, 275/360 defaults, bounded main protection, persisted collapse restoration, pointer capture, keyboard/double-click reset, non-Studio fallback, and exclusive file ownership with no blocking findings",
+      "updated": "2026-08-13T17:16:09+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records exact final tests/workflow checks, review correction, rollback, exclusive-boundary audit, parent integration handoff, and packaged visual uncertainties; local commit is authorized with no push or merge",
+      "updated": "2026-08-13T17:17:45+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T16:58:41+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T17:00:15+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Parent spec docs/specs/studio-visual-convergence.md and Track A tasks define AC2/AC3/AC8, exclusive files, packaged-Studio-only compatibility, and parent-owned visual acceptance"
+    },
+    {
+      "at": "2026-08-13T17:00:15+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md resolves left 275/right 360 defaults, bounds, 600pt main protection, persisted collapse semantics, runtime gating, and accessible drag/reset behavior"
+    },
+    {
+      "at": "2026-08-13T17:00:15+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Device-local UI geometry only; no authentication, authorization, privacy, migration, destructive operation, protocol, backend, deployment, or cross-device synchronization trigger"
+    },
+    {
+      "at": "2026-08-13T17:00:15+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: clean isolated child branch/worktree, explicit allowed/blocked files and stop/return contract, pure-policy TDD seam, local-settings tests, typecheck, workflow checks, and parent integration gate are durable"
+    },
+    {
+      "at": "2026-08-13T17:00:43+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED pure policy and persistence tests, implement Studio-only panel sizing and accessible handles, then run focused verification"
+    },
+    {
+      "at": "2026-08-13T17:09:52+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD pure width policy, device-local defaults/schema, accessible pointer/keyboard/double-click handle, and packaged-Studio-only left/right host seams implemented; focused 4 files/24 tests and Happy App typecheck pass"
+    },
+    {
+      "at": "2026-08-13T17:09:52+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Rerun complete Happy App family, record workflow checks, inspect whole diff, and close the isolated child"
+    },
+    {
+      "at": "2026-08-13T17:12:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:15:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:16:09+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff semantic review found and fixed actual right-panel visibility coordination for picker-open state; final review confirms packaged-Studio-only activation, 275/360 defaults, bounded main protection, persisted collapse restoration, pointer capture, keyboard/double-click reset, non-Studio fallback, and exclusive file ownership with no blocking findings"
+    },
+    {
+      "at": "2026-08-13T17:16:09+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record final evidence, rollback, visual uncertainties, child handoff, archive with commit pending, stage atomically, pass staged workflow CI, and commit locally"
+    },
+    {
+      "at": "2026-08-13T17:17:45+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records exact final tests/workflow checks, review correction, rollback, exclusive-boundary audit, parent integration handoff, and packaged visual uncertainties; local commit is authorized with no push or merge"
+    },
+    {
+      "at": "2026-08-13T17:17:45+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and verified packaged-Studio resizable left/right panels with persisted widths, accessible reset handles, and main-content protection; commit: pending; follow-up: Parent cherry-picks locally, integrates Tracks B/C, builds/installs packaged macOS Desktop, captures 1470pt default/resized/reset/collapse states, and obtains user visual acceptance"
+    }
+  ],
+  "updated": "2026-08-13T17:17:45+00:00",
+  "previousActive": {
+    "feature": "studio-visual-convergence",
+    "phase": "implementation",
+    "updated": "2026-08-14",
+    "next": "Commit Batch 0, fork three isolated writers, then integrate validated child commits.",
+    "branch / worktree": "feature/studio-visual-convergence"
+  },
+  "archivedAt": "2026-08-13T17:17:45+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and verified packaged-Studio resizable left/right panels with persisted widths, accessible reset handles, and main-content protection",
+  "archiveFollowUp": "Parent cherry-picks locally, integrates Tracks B/C, builds/installs packaged macOS Desktop, captures 1470pt default/resized/reset/collapse states, and obtains user visual acceptance"
+}

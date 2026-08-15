@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Accepted AC2/AC3 panel behavior."}
+{"path":"packages/happy-app/sources/features/studio-panel-resize/studioPanelResizePolicy.ts","reason":"Shared deterministic joint projection policy."}
+{"path":"packages/happy-app/sources/features/studio-panel-resize/studioPanelResizePolicy.test.ts","reason":"Stable pure behavior seam for RED/GREEN."}
+{"path":"packages/happy-app/sources/features/studio-panel-resize/StudioPanelResizeHandle.tsx","reason":"Reset and drag target semantics."}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"Minimum left host seam."}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Minimum right host seam."}

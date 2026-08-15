@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-panel-resize-interaction-projection",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Parent integration visually verifies packaged pointer feel and handle discoverability",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Parent final review provides exact closed-loop reproduction and requires target/rendered separation, active-side budget redistribution, reset, and collapse/reopen",
+      "updated": "2026-08-13T17:46:31+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md resolves rendered-based interaction targets and persisted last-active-side priority",
+      "updated": "2026-08-13T17:46:31+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: bounded panel feature/two hosts/minimum local settings, closed-loop TDD seam, focused/full/typecheck/workflow/review/staged CI",
+      "updated": "2026-08-13T17:46:31+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Device-local Studio geometry preference only; no protocol/backend/auth/privacy/destructive/deployment/cross-device trigger",
+      "updated": "2026-08-13T17:46:31+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Closed-loop RED reproduced backward drag/no keyboard response; GREEN separates target/rendered widths, persists last active side, prioritizes active-side constrained allocation, and atomically updates host target+priority; focused 5 files/32 tests and typecheck pass",
+      "updated": "2026-08-13T17:49:33+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Focused 5 files/33 tests, full happy-app 135 files/1203 tests, typecheck, git diff --check, and workflow-check 4 commands all pass; validation.md maps all acceptance criteria",
+      "updated": "2026-08-13T17:53:47+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole incremental diff reviewed against ebac34eb: active-side projection prioritizes requested rendered movement without exceeding either panel min/max, allows unused wide-window budget, preserves stored targets through collapse/reopen/window changes, atomically persists side priority, and remains gated to packaged Tauri Studio hosts; no out-of-scope product files",
+      "updated": "2026-08-13T17:53:47+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records verified behavior, whole-diff review, rollback, no durable guidance promotion, and parent-owned packaged visual follow-up",
+      "updated": "2026-08-13T17:54:09+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T17:45:56+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T17:46:31+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Parent final review provides exact closed-loop reproduction and requires target/rendered separation, active-side budget redistribution, reset, and collapse/reopen"
+    },
+    {
+      "at": "2026-08-13T17:46:31+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md resolves rendered-based interaction targets and persisted last-active-side priority"
+    },
+    {
+      "at": "2026-08-13T17:46:31+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Device-local Studio geometry preference only; no protocol/backend/auth/privacy/destructive/deployment/cross-device trigger"
+    },
+    {
+      "at": "2026-08-13T17:46:31+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: bounded panel feature/two hosts/minimum local settings, closed-loop TDD seam, focused/full/typecheck/workflow/review/staged CI"
+    },
+    {
+      "at": "2026-08-13T17:46:32+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write closed-loop RED tests, separate target/rendered interaction, add active-side allocation/persistence, verify"
+    },
+    {
+      "at": "2026-08-13T17:49:33+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Closed-loop RED reproduced backward drag/no keyboard response; GREEN separates target/rendered widths, persists last active side, prioritizes active-side constrained allocation, and atomically updates host target+priority; focused 5 files/32 tests and typecheck pass"
+    },
+    {
+      "at": "2026-08-13T17:49:33+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete App and workflow checks, whole incremental review, archive/staged CI/commit"
+    },
+    {
+      "at": "2026-08-13T17:52:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:53:47+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Focused 5 files/33 tests, full happy-app 135 files/1203 tests, typecheck, git diff --check, and workflow-check 4 commands all pass; validation.md maps all acceptance criteria"
+    },
+    {
+      "at": "2026-08-13T17:53:47+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole incremental diff reviewed against ebac34eb: active-side projection prioritizes requested rendered movement without exceeding either panel min/max, allows unused wide-window budget, preserves stored targets through collapse/reopen/window changes, atomically persists side priority, and remains gated to packaged Tauri Studio hosts; no out-of-scope product files"
+    },
+    {
+      "at": "2026-08-13T17:53:47+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish review, archive commit=pending, stage product plus workflow evidence, run staged CI, and commit locally"
+    },
+    {
+      "at": "2026-08-13T17:54:09+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records verified behavior, whole-diff review, rollback, no durable guidance promotion, and parent-owned packaged visual follow-up"
+    },
+    {
+      "at": "2026-08-13T17:54:09+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Fix constrained Studio panel interaction by separating target/rendered widths and persisting bounded active-side allocation; commit: pending; follow-up: Parent integration visually verifies packaged pointer feel and handle discoverability"
+    }
+  ],
+  "updated": "2026-08-13T17:54:09+00:00",
+  "previousActive": {
+    "feature": "studio-visual-convergence",
+    "phase": "implementation",
+    "updated": "2026-08-14",
+    "next": "Commit Batch 0, fork three isolated writers, then integrate validated child commits.",
+    "branch / worktree": "feature/studio-visual-convergence"
+  },
+  "archivedAt": "2026-08-13T17:54:09+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Fix constrained Studio panel interaction by separating target/rendered widths and persisting bounded active-side allocation",
+  "archiveFollowUp": "Parent integration visually verifies packaged pointer feel and handle discoverability"
+}

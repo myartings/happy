@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-panel-resize-joint-projection",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Parent cherry-picks after d1a040bd and verifies integrated 1200pt/1470pt drag, reset, collapse/reopen, and packaged visuals",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Parent integration review identifies independent persisted-opposite projection causing 220/280 blank space and reset-at-min at 1200pt; AC2/AC3 require safe shared projection and usable reset",
+      "updated": "2026-08-13T17:33:01+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md resolves deterministic joint allocation, intrinsic-default reset targets, and unchanged collapsed-side semantics",
+      "updated": "2026-08-13T17:33:02+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: clean isolated branch at d1a040bd, bounded existing feature plus two host seams, pure-policy TDD reproduction, focused/full App/typecheck/workflow/review/staged-CI gates, local-only incremental commit",
+      "updated": "2026-08-13T17:33:02+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Pure Studio desktop geometry correction only; no authentication, protocol, persistence schema, migration, backend, destructive, privacy, deployment, or cross-device trigger",
+      "updated": "2026-08-13T17:33:02+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "RED reproduced missing joint projection, stale-opposite host wiring, and reset dependency; GREEN adds deterministic paired allocation, intrinsic target reset/drag, and minimal shared host consumption; focused 5 files/29 tests and typecheck pass",
+      "updated": "2026-08-13T17:36:17+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-13T17:36:52+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole incremental diff review found no blocking issue: joint allocation is deterministic, consumes no more than window minus 600pt main reserve, preserves intrinsic side bounds, uses visible-only projection for collapse, resets persisted targets to 275/360, and changes only existing Studio panel feature plus minimal left/right host width sources; non-Studio gating/persistence schema/callbacks unchanged",
+      "updated": "2026-08-13T17:37:22+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records joint-projection outcome, RED/GREEN/full verification, whole-diff review, rollback, unchanged boundaries, session handoff, and parent packaged follow-up; incremental local commit authorized without push/merge",
+      "updated": "2026-08-13T17:38:01+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T17:32:07+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T17:33:01+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Parent integration review identifies independent persisted-opposite projection causing 220/280 blank space and reset-at-min at 1200pt; AC2/AC3 require safe shared projection and usable reset"
+    },
+    {
+      "at": "2026-08-13T17:33:02+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md resolves deterministic joint allocation, intrinsic-default reset targets, and unchanged collapsed-side semantics"
+    },
+    {
+      "at": "2026-08-13T17:33:02+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Pure Studio desktop geometry correction only; no authentication, protocol, persistence schema, migration, backend, destructive, privacy, deployment, or cross-device trigger"
+    },
+    {
+      "at": "2026-08-13T17:33:02+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: clean isolated branch at d1a040bd, bounded existing feature plus two host seams, pure-policy TDD reproduction, focused/full App/typecheck/workflow/review/staged-CI gates, local-only incremental commit"
+    },
+    {
+      "at": "2026-08-13T17:33:02+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED joint projection and reset behavior, implement shared pair projection with minimal host seams, then verify"
+    },
+    {
+      "at": "2026-08-13T17:36:17+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED reproduced missing joint projection, stale-opposite host wiring, and reset dependency; GREEN adds deterministic paired allocation, intrinsic target reset/drag, and minimal shared host consumption; focused 5 files/29 tests and typecheck pass"
+    },
+    {
+      "at": "2026-08-13T17:36:17+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete relevant App family and workflow checks, review incremental diff, then archive and commit"
+    },
+    {
+      "at": "2026-08-13T17:36:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:37:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole incremental diff review found no blocking issue: joint allocation is deterministic, consumes no more than window minus 600pt main reserve, preserves intrinsic side bounds, uses visible-only projection for collapse, resets persisted targets to 275/360, and changes only existing Studio panel feature plus minimal left/right host width sources; non-Studio gating/persistence schema/callbacks unchanged"
+    },
+    {
+      "at": "2026-08-13T17:37:22+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record finish/rollback/session handoff, archive commit pending, stage incremental diff, pass staged CI, and commit locally"
+    },
+    {
+      "at": "2026-08-13T17:38:01+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records joint-projection outcome, RED/GREEN/full verification, whole-diff review, rollback, unchanged boundaries, session handoff, and parent packaged follow-up; incremental local commit authorized without push/merge"
+    },
+    {
+      "at": "2026-08-13T17:38:01+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Correct dual-panel projection so constrained persisted targets share available width and reset to containable defaults; commit: pending; follow-up: Parent cherry-picks after d1a040bd and verifies integrated 1200pt/1470pt drag, reset, collapse/reopen, and packaged visuals"
+    }
+  ],
+  "updated": "2026-08-13T17:38:01+00:00",
+  "previousActive": {
+    "feature": "studio-visual-convergence",
+    "phase": "implementation",
+    "updated": "2026-08-14",
+    "next": "Commit Batch 0, fork three isolated writers, then integrate validated child commits.",
+    "branch / worktree": "feature/studio-visual-convergence"
+  },
+  "archivedAt": "2026-08-13T17:38:01+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Correct dual-panel projection so constrained persisted targets share available width and reset to containable defaults",
+  "archiveFollowUp": "Parent cherry-picks after d1a040bd and verifies integrated 1200pt/1470pt drag, reset, collapse/reopen, and packaged visuals"
+}

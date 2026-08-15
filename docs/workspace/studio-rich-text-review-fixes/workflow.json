@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-rich-text-review-fixes",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Parent applies incremental commit after 2d794d46 and reruns integrated packaged visual acceptance",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Parent integration-review findings 1 and 3 plus docs/specs/studio-visual-convergence.md AC6-AC8",
+      "updated": "2026-08-13T17:32:42+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D3 in decisions.md define conservative observable role recognition and strict packaged Studio parser gating",
+      "updated": "2026-08-13T17:32:43+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Clean isolated writer branch; exclusive files, public behavior seams, validation commands, stop boundaries, and local return contract recorded",
+      "updated": "2026-08-13T17:32:43+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "UI parser/presentation follow-up only; no project risk trigger applies; D4",
+      "updated": "2026-08-13T17:32:43+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Three recorded RED/GREEN behaviors now cover legacy parser gating, parsed semantic roles, and parsed-role-to-concrete-style production composition; focused 35/35 and typecheck pass",
+      "updated": "2026-08-13T17:39:08+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-13T17:39:26+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Final incremental whole-diff review in finish.md: observable production composition, strict runtime/parser gating, negative prose coverage, and exclusive boundaries confirmed; no blocking findings",
+      "updated": "2026-08-13T17:40:01+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md and structured session record complete with verification, review, rollback, and parent incremental integration handoff",
+      "updated": "2026-08-13T17:40:26+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T17:31:49+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T17:32:42+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Parent integration-review findings 1 and 3 plus docs/specs/studio-visual-convergence.md AC6-AC8"
+    },
+    {
+      "at": "2026-08-13T17:32:43+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D3 in decisions.md define conservative observable role recognition and strict packaged Studio parser gating"
+    },
+    {
+      "at": "2026-08-13T17:32:43+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "UI parser/presentation follow-up only; no project risk trigger applies; D4"
+    },
+    {
+      "at": "2026-08-13T17:32:43+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Clean isolated writer branch; exclusive files, public behavior seams, validation commands, stop boundaries, and local return contract recorded"
+    },
+    {
+      "at": "2026-08-13T17:32:43+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED behavior tests for production semantic roles and Studio-only parser gating"
+    },
+    {
+      "at": "2026-08-13T17:36:34+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Two RED/GREEN tracers recorded; focused 34/34 tests, Happy App typecheck, and diff check pass"
+    },
+    {
+      "at": "2026-08-13T17:36:34+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run workflow checks and review the incremental diff against findings 1 and 3"
+    },
+    {
+      "at": "2026-08-13T17:36:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:37:23+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Incremental review found one evidence gap: parsed roles are behavior-tested, but final role-to-style composition remains inline in MarkdownView and only source-wiring tested"
+    },
+    {
+      "at": "2026-08-13T17:37:23+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add observable production role-to-style composition behavior and rerun verification"
+    },
+    {
+      "at": "2026-08-13T17:39:08+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Three recorded RED/GREEN behaviors now cover legacy parser gating, parsed semantic roles, and parsed-role-to-concrete-style production composition; focused 35/35 and typecheck pass"
+    },
+    {
+      "at": "2026-08-13T17:39:08+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Rerun workflow checks and final incremental review"
+    },
+    {
+      "at": "2026-08-13T17:39:26+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T17:40:01+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Final incremental whole-diff review in finish.md: observable production composition, strict runtime/parser gating, negative prose coverage, and exclusive boundaries confirmed; no blocking findings"
+    },
+    {
+      "at": "2026-08-13T17:40:01+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive follow-up, pass staged workflow CI, and commit the increment locally"
+    },
+    {
+      "at": "2026-08-13T17:40:26+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md and structured session record complete with verification, review, rollback, and parent incremental integration handoff"
+    },
+    {
+      "at": "2026-08-13T17:40:27+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Resolved rich-text integration review findings with observable semantic styling and strict packaged Studio parser gating; commit: pending; follow-up: Parent applies incremental commit after 2d794d46 and reruns integrated packaged visual acceptance"
+    }
+  ],
+  "updated": "2026-08-13T17:40:27+00:00",
+  "previousActive": {
+    "feature": "studio-visual-convergence",
+    "phase": "implementation",
+    "updated": "2026-08-14",
+    "next": "Commit Batch 0, fork three isolated writers, then integrate validated child commits.",
+    "branch / worktree": "feature/studio-visual-convergence"
+  },
+  "archivedAt": "2026-08-13T17:40:27+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Resolved rich-text integration review findings with observable semantic styling and strict packaged Studio parser gating",
+  "archiveFollowUp": "Parent applies incremental commit after 2d794d46 and reruns integrated packaged visual acceptance"
+}

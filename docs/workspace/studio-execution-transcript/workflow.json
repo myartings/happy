@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-execution-transcript",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly said 做吧 after accepting Codex CLI as the primary semantic transcript reference; durable outcome and AC1-AC8 are recorded in docs/PRD.md and docs/specs/studio-execution-transcript.md.",
+      "updated": "2026-08-13T20:36:43+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D5 fix reference precedence, semantic color boundary, read-only transcript scope, Pierre diff authority, and observed-provider first slice.",
+      "updated": "2026-08-13T20:36:43+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature intensity; accepted PRD/spec/tasks; local-only execution; narrow ToolView/feature resolver/ANSI parser seams; public behavior tests and packaged evidence defined.",
+      "updated": "2026-08-13T20:36:43+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Studio-only read-only presentation using existing message fields; no protocol, command execution, permission, backend, auth, persistence, sync, privacy, or destructive operation change.",
+      "updated": "2026-08-13T20:36:43+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Feature-local Studio transcript model and renderer implemented from observed Happy shell tool fields; safe ANSI/C1 parser, bounded output, light/dark tokens, mounted selectable renderer, and non-Studio compatibility tests are green.",
+      "updated": "2026-08-13T20:53:26+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Focused 4 files/26 tests, full App 138 files/1232 tests, App/Server typechecks, Server 14 files/102 tests, workflow validators, diff check, unsigned packaged Studio build/install/launch passed. Exact light/dark transcript fixture capture remains because Accessibility input is unavailable and restart returned to an unselected session; no session was mutated to manufacture evidence.",
+      "updated": "2026-08-13T21:05:54+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff semantic review completed; corrected CR progress normalization, truncation model/run consistency, ISO colon SGR, and resolver dependency isolation. No blocking/high/medium correctness, compatibility, security, or regression finding remains.",
+      "updated": "2026-08-13T21:05:54+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "User accepted the explicitly named visual-capture and local-signing gaps and authorized commit/push. Finish review records validated scope, rollback, evidence, no promotion need, no tracker/PR action, and feature-branch-only publication.",
+      "updated": "2026-08-14T04:49:00+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-13T20:33:53+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-13T20:36:43+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly said 做吧 after accepting Codex CLI as the primary semantic transcript reference; durable outcome and AC1-AC8 are recorded in docs/PRD.md and docs/specs/studio-execution-transcript.md."
+    },
+    {
+      "at": "2026-08-13T20:36:43+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D5 fix reference precedence, semantic color boundary, read-only transcript scope, Pierre diff authority, and observed-provider first slice."
+    },
+    {
+      "at": "2026-08-13T20:36:43+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Studio-only read-only presentation using existing message fields; no protocol, command execution, permission, backend, auth, persistence, sync, privacy, or destructive operation change."
+    },
+    {
+      "at": "2026-08-13T20:36:43+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature intensity; accepted PRD/spec/tasks; local-only execution; narrow ToolView/feature resolver/ANSI parser seams; public behavior tests and packaged evidence defined."
+    },
+    {
+      "at": "2026-08-13T20:36:43+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Inventory real shell tool shapes, then implement the first ANSI-backed Studio transcript tracer bullet with public behavior tests."
+    },
+    {
+      "at": "2026-08-13T20:53:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Feature-local Studio transcript model and renderer implemented from observed Happy shell tool fields; safe ANSI/C1 parser, bounded output, light/dark tokens, mounted selectable renderer, and non-Studio compatibility tests are green."
+    },
+    {
+      "at": "2026-08-13T20:53:26+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured checks, complete whole-diff review, build packaged Studio, and collect visual evidence."
+    },
+    {
+      "at": "2026-08-13T20:54:05+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-13T21:05:54+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Focused 4 files/26 tests, full App 138 files/1232 tests, App/Server typechecks, Server 14 files/102 tests, workflow validators, diff check, unsigned packaged Studio build/install/launch passed. Exact light/dark transcript fixture capture remains because Accessibility input is unavailable and restart returned to an unselected session; no session was mutated to manufacture evidence."
+    },
+    {
+      "at": "2026-08-13T21:05:54+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff semantic review completed; corrected CR progress normalization, truncation model/run consistency, ISO colon SGR, and resolver dependency isolation. No blocking/high/medium correctness, compatibility, security, or regression finding remains."
+    },
+    {
+      "at": "2026-08-14T04:47:53+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record user acceptance of the visual-capture gap, finalize finish evidence, archive with commit pending, stage, run staged CI, commit, and push the feature branch."
+    },
+    {
+      "at": "2026-08-14T04:49:00+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "User accepted the explicitly named visual-capture and local-signing gaps and authorized commit/push. Finish review records validated scope, rollback, evidence, no promotion need, no tracker/PR action, and feature-branch-only publication."
+    },
+    {
+      "at": "2026-08-14T04:49:00+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Added a safe packaged-Studio shell execution transcript with observed command/output data, ANSI styling, light/dark contrast, bounded selectable logs, complete regression evidence, and user-accepted visual capture gap.; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-14T04:49:00+00:00",
+  "archivedAt": "2026-08-14T04:49:00+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Added a safe packaged-Studio shell execution transcript with observed command/output data, ANSI styling, light/dark contrast, bounded selectable logs, complete regression evidence, and user-accepted visual capture gap.",
+  "archiveFollowUp": "None"
+}

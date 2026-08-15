@@ -1,0 +1,10 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-visual-convergence.md","reason":"Accepted Track B behavior and compatibility contract"}
+{"path":"docs/tasks/studio-visual-convergence-tasks.md","reason":"Track B file ownership and completion checklist"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"Authorized top-action host seam"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Authorized historical row and section hierarchy seam"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Authorized active-session row seam"}
+{"path":"packages/happy-app/sources/components/ProjectGroup.tsx","reason":"Authorized project and workspace hierarchy seam"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Studio-only density resolver"}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarInteractionPresentation.ts","reason":"Existing hover focus pressed selected contract"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}

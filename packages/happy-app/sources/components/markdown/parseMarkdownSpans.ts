@@ -1,7 +1,8 @@
-import type { MarkdownSpan } from "./parseMarkdown";
+import type { MarkdownSpan, ParseMarkdownOptions } from "./parseMarkdown";
 
 // Updated pattern to handle nested markdown and asterisks
-const pattern = /(\*\*(.*?)(?:\*\*|$))|(\*(.*?)(?:\*|$))|(\[([^\]]+)\](?:\(([^)]+)\))?)|(`(.*?)(?:`|$))/g;
+const defaultPattern = /(\*\*(.*?)(?:\*\*|$))|(\*(.*?)(?:\*|$))|(\[([^\]]+)\](?:\(([^)]+)\))?)|(`(.*?)(?:`|$))/g;
+const studioPattern = /(\*\*(.*?)(?:\*\*|$))|(~~(.*?)(?:~~|$))|(\*(.*?)(?:\*|$))|(\[([^\]]+)\](?:\(([^)]+)\))?)|(`(.*?)(?:`|$))/g;
 
 function pushTextWithAutoLinks(spans: MarkdownSpan[], text: string, styles: MarkdownSpan['styles']) {
     const urlPattern = /https?:\/\/[^\s<]+/g;
@@ -36,10 +37,11 @@ function pushTextWithAutoLinks(spans: MarkdownSpan[], text: string, styles: Mark
     }
 }
 
-export function parseMarkdownSpans(markdown: string, header: boolean) {
+export function parseMarkdownSpans(markdown: string, header: boolean, options: ParseMarkdownOptions = {}) {
     const spans: MarkdownSpan[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
+    const pattern = options.enableStudioExtensions ? studioPattern : defaultPattern;
     pattern.lastIndex = 0;
 
     while ((match = pattern.exec(markdown)) !== null) {
@@ -56,24 +58,30 @@ export function parseMarkdownSpans(markdown: string, header: boolean) {
             } else {
                 pushTextWithAutoLinks(spans, match[2], ['bold']);
             }
-        } else if (match[3]) {
+        } else if (options.enableStudioExtensions && match[3]) {
+            // Strikethrough
+            pushTextWithAutoLinks(spans, match[4], ['strikethrough']);
+        } else if (match[options.enableStudioExtensions ? 5 : 3]) {
             // Italic
+            const italicText = match[options.enableStudioExtensions ? 6 : 4];
             if (header) {
-                pushTextWithAutoLinks(spans, match[4], []);
+                pushTextWithAutoLinks(spans, italicText, []);
             } else {
-                pushTextWithAutoLinks(spans, match[4], ['italic']);
+                pushTextWithAutoLinks(spans, italicText, ['italic']);
             }
-        } else if (match[5]) {
+        } else if (match[options.enableStudioExtensions ? 7 : 5]) {
             // Link - handle incomplete links (no URL part)
-            if (match[7]) {
-                spans.push({ styles: [], text: match[6], url: match[7] });
+            const linkText = match[options.enableStudioExtensions ? 8 : 6];
+            const linkUrl = match[options.enableStudioExtensions ? 9 : 7];
+            if (linkUrl) {
+                spans.push({ styles: [], text: linkText, url: linkUrl });
             } else {
                 // If no URL part, treat as plain text with brackets
-                pushTextWithAutoLinks(spans, `[${match[6]}]`, []);
+                pushTextWithAutoLinks(spans, `[${linkText}]`, []);
             }
-        } else if (match[8]) {
+        } else if (match[options.enableStudioExtensions ? 10 : 8]) {
             // Inline code
-            spans.push({ styles: ['code'], text: match[9], url: null });
+            spans.push({ styles: ['code'], text: match[options.enableStudioExtensions ? 11 : 9], url: null });
         }
 
         lastIndex = pattern.lastIndex;

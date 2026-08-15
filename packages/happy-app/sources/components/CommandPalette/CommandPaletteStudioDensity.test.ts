@@ -29,10 +29,12 @@ const presentationState = vi.hoisted(() => ({
             shortcutPaddingVertical: 3,
         },
         dividerColor: '#E4E4E5',
+        focusRingColor: 'focus-ring',
         hoverColor: 'hover',
         inputSurfaceColor: '#FAFAFA',
         isStudio: true,
         pressedColor: 'pressed',
+        selectedBorderColor: 'selected-border',
         selectedColor: 'selected',
         textColor: '#1A1C1F',
         textSecondaryColor: '#6F7277',
@@ -138,6 +140,8 @@ describe('Studio Command Palette density wiring', () => {
 
         const pressable = renderer.root.findByType('Pressable' as any);
         expect(flattenStyle(pressable.props.style({ pressed: false }))).toMatchObject({
+            backgroundColor: 'selected',
+            borderColor: 'selected-border',
             borderWidth: 1,
             marginVertical: 1,
             paddingHorizontal: 16,
@@ -152,6 +156,52 @@ describe('Studio Command Palette density wiring', () => {
         const textStyles = renderer.root.findAllByType('Text' as any).map((node: any) => flattenStyle(node.props.style));
         expect(textStyles).toContainEqual(expect.objectContaining({ fontSize: 14 }));
         expect(textStyles).toContainEqual(expect.objectContaining({ fontSize: 12 }));
+    });
+
+    it('wires actual hover and focus events into an item without changing selection callbacks', () => {
+        const onHover = vi.fn();
+        const renderer = render(React.createElement(CommandPaletteItem, {
+            command: { id: 'new', title: 'New Session', action: vi.fn() },
+            isSelected: false,
+            onHover,
+            onPress: vi.fn(),
+        }));
+        let pressable = renderer.root.findByType('Pressable' as any);
+
+        act(() => pressable.props.onHoverIn());
+        pressable = renderer.root.findByType('Pressable' as any);
+        expect(flattenStyle(pressable.props.style({ pressed: false }))).toMatchObject({
+            backgroundColor: 'hover',
+        });
+
+        act(() => pressable.props.onFocus());
+        pressable = renderer.root.findByType('Pressable' as any);
+        expect(flattenStyle(pressable.props.style({ pressed: false }))).toMatchObject({
+            outlineColor: 'focus-ring',
+            outlineWidth: 2,
+        });
+
+        act(() => pressable.props.onMouseEnter());
+        expect(onHover).toHaveBeenCalledOnce();
+
+        act(() => pressable.props.onBlur());
+        act(() => pressable.props.onFocus({ target: { matches: () => false } }));
+        pressable = renderer.root.findByType('Pressable' as any);
+        expect(flattenStyle(pressable.props.style({ pressed: false })).outlineWidth).toBeUndefined();
+    });
+
+    it('wires actual input focus to the Studio focus divider', () => {
+        const renderer = render(React.createElement(CommandPaletteInput, {
+            value: '',
+            onChangeText: vi.fn(),
+        }));
+        const input = renderer.root.findByType('TextInput' as any);
+        act(() => input.props.onFocus());
+
+        const container = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(container.props.style)).toMatchObject({
+            borderBottomColor: 'focus-ring',
+        });
     });
 
     it('wires compact Studio results and category spacing', () => {

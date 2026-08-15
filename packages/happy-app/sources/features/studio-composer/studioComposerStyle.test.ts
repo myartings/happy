@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { resolveDesktopComposerStyle } from './studioComposerStyle';
+import {
+    resolveDesktopComposerStyle,
+    resolveStudioComposerStatePresentation,
+} from './studioComposerStyle';
 
 describe('Studio desktop composer style', () => {
     it('resolves the accepted elevated composer geometry in packaged Studio', () => {
@@ -43,5 +46,63 @@ describe('Studio desktop composer style', () => {
             requestedStyle: 'studio',
             previewStyle: 'studio',
         }).visualStyle).toBe('default');
+    });
+});
+
+describe('Studio composer interaction states', () => {
+    const base = {
+        isStudio: true,
+        hasText: false,
+        hasAttachments: false,
+        hasSuggestions: false,
+        pickerOpen: false,
+        isSending: false,
+        showAbortButton: false,
+        isAborting: false,
+        isSendBlocked: false,
+    };
+
+    it('keeps the empty shell quiet and makes text or attachments visibly ready', () => {
+        expect(resolveStudioComposerStatePresentation(base)).toMatchObject({
+            state: 'empty',
+            shellBorder: '#E1E1E2',
+            primaryActionBackground: '#E7E7E8',
+            primaryActionForeground: '#858589',
+        });
+        expect(resolveStudioComposerStatePresentation({ ...base, hasText: true })).toMatchObject({
+            state: 'ready',
+            shellBorder: '#D2D2D4',
+            primaryActionBackground: '#242426',
+            primaryActionForeground: '#FFFFFF',
+        });
+        expect(resolveStudioComposerStatePresentation({ ...base, hasAttachments: true })).toMatchObject({
+            state: 'attachment',
+            attachmentBackground: '#F6F6F6',
+            attachmentBorder: '#E4E4E5',
+            primaryActionBackground: '#242426',
+        });
+    });
+
+    it('prioritizes autocomplete, picker, sending, and abort feedback', () => {
+        expect(resolveStudioComposerStatePresentation({ ...base, hasSuggestions: true })!.state).toBe('autocomplete');
+        expect(resolveStudioComposerStatePresentation({ ...base, pickerOpen: true })!.state).toBe('picker');
+        expect(resolveStudioComposerStatePresentation({ ...base, isSending: true })).toMatchObject({
+            state: 'sending',
+            primaryActionBackground: '#4C4C50',
+        });
+        expect(resolveStudioComposerStatePresentation({ ...base, showAbortButton: true })).toMatchObject({
+            state: 'abort',
+            abortActionBackground: '#F2ECEB',
+            abortActionForeground: '#8E3F37',
+        });
+        expect(resolveStudioComposerStatePresentation({
+            ...base,
+            showAbortButton: true,
+            isAborting: true,
+        })!.state).toBe('aborting');
+    });
+
+    it('returns no state styling outside Studio', () => {
+        expect(resolveStudioComposerStatePresentation({ ...base, isStudio: false })).toBeNull();
     });
 });

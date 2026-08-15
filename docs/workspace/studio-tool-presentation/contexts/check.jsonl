@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative repository verification commands."}
+{"path":"packages/happy-app/sources/components/tools","reason":"Verify actual component wiring, behavior preservation, and complete owned product diff."}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation","reason":"Verify activation resolver, semantic variants, and focused behavior tests."}
+{"path":"docs/specs/studio-tool-presentation.md","reason":"Map each acceptance criterion to evidence."}
+{"path":"docs/workspace/studio-tool-presentation/validation.md","reason":"Record exact check results and the parent-owned visual gap."}

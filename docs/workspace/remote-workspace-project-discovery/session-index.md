@@ -7,3 +7,4 @@ agent, worktree, or parallel child handoff.
 | Date | Session | Agent / Scope | Branch / Worktree | Commit | Notes |
 | --- | --- | --- | --- | --- | --- |
 | 2026-08-14 | `sessions/2026-08-14-feature-finish.md` | Codex / full feature lifecycle | `feature/remote-workspace-project-discovery-doc` / current | pending | Implemented, verified, reviewed; three user-accepted gaps recorded. |
+| 2026-08-16 | `sessions/2026-08-16-dev-merge.md` | Codex / dev merge and revalidation | `feature/remote-workspace-project-discovery-doc` / isolated worktree | pending | Documentation conflicts resolved; post-merge checks passed with one accepted dev baseline gap. |

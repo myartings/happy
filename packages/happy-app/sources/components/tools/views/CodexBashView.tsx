@@ -9,6 +9,7 @@ import { Metadata } from '@/sync/storageTypes';
 import { resolvePath } from '@/utils/pathUtils';
 import { stringifyToolCommand } from '@/utils/toolCommand';
 import { t } from '@/text';
+import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 
 interface CodexBashViewProps {
     tool: ToolCall;
@@ -17,6 +18,7 @@ interface CodexBashViewProps {
 
 export const CodexBashView = React.memo<CodexBashViewProps>(({ tool, metadata }) => {
     const { theme } = useUnistyles();
+    const studioPresentation = useStudioToolPresentation();
     const { input, result, state } = tool;
 
     // Parse the input structure
@@ -55,13 +57,18 @@ export const CodexBashView = React.memo<CodexBashViewProps>(({ tool, metadata })
         
         return (
             <ToolSectionView>
-                <View style={styles.readContainer}>
+                <View style={[styles.readContainer, studioPresentation && {
+                    backgroundColor: studioPresentation.diff.backgroundColor,
+                    borderColor: studioPresentation.diff.borderColor,
+                    borderRadius: studioPresentation.diff.borderRadius,
+                    borderWidth: 1,
+                }]}>
                     <View style={styles.iconRow}>
                         {icon}
-                        <Text style={styles.operationText}>{t('tools.desc.readingFile', { file: resolvedPath })}</Text>
+                        <Text style={[styles.operationText, studioPresentation && { color: studioPresentation.diff.pathColor }]}>{t('tools.desc.readingFile', { file: resolvedPath })}</Text>
                     </View>
                     {commandStr && (
-                        <Text style={styles.commandText}>{commandStr}</Text>
+                        <Text style={[styles.commandText, studioPresentation && { color: studioPresentation.diff.metadataColor }]}>{commandStr}</Text>
                     )}
                 </View>
             </ToolSectionView>
@@ -72,13 +79,18 @@ export const CodexBashView = React.memo<CodexBashViewProps>(({ tool, metadata })
         
         return (
             <ToolSectionView>
-                <View style={styles.readContainer}>
+                <View style={[styles.readContainer, studioPresentation && {
+                    backgroundColor: studioPresentation.diff.backgroundColor,
+                    borderColor: studioPresentation.diff.borderColor,
+                    borderRadius: studioPresentation.diff.borderRadius,
+                    borderWidth: 1,
+                }]}>
                     <View style={styles.iconRow}>
                         {icon}
-                        <Text style={styles.operationText}>{t('tools.desc.writingFile', { file: resolvedPath })}</Text>
+                        <Text style={[styles.operationText, studioPresentation && { color: studioPresentation.diff.pathColor }]}>{t('tools.desc.writingFile', { file: resolvedPath })}</Text>
                     </View>
                     {commandStr && (
-                        <Text style={styles.commandText}>{commandStr}</Text>
+                        <Text style={[styles.commandText, studioPresentation && { color: studioPresentation.diff.metadataColor }]}>{commandStr}</Text>
                     )}
                 </View>
             </ToolSectionView>
