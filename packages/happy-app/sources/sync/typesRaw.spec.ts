@@ -1816,6 +1816,115 @@ describe('Zod Transform - WOLOG Content Normalization', () => {
             }
         });
 
+        it('preserves enriched tool completion metadata in the normalized result', () => {
+            const end = normalizeRawMessage('db-enriched-end', null, 10, {
+                ...base,
+                content: {
+                    type: 'session',
+                    data: {
+                        id: 'env-enriched-end',
+                        time: 10,
+                        role: 'agent',
+                        turn: 'turn-1',
+                        ev: {
+                            t: 'tool-call-end',
+                            call: 'call-1',
+                            output: '\u001b[32m2 passed\u001b[0m\n',
+                            exitCode: 0,
+                            durationMs: 1250,
+                            status: 'completed',
+                            truncated: false,
+                            isError: false,
+                        }
+                    }
+                }
+            });
+
+            expect(end).toBeTruthy();
+            if (end && end.role === 'agent') {
+                expect(end.content[0]).toMatchObject({
+                    type: 'tool-result',
+                    tool_use_id: 'call-1',
+                    content: {
+                        output: '\u001b[32m2 passed\u001b[0m\n',
+                        exitCode: 0,
+                        durationMs: 1250,
+                        status: 'completed',
+                        truncated: false,
+                    },
+                    is_error: false,
+                });
+            }
+        });
+
+        it('rejects malformed enriched tool completion metadata', () => {
+            expect(normalizeRawMessage('db-invalid-enriched-end', null, 10, {
+                ...base,
+                content: {
+                    type: 'session',
+                    data: {
+                        id: 'env-invalid-enriched-end',
+                        time: 10,
+                        role: 'agent',
+                        turn: 'turn-1',
+                        ev: {
+                            t: 'tool-call-end',
+                            call: 'call-1',
+                            durationMs: -1,
+                        }
+                    }
+                }
+            })).toBeNull();
+        });
+
+        it('derives command failure from non-zero exit status and rejects contradictory hints', () => {
+            const failed = normalizeRawMessage('db-failed-end', null, 10, {
+                ...base,
+                content: {
+                    type: 'session',
+                    data: {
+                        id: 'env-failed-end',
+                        time: 10,
+                        role: 'agent',
+                        turn: 'turn-1',
+                        ev: {
+                            t: 'tool-call-end',
+                            call: 'call-1',
+                            exitCode: 2,
+                            status: 'failed',
+                        }
+                    }
+                }
+            });
+            expect(failed).toBeTruthy();
+            if (failed && failed.role === 'agent') {
+                expect(failed.content[0]).toMatchObject({
+                    type: 'tool-result',
+                    tool_use_id: 'call-1',
+                    is_error: true,
+                });
+            }
+
+            expect(normalizeRawMessage('db-contradictory-end', null, 10, {
+                ...base,
+                content: {
+                    type: 'session',
+                    data: {
+                        id: 'env-contradictory-end',
+                        time: 10,
+                        role: 'agent',
+                        turn: 'turn-1',
+                        ev: {
+                            t: 'tool-call-end',
+                            call: 'call-1',
+                            exitCode: 2,
+                            isError: false,
+                        }
+                    }
+                }
+            })).toBeNull();
+        });
+
         it('maps turn-end to ready event and drops turn-start', () => {
             const turnStart = normalizeRawMessage('db-5', null, 1, {
                 ...base,

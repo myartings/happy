@@ -109,13 +109,17 @@ export function resolveStudioExecutionTranscript(tool: ToolCall): StudioExecutio
     const command = extractCommand(tool);
     if (!command) return null;
     const output = outputFields(tool);
+    const providerDurationMs = tool.result && typeof tool.result === 'object' && !Array.isArray(tool.result)
+        && typeof tool.result.durationMs === 'number' && Number.isFinite(tool.result.durationMs) && tool.result.durationMs >= 0
+        ? tool.result.durationMs
+        : null;
     return {
         command,
         cwd: extractCwd(tool),
         state: tool.state,
-        durationMs: tool.startedAt !== null && tool.completedAt !== null
+        durationMs: providerDurationMs ?? (tool.startedAt !== null && tool.completedAt !== null
             ? Math.max(0, tool.completedAt - tool.startedAt)
-            : null,
+            : null),
         stdout: parseOutput(output.stdout),
         stderr: parseOutput(output.stderr),
         error: parseOutput(output.error),

@@ -53,6 +53,50 @@ describe('session protocol schemas', () => {
     expect(sessionEventSchema.safeParse({ t: 'not-real' }).success).toBe(false);
   });
 
+  it('preserves optional structured tool completion metadata while accepting legacy completions', () => {
+    const legacy = sessionEventSchema.parse({ t: 'tool-call-end', call: 'call-legacy' });
+    expect(legacy).toEqual({ t: 'tool-call-end', call: 'call-legacy' });
+
+    const enriched = sessionEventSchema.parse({
+      t: 'tool-call-end',
+      call: 'call-1',
+      output: 'tests passed\n',
+      exitCode: 0,
+      durationMs: 1250,
+      status: 'completed',
+      truncated: false,
+      isError: false,
+    });
+
+    expect(enriched).toEqual({
+      t: 'tool-call-end',
+      call: 'call-1',
+      output: 'tests passed\n',
+      exitCode: 0,
+      durationMs: 1250,
+      status: 'completed',
+      truncated: false,
+      isError: false,
+    });
+    expect(sessionEventSchema.safeParse({
+      t: 'tool-call-end',
+      call: 'call-1',
+      durationMs: -1,
+    }).success).toBe(false);
+
+    expect(sessionEventSchema.safeParse({
+      t: 'tool-call-end',
+      call: 'call-failed-without-hint',
+      exitCode: 2,
+    }).success).toBe(true);
+    expect(sessionEventSchema.safeParse({
+      t: 'tool-call-end',
+      call: 'call-contradictory',
+      exitCode: 2,
+      isError: false,
+    }).success).toBe(false);
+  });
+
   it('validates envelopes that include turn/subagent', () => {
     const subagent = createId();
     const envelope = {

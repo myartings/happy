@@ -25,6 +25,7 @@ import { useSetting } from '@/sync/storage';
 import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 import { resolveStudioExecutionTranscript } from '@/features/studio-execution-transcript/studioExecutionTranscript';
 import { StudioExecutionTranscriptView } from '@/features/studio-execution-transcript/StudioExecutionTranscriptView';
+import { hasRenderableCodexPatchInput } from './views/CodexPatchView';
 
 interface ToolViewProps {
     metadata: Metadata | null;
@@ -179,8 +180,11 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     const studioExecutionTranscript = studioPresentation
         ? resolveStudioExecutionTranscript(tool)
         : null;
+    const isStudioInlinePatch = studioPresentation !== null
+        && tool.name === 'CodexPatch'
+        && hasRenderableCodexPatchInput(tool.input);
     const isCompactTerminalTool = terminalCommand !== null && !studioExecutionTranscript;
-    const isCompactActivityTool = !studioExecutionTranscript && (shouldUseCompactToolRow(tool, compactToolCalls)
+    const isCompactActivityTool = !studioExecutionTranscript && !isStudioInlinePatch && (shouldUseCompactToolRow(tool, compactToolCalls)
         || minimal
         || isCompactTerminalTool);
     const activityLabel = getToolActivityLabel(tool);

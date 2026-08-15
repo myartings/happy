@@ -55,6 +55,38 @@ describe('Studio execution transcript model', () => {
         }))).toMatchObject({ command: 'swift test', cwd: '/repo', stdout: { text: 'ok' }, stderr: { text: 'warning' } });
     });
 
+    it('prefers provider command duration and preserved aggregated output', () => {
+        expect(resolveStudioExecutionTranscript(tool({
+            name: 'CodexBash',
+            state: 'error',
+            startedAt: 100,
+            completedAt: 200,
+            result: {
+                output: '\u001B[31m1 failed\u001B[0m\n',
+                exitCode: 1,
+                durationMs: 1250,
+                status: 'failed',
+                truncated: false,
+            },
+        }))).toMatchObject({
+            state: 'error',
+            durationMs: 1250,
+            stdout: { text: '1 failed\n' },
+        });
+    });
+
+    it('preserves the producer truncation marker without truncating it again', () => {
+        const marker = '\n… output truncated';
+        const output = `${'a'.repeat(100_000 - marker.length)}${marker}`;
+        const transcript = resolveStudioExecutionTranscript(tool({
+            name: 'CodexBash',
+            result: { output, truncated: true },
+        }));
+
+        expect(transcript?.stdout?.text).toHaveLength(100_000);
+        expect(transcript?.stdout?.text.endsWith(marker)).toBe(true);
+    });
+
     it('preserves tabs, newlines, CJK, emoji, and long paths while removing unsafe controls', () => {
         const transcript = resolveStudioExecutionTranscript(tool({
             result: { stdout: '列一\t/very/long/path\nemoji 👩🏽‍💻\u0000hidden\u0007\u009Bunsafe', stderr: '' },

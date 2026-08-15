@@ -53,9 +53,32 @@ const sessionToolCallStartEventSchema = z.object({
     args: z.record(z.string(), z.unknown()),
 });
 
+const sessionToolOutputWireLimit = 100_000;
+const failedToolStatuses = new Set(['failed', 'error', 'cancelled', 'canceled', 'aborted', 'interrupted']);
+
 const sessionToolCallEndEventSchema = z.object({
     t: z.literal('tool-call-end'),
     call: z.string(),
+    output: z.string().max(sessionToolOutputWireLimit).optional(),
+    exitCode: z.number().int().nullable().optional(),
+    durationMs: z.number().nonnegative().nullable().optional(),
+    status: z.string().max(64).optional(),
+    truncated: z.boolean().optional(),
+    isError: z.boolean().optional(),
+}).superRefine((event, ctx) => {
+    const exitFailure = event.exitCode !== undefined && event.exitCode !== null
+        ? event.exitCode !== 0
+        : null;
+    const statusFailure = event.status !== undefined
+        && failedToolStatuses.has(event.status.toLowerCase());
+    const structuralFailure = exitFailure ?? statusFailure;
+    if (event.isError !== undefined && event.isError !== structuralFailure && (exitFailure !== null || statusFailure)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'isError contradicts structured completion status',
+            path: ['isError'],
+        });
+    }
 });
 
 const sessionFileEventSchema = z.object({
@@ -682,6 +705,16 @@ function normalizeSessionEnvelope(
     }
 
     if (envelope.ev.t === 'tool-call-end') {
+        const hasResultMetadata = envelope.ev.output !== undefined
+            || envelope.ev.exitCode !== undefined
+            || envelope.ev.durationMs !== undefined
+            || envelope.ev.status !== undefined
+            || envelope.ev.truncated !== undefined;
+        const exitFailure = envelope.ev.exitCode !== undefined && envelope.ev.exitCode !== null
+            ? envelope.ev.exitCode !== 0
+            : null;
+        const statusFailure = envelope.ev.status !== undefined
+            && failedToolStatuses.has(envelope.ev.status.toLowerCase());
         return {
             id: messageId,
             localId,
@@ -691,8 +724,14 @@ function normalizeSessionEnvelope(
             content: [{
                 type: 'tool-result',
                 tool_use_id: envelope.ev.call,
-                content: null,
-                is_error: false,
+                content: hasResultMetadata ? {
+                    ...(envelope.ev.output !== undefined ? { output: envelope.ev.output } : {}),
+                    ...(envelope.ev.exitCode !== undefined ? { exitCode: envelope.ev.exitCode } : {}),
+                    ...(envelope.ev.durationMs !== undefined ? { durationMs: envelope.ev.durationMs } : {}),
+                    ...(envelope.ev.status !== undefined ? { status: envelope.ev.status } : {}),
+                    ...(envelope.ev.truncated !== undefined ? { truncated: envelope.ev.truncated } : {}),
+                } : null,
+                is_error: exitFailure ?? (statusFailure || envelope.ev.isError === true),
                 uuid: contentUUID,
                 parentUUID
             }],

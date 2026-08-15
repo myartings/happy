@@ -1,0 +1,25 @@
+{"path":"CONTEXT.md","reason":"Personal feature and protocol-change repository boundaries"}
+{"path":".ai/project.json","reason":"Protected paths, risk triggers, and deterministic commands"}
+{"path":"docs/PRD.md","reason":"Accepted Studio activity outcome"}
+{"path":"docs/specs/studio-activity-transcript.md","reason":"Observable behavior and compatibility contract"}
+{"path":"docs/tasks/studio-activity-transcript-tasks.md","reason":"Dependency-ordered implementation slices"}
+{"path":"docs/workspace/studio-activity-transcript/decisions.md","reason":"Resolved additive-contract and bounding decisions"}
+{"path":"docs/workspace/studio-activity-transcript/validation.md","reason":"RED/GREEN and verification evidence ledger"}
+{"path":"packages/happy-wire/src/sessionProtocol.ts","reason":"Canonical additive session completion schema"}
+{"path":"packages/happy-wire/src/sessionProtocol.test.ts","reason":"Wire compatibility public seam"}
+{"path":"packages/happy-cli/src/codex/utils/sessionProtocolMapper.ts","reason":"Codex completion producer mapping"}
+{"path":"packages/happy-cli/src/codex/__tests__/sessionProtocolMapper.test.ts","reason":"Codex mapper public behavior seam"}
+{"path":"packages/happy-app/sources/sync/typesRaw.ts","reason":"App envelope normalization contract"}
+{"path":"packages/happy-app/sources/sync/typesRaw.spec.ts","reason":"Legacy/enriched normalization tests"}
+{"path":"packages/happy-app/sources/sync/reducer/reducer.ts","reason":"Tool result join and state projection"}
+{"path":"packages/happy-app/sources/sync/reducer/reducer.spec.ts","reason":"Envelope-to-ToolCall integration seam"}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/studioExecutionTranscript.ts","reason":"Existing bounded Studio result resolver"}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/studioExecutionTranscript.test.ts","reason":"Transcript data behavior tests"}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation/studioToolPresentation.ts","reason":"Studio-only semantic activity tokens"}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation/studioToolPresentation.test.ts","reason":"Light/dark/non-Studio token tests"}
+{"path":"packages/happy-app/sources/components/ToolGroupView.tsx","reason":"Actual grouped activity row rendering seam"}
+{"path":"packages/happy-app/sources/components/ToolGroupViewStudioPresentation.test.ts","reason":"Mounted Studio and Default activity wiring tests"}
+{"path":"packages/happy-app/sources/components/tools/views/CodexPatchView.tsx","reason":"Studio file-edit disclosure and inline diff host seam"}
+{"path":"packages/happy-app/sources/components/tools/views/CodexPatchStudioPresentation.test.ts","reason":"Mounted Studio/non-Studio disclosure and diff behavior seam"}
+{"path":"packages/happy-app/sources/components/tools/ToolDiffView.tsx","reason":"Existing unified diff adapter whose behavior must remain authoritative"}
+{"path":"packages/happy-app/sources/components/diff/PierreDiffView.tsx","reason":"Existing desktop diff renderer and green/red line presentation boundary"}

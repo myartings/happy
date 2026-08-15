@@ -424,6 +424,113 @@ describe('mapCodexMcpMessageToSessionEnvelopes', () => {
         }
     });
 
+    it('maps Codex command completion metadata into one enriched tool-call-end', () => {
+        const completed = mapCodexMcpMessageToSessionEnvelopes(
+            {
+                type: 'exec_command_end',
+                call_id: 'call-1',
+                output: '\u001b[32m2 passed\u001b[0m\n',
+                exit_code: 0,
+                duration_ms: 1250,
+                status: 'completed',
+            },
+            { currentTurnId: 'turn-1' },
+        );
+
+        expect(completed.envelopes).toHaveLength(1);
+        expect(completed.envelopes[0].ev).toEqual({
+            t: 'tool-call-end',
+            call: 'call-1',
+            output: '\u001b[32m2 passed\u001b[0m\n',
+            exitCode: 0,
+            durationMs: 1250,
+            status: 'completed',
+            truncated: false,
+            isError: false,
+        });
+
+        const failed = mapCodexMcpMessageToSessionEnvelopes(
+            {
+                type: 'exec_command_end',
+                call_id: 'call-2',
+                output: 'command failed\n',
+                exit_code: 2,
+                duration_ms: 40,
+                status: 'failed',
+            },
+            { currentTurnId: 'turn-1' },
+        );
+
+        expect(failed.envelopes[0].ev).toMatchObject({
+            t: 'tool-call-end',
+            call: 'call-2',
+            exitCode: 2,
+            isError: true,
+        });
+
+        for (const exit_code of ['2', 1.5]) {
+            const malformed = mapCodexMcpMessageToSessionEnvelopes(
+                {
+                    type: 'exec_command_end',
+                    call_id: `call-malformed-${String(exit_code)}`,
+                    output: 'untrusted completion metadata',
+                    exit_code,
+                    status: 'completed',
+                },
+                { currentTurnId: 'turn-1' },
+            );
+            expect(malformed.envelopes[0].ev).toMatchObject({
+                t: 'tool-call-end',
+                exitCode: null,
+                isError: true,
+            });
+        }
+
+        for (const malformedField of [
+            { duration_ms: 'bad' },
+            { status: 123 },
+            { output: { unexpected: true } },
+        ]) {
+            const reliableZeroExit = mapCodexMcpMessageToSessionEnvelopes(
+                {
+                    type: 'exec_command_end',
+                    call_id: `call-zero-${Object.keys(malformedField)[0]}`,
+                    exit_code: 0,
+                    ...malformedField,
+                },
+                { currentTurnId: 'turn-1' },
+            );
+            expect(reliableZeroExit.envelopes[0].ev).toMatchObject({
+                t: 'tool-call-end',
+                exitCode: 0,
+                isError: false,
+            });
+        }
+    });
+
+    it('bounds live command output without splitting a surrogate pair', () => {
+        const oversized = `${'a'.repeat(99_999)}😀tail`;
+        const result = mapCodexMcpMessageToSessionEnvelopes(
+            {
+                type: 'exec_command_end',
+                call_id: 'call-large',
+                output: oversized,
+                exit_code: 0,
+                status: 'completed',
+            },
+            { currentTurnId: 'turn-1' },
+        );
+
+        const completion = result.envelopes[0].ev;
+        expect(completion.t).toBe('tool-call-end');
+        if (completion.t === 'tool-call-end') {
+            expect(completion.truncated).toBe(true);
+            expect(completion.output?.length).toBe(100_000);
+            expect(completion.output?.endsWith('\n… output truncated')).toBe(true);
+            expect(completion.output).not.toContain('\uFFFD');
+        }
+    });
+
     it('maps token_count messages to usage-only session envelopes', () => {
         const result = mapCodexMcpMessageToSessionEnvelopes(
             { type: 'token_count', total_tokens: 10 },
@@ -643,7 +750,6 @@ describe('mapCodexThreadToSessionEnvelopes', () => {
         expect(envelopes.map((envelope) => envelope.ev.t)).toEqual([
             'turn-start',
             'tool-call-start',
-            'text',
             'tool-call-end',
             'turn-end',
         ]);
@@ -655,13 +761,45 @@ describe('mapCodexThreadToSessionEnvelopes', () => {
         expect(envelopes[2]).toMatchObject({
             role: 'agent',
             turn: 'turn-1',
-            ev: { t: 'text', text: 'ok', thinking: true },
+            ev: {
+                t: 'tool-call-end',
+                call: 'cmd-1',
+                output: 'ok',
+                truncated: false,
+                isError: false,
+            },
         });
-        expect(envelopes[3]).toMatchObject({
-            role: 'agent',
-            turn: 'turn-1',
-            ev: { t: 'tool-call-end', call: 'cmd-1' },
+    });
+
+    it('preserves legacy historical MCP output for older App consumers', () => {
+        const envelopes = mapCodexThreadToSessionEnvelopes({
+            turns: [{
+                id: 'turn-1',
+                startedAt: 100,
+                items: [{
+                    id: 'mcp-1',
+                    type: 'mcpToolCall',
+                    server: 'github',
+                    tool: 'search',
+                    arguments: { query: 'happy' },
+                    result: 'legacy visible result',
+                }],
+            }],
         });
+
+        expect(envelopes.map((envelope) => envelope.ev.t)).toEqual([
+            'turn-start',
+            'tool-call-start',
+            'text',
+            'tool-call-end',
+            'turn-end',
+        ]);
+        expect(envelopes[2].ev).toEqual({
+            t: 'text',
+            text: 'legacy visible result',
+            thinking: true,
+        });
+        expect(envelopes[3].ev).toEqual({ t: 'tool-call-end', call: 'mcp-1' });
     });
 
     it('backfills Codex collab-agent items with session subagent linkage', () => {
@@ -849,7 +987,6 @@ describe('mapCodexThreadToSessionEnvelopes', () => {
             });
 
             expect(envelopes.map((envelope) => envelope.time)).toEqual([
-                10_000,
                 10_000,
                 10_000,
                 20_000,

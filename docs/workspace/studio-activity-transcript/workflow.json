@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-activity-transcript",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/studio-activity-transcript.md AC1-AC8; docs/tasks/studio-activity-transcript-tasks.md T1-T6; user accepted Studio inline diff correction",
+      "updated": "2026-08-14T13:22:24+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-activity-transcript/decisions.md D1-D7; D7 keeps Pierre and changes Studio disclosure only",
+      "updated": "2026-08-14T13:22:24+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: same local feature/worktree; T5 limited to CodexPatch Studio disclosure and mounted tests; Pierre parser remains read-only boundary; focused test then App suite/typecheck/package capture",
+      "updated": "2026-08-14T13:22:25+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Existing high-risk additive protocol controls remain; T5 is UI-only, changes no protocol/storage/permission behavior, and preserves non-Studio fallback with mounted regression coverage",
+      "updated": "2026-08-14T13:22:25+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "T5 inline diff implementation complete: documented RED/GREEN; final focused 3 files/24 tests; App 139 files/1255 tests with 15s bound; typecheck and diff integrity passed; explicit-Studio package built and launched; docs/workspace/studio-activity-transcript/validation.md",
+      "updated": "2026-08-14T15:17:26+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User explicitly authorized commit and push after the sole named configured-check gap was reported: unchanged 1MB blob test exceeds default 5s; feature-specific suites and complete App 1255/1255 pass with recorded 15s bound; all other configured commands pass",
+      "updated": "2026-08-15T04:24:58+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Final independent T5 whole-diff review PASS with no blocking/high/medium findings; valid/malformed/object/array/hunk/pair/multi-file/move/footer and Studio/non-Studio paths traced",
+      "updated": "2026-08-14T15:17:26+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-activity-transcript/finish.md complete; AC1-AC8 verified; user visual acceptance recorded; independent review passed; named configured-check gap accepted with commit/push authorization; rollback and follow-up documented",
+      "updated": "2026-08-15T04:25:44+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-14T09:32:45+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-14T09:48:35+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/studio-activity-transcript.md AC1-AC7; docs/tasks/studio-activity-transcript-tasks.md T1-T5"
+    },
+    {
+      "at": "2026-08-14T09:48:35+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-activity-transcript/decisions.md D1-D6 resolved from repository trace"
+    },
+    {
+      "at": "2026-08-14T09:48:35+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/specs/studio-activity-transcript.md Risk controls: optional additive fields, pre-sync output bound, structural status, legacy tests, independent review, rollback"
+    },
+    {
+      "at": "2026-08-14T09:48:35+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "High-risk local-only single-owner feature on feature/studio-visual-convergence; T1-T5 dependency order; implement/check manifests bound scope and tests"
+    },
+    {
+      "at": "2026-08-14T09:48:45+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED tests for enriched tool-call-end compatibility and Codex result preservation"
+    },
+    {
+      "at": "2026-08-14T10:33:23+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T4 complete; documented RED/GREEN; focused 178 protocol/CLI/App tests and full Wire/CLI/App suites passed; docs/workspace/studio-activity-transcript/validation.md"
+    },
+    {
+      "at": "2026-08-14T10:33:23+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured workflow checks, packaged Studio evidence, and independent review"
+    },
+    {
+      "at": "2026-08-14T10:34:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-14T11:23:44+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Address independent review findings with focused RED-GREEN compatibility tests"
+    },
+    {
+      "at": "2026-08-14T11:57:18+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "All review findings closed through focused RED-GREEN; final Wire 26, CLI 806, App 1241; independent whole-diff review PASS"
+    },
+    {
+      "at": "2026-08-14T11:57:18+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final configured workflow checks and reconcile bounded visual evidence gap"
+    },
+    {
+      "at": "2026-08-14T11:59:46+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-14T12:00:35+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Final independent whole-diff review PASS after three rounds; no blocking/high/medium findings; producer-schema-normalizer-reducer-transcript and compatibility boundaries traced"
+    },
+    {
+      "at": "2026-08-14T13:22:24+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/studio-activity-transcript.md AC1-AC8; docs/tasks/studio-activity-transcript-tasks.md T1-T6; user accepted Studio inline diff correction"
+    },
+    {
+      "at": "2026-08-14T13:22:24+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-activity-transcript/decisions.md D1-D7; D7 keeps Pierre and changes Studio disclosure only"
+    },
+    {
+      "at": "2026-08-14T13:22:25+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Existing high-risk additive protocol controls remain; T5 is UI-only, changes no protocol/storage/permission behavior, and preserves non-Studio fallback with mounted regression coverage"
+    },
+    {
+      "at": "2026-08-14T13:22:25+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: same local feature/worktree; T5 limited to CodexPatch Studio disclosure and mounted tests; Pierre parser remains read-only boundary; focused test then App suite/typecheck/package capture"
+    },
+    {
+      "at": "2026-08-14T13:22:25+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "T5 Studio inline edit diff not yet implemented"
+    },
+    {
+      "at": "2026-08-14T13:22:26+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "T5 verification pending"
+    },
+    {
+      "at": "2026-08-14T13:22:26+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "T5 whole-diff review pending"
+    },
+    {
+      "at": "2026-08-14T13:22:26+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD mounted Studio default-expanded diff while preserving non-Studio collapse"
+    },
+    {
+      "at": "2026-08-14T15:17:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T5 inline diff implementation complete: documented RED/GREEN; final focused 3 files/24 tests; App 139 files/1255 tests with 15s bound; typecheck and diff integrity passed; explicit-Studio package built and launched; docs/workspace/studio-activity-transcript/validation.md"
+    },
+    {
+      "at": "2026-08-14T15:17:26+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Final independent T5 whole-diff review PASS with no blocking/high/medium findings; valid/malformed/object/array/hunk/pair/multi-file/move/footer and Studio/non-Studio paths traced"
+    },
+    {
+      "at": "2026-08-14T15:17:26+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Obtain direct light/dark green-red diff visual acceptance from the running explicit-Studio worktree bundle; keep capture unavailability explicit"
+    },
+    {
+      "at": "2026-08-14T15:18:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-15T04:09:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-15T04:24:58+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly authorized commit and push after the sole named configured-check gap was reported: unchanged 1MB blob test exceeds default 5s; feature-specific suites and complete App 1255/1255 pass with recorded 15s bound; all other configured commands pass"
+    },
+    {
+      "at": "2026-08-15T04:24:59+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize finish review, archive with commit pending, stage atomically, run staged workflow CI, commit, and push the current feature branch"
+    },
+    {
+      "at": "2026-08-15T04:25:44+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-activity-transcript/finish.md complete; AC1-AC8 verified; user visual acceptance recorded; independent review passed; named configured-check gap accepted with commit/push authorization; rollback and follow-up documented"
+    },
+    {
+      "at": "2026-08-15T04:25:44+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Complete Studio activity transcripts and accepted inline green-red edit diffs with additive protocol compatibility, bounded verification, independent review, and documented default-timeout gap; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-15T04:25:44+00:00",
+  "archivedAt": "2026-08-15T04:25:44+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Complete Studio activity transcripts and accepted inline green-red edit diffs with additive protocol compatibility, bounded verification, independent review, and documented default-timeout gap",
+  "archiveFollowUp": "None"
+}

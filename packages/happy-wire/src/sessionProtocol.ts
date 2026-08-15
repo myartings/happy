@@ -51,9 +51,32 @@ export const sessionToolCallStartEventSchema = z.object({
   args: z.record(z.string(), z.unknown()),
 });
 
+export const SESSION_TOOL_OUTPUT_LIMIT = 100_000;
+const failedToolStatuses = new Set(['failed', 'error', 'cancelled', 'canceled', 'aborted', 'interrupted']);
+
 export const sessionToolCallEndEventSchema = z.object({
   t: z.literal('tool-call-end'),
   call: z.string(),
+  output: z.string().max(SESSION_TOOL_OUTPUT_LIMIT).optional(),
+  exitCode: z.number().int().nullable().optional(),
+  durationMs: z.number().nonnegative().nullable().optional(),
+  status: z.string().max(64).optional(),
+  truncated: z.boolean().optional(),
+  isError: z.boolean().optional(),
+}).superRefine((event, ctx) => {
+  const exitFailure = event.exitCode !== undefined && event.exitCode !== null
+    ? event.exitCode !== 0
+    : null;
+  const statusFailure = event.status !== undefined
+    && failedToolStatuses.has(event.status.toLowerCase());
+  const structuralFailure = exitFailure ?? statusFailure;
+  if (event.isError !== undefined && event.isError !== structuralFailure && (exitFailure !== null || statusFailure)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'isError contradicts structured completion status',
+      path: ['isError'],
+    });
+  }
 });
 
 export const sessionFileEventSchema = z.object({

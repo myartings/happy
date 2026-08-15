@@ -1,7 +1,7 @@
 import * as React from 'react';
 // @ts-expect-error react-test-renderer has no declarations in this workspace.
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { ToolCall } from '@/sync/typesMessage';
 
 const presentation = vi.hoisted(() => ({ current: {
@@ -11,7 +11,7 @@ const presentation = vi.hoisted(() => ({ current: {
         addedColor: '#2E6A4F', backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', borderRadius: 10,
         metadataColor: '#707070', pathColor: '#2D2D2D', removedColor: '#A23D3D',
     },
-} as any }));
+} as any | null }));
 
 vi.mock('react-native', async () => {
     const ReactModule = await import('react');
@@ -30,7 +30,6 @@ vi.mock('@expo/vector-icons', async () => {
     return { Ionicons: icon, Octicons: icon };
 });
 vi.mock('@/text', () => ({ t: (key: string) => key }));
-vi.mock('@/utils/pathUtils', () => ({ resolvePath: (path: string) => `/repo/${path}` }));
 vi.mock('../ToolSectionView', async () => {
     const ReactModule = await import('react');
     return { ToolSectionView: (props: any) => ReactModule.createElement('ToolSectionView', props, props.children) };
@@ -54,6 +53,16 @@ beforeAll(() => {
     });
 });
 afterAll(() => vi.restoreAllMocks());
+afterEach(() => {
+    presentation.current = {
+        compactRow: { fontSize: 14, lineHeight: 20, minHeight: 26, paddingHorizontal: 4, paddingVertical: 2 },
+        disclosureRow: { fontSize: 13, lineHeight: 18, minHeight: 30, paddingHorizontal: 12, paddingVertical: 4 },
+        diff: {
+            addedColor: '#2E6A4F', backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', borderRadius: 10,
+            metadataColor: '#707070', pathColor: '#2D2D2D', removedColor: '#A23D3D',
+        },
+    } as any;
+});
 
 function render(element: React.ReactElement): ReactTestRenderer {
     let renderer!: ReactTestRenderer;
@@ -85,7 +94,7 @@ const patchTool: ToolCall = {
 };
 
 describe('actual CodexPatch disclosure wiring', () => {
-    it('keeps the collapsed default and reveals the existing diff/footer hierarchy on press', () => {
+    it('shows the existing diff/footer hierarchy immediately in Studio and remains collapsible', () => {
         const footer = React.createElement('PermissionFooterMarker');
         const renderer = render(React.createElement(CodexPatchView, {
             metadata: null,
@@ -93,11 +102,24 @@ describe('actual CodexPatch disclosure wiring', () => {
             tool: patchTool,
         }));
 
-        expect(renderer.root.findAllByType('ToolDiffView' as any)).toHaveLength(0);
+        expect(renderer.root.findAllByType('ToolDiffView' as any)).toHaveLength(1);
+        expect(renderer.root.findAllByType('PermissionFooterMarker' as any)).toHaveLength(1);
         const toggle = renderer.root.findByType('Pressable' as any);
         expect(flattenStyle(toggle.props.style({ pressed: false }))).toMatchObject({
             minHeight: 30, paddingHorizontal: 12, paddingVertical: 4,
         });
+        const toggleText = toggle.findAllByType('Text' as any).map((node: { props: { children?: unknown } }) => (
+            Array.isArray(node.props.children) ? node.props.children.join('') : String(node.props.children)
+        ));
+        expect(toggleText).toContain('src/app.ts');
+        expect(toggleText).toContain('edit');
+        expect(toggleText).toContain('+1');
+        expect(toggleText).toContain('-1');
+
+        act(() => toggle.props.onPress());
+
+        expect(renderer.root.findAllByType('ToolDiffView' as any)).toHaveLength(0);
+        expect(renderer.root.findAllByType('PermissionFooterMarker' as any)).toHaveLength(0);
 
         act(() => toggle.props.onPress());
 
@@ -107,10 +129,87 @@ describe('actual CodexPatch disclosure wiring', () => {
             flattenStyle(node.props.style).borderRadius === 10
         ));
         expect(flattenStyle(patchSurface?.props.style)).toMatchObject({
-            backgroundColor: '#FAFAF9', borderColor: '#E7E6E3', borderRadius: 10,
+            backgroundColor: '#FAFAF9', borderRadius: 10, borderWidth: 0,
         });
         const text = renderer.root.findAllByType('Text' as any).map((node: { props: { children?: unknown } }) => node.props.children);
-        expect(text).toContain('/repo/src/app.ts');
-        expect(text).toContain('edit');
+        expect(text.filter((value: unknown) => value === 'src/app.ts')).toHaveLength(1);
+    });
+
+    it('keeps the existing initially-collapsed disclosure outside Studio', () => {
+        presentation.current = null;
+        const renderer = render(React.createElement(CodexPatchView, {
+            metadata: null,
+            permissionFooter: React.createElement('PermissionFooterMarker'),
+            tool: patchTool,
+        }));
+
+        expect(renderer.root.findAllByType('ToolDiffView' as any)).toHaveLength(0);
+        const toggle = renderer.root.findByType('Pressable' as any);
+
+        act(() => toggle.props.onPress());
+
+        expect(renderer.root.findAllByType('ToolDiffView' as any)).toHaveLength(1);
+        expect(renderer.root.findAllByType('PermissionFooterMarker' as any)).toHaveLength(1);
+    });
+
+    it('materializes real unified patches and keeps the footer on the final file', () => {
+        const renderer = render(React.createElement(CodexPatchView, {
+            metadata: null,
+            permissionFooter: React.createElement('PermissionFooterMarker'),
+            tool: {
+                ...patchTool,
+                input: {
+                    changes: {
+                        'src/first.ts': {
+                            diff: '@@ -1 +1 @@\n-const first = false;\n+const first = true;',
+                            kind: { type: 'update', move_path: null },
+                        },
+                        'src/second.ts': {
+                            kind: { type: 'update', move_path: 'src/renamed.ts' },
+                            modify: { old_content: 'old', new_content: 'new' },
+                        },
+                        'src/invalid.ts': null,
+                    },
+                },
+            },
+        }));
+
+        const diffs = renderer.root.findAllByType('ToolDiffView' as any);
+        expect(diffs).toHaveLength(2);
+        expect(diffs[0].props).toMatchObject({
+            fileName: 'first.ts',
+            patch: [
+                '--- a/src/first.ts',
+                '+++ b/src/first.ts',
+                '@@ -1 +1 @@',
+                '-const first = false;',
+                '+const first = true;',
+            ].join('\n'),
+        });
+        expect(diffs[1].props).toMatchObject({ fileName: 'second.ts', oldText: 'old', newText: 'new' });
+
+        const sections = renderer.root.findAllByType('ToolSectionView' as any);
+        expect(sections).toHaveLength(2);
+        expect(sections[0].findAllByType('PermissionFooterMarker' as any)).toHaveLength(0);
+        expect(sections[1].findAllByType('PermissionFooterMarker' as any)).toHaveLength(1);
+        const text = renderer.root.findAllByType('Text' as any).map((node: { props: { children?: unknown } }) => node.props.children).flat(Infinity);
+        expect(text).toContain('src/renamed.ts');
+    });
+
+    it('ignores malformed move paths before resolving against real metadata', () => {
+        expect(() => render(React.createElement(CodexPatchView, {
+            metadata: { path: '/repo' } as any,
+            tool: {
+                ...patchTool,
+                input: {
+                    changes: {
+                        '/repo/src/app.ts': {
+                            kind: { type: 'update', move_path: 5 },
+                            modify: { old_content: 'old', new_content: 'new' },
+                        },
+                    },
+                },
+            },
+        }))).not.toThrow();
     });
 });

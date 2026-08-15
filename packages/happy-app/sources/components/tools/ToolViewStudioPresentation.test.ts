@@ -144,6 +144,45 @@ describe('actual ToolView Studio wiring', () => {
         });
     });
 
+    it('renders structured Studio Codex patches even when compact mode is enabled', () => {
+        state.compact = true;
+        const patch = tool('CodexPatch');
+        patch.input = {
+            changes: {
+                'src/app.ts': {
+                    kind: { type: 'update', move_path: null },
+                    modify: { old_content: 'const value = 1;', new_content: 'const value = 2;' },
+                },
+            },
+        };
+
+        const renderer = render(React.createElement(ToolView, { metadata: null, tool: patch }));
+
+        expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(1);
+    });
+
+    it.each([
+        ['missing changes', { value: 1 }],
+        ['empty changes', { changes: {} }],
+        ['malformed entry', { changes: { 'src/app.ts': null } }],
+        ['empty patch', { changes: { 'src/app.ts': { diff: '', kind: { type: 'update' } } } }],
+        ['empty content pair', { changes: { 'src/app.ts': { modify: { old_content: '', new_content: '' } } } }],
+        ['malformed object modify content', { changes: { 'src/app.ts': { modify: { old_content: 5, new_content: 'new' } } } }],
+        ['malformed array modify content', { changes: [{ path: 'src/app.ts', type: 'update', modify: { old_content: 5, new_content: 'new' } }] }],
+        ['malformed add content', { changes: { 'src/app.ts': { add: { content: 5 } } } }],
+        ['malformed delete content', { changes: { 'src/app.ts': { delete: { content: 5 } } } }],
+    ])('keeps Studio Codex patches with %s on the safe compact fallback', (_label, input) => {
+        state.compact = true;
+        const patch = tool('CodexPatch');
+        patch.input = input;
+
+        const renderer = render(React.createElement(ToolView, { metadata: null, tool: patch }));
+
+        expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
+        const root = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
+    });
+
     it('retains the existing shell when Studio is inactive', () => {
         state.compact = false;
         presentation.current = null as any;
@@ -166,6 +205,26 @@ describe('actual ToolView Studio wiring', () => {
         terminal.input = { command: 'pnpm typecheck' };
         terminal.result = { stdout: 'done', stderr: '' };
         const renderer = render(React.createElement(ToolView, { metadata: null, tool: terminal }));
+        expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
+        const root = renderer.root.findAllByType('View' as any)[0];
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
+    });
+
+    it('keeps non-Studio Codex patches on the existing compact path', () => {
+        state.compact = true;
+        presentation.current = null as any;
+        const patch = tool('CodexPatch');
+        patch.input = {
+            changes: {
+                'src/app.ts': {
+                    kind: { type: 'update', move_path: null },
+                    modify: { old_content: 'old', new_content: 'new' },
+                },
+            },
+        };
+
+        const renderer = render(React.createElement(ToolView, { metadata: null, tool: patch }));
+
         expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
         const root = renderer.root.findAllByType('View' as any)[0];
         expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });

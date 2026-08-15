@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveStudioToolPresentation } from './studioToolPresentation';
+import {
+    resolveStudioActivityColor,
+    resolveStudioToolPresentation,
+} from './studioToolPresentation';
 
 describe('Studio tool presentation', () => {
     it('resolves a compact contained hierarchy for packaged light Studio', () => {
@@ -62,6 +65,15 @@ describe('Studio tool presentation', () => {
                 fontSize: 13,
                 lineHeight: 19,
             },
+            activity: {
+                terminalColor: '#327078',
+                exploreColor: '#3F6B8F',
+                editColor: '#2E6A4F',
+                taskColor: '#76558B',
+                neutralColor: '#707070',
+                runningColor: '#327078',
+                errorColor: '#A23D3D',
+            },
         });
     });
 
@@ -82,9 +94,37 @@ describe('Studio tool presentation', () => {
             error: { backgroundColor: '#352929', borderColor: '#5A3A3A', textColor: '#DC8A8A' },
             diff: { backgroundColor: '#2C2C2C', addedColor: '#80B99D', removedColor: '#DC8A8A' },
             transcript: { dark: true, backgroundColor: '#232323', commandColor: '#E7E7E7', successColor: '#80B99D', errorColor: '#DC8A8A' },
+            activity: {
+                terminalColor: '#85C1C7',
+                exploreColor: '#8DB6D7',
+                editColor: '#80B99D',
+                taskColor: '#C8AED9',
+                neutralColor: '#A6A6A6',
+                runningColor: '#85C1C7',
+                errorColor: '#DC8A8A',
+            },
         });
         expect(dark?.shell.borderRadius).toBe(light?.shell.borderRadius);
         expect(dark?.compactRow).toEqual(light?.compactRow);
+    });
+
+    it('prioritizes running and failure state over activity category', () => {
+        const presentation = resolveStudioToolPresentation({
+            dark: false,
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+        });
+        expect(presentation).not.toBeNull();
+        if (!presentation) return;
+
+        expect(resolveStudioActivityColor(presentation, 'terminal', 'completed')).toBe('#327078');
+        expect(resolveStudioActivityColor(presentation, 'read', 'completed')).toBe('#3F6B8F');
+        expect(resolveStudioActivityColor(presentation, 'search', 'completed')).toBe('#3F6B8F');
+        expect(resolveStudioActivityColor(presentation, 'edit', 'completed')).toBe('#2E6A4F');
+        expect(resolveStudioActivityColor(presentation, 'task', 'completed')).toBe('#76558B');
+        expect(resolveStudioActivityColor(presentation, 'terminal', 'running')).toBe('#327078');
+        expect(resolveStudioActivityColor(presentation, 'edit', 'error')).toBe('#A23D3D');
+        expect(resolveStudioActivityColor(presentation, null, 'completed')).toBe('#707070');
     });
 
     it('fails closed outside packaged Studio and honors the preview override', () => {

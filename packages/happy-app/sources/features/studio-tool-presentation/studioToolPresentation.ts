@@ -2,6 +2,7 @@ import {
     resolveDesktopVisualStyle,
     type VisualStyle,
 } from '@/features/studio-visual-style/studioVisualStyle';
+import type { ToolSummaryCategory } from '@/utils/toolDisplay';
 
 export type StudioToolPresentation = Readonly<{
     visualStyle: 'studio';
@@ -76,6 +77,15 @@ export type StudioToolPresentation = Readonly<{
         paddingVertical: number;
         fontSize: number;
         lineHeight: number;
+    }>;
+    activity: Readonly<{
+        terminalColor: string;
+        exploreColor: string;
+        editColor: string;
+        taskColor: string;
+        neutralColor: string;
+        runningColor: string;
+        errorColor: string;
     }>;
 }>;
 
@@ -174,5 +184,38 @@ export function resolveStudioToolPresentation({
             fontSize: 13,
             lineHeight: 19,
         },
+        activity: {
+            terminalColor: dark ? '#85C1C7' : '#327078',
+            exploreColor: dark ? '#8DB6D7' : '#3F6B8F',
+            editColor: dark ? '#80B99D' : '#2E6A4F',
+            taskColor: dark ? '#C8AED9' : '#76558B',
+            neutralColor: dark ? '#A6A6A6' : '#707070',
+            runningColor: dark ? '#85C1C7' : '#327078',
+            errorColor: dark ? '#DC8A8A' : '#A23D3D',
+        },
     };
+}
+
+export function resolveStudioActivityColor(
+    presentation: StudioToolPresentation,
+    category: ToolSummaryCategory | null,
+    state: 'running' | 'completed' | 'error',
+): string {
+    if (state === 'error') return presentation.activity.errorColor;
+    if (state === 'running') return presentation.activity.runningColor;
+
+    switch (category) {
+        case 'terminal':
+            return presentation.activity.terminalColor;
+        case 'read':
+        case 'search':
+        case 'web':
+            return presentation.activity.exploreColor;
+        case 'edit':
+            return presentation.activity.editColor;
+        case 'task':
+            return presentation.activity.taskColor;
+        default:
+            return presentation.activity.neutralColor;
+    }
 }
