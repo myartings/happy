@@ -1,0 +1,15 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-desktop-default/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-desktop-default.md","reason":"Accepted feature contract and non-goals."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.ts","reason":"Verify centralized Tauri and non-Tauri policy."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioVisualStyle.test.ts","reason":"Verify policy regression coverage."}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Verify backward-compatible local-settings behavior."}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Verify old payload parsing and new default."}
+{"path":"packages/happy-app/src-tauri/tauri.conf.json","reason":"Verify the exact production export environment."}
+{"path":"packages/happy-app/sources/features/studio-overlays/studioDesktopBuildConfiguration.test.ts","reason":"Verify build configuration regression coverage."}
+{"path":"packages/happy-app/sources/features/studio-composer/studioComposerStyle.test.ts","reason":"Verify composer policy compatibility assertions."}
+{"path":"packages/happy-app/sources/features/studio-overlays/studioOverlayPresentation.test.ts","reason":"Verify overlay policy compatibility assertions."}
+{"path":"packages/happy-app/sources/features/studio-semantic-text/studioSemanticTextPresentation.test.ts","reason":"Verify semantic-text policy compatibility assertions."}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation/studioToolPresentation.test.ts","reason":"Verify tool-presentation policy compatibility assertions."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarGroupPresentation.test.ts","reason":"Verify sidebar group policy compatibility assertions."}
+{"path":"packages/happy-app/sources/features/studio-visual-style/studioSidebarInteractionPresentation.test.ts","reason":"Verify sidebar interaction policy compatibility assertions."}

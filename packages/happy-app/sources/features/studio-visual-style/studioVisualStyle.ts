@@ -98,13 +98,8 @@ function clampSidebarWidth(width: number): number {
 
 export function resolveDesktopVisualStyle({
     isTauriRuntime,
-    requestedStyle,
-    previewStyle,
 }: ResolveDesktopVisualStyleInput): VisualStyle {
-    if (!isTauriRuntime) return 'default';
-    if (previewStyle === 'studio') return 'studio';
-    if (previewStyle === 'default') return 'default';
-    return requestedStyle;
+    return isTauriRuntime ? 'studio' : 'default';
 }
 
 export function resolveDesktopSidebarFrame({

@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-desktop-default",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Merge into dev, then run canonical happyctl refresh-desktop for the signed installed app.",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User accepted packaged-Tauri Studio as the only personal desktop visual system; docs/specs/studio-desktop-default.md defines seven verifiable criteria.",
+      "updated": "2026-08-15T05:06:32+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-desktop-default/decisions.md records forced Tauri Studio, retained compatibility code/data, explicit build embedding, and unchanged non-Tauri paths.",
+      "updated": "2026-08-15T05:06:32+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Implementation is bounded to the central resolver, device-local compatibility default, Tauri export config, and focused tests listed in role manifests.",
+      "updated": "2026-08-15T05:06:32+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Bounded UI/build-selection policy; no authentication, protocol, synchronized data migration, security, privacy, deployment, or destructive operation.",
+      "updated": "2026-08-15T05:06:32+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "RED reproduced five policy/default/build failures; GREEN changed only the central resolver, compatibility default/schema description, Tauri export config, and contract-aligned tests. Studio suite 17 files/95 tests passed; App full suite 139 files/1255 tests passed; Happy App typecheck passed.",
+      "updated": "2026-08-15T07:18:00+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-15T14:33:13+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review traced every visualStyle consumer, Tauri/non-Tauri gating, local compatibility parsing, production export, and runtime evidence. No blocking/high/medium finding; misleading preview-override test descriptions were corrected and 3 files/21 tests passed.",
+      "updated": "2026-08-15T14:34:47+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records the forced-Studio policy, 139 files/1256 App tests, both typechecks, four workflow checks, fresh packaged build/runtime capture, passed whole-diff review, rollback, and integration follow-up.",
+      "updated": "2026-08-15T14:35:37+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-15T05:03:27+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-15T05:06:32+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted packaged-Tauri Studio as the only personal desktop visual system; docs/specs/studio-desktop-default.md defines seven verifiable criteria."
+    },
+    {
+      "at": "2026-08-15T05:06:32+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-desktop-default/decisions.md records forced Tauri Studio, retained compatibility code/data, explicit build embedding, and unchanged non-Tauri paths."
+    },
+    {
+      "at": "2026-08-15T05:06:32+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Bounded UI/build-selection policy; no authentication, protocol, synchronized data migration, security, privacy, deployment, or destructive operation."
+    },
+    {
+      "at": "2026-08-15T05:06:32+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Implementation is bounded to the central resolver, device-local compatibility default, Tauri export config, and focused tests listed in role manifests."
+    },
+    {
+      "at": "2026-08-15T07:18:00+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED reproduced five policy/default/build failures; GREEN changed only the central resolver, compatibility default/schema description, Tauri export config, and contract-aligned tests. Studio suite 17 files/95 tests passed; App full suite 139 files/1255 tests passed; Happy App typecheck passed."
+    },
+    {
+      "at": "2026-08-15T07:18:21+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Run deterministic checks and build a fresh packaged Tauri desktop."
+    },
+    {
+      "at": "2026-08-15T07:18:21+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Complete packaged build verification and whole-diff review."
+    },
+    {
+      "at": "2026-08-15T14:32:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-15T14:33:13+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-15T14:34:47+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review traced every visualStyle consumer, Tauri/non-Tauri gating, local compatibility parsing, production export, and runtime evidence. No blocking/high/medium finding; misleading preview-override test descriptions were corrected and 3 files/21 tests passed."
+    },
+    {
+      "at": "2026-08-15T14:35:00+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize evidence, archive with commit pending, stage, and run staged workflow CI."
+    },
+    {
+      "at": "2026-08-15T14:35:37+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records the forced-Studio policy, 139 files/1256 App tests, both typechecks, four workflow checks, fresh packaged build/runtime capture, passed whole-diff review, rollback, and integration follow-up."
+    },
+    {
+      "at": "2026-08-15T14:35:37+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Force Studio as the personal packaged-Tauri default while retaining non-Tauri Default compatibility and verifying a fresh bundle.; commit: pending; follow-up: Merge into dev, then run canonical happyctl refresh-desktop for the signed installed app."
+    }
+  ],
+  "updated": "2026-08-15T14:35:37+00:00",
+  "archivedAt": "2026-08-15T14:35:37+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Force Studio as the personal packaged-Tauri default while retaining non-Tauri Default compatibility and verifying a fresh bundle.",
+  "archiveFollowUp": "Merge into dev, then run canonical happyctl refresh-desktop for the signed installed app."
+}
