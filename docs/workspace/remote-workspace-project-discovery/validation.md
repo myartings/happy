@@ -46,6 +46,9 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | `2026-08-15` | `pnpm --filter happy typecheck` and `pnpm --filter happy-app typecheck` | passed | Post-merge CLI and App typechecks. |
 | `2026-08-15` | workflow validator, core tests, CI tests, and staged workflow CI | passed | Core and CI test scripts passed 14/14 each; staged workflow CI passed. |
 | `2026-08-15` | full Happy App Vitest family | failed, one unrelated test | `studioSidebarWiring.test.ts` has a Windows CRLF-sensitive source-string assertion; it fails 1/6 in isolation and both involved files are byte-for-byte the `origin/dev` versions. Workspace Project Discovery tests passed. User accepted this dev baseline gap on 2026-08-16. |
+| `2026-08-16` | merge latest `origin/dev` at `33bdd46e` | passed | Integrated the subsequent Studio-desktop-default PR without conflict. |
+| `2026-08-16` | targeted CLI scanner/RPC and App discovery/RPC-wrapper suites | passed, 7/7 and 13/13 | Final pre-PR regression after merging the current `origin/dev`. |
+| `2026-08-16` | `pnpm --filter happy typecheck` and `pnpm --filter happy-app typecheck` | passed | Final pre-PR typechecks after merging the current `origin/dev`. |
 
 ## Acceptance coverage
 
