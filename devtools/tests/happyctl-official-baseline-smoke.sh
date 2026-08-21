@@ -26,6 +26,10 @@ printf '{}\n' >"$fixture_repo/devtools/config/tauri.official-baseline.conf.json"
 git -C "$fixture_repo" add .
 git -C "$fixture_repo" commit -qm "official"
 git -C "$fixture_repo" branch upstream/main
+git -C "$fixture_repo" branch origin/main
+printf 'local tooling\n' >"$fixture_repo/devtools/local-tool"
+git -C "$fixture_repo" add devtools/local-tool
+git -C "$fixture_repo" commit -qm "local devtools"
 
 HAPPY_REPO="$fixture_repo"
 HAPPY_DEVTOOLS_BASE_UPSTREAM="upstream/main"
@@ -52,6 +56,18 @@ grep -F 'No changes made.' <<<"$dry_run_output" >/dev/null
 grep -F 'Happy (official baseline).app' <<<"$dry_run_output" >/dev/null
 grep -F "$HAPPY_OFFICIAL_BASELINE_WORKTREE" <<<"$dry_run_output" >/dev/null
 grep -F 'rollback-official-baseline' < <("$REPO_ROOT/devtools/happyctl" help) >/dev/null
+
+git -C "$fixture_repo" switch -q -c origin-next main
+printf 'remote tooling\n' >"$fixture_repo/devtools/remote-tool"
+git -C "$fixture_repo" add devtools/remote-tool
+git -C "$fixture_repo" commit -qm "remote devtools"
+git -C "$fixture_repo" branch -f origin/main HEAD
+git -C "$fixture_repo" switch -q main
+if assert_official_baseline_source >/dev/null 2>&1; then
+  echo "official baseline source guard accepted main behind origin/main" >&2
+  exit 1
+fi
+git -C "$fixture_repo" branch -f origin/main main
 
 git -C "$fixture_repo" switch -q -c official-next upstream/main
 printf 'new official product\n' >>"$fixture_repo/product.txt"
