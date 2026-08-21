@@ -48,6 +48,9 @@ HAPPY_DEVTOOLS_BASE_BRANCH="${HAPPY_DEVTOOLS_BASE_BRANCH:-main}"
 HAPPY_DEVTOOLS_BASE_UPSTREAM="${HAPPY_DEVTOOLS_BASE_UPSTREAM:-upstream/main}"
 HAPPY_DEVTOOLS_PATCH_BRANCHES="${HAPPY_DEVTOOLS_PATCH_BRANCHES:-dev}"
 HAPPY_DEVTOOLS_FINAL_BRANCH="${HAPPY_DEVTOOLS_FINAL_BRANCH:-dev}"
+HAPPY_PRIMARY_WORKTREE="$(git -C "$HAPPY_REPO" worktree list --porcelain 2>/dev/null | awk '/^worktree / && !found { sub(/^worktree /, ""); print; found=1 }')"
+HAPPY_PRIMARY_WORKTREE="${HAPPY_PRIMARY_WORKTREE:-$HAPPY_REPO}"
+HAPPY_OFFICIAL_BASELINE_WORKTREE="${HAPPY_OFFICIAL_BASELINE_WORKTREE:-$HAPPY_PRIMARY_WORKTREE/.baseline/worktree/official-main}"
 
 HAPPY_DEVTOOLS_CONFIG="${HAPPY_DEVTOOLS_CONFIG:-$HAPPY_DEVTOOLS_STATE_DIR/config.env}"
 if [[ ! -f "$HAPPY_DEVTOOLS_CONFIG" && -f "$SCRIPT_DIR/config.env" ]]; then
@@ -77,9 +80,37 @@ HAPPY_IOS_STORE_PROFILE="${HAPPY_IOS_STORE_PROFILE:-personal-store}"
 HAPPY_IOS_CHANNEL="${HAPPY_IOS_CHANNEL:-personal}"
 HAPPY_IOS_EAS_ENVIRONMENT="${HAPPY_IOS_EAS_ENVIRONMENT:-preview}"
 
-INSTALL_APP="$HAPPY_INSTALL_DIR/$HAPPY_APP_NAME"
-TAURI_TARGET_DIR="$HAPPY_REPO/packages/happy-app/src-tauri/target/release"
-BUILD_APP="$TAURI_TARGET_DIR/bundle/macos/$HAPPY_APP_NAME"
+HAPPY_DESKTOP_PROFILE="personal"
+
+refresh_desktop_paths() {
+  INSTALL_APP="$HAPPY_INSTALL_DIR/$HAPPY_APP_NAME"
+  TAURI_TARGET_DIR="$HAPPY_REPO/packages/happy-app/src-tauri/target/release"
+  BUILD_APP="$TAURI_TARGET_DIR/bundle/macos/$HAPPY_APP_NAME"
+}
+
+set_desktop_profile() {
+  case "$1" in
+    personal)
+      HAPPY_DESKTOP_PROFILE="personal"
+      HAPPY_APP_NAME="Happy (dev).app"
+      HAPPY_APP_BUNDLE_ID="com.slopus.happy.dev"
+      HAPPY_TAURI_CONFIG="src-tauri/tauri.dev.conf.json"
+      ;;
+    official-baseline)
+      HAPPY_DESKTOP_PROFILE="official-baseline"
+      HAPPY_APP_NAME="Happy (official baseline).app"
+      HAPPY_APP_BUNDLE_ID="com.slopus.happy.official-baseline"
+      HAPPY_TAURI_CONFIG="$HAPPY_REPO/devtools/config/tauri.official-baseline.conf.json"
+      ;;
+    *)
+      echo "Unknown desktop profile: $1" >&2
+      return 1
+      ;;
+  esac
+  refresh_desktop_paths
+}
+
+refresh_desktop_paths
 LINUX_EXECUTABLE="$TAURI_TARGET_DIR/app"
 LINUX_INSTALLED_EXECUTABLE="${LINUX_INSTALLED_EXECUTABLE:-/usr/bin/app}"
 LINUX_PACKAGE_NAME="${LINUX_PACKAGE_NAME:-happy-dev}"
@@ -143,6 +174,11 @@ Usage:
   devtools/happyctl update-desktop [--dry-run] [--launch-smoke]
   devtools/happyctl refresh-desktop [--dry-run] [--force] [--keep-backups N] [--launch-smoke]
   devtools/happyctl verify-desktop [--launch]
+  devtools/happyctl build-official-baseline
+  devtools/happyctl update-official-baseline [--keep-backups N]
+  devtools/happyctl verify-official-baseline
+  devtools/happyctl refresh-official-baseline [--dry-run] [--keep-backups N]
+  devtools/happyctl rollback-official-baseline [backup.app]
   devtools/happyctl update-all
   devtools/happyctl launch-desktop
   devtools/happyctl rollback-desktop [backup.app]
@@ -548,6 +584,15 @@ install_js_dependencies() {
   fi
 }
 
+install_official_baseline_dependencies() {
+  log "Installing official baseline JS dependencies from the tracked lockfile"
+  if run_pnpm -C "$HAPPY_REPO" install --frozen-lockfile; then
+    return
+  fi
+  log "Tracked lockfile is stale; resolving without writing a replacement lockfile"
+  run_pnpm -C "$HAPPY_REPO" install --no-frozen-lockfile --lockfile=false
+}
+
 linux_only_build_notice() {
   if [[ "$OS_NAME" == "Linux" ]]; then
     echo "Linux support is currently build verification only. update/install/refresh task commands are intentionally disabled." >&2
@@ -583,7 +628,7 @@ git_ref_exists() {
 
 is_devtools_path() {
   case "$1" in
-    devtools/*|.agents/skills/happy-desktop-update/*|.agents/skills/happy-ios-release/*|AGENTS.md|.gitignore)
+    devtools/*|.agents/skills/happy-desktop-update/*|.agents/skills/happy-desktop-official-release/*|.agents/skills/happy-ios-release/*|AGENTS.md|.gitignore)
       return 0
       ;;
     *)
@@ -1081,9 +1126,15 @@ build_desktop() {
   fi
   require_cmd cargo
   ensure_repo
-  require_github_issues_build_configuration || return 1
+  if [[ "$HAPPY_DESKTOP_PROFILE" != "official-baseline" ]]; then
+    require_github_issues_build_configuration || return 1
+  fi
   log "Installing JS dependencies"
-  install_js_dependencies
+  if [[ "$HAPPY_DESKTOP_PROFILE" == "official-baseline" ]]; then
+    install_official_baseline_dependencies || return 1
+  else
+    install_js_dependencies || return 1
+  fi
   log "Building Happy Desktop app bundle"
   if [[ "$OS_NAME" == "Linux" ]]; then
     log "+ CARGO_BUILD_JOBS=1 RUSTFLAGS=-C link-arg=-Wl,--threads=1 $HAPPY_PNPM_CMD -C $HAPPY_REPO --filter happy-app exec tauri build --config $HAPPY_TAURI_CONFIG --bundles $HAPPY_LINUX_BUNDLES"
@@ -1092,13 +1143,170 @@ build_desktop() {
       $HAPPY_PNPM_CMD -C "$HAPPY_REPO" --filter happy-app exec tauri build --config "$HAPPY_TAURI_CONFIG" --bundles "$HAPPY_LINUX_BUNDLES"
     artifacts
   else
-    run_pnpm -C "$HAPPY_REPO" --filter happy-app exec tauri build --config "$HAPPY_TAURI_CONFIG" --bundles app --no-sign
+    run_pnpm -C "$HAPPY_REPO" --filter happy-app exec tauri build --config "$HAPPY_TAURI_CONFIG" --bundles app --no-sign || return 1
     if [[ ! -d "$BUILD_APP" ]]; then
       echo "Build completed but app bundle was not found: $BUILD_APP" >&2
       exit 1
     fi
     log "Built app: $BUILD_APP"
   fi
+}
+
+assert_official_baseline_source() {
+  ensure_repo
+  ensure_clean_repo
+  git_ref_exists "$HAPPY_DEVTOOLS_BASE_BRANCH" || {
+    echo "Happy personal main ref not found: $HAPPY_DEVTOOLS_BASE_BRANCH" >&2
+    return 1
+  }
+  assert_official_product_equivalence "$HAPPY_DEVTOOLS_BASE_UPSTREAM" "$HAPPY_DEVTOOLS_BASE_BRANCH" || return 1
+  if git_ref_exists "origin/$HAPPY_DEVTOOLS_BASE_BRANCH" &&
+    [[ "$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_BASE_BRANCH")" != "$(git -C "$HAPPY_REPO" rev-parse "origin/$HAPPY_DEVTOOLS_BASE_BRANCH")" ]]; then
+    echo "$HAPPY_DEVTOOLS_BASE_BRANCH is not synchronized with origin/$HAPPY_DEVTOOLS_BASE_BRANCH; run happyctl refresh-desktop first." >&2
+    return 1
+  fi
+}
+
+prepare_official_baseline_worktree() {
+  assert_official_baseline_source || return 1
+  local target="$HAPPY_OFFICIAL_BASELINE_WORKTREE"
+  if [[ -e "$target" ]]; then
+    if ! git -C "$target" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      echo "Official baseline path exists but is not a Git worktree: $target" >&2
+      return 1
+    fi
+    if [[ -n "$(git -C "$target" status --porcelain)" ]]; then
+      echo "Official baseline worktree has local changes: $target" >&2
+      return 1
+    fi
+    run git -C "$target" checkout --detach "$HAPPY_DEVTOOLS_BASE_BRANCH" || return 1
+  else
+    mkdir -p "$(dirname "$target")" || return 1
+    run git -C "$HAPPY_REPO" worktree add --detach "$target" "$HAPPY_DEVTOOLS_BASE_BRANCH" || return 1
+  fi
+  if [[ "$(git -C "$target" rev-parse HEAD)" != "$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_BASE_BRANCH")" ]]; then
+    echo "Official baseline worktree did not resolve to $HAPPY_DEVTOOLS_BASE_BRANCH" >&2
+    return 1
+  fi
+}
+
+activate_official_baseline_build_paths() {
+  HAPPY_REPO="$HAPPY_OFFICIAL_BASELINE_WORKTREE"
+  set_desktop_profile official-baseline
+  refresh_desktop_paths
+}
+
+build_official_baseline() {
+  linux_only_build_notice
+  set_desktop_profile official-baseline
+  prepare_official_baseline_worktree || return 1
+  activate_official_baseline_build_paths
+  build_desktop
+}
+
+update_official_baseline() {
+  linux_only_build_notice
+  local keep_backups="$HAPPY_DEVTOOLS_KEEP_BACKUPS"
+  if [[ "${1:-}" == "--keep-backups" ]]; then
+    [[ -n "${2:-}" ]] || { echo "--keep-backups requires a value" >&2; return 1; }
+    keep_backups="$2"
+  elif [[ "${1:-}" == --keep-backups=* ]]; then
+    keep_backups="${1#*=}"
+  elif [[ -n "${1:-}" ]]; then
+    echo "Unknown update-official-baseline option: $1" >&2
+    return 1
+  fi
+  [[ "$keep_backups" =~ ^[0-9]+$ ]] || { echo "Keep backups must be a non-negative integer, got: $keep_backups" >&2; return 1; }
+  activate_official_baseline_build_paths
+  install_desktop || return 1
+  remove_old_desktop_backups "$keep_backups" || return 1
+}
+
+verify_official_baseline() {
+  linux_only_build_notice
+  activate_official_baseline_build_paths
+  verify_desktop || return 1
+}
+
+rollback_official_baseline() {
+  linux_only_build_notice
+  activate_official_baseline_build_paths
+  rollback_desktop "${1:-}"
+}
+
+refresh_official_baseline() {
+  linux_only_build_notice
+  local dry_run=0 keep_backups="$HAPPY_DEVTOOLS_KEEP_BACKUPS"
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --keep-backups)
+        [[ -n "${2:-}" ]] || { echo "--keep-backups requires a value" >&2; return 1; }
+        keep_backups="$2"
+        shift
+        ;;
+      --keep-backups=*) keep_backups="${1#*=}" ;;
+      *) echo "Unknown refresh-official-baseline option: $1" >&2; return 1 ;;
+    esac
+    shift
+  done
+  [[ "$keep_backups" =~ ^[0-9]+$ ]] || { echo "Keep backups must be a non-negative integer, got: $keep_backups" >&2; return 1; }
+
+  set_desktop_profile official-baseline
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "macOS official baseline refresh dry run"
+    echo "Source:         $HAPPY_DEVTOOLS_BASE_BRANCH (must contain $HAPPY_DEVTOOLS_BASE_UPSTREAM)"
+    echo "Worktree:       $HAPPY_OFFICIAL_BASELINE_WORKTREE"
+    echo "App:            $HAPPY_APP_NAME"
+    echo "Bundle id:      $HAPPY_APP_BUNDLE_ID"
+    echo "Install target: $INSTALL_APP"
+    echo "Would fetch official/personal remotes, validate source equivalence, prepare the detached worktree, build, stably sign, back up, install, verify, and launch."
+    echo "Would not switch the caller worktree, replace Happy (dev).app, push branches, or publish a public release."
+    show_backup_retention_preview "$keep_backups"
+    echo "No changes made."
+    return
+  fi
+
+  local source_repo="$HAPPY_REPO" started_at main_commit status="failed" rc=0
+  started_at="$(date +%s)"
+  set +e
+  run git -C "$source_repo" fetch --prune upstream
+  rc=$?
+  if [[ "$rc" -eq 0 ]] && git -C "$source_repo" remote get-url origin >/dev/null 2>&1; then
+    run git -C "$source_repo" fetch --prune origin
+    rc=$?
+  fi
+  if [[ "$rc" -eq 0 ]]; then
+    HAPPY_REPO="$source_repo"
+    assert_official_baseline_source
+    rc=$?
+  fi
+  if [[ "$rc" -eq 0 ]]; then
+    main_commit="$(git -C "$source_repo" rev-parse "$HAPPY_DEVTOOLS_BASE_BRANCH")"
+    prepare_official_baseline_worktree
+    rc=$?
+  fi
+  if [[ "$rc" -eq 0 ]]; then
+    activate_official_baseline_build_paths
+    build_desktop
+    rc=$?
+  fi
+  if [[ "$rc" -eq 0 ]]; then install_desktop; rc=$?; fi
+  if [[ "$rc" -eq 0 ]]; then remove_old_desktop_backups "$keep_backups"; rc=$?; fi
+  if [[ "$rc" -eq 0 ]]; then verify_desktop; rc=$?; fi
+  if [[ "$rc" -eq 0 ]]; then launch_desktop; rc=$?; fi
+  if [[ "$rc" -eq 0 ]]; then status="success"; fi
+  set -e
+
+  write_update_report "refresh-official-baseline" \
+    "Status" "$status" \
+    "Personal main commit" "${main_commit:-n/a}" \
+    "Product source equivalence" "$([[ -n "${main_commit:-}" ]] && echo verified || echo 'not verified')" \
+    "Baseline worktree" "$HAPPY_OFFICIAL_BASELINE_WORKTREE" \
+    "Install app" "$INSTALL_APP" \
+    "Keep backups" "$keep_backups" \
+    "Duration seconds" "$(( $(date +%s) - started_at ))" >/dev/null
+  [[ "$rc" -eq 0 ]] || return "$rc"
 }
 
 artifacts() {
@@ -2066,6 +2274,11 @@ case "$cmd" in
   update-desktop) shift; update_desktop "$@" ;;
   refresh-desktop) shift; refresh_desktop "$@" ;;
   verify-desktop) shift; verify_desktop "$@" ;;
+  build-official-baseline) build_official_baseline ;;
+  update-official-baseline) shift; update_official_baseline "$@" ;;
+  verify-official-baseline) verify_official_baseline ;;
+  refresh-official-baseline) shift; refresh_official_baseline "$@" ;;
+  rollback-official-baseline) shift; rollback_official_baseline "${1:-}" ;;
   update-all) update_all ;;
   launch-desktop) launch_desktop ;;
   rollback-desktop) shift; rollback_desktop "${1:-}" ;;

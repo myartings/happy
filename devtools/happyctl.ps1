@@ -326,6 +326,7 @@ function Test-DevtoolsPath {
         $Path -eq ".gitignore" -or
         $Path -like "devtools/*" -or
         $Path -like ".agents/skills/happy-desktop-update/*" -or
+        $Path -like ".agents/skills/happy-desktop-official-release/*" -or
         $Path -like ".agents/skills/happy-ios-release/*"
 }
 

@@ -14,7 +14,7 @@ Do not force push for this workflow.
 ## Personal Branch Model
 
 - `upstream/main` is the official source baseline.
-- Personal `main` may differ from `upstream/main` only in `devtools/`, `.agents/skills/happy-desktop-update/`, `.agents/skills/happy-ios-release/`, `AGENTS.md`, and `.gitignore`.
+- Personal `main` may differ from `upstream/main` only in `devtools/`, `.agents/skills/happy-desktop-update/`, `.agents/skills/happy-desktop-official-release/`, `.agents/skills/happy-ios-release/`, `AGENTS.md`, and `.gitignore`.
 - `dev` is the personal product integration, desktop build, and release branch.
 - Merge official updates into personal `main`, validate the devtools-only delta, then merge `main` into `dev`.
 - Do not use `git reset`, history rewriting, or force pushes to synchronize these branches.
@@ -22,3 +22,12 @@ Do not force push for this workflow.
 ## Happy Devtools
 
 Cross-platform client operations live in `devtools/`; use `devtools/happyctl` on macOS/Linux and `devtools/happyctl.ps1` on Windows. Generated reports, logs, backups, downloaded runtimes, credentials, and machine-local configuration must remain outside tracked source.
+
+## Official macOS Baseline Release
+
+When the user asks to release or publish the official macOS client from `main`
+and means a local source-built app, use the project-local
+`happy-desktop-official-release` Skill. The executable entrypoint is
+`devtools/happyctl refresh-official-baseline`; it must use the isolated baseline
+worktree and must not replace the personal development client. Public
+distribution requires a separate, explicit workflow.

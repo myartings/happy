@@ -19,7 +19,7 @@ invalid=()
 while IFS= read -r path; do
   [[ -z "$path" ]] && continue
   case "$path" in
-    devtools/*|.agents/skills/happy-desktop-update/*|.agents/skills/happy-ios-release/*|AGENTS.md|.gitignore) ;;
+    devtools/*|.agents/skills/happy-desktop-update/*|.agents/skills/happy-desktop-official-release/*|.agents/skills/happy-ios-release/*|AGENTS.md|.gitignore) ;;
     *) invalid+=("$path") ;;
   esac
 done < <(git -C "$REPO_ROOT" diff --name-only "$UPSTREAM_REF"..HEAD)
