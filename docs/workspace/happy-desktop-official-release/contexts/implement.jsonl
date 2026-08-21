@@ -1,0 +1,8 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"devtools/happyctl","reason":"macOS official-baseline implementation"}
+{"path":"devtools/happyctl.ps1","reason":"cross-platform allowlist parity"}
+{"path":"devtools/tests/","reason":"focused smoke tests"}
+{"path":".agents/skills/happy-desktop-official-release/","reason":"agent-facing workflow"}
+{"path":"AGENTS.md","reason":"repository routing invariant"}
+{"path":"devtools/AGENTS.md","reason":"devtools behavior contract"}
+{"path":"devtools/README.md","reason":"operator documentation"}

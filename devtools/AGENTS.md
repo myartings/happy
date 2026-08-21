@@ -29,6 +29,7 @@ devtools/happyctl check-upstream
 devtools/happyctl install-git-guards
 devtools/happyctl sync-dev --dry-run
 devtools/happyctl refresh-desktop --dry-run
+devtools/happyctl refresh-official-baseline --dry-run
 ```
 
 ```powershell
@@ -40,6 +41,6 @@ devtools/happyctl refresh-desktop --dry-run
 .\devtools\happyctl.ps1 refresh-official-baseline -DryRun
 ```
 
-Commands that install, replace, roll back, publish, submit, or register scheduled tasks require explicit user authorization. A general request to update Happy Desktop authorizes the complete `refresh-desktop` workflow described by the `happy-desktop-update` skill.
+Commands that install, replace, roll back, publish, submit, or register scheduled tasks require explicit user authorization. A general request to update Happy Desktop authorizes the complete `refresh-desktop` workflow described by the `happy-desktop-update` skill. A request to release the local official macOS client from `main` authorizes `refresh-official-baseline` as described by the `happy-desktop-official-release` skill; it does not authorize public distribution.
 
 Before committing changes, run syntax checks, the devtools smoke tests, relevant dry-runs, and inspect `git diff --check` plus the complete diff.

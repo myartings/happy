@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/happy-desktop-official-release/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/happy-desktop-official-release.md","reason":"acceptance contract"}
+{"path":"devtools/happyctl","reason":"review implemented safeguards"}
+{"path":"devtools/tests/","reason":"verification evidence"}
+{"path":".agents/skills/happy-desktop-official-release/","reason":"validate agent workflow"}

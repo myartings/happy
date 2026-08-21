@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "happy-desktop-official-release",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Review or replace the pre-existing dirty runtime baseline worktree before a real refresh.",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/PRD.md and docs/specs/happy-desktop-official-release.md define observable local baseline release acceptance",
+      "updated": "2026-08-21T15:43:50+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/happy-desktop-official-release/decisions.md records accepted placement, scope, isolation, identity, and safety decisions",
+      "updated": "2026-08-21T15:43:50+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "task list and role-scoped context manifests bound implementation and verification",
+      "updated": "2026-08-21T15:43:50+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "risk-assessment.md clears source, worktree, install, signing, and publication risks with controls",
+      "updated": "2026-08-21T15:43:50+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Implemented project-local skill, Bash official-baseline stages, detached-worktree guards, reports, rollback, docs, and cross-platform allowlist parity",
+      "updated": "2026-08-21T15:53:48+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Focused shell/static/skill/workflow checks pass; full real install deferred until integration and pre-existing dirty baseline worktree resolution",
+      "updated": "2026-08-21T15:53:48+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Complete diff reviewed for source isolation, no-push behavior, stable signing, separate identity, error propagation, and rollback routing; no unresolved code findings",
+      "updated": "2026-08-21T15:53:48+00:00"
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "All finish sections complete; user accepted local integration with full real refresh deferred because the existing runtime baseline worktree is dirty",
+      "updated": "2026-08-21T16:21:11+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-21T15:41:00+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-21T15:43:50+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md and docs/specs/happy-desktop-official-release.md define observable local baseline release acceptance"
+    },
+    {
+      "at": "2026-08-21T15:43:50+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/happy-desktop-official-release/decisions.md records accepted placement, scope, isolation, identity, and safety decisions"
+    },
+    {
+      "at": "2026-08-21T15:43:50+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "risk-assessment.md clears source, worktree, install, signing, and publication risks with controls"
+    },
+    {
+      "at": "2026-08-21T15:43:50+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "task list and role-scoped context manifests bound implementation and verification"
+    },
+    {
+      "at": "2026-08-21T15:44:24+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write red official-baseline smoke tests"
+    },
+    {
+      "at": "2026-08-21T15:53:48+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented project-local skill, Bash official-baseline stages, detached-worktree guards, reports, rollback, docs, and cross-platform allowlist parity"
+    },
+    {
+      "at": "2026-08-21T15:53:48+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run acceptance checks and inspect complete diff"
+    },
+    {
+      "at": "2026-08-21T15:53:48+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Focused shell/static/skill/workflow checks pass; full real install deferred until integration and pre-existing dirty baseline worktree resolution"
+    },
+    {
+      "at": "2026-08-21T15:53:48+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Complete diff reviewed for source isolation, no-push behavior, stable signing, separate identity, error propagation, and rollback routing; no unresolved code findings"
+    },
+    {
+      "at": "2026-08-21T15:53:48+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Prepare integration handoff without committing absent user authorization"
+    },
+    {
+      "at": "2026-08-21T16:21:11+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "All finish sections complete; user accepted local integration with full real refresh deferred because the existing runtime baseline worktree is dirty"
+    },
+    {
+      "at": "2026-08-21T16:21:11+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Added and verified the local macOS official-baseline release Skill and happyctl workflow.; commit: pending; follow-up: Review or replace the pre-existing dirty runtime baseline worktree before a real refresh."
+    }
+  ],
+  "updated": "2026-08-21T16:21:11+00:00",
+  "archivedAt": "2026-08-21T16:21:11+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Added and verified the local macOS official-baseline release Skill and happyctl workflow.",
+  "archiveFollowUp": "Review or replace the pre-existing dirty runtime baseline worktree before a real refresh."
+}

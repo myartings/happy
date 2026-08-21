@@ -174,3 +174,30 @@ Observable success:
 - Stream live terminal cells or implement an interactive terminal emulator.
 - Persist unbounded command output or retroactively manufacture output for old
   messages that never carried it.
+
+# Happy Desktop Official Baseline Release
+
+## Product outcome
+
+The repository owner can request an official macOS desktop client refresh and
+receive a locally built, stably signed, separately installed app sourced from
+the validated personal `main` branch without disturbing the active `dev`
+workspace or the installed development client.
+
+Observable success:
+
+- one `happyctl` command prepares an isolated official-baseline worktree, builds,
+  signs, backs up, installs, verifies, and launches the client;
+- product inputs on `main` are proven equivalent to `upstream/main`, allowing
+  only the repository's declared devtools/instruction paths to differ;
+- the app installs as `Happy (official baseline).app` with bundle identifier
+  `com.slopus.happy.official-baseline`, alongside `Happy (dev).app`;
+- a dry run reports the exact intended source and targets without mutation;
+- a project-local Skill gives agents a concise, repeatable release procedure.
+
+## Non-goals
+
+- Apple notarization, App Store submission, DMG publication, GitHub Releases,
+  or any other public distribution.
+- Building official baseline artifacts from `dev` or from a dirty worktree.
+- Replacing, stopping, or relabeling the personal development client.
