@@ -19,25 +19,13 @@ devtools/happyctl refresh-desktop
 .\devtools\happyctl.ps1 refresh-official-baseline
 ```
 
-On macOS, build and install the separately identified local baseline from
-validated `main` without switching the active development worktree:
-
-```bash
-devtools/happyctl refresh-official-baseline --dry-run
-devtools/happyctl refresh-official-baseline
-```
-
-This installs `/Applications/Happy (official baseline).app` with bundle ID
-`com.slopus.happy.official-baseline`. It does not notarize or publish a public
-artifact and does not replace `Happy (dev).app`.
-
 ## Branch model
 
 ```text
 upstream/main -> personal main (devtools-only delta) -> dev (personal product features)
 ```
 
-Personal `main` contains the official product tree plus allowlisted infrastructure only: `devtools/`, the Happy operation skills, `AGENTS.md`, and `.gitignore`. `happyctl` verifies that `main` contains the current `upstream/main` and has no product/build-input differences before using it for the isolated official baseline client.
+Personal `main` contains the official product tree plus allowlisted infrastructure only: `devtools/`, the two Happy operation skills, `AGENTS.md`, and `.gitignore`. `happyctl` verifies that `main` contains the current `upstream/main` and has no product/build-input differences before using it for the isolated official baseline client.
 
 `refresh-desktop` merges new official commits into personal `main`, verifies that invariant, merges `main` into `dev`, builds `dev`, then installs and verifies the personal desktop client. It stops on dirty state, divergence, conflicts, build failures, or verification failures.
 
@@ -57,7 +45,6 @@ Copy `config.example.env` to the untracked `devtools/config.env` on macOS/Linux,
 
 ```bash
 bash -n devtools/happyctl
-bash devtools/tests/happyctl-official-baseline-smoke.sh
 bash devtools/tests/ios-release-smoke.sh
 bash devtools/tests/devtools-layout-smoke.sh
 ```

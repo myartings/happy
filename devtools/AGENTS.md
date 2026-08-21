@@ -11,7 +11,6 @@ This directory owns personal Happy operations: update, build, install, backup, r
 - `dev` contains personal product features and is the desktop build/release branch.
 - `happyctl` must reject an official-baseline build when personal `main` differs from `upstream/main` outside the explicit devtools allowlist.
 - New official commits are merged into personal `main`; `main` is then merged into `dev`. Do not reset or rewrite either branch.
-- Updates to `origin/main` must pass the clone-local guard installed by `happyctl`; use `happyctl sync-dev` for the authorized synchronization path.
 
 ## State and secrets
 
@@ -26,21 +25,18 @@ This directory owns personal Happy operations: update, build, install, backup, r
 devtools/happyctl status
 devtools/happyctl doctor
 devtools/happyctl check-upstream
-devtools/happyctl install-git-guards
 devtools/happyctl sync-dev --dry-run
 devtools/happyctl refresh-desktop --dry-run
-devtools/happyctl refresh-official-baseline --dry-run
 ```
 
 ```powershell
 .\devtools\happyctl.ps1 status
 .\devtools\happyctl.ps1 doctor
-.\devtools\happyctl.ps1 install-git-guards
 .\devtools\happyctl.ps1 artifacts
 .\devtools\happyctl.ps1 refresh-desktop -DryRun
 .\devtools\happyctl.ps1 refresh-official-baseline -DryRun
 ```
 
-Commands that install, replace, roll back, publish, submit, or register scheduled tasks require explicit user authorization. A general request to update Happy Desktop authorizes the complete `refresh-desktop` workflow described by the `happy-desktop-update` skill. A request to release the local official macOS client from `main` authorizes `refresh-official-baseline` as described by the `happy-desktop-official-release` skill; it does not authorize public distribution.
+Commands that install, replace, roll back, publish, submit, or register scheduled tasks require explicit user authorization. A general request to update Happy Desktop authorizes the complete `refresh-desktop` workflow described by the `happy-desktop-update` skill.
 
 Before committing changes, run syntax checks, the devtools smoke tests, relevant dry-runs, and inspect `git diff --check` plus the complete diff.
