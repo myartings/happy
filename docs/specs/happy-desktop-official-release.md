@@ -11,6 +11,8 @@ that command; it does not duplicate build or install logic.
 1. The command fails closed unless run on macOS with a clean repository, a
    resolvable `upstream/main`, and a `main` whose product/build inputs differ
    from `upstream/main` only in the documented allowlist.
+   A local `main` that only leads `origin/main` is valid; a `main` behind or
+   diverged from `origin/main` is rejected. The release command never pushes.
 2. Source preparation uses the isolated
    `.baseline/worktree/official-main` worktree at the validated `main` commit;
    it does not switch or modify the caller's current branch/worktree.

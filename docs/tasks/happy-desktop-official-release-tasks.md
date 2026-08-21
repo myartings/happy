@@ -11,3 +11,5 @@
 - [x] Update devtools documentation and cross-platform allowlists.
 - [x] Run focused tests, static checks, skill validation, formal review, and
   workflow archive checks.
+- [x] Allow validated local `main` to lead `origin/main` without weakening the
+  behind/diverged guard, then publish from the rebuilt baseline worktree.

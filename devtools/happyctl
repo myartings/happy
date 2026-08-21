@@ -1229,10 +1229,12 @@ assert_official_baseline_source() {
     return 1
   }
   assert_official_product_equivalence "$HAPPY_DEVTOOLS_BASE_UPSTREAM" "$HAPPY_DEVTOOLS_BASE_BRANCH" || return 1
-  if git_ref_exists "origin/$HAPPY_DEVTOOLS_BASE_BRANCH" &&
-    [[ "$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_BASE_BRANCH")" != "$(git -C "$HAPPY_REPO" rev-parse "origin/$HAPPY_DEVTOOLS_BASE_BRANCH")" ]]; then
-    echo "$HAPPY_DEVTOOLS_BASE_BRANCH is not synchronized with origin/$HAPPY_DEVTOOLS_BASE_BRANCH; run happyctl refresh-desktop first." >&2
-    return 1
+  if git_ref_exists "origin/$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+    if ! git -C "$HAPPY_REPO" merge-base --is-ancestor \
+      "origin/$HAPPY_DEVTOOLS_BASE_BRANCH" "$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+      echo "$HAPPY_DEVTOOLS_BASE_BRANCH is behind or diverged from origin/$HAPPY_DEVTOOLS_BASE_BRANCH; run happyctl refresh-desktop first." >&2
+      return 1
+    fi
   fi
 }
 

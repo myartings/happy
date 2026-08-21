@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "happyctl-local-main-release",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Rebuild the baseline worktree and execute the authorized local release.",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Existing official-baseline specification now defines ahead-only local main as valid and behind/diverged as rejected",
+      "updated": "2026-08-21T16:26:54+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md records no-push ahead-only branch policy",
+      "updated": "2026-08-21T16:26:54+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Context manifests limit implementation to guard and smoke test",
+      "updated": "2026-08-21T16:26:55+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "risk-assessment.md preserves ancestry and upstream equivalence controls",
+      "updated": "2026-08-21T16:26:55+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD guard fix accepts local-ahead main and rejects origin-ahead/upstream-ahead fixtures",
+      "updated": "2026-08-21T16:28:21+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Official-baseline, signing, refresh guards, Bash syntax, ShellCheck, and diff checks pass",
+      "updated": "2026-08-21T16:28:21+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: one ancestry guard and regression fixture, with no push path",
+      "updated": "2026-08-21T16:28:21+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records outcome, verification, review, rollback, and runtime follow-up",
+      "updated": "2026-08-21T16:28:21+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-21T16:26:24+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-21T16:26:54+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Existing official-baseline specification now defines ahead-only local main as valid and behind/diverged as rejected"
+    },
+    {
+      "at": "2026-08-21T16:26:54+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md records no-push ahead-only branch policy"
+    },
+    {
+      "at": "2026-08-21T16:26:55+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "risk-assessment.md preserves ancestry and upstream equivalence controls"
+    },
+    {
+      "at": "2026-08-21T16:26:55+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Context manifests limit implementation to guard and smoke test"
+    },
+    {
+      "at": "2026-08-21T16:27:05+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write ahead-only origin guard regression test"
+    },
+    {
+      "at": "2026-08-21T16:28:21+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD guard fix accepts local-ahead main and rejects origin-ahead/upstream-ahead fixtures"
+    },
+    {
+      "at": "2026-08-21T16:28:21+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run focused regression and whole-diff checks"
+    },
+    {
+      "at": "2026-08-21T16:28:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Official-baseline, signing, refresh guards, Bash syntax, ShellCheck, and diff checks pass"
+    },
+    {
+      "at": "2026-08-21T16:28:21+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: one ancestry guard and regression fixture, with no push path"
+    },
+    {
+      "at": "2026-08-21T16:28:21+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive verified release-blocking guard fix"
+    },
+    {
+      "at": "2026-08-21T16:28:21+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records outcome, verification, review, rollback, and runtime follow-up"
+    },
+    {
+      "at": "2026-08-21T16:28:21+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Allow validated local main to lead origin/main during no-push official baseline release.; commit: pending; follow-up: Rebuild the baseline worktree and execute the authorized local release."
+    }
+  ],
+  "updated": "2026-08-21T16:28:21+00:00",
+  "archivedAt": "2026-08-21T16:28:21+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Allow validated local main to lead origin/main during no-push official baseline release.",
+  "archiveFollowUp": "Rebuild the baseline worktree and execute the authorized local release."
+}

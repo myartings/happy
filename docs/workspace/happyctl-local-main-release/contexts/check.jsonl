@@ -1,0 +1,4 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/happyctl-local-main-release/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/happy-desktop-official-release.md","reason":"accepted release contract"}
+{"path":"devtools/tests/happyctl-official-baseline-smoke.sh","reason":"deterministic regression evidence"}
