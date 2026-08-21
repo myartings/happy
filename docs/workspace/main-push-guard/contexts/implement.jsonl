@@ -1,0 +1,10 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/main-push-guard/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"AGENTS.md","reason":"Durable root branch-routing rule with the current conflicting instruction"}
+{"path":"devtools/AGENTS.md","reason":"Devtools branch invariants and validation expectations"}
+{"path":"devtools/happyctl","reason":"Existing main equivalence validator and macOS/Linux synchronization path"}
+{"path":"devtools/happyctl.ps1","reason":"Windows synchronization path that must authorize the guarded main push"}
+{"path":"devtools/tests/happyctl-refresh-guards-smoke.sh","reason":"Nearest existing deterministic guard coverage"}
+{"path":"docs/specs/main-push-guard.md","reason":"Accepted observable behavior and acceptance criteria"}
+{"path":"docs/tasks/main-push-guard-tasks.md","reason":"Bounded implementation and verification slices"}

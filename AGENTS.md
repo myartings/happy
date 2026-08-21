@@ -1,15 +1,12 @@
 # Agent Workflow
 
-## Sync To Main
+## Main Synchronization
 
-When the user says `sync to main` or `synt to main`, they mean:
-
-1. Fetch `origin/main`.
-2. Rebase the current branch on `origin/main`.
-3. Push the current HEAD directly to `main` with a normal push, for example:
-   `git push origin HEAD:main`
-
-Do not force push for this workflow.
+When the user says `sync to main` or `synt to main`, route the request through
+the Personal Branch Model below. Personal product features integrate into
+`dev`; synchronize official `main` only through `devtools/happyctl sync-dev`.
+The tracked pre-push guard must be active via
+`devtools/happyctl install-git-guards` before any synchronization.
 
 ## Personal Feature Development
 

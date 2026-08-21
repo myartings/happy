@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "main-push-guard",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Install the guard in each Windows clone after integrating this commit",
+  "riskRequired": true,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/main-push-guard.md AC1-AC7; user explicitly authorized local strong protection",
+      "updated": "2026-08-21T11:41:46+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "No unresolved material decisions; D1-D3 record the accepted local guard boundary",
+      "updated": "2026-08-21T11:41:48+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: feature/main-push-guard; bounded AGENTS/devtools/hook/tests/docs scope; local-only tracker reason; real-push TDD seam",
+      "updated": "2026-08-21T11:41:52+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/workspace/main-push-guard/decisions.md cleared-with-controls: real-push tests, fail-closed validation, scoped marker, reversible local config",
+      "updated": "2026-08-21T11:41:50+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "RED/GREEN complete; stable Git-common-dir hook, happyctl integration, root instructions, current clone install; focused and workflow suites passed",
+      "updated": "2026-08-21T11:56:46+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-21T12:06:04+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: branch-switch persistence, URL-addressed main, stale installed hook, scoped marker, allowlist reuse, rollback, and current-clone dry-run verified; no blocking findings",
+      "updated": "2026-08-21T12:07:52+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "AC1-AC7 verified on Linux and Windows; whole-diff review passed; rollback and clone-install limitation documented",
+      "updated": "2026-08-21T12:37:25+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-21T11:37:33+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-21T11:41:46+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/main-push-guard.md AC1-AC7; user explicitly authorized local strong protection"
+    },
+    {
+      "at": "2026-08-21T11:41:48+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "No unresolved material decisions; D1-D3 record the accepted local guard boundary"
+    },
+    {
+      "at": "2026-08-21T11:41:50+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/main-push-guard/decisions.md cleared-with-controls: real-push tests, fail-closed validation, scoped marker, reversible local config"
+    },
+    {
+      "at": "2026-08-21T11:41:52+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: feature/main-push-guard; bounded AGENTS/devtools/hook/tests/docs scope; local-only tracker reason; real-push TDD seam"
+    },
+    {
+      "at": "2026-08-21T11:42:19+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write the real-push RED test for origin/main protection"
+    },
+    {
+      "at": "2026-08-21T11:56:46+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED/GREEN complete; stable Git-common-dir hook, happyctl integration, root instructions, current clone install; focused and workflow suites passed"
+    },
+    {
+      "at": "2026-08-21T11:56:47+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify AC1-AC7 and review the complete diff"
+    },
+    {
+      "at": "2026-08-21T12:06:04+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-21T12:07:52+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: branch-switch persistence, URL-addressed main, stale installed hook, scoped marker, allowlist reuse, rollback, and current-clone dry-run verified; no blocking findings"
+    },
+    {
+      "at": "2026-08-21T12:37:05+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record Windows verification, rollback, and commit evidence"
+    },
+    {
+      "at": "2026-08-21T12:37:25+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "AC1-AC7 verified on Linux and Windows; whole-diff review passed; rollback and clone-install limitation documented"
+    },
+    {
+      "at": "2026-08-21T12:37:25+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and cross-platform verified a clone-local fail-closed guard for personal main synchronization; commit: pending; follow-up: Install the guard in each Windows clone after integrating this commit"
+    }
+  ],
+  "updated": "2026-08-21T12:37:25+00:00",
+  "archivedAt": "2026-08-21T12:37:25+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and cross-platform verified a clone-local fail-closed guard for personal main synchronization",
+  "archiveFollowUp": "Install the guard in each Windows clone after integrating this commit"
+}
