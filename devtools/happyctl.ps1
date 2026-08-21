@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("status", "doctor", "artifacts", "build-desktop", "build-official-baseline", "update-cli", "patch-cli-codex-model", "update-desktop", "update-official-baseline", "update-all", "verify-desktop", "verify-official-baseline", "check-upstream", "refresh-desktop", "refresh-official-baseline", "install-refresh-task", "uninstall-refresh-task", "refresh-task-status", "help")]
+    [ValidateSet("status", "doctor", "artifacts", "build-desktop", "build-official-baseline", "update-cli", "patch-cli-codex-model", "update-desktop", "update-official-baseline", "update-all", "verify-desktop", "verify-official-baseline", "check-upstream", "refresh-desktop", "refresh-official-baseline", "install-git-guards", "install-refresh-task", "uninstall-refresh-task", "refresh-task-status", "help")]
     [string]$Command = "help",
 
     [switch]$DryRun,
@@ -76,6 +76,7 @@ $LastDesktopUpdateResult = $null
 $OfficialBaseRef = if ($env:HAPPY_OFFICIAL_BASE_REF) { $env:HAPPY_OFFICIAL_BASE_REF } else { "upstream/main" }
 $PersonalMainBranch = if ($env:HAPPY_PERSONAL_MAIN_BRANCH) { $env:HAPPY_PERSONAL_MAIN_BRANCH } else { "main" }
 $DevBranch = if ($env:HAPPY_DEV_BRANCH) { $env:HAPPY_DEV_BRANCH } else { "dev" }
+$GitHooksSource = if ($env:HAPPY_GIT_HOOKS_SOURCE) { $env:HAPPY_GIT_HOOKS_SOURCE } else { "devtools/git-hooks" }
 $CodexDefaultModel = if ($env:HAPPY_CODEX_DEFAULT_MODEL) { $env:HAPPY_CODEX_DEFAULT_MODEL } else { "gpt-5.6-sol" }
 $LastPatchStackChanged = $false
 $LastPatchStackCommit = ""
@@ -314,6 +315,49 @@ function Invoke-HappyGit {
     }
 }
 
+function Test-GitPushGuard {
+    $configured = (& git -C $HappyRepo config --local --get core.hooksPath 2>$null | Out-String).Trim()
+    $hooksPath = Get-GitPushGuardInstallDir
+    $sourceHook = Join-Path $HappyRepo "$GitHooksSource\pre-push"
+    $installedHook = Join-Path $hooksPath "pre-push"
+    if ($configured -ne $hooksPath -or
+        -not (Test-Path -LiteralPath $sourceHook -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $installedHook -PathType Leaf)) {
+        return $false
+    }
+    $sourceHash = (Get-FileHash -LiteralPath $sourceHook -Algorithm SHA256).Hash
+    $installedHash = (Get-FileHash -LiteralPath $installedHook -Algorithm SHA256).Hash
+    return $sourceHash -eq $installedHash
+}
+
+function Get-GitPushGuardInstallDir {
+    $gitCommonDir = (& git -C $HappyRepo rev-parse --path-format=absolute --git-common-dir 2>$null | Out-String).Trim()
+    if (-not $gitCommonDir) {
+        throw "Could not resolve the Happy Git common directory."
+    }
+    return (Join-Path $gitCommonDir "happy-hooks")
+}
+
+function Install-GitPushGuard {
+    if (-not (Test-HappyRepo)) {
+        throw "Happy repo not found: $HappyRepo"
+    }
+    $configured = (& git -C $HappyRepo config --local --get core.hooksPath 2>$null | Out-String).Trim()
+    $hooksPath = Get-GitPushGuardInstallDir
+    $sourceHook = Join-Path $HappyRepo "$GitHooksSource\pre-push"
+    $installedHook = Join-Path $hooksPath "pre-push"
+    if (-not (Test-Path -LiteralPath $sourceHook -PathType Leaf)) {
+        throw "Tracked Happy pre-push hook is missing: $sourceHook"
+    }
+    if ($configured -and $configured -ne $hooksPath -and $configured -ne $GitHooksSource) {
+        throw "Refusing to replace existing core.hooksPath=$configured"
+    }
+    New-Item -ItemType Directory -Force -Path $hooksPath | Out-Null
+    Copy-Item -LiteralPath $sourceHook -Destination $installedHook -Force
+    Invoke-HappyGit -Arguments @("config", "--local", "core.hooksPath", $hooksPath)
+    Write-Host "Installed Happy Git push guard: $installedHook"
+}
+
 function Test-GitRef {
     param([Parameter(Mandatory = $true)][string]$Ref)
     & git -C $HappyRepo rev-parse --verify --quiet $Ref | Out-Null
@@ -427,6 +471,9 @@ function Sync-PersonalPatchStack {
         throw "Happy repo not found: $HappyRepo"
     }
     Assert-HappyRepoClean
+    if (-not (Test-GitPushGuard)) {
+        throw "Happy Git push guard is not active; run .\devtools\happyctl.ps1 install-git-guards"
+    }
 
     $beforeFinal = ""
     $beforeOutput = & git -C $HappyRepo rev-parse $DevBranch 2>$null
@@ -449,7 +496,13 @@ function Sync-PersonalPatchStack {
     Sync-CurrentBranchFromOrigin -Branch $PersonalMainBranch
     Invoke-HappyGit -Arguments @("merge", "--no-edit", $OfficialBaseRef)
     Assert-OfficialProductEquivalence
-    Invoke-HappyGit -Arguments @("push", "origin", $PersonalMainBranch)
+    $previousGuard = $env:HAPPY_MAIN_PUSH_GUARD
+    try {
+        $env:HAPPY_MAIN_PUSH_GUARD = "happyctl-sync"
+        Invoke-HappyGit -Arguments @("push", "origin", $PersonalMainBranch)
+    } finally {
+        $env:HAPPY_MAIN_PUSH_GUARD = $previousGuard
+    }
 
     Ensure-HappyLocalBranch -Branch $DevBranch -FallbackRef $PersonalMainBranch
     Sync-CurrentBranchFromOrigin -Branch $DevBranch
@@ -1187,6 +1240,7 @@ Usage:
   .\devtools\happyctl.ps1 verify-desktop
   .\devtools\happyctl.ps1 verify-official-baseline
   .\devtools\happyctl.ps1 check-upstream
+  .\devtools\happyctl.ps1 install-git-guards
   .\devtools\happyctl.ps1 refresh-desktop
   .\devtools\happyctl.ps1 refresh-desktop -Force
   .\devtools\happyctl.ps1 refresh-official-baseline [-DryRun]
@@ -1321,6 +1375,13 @@ function Invoke-Doctor {
         Write-Host "ok   Happy repo $HappyRepo"
     } else {
         Write-Host "miss Happy repo $HappyRepo"
+        $failed = $true
+    }
+
+    if (Test-GitPushGuard) {
+        Write-Host "ok   Git push guard $(Join-Path (Get-GitPushGuardInstallDir) 'pre-push')"
+    } else {
+        Write-Host "miss Git push guard; run .\devtools\happyctl.ps1 install-git-guards"
         $failed = $true
     }
 
@@ -1907,6 +1968,7 @@ switch ($Command) {
     "check-upstream" { Invoke-CheckUpstream }
     "refresh-desktop" { Invoke-RefreshDesktop }
     "refresh-official-baseline" { Invoke-RefreshOfficialBaseline }
+    "install-git-guards" { Install-GitPushGuard }
     "install-refresh-task" { Invoke-InstallRefreshTask }
     "uninstall-refresh-task" { Invoke-UninstallRefreshTask }
     "refresh-task-status" { Show-RefreshTaskStatus }

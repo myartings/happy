@@ -1,0 +1,8 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/main-push-guard/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"AGENTS.md","reason":"Verify the conflicting direct-main instruction is removed"}
+{"path":"devtools/happyctl","reason":"Verify guard installation, validation, doctor, and Bash authorization behavior"}
+{"path":"devtools/happyctl.ps1","reason":"Verify Windows authorization remains narrowly scoped"}
+{"path":"docs/specs/main-push-guard.md","reason":"Acceptance contract for final verification"}
+{"path":"devtools/tests/main-push-guard-smoke.sh","reason":"Verify real Git push acceptance coverage"}
+{"path":"devtools/git-hooks/pre-push","reason":"Verify target parsing and fail-closed behavior"}
