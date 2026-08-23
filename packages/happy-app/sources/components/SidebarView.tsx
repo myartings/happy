@@ -168,7 +168,6 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
     const handleProjectTodos = React.useCallback(() => {
         router.push('/project-todos' as any);
     }, [router]);
-
     return (
         <View style={[
             styles.container,

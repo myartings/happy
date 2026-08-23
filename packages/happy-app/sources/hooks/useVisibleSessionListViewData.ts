@@ -9,6 +9,15 @@ import { buildVisibleSessionListViewData } from '@/utils/visibleSessionListViewD
  * The synced setting keeps its historical `hideInactiveSessions` key, but its
  * current meaning is "hide archived sessions". A disconnected Rig session is
  * still live work and must remain visible until its lifecycle is archived.
+ *
+ * `buildSessionListViewData` already routes every archived session into the
+ * flat tail, so revealing the archive appends rows below the project cards
+ * rather than growing them. The project pass here stays as a backstop.
+ *
+ * The setting behind it is still stored as `hideInactiveSessions`: it is a
+ * server-synced settings field (see sync/settings.ts) with no per-field rename
+ * migration, so the key stays put and only the local naming reflects what it
+ * actually does.
  */
 export function useVisibleSessionListViewData(): SessionListViewItem[] | null {
     const data = useSessionListViewData();
@@ -29,7 +38,11 @@ export function useVisibleSessionListViewData(): SessionListViewItem[] | null {
     }), [data, hideArchivedSessions, sortActiveSessionsGlobally, groupActiveSessionsByDate, needsAttentionSessionsEnabled, pinnedSessionIds, favoriteProjectIds]);
 }
 
-/** Whether the unfiltered list contains at least one archived session. */
+/**
+ * Whether the archive-visibility control can change anything. Keyed off the
+ * same `archived` flag the filter above uses so the control never appears
+ * without changing what is on screen.
+ */
 export function useHasArchivedSessions(): boolean {
     const data = useSessionListViewData();
     return React.useMemo(() => {

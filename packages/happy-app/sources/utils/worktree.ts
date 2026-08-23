@@ -5,9 +5,10 @@
 import { machineBash } from '@/sync/ops';
 import {
     WORKTREE_DIR,
+    WORKTREE_PATH_MARKER,
     getRepoPath,
     isWorktreePath,
-} from './worktreePath';
+} from './worktreePaths';
 
 export {
     WORKTREE_DIR,
@@ -15,7 +16,7 @@ export {
     getRepoPath,
     getWorktreeName,
     isWorktreePath,
-} from './worktreePath';
+} from './worktreePaths';
 
 // --- Name generation ---
 

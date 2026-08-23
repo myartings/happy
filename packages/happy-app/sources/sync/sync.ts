@@ -216,6 +216,20 @@ class Sync {
                 this.friendsSync.invalidate();
                 this.friendRequestsSync.invalidate();
                 this.feedSync.invalidate();
+
+                // Refresh the open chat's message log on resume. While the app is
+                // backgrounded the data socket is suspended/dropped, so any messages
+                // the agent produced while away arrive with no live `update` to apply
+                // them. The invalidations above only refresh the session LIST, not the
+                // viewing session's messages — without this the visible chat stays
+                // stale until the user leaves and re-enters it (it only re-fetches on a
+                // fresh SessionView mount). getMessagesSync does a bounded forward sync;
+                // if the socket hasn't reconnected yet, InvalidateSync's backoff retries
+                // until it has.
+                const resumeViewingSessionId = storage.getState().currentViewingSessionId;
+                if (resumeViewingSessionId) {
+                    this.onSessionVisible(resumeViewingSessionId);
+                }
             } else {
                 log.log(`📱 App state changed to: ${nextAppState}`);
                 this.pruneSessionMessageCaches(
@@ -2402,11 +2416,18 @@ class Sync {
             this.feedSync.invalidate();
             // Refresh only messages for sessions that are currently mounted. Git status and
             // voice focus are visibility concerns and must not be repeated on reconnect.
-            for (const sessionId of selectVisibleSessionIds(this.visibleSessionRefCounts)) {
+            const visibleSessionIds = selectVisibleSessionIds(this.visibleSessionRefCounts);
+            for (const sessionId of visibleSessionIds) {
                 this.refreshSessionMessageCache(sessionId, 'socket-reconnected');
             }
             // Session metadata + agentState (including permission requests) are already
             // refreshed by sessionsSync.invalidate() above.
+            // The current viewer should normally be registered above. Keep the upstream
+            // fallback for reconnects that happen before its visibility ref is restored.
+            const reconnectViewingSessionId = storage.getState().currentViewingSessionId;
+            if (reconnectViewingSessionId && !visibleSessionIds.includes(reconnectViewingSessionId)) {
+                this.onSessionVisible(reconnectViewingSessionId);
+            }
             for (const sync of this.sendSync.values()) {
                 sync.invalidate();
             }

@@ -1,9 +1,11 @@
 import React from 'react';
 import { Platform, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
+import { t } from '@/text';
 import { ProjectGroupData, ProjectWorkspaceGroup, useAllMachines, useLocalSettingMutable, useSettingMutable } from '@/sync/storage';
 import { CompactSessionRow } from './ActiveSessionsGroupCompact';
 import { ProjectTodoButton } from './ProjectTodoButton';
@@ -12,6 +14,10 @@ import type { DesktopSessionRowStyle } from '@/features/studio-visual-style/stud
 import { resolveStudioSidebarGroupPresentation } from '@/features/studio-visual-style/studioSidebarGroupPresentation';
 import { resolveStudioSidebarInteractionPresentation } from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
+import { requestHomeDockFocus } from './homeDockFocus';
+import { useNewSessionDraft } from '@/hooks/useNewSessionDraft';
+import { formatPathRelativeToHome } from '@/utils/sessionUtils';
+import { getRepoPath, isWorktreePath } from '@/utils/worktreePaths';
 
 interface ProjectGroupProps {
     project: ProjectGroupData;
@@ -40,6 +46,8 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
     }), [isStudio, theme.dark]);
     const headerInteraction = useStudioInteractionState(isStudio);
     const favoriteInteraction = useStudioInteractionState(isStudio);
+    const primaryWorkspace = project.workspaces.find((workspace) => workspace.id === '') ?? project.workspaces[0];
+    const startProjectSession = useStartSessionFromWorkspace(primaryWorkspace);
 
     const toggleCollapsed = React.useCallback(() => {
         setCollapsedProjects({ ...collapsedProjects, [project.id]: !collapsed });
@@ -52,6 +60,11 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
             : [project.id, ...favoriteProjectIds.filter((id) => id !== project.id)]
         );
     }, [favoriteProjectIds, isFavorite, project.id, setFavoriteProjectIds]);
+
+    const handleNewSession = React.useCallback((event: { stopPropagation?: () => void }) => {
+        event.stopPropagation?.();
+        startProjectSession();
+    }, [startProjectSession]);
 
     const machineName = React.useMemo(() => {
         if (!project.machineId) return null;
@@ -109,6 +122,15 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
                         </Text>
                     )}
                 </View>
+                <Pressable
+                    onPress={handleNewSession}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('sidebar.newSession')}
+                    style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}
+                >
+                    <Ionicons name="add" size={18} color={theme.colors.textSecondary} />
+                </Pressable>
                 <Pressable
                     accessibilityLabel={isFavorite ? 'Remove project from favorites' : 'Add project to favorites'}
                     accessibilityRole="button"
@@ -171,6 +193,7 @@ const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, sele
 }) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
+    const startSession = useStartSessionFromWorkspace(workspace);
     return (
         <View style={[styles.workspace, sessionRowStyle.visualStyle === 'studio' && { paddingLeft: 0 }]}>
             {showLabel && (
@@ -196,6 +219,15 @@ const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, sele
                     ]} numberOfLines={1}>
                         {workspace.name ?? 'main'}
                     </Text>
+                    <Pressable
+                        onPress={startSession}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('sidebar.newSession')}
+                        style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}
+                    >
+                        <Ionicons name="add" size={16} color={theme.colors.textSecondary} />
+                    </Pressable>
                 </View>
             )}
             {workspace.sessions.map((session, index) => (
@@ -212,13 +244,34 @@ const WorkspaceSection = React.memo(({ workspace, showLabel, showTopBorder, sele
     );
 });
 
+function useStartSessionFromWorkspace(workspace: ProjectWorkspaceGroup | undefined): () => void {
+    const router = useRouter();
+    const firstSession = workspace?.sessions[0];
+
+    return React.useCallback(() => {
+        const draft = useNewSessionDraft.getState();
+        const sessionPath = firstSession?.path ?? '';
+        const worktree = isWorktreePath(sessionPath);
+        const repoPath = worktree ? getRepoPath(sessionPath) : sessionPath;
+
+        if (firstSession?.machineId) draft.setMachineId(firstSession.machineId);
+        if (repoPath) {
+            draft.setPath(formatPathRelativeToHome(repoPath, firstSession?.homeDir ?? undefined));
+        }
+        draft.setSessionType(worktree ? 'worktree' : 'simple');
+        draft.setWorktreeKey(worktree ? sessionPath : null);
+
+        if (!requestHomeDockFocus()) router.navigate('/new');
+    }, [firstSession, router]);
+}
+
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
-        backgroundColor: theme.colors.surface,
-        marginHorizontal: 8,
-        marginBottom: 8,
-        borderRadius: 12,
-        overflow: 'hidden',
+        backgroundColor: 'transparent',
+        marginBottom: 4,
+    },
+    section: {
+        backgroundColor: 'transparent',
     },
     containerUnboxed: {
         backgroundColor: 'transparent',
@@ -246,9 +299,12 @@ const stylesheet = StyleSheet.create((theme) => ({
         minWidth: 0,
     },
     title: {
-        fontSize: 15,
-        color: theme.colors.text,
-        ...Typography.default('semiBold'),
+        color: theme.colors.groupped.sectionTitle,
+        fontSize: Platform.select({ ios: 13, default: 14 }),
+        lineHeight: Platform.select({ ios: 18, default: 20 }),
+        letterSpacing: Platform.select({ ios: -0.08, default: 0.1 }),
+        fontWeight: Platform.select({ ios: 'normal', default: '500' }),
+        ...Typography.default('regular'),
     },
     subtitle: {
         fontSize: 12,
@@ -283,5 +339,14 @@ const stylesheet = StyleSheet.create((theme) => ({
         fontSize: 12,
         color: theme.colors.textSecondary,
         ...Typography.default('semiBold'),
+    },
+    addButton: {
+        width: 28,
+        height: 28,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    addButtonPressed: {
+        opacity: 0.5,
     },
 }));

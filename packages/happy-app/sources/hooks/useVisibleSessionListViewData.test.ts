@@ -409,7 +409,6 @@ describe('useVisibleSessionListViewData', () => {
         ]);
     });
 });
-
 describe('useHasArchivedSessions', () => {
     it('is false when only disconnected sessions exist', () => {
         mocks.data = [project('p1', [row('project-disconnected')])];
