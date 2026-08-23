@@ -127,8 +127,12 @@ export interface SessionRowData {
     // activeAt is only present on inactive sessions because it changes on every
     // heartbeat. Stable creation/send timestamps are available for display order.
     activeAt?: number;
-    createdAt?: number;
+    createdAt: number;
     lastMessageSentAt?: number;
+    // Last time the user sent a message, falling back to creation. Grouping the
+    // list by project loses the global ordering the sessions were sorted into,
+    // so the flat list re-sorts on these two immutable-enough keys instead.
+    lastActivityAt: number;
     hasDraft: boolean;
     active: boolean;
     archived: boolean;
@@ -185,9 +189,10 @@ function buildSessionRowData(session: Session, unreadSessionIds?: Set<string>): 
             ? rigActivity.map((item) => `${item.count}${item.queued ? `+${item.queued}` : ''} ${item.key}`).join(' · ')
             : null,
         state,
-        ...(!session.active && { activeAt: session.activeAt }),
         createdAt: session.createdAt,
+        lastActivityAt: session.lastMessageSentAt ?? session.createdAt,
         lastMessageSentAt: session.lastMessageSentAt,
+        ...(!session.active && { activeAt: session.activeAt }),
         hasDraft: !!session.draft,
         active: session.active,
         archived: isSessionArchived(session),

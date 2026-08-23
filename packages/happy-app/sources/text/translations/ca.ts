@@ -498,6 +498,7 @@ export const ca: TranslationStructure = {
     agentInput: {
         permissionMode: {
             title: 'MODE DE PERMISOS',
+            auto: 'decideix pel seu compte, pregunta si dubta',
             default: 'Per defecte',
             agyDefault: "sandbox d'agy, sense preguntes",
             openclawInert: "no s'aplica a openclaw",
@@ -529,6 +530,7 @@ export const ca: TranslationStructure = {
             safeYolo: 'Safe YOLO',
             yolo: 'YOLO',
             defaultDescription: "pregunta abans d'ordres no fiables",
+            autoDescription: 'decideix pel seu compte, pregunta si dubta',
             readOnlyDescription: 'sense escriptura',
             safeYoloDescription: "sense preguntes, sandbox de l'espai de treball",
             yoloDescription: 'sense preguntes, accés complet',

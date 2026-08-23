@@ -36,6 +36,7 @@ export default function FeaturesSettingsScreen() {
     const [devShowActiveSessionRuntimeEnabled, setDevShowActiveSessionRuntimeEnabled] = useLocalSettingMutable('devShowActiveSessionRuntimeEnabled');
     const [devShowSessionModelEnabled, setDevShowSessionModelEnabled] = useLocalSettingMutable('devShowSessionModelEnabled');
     const [devSideChatQuickPanelEnabled, setDevSideChatQuickPanelEnabled] = useLocalSettingMutable('devSideChatQuickPanelEnabled');
+    const [flatSessionList, setFlatSessionList] = useLocalSettingMutable('flatSessionList');
 
     return (
         <ItemList style={{ paddingTop: 0 }}>
@@ -64,6 +65,18 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={groupToolCalls}
                             onValueChange={setGroupToolCalls}
+                        />
+                    }
+                    showChevron={false}
+                />
+                <Item
+                    title="Flat Session List"
+                    subtitle="One full-width list on the home screen instead of project cards"
+                    icon={<Ionicons name="reorder-four-outline" size={29} color="#34C759" />}
+                    rightElement={
+                        <Switch
+                            value={flatSessionList}
+                            onValueChange={setFlatSessionList}
                         />
                     }
                     showChevron={false}

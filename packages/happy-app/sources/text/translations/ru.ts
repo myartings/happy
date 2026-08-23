@@ -514,6 +514,7 @@ export const ru: TranslationStructure = {
     agentInput: {
         permissionMode: {
             title: 'РЕЖИМ РАЗРЕШЕНИЙ',
+            auto: 'решает сам, спрашивает при сомнении',
             default: 'По умолчанию',
             agyDefault: 'песочница agy, без запросов',
             openclawInert: 'не применяется в openclaw',
@@ -545,6 +546,7 @@ export const ru: TranslationStructure = {
             safeYolo: 'Safe YOLO',
             yolo: 'YOLO',
             defaultDescription: 'спрашивать перед недоверенными командами',
+            autoDescription: 'решает сам, спрашивает при сомнении',
             readOnlyDescription: 'без записи',
             safeYoloDescription: 'без запросов, песочница рабочей папки',
             yoloDescription: 'без запросов, полный доступ',

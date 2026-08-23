@@ -46,6 +46,7 @@ export const LocalSettingsSchema = z.object({
     studioLeftPanelWidth: z.number().finite().describe('Last accepted Studio left navigation width on this device'),
     studioRightPanelWidth: z.number().finite().describe('Last accepted Studio right workspace width on this device'),
     studioLastResizedPanel: z.enum(['left', 'right']).nullable().describe('Studio panel that owns constrained-width resize priority'),
+    flatSessionList: z.boolean().describe('Show the home list as one full-width chronological list instead of project cards'),
     // Right file sidebar: which panels the user has opened and which is active.
     // Persisted so the layout survives reloads and long absences.
     sidebarPanelsOpen: z.array(z.enum(['changes', 'allFiles', 'sideChat', 'issues'])).describe('Open right-sidebar panels, in tab order'),
@@ -100,6 +101,7 @@ export const localSettingsDefaults: LocalSettings = {
     studioLeftPanelWidth: 275,
     studioRightPanelWidth: 360,
     studioLastResizedPanel: null,
+    flatSessionList: true,
     sidebarPanelsOpen: [],
     sidebarPanelActive: null,
     acknowledgedCliVersions: {},
