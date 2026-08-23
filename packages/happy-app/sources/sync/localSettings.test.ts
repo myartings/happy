@@ -51,6 +51,21 @@ describe('personal development local settings', () => {
         expect(localSettingsParse({ visualStyle: 'default' }).visualStyle).toBe('default');
     });
 
+    it('restores the grouped list once without blocking a later flat-list opt-in', () => {
+        expect(localSettingsParse({ flatSessionList: true })).toMatchObject({
+            flatSessionList: false,
+            flatSessionListDefaultRestored: true,
+        });
+
+        expect(localSettingsParse({
+            flatSessionList: true,
+            flatSessionListDefaultRestored: true,
+        })).toMatchObject({
+            flatSessionList: true,
+            flatSessionListDefaultRestored: true,
+        });
+    });
+
     it('persists Studio panel widths independently as device-local settings', () => {
         expect(localSettingsDefaults).toMatchObject({
             studioLeftPanelWidth: 275,
