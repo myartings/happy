@@ -1,5 +1,10 @@
 # Studio Activity Transcript
 
+> Disclosure update: `studio-tool-output-disclosure.md` supersedes this
+> specification's initial expansion behavior for verbose command/result output.
+> The enriched result contract and structured diff behavior below remain
+> authoritative.
+
 ## Problem
 
 Codex app-server command completion already supplies aggregated output, exit

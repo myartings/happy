@@ -101,6 +101,13 @@ describe('Studio execution transcript model', () => {
         expect(transcript?.stdout?.text).toBe('step 1\nstep 2\ndone');
     });
 
+    it('sanitizes complete multiline commands without applying the output body bound', () => {
+        const command = `\u001B[31m${'x'.repeat(100_001)}\nnext\u001B[0m\u0007`;
+        const transcript = resolveStudioExecutionTranscript(tool({ input: { command } }));
+
+        expect(transcript?.command).toBe(`${'x'.repeat(100_001)}\nnext`);
+    });
+
     it('bounds pathological output without splitting a surrogate pair', () => {
         const transcript = resolveStudioExecutionTranscript(tool({
             result: { stdout: `${'x'.repeat(99_999)}👩tail`, stderr: '' },

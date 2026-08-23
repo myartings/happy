@@ -20,6 +20,8 @@ import { getToolActivityLabel, getToolSummaryCategory, ToolSummaryCategory } fro
 import { useRouter } from 'expo-router';
 import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 import { resolveStudioActivityColor } from '@/features/studio-tool-presentation/studioToolPresentation';
+import { resolveStudioToolOutputDisclosure } from '@/features/studio-tool-output-disclosure/studioToolOutputDisclosure';
+import { resolveStudioToolGroupMetrics } from '@/features/studio-tool-output-disclosure/studioToolGroupDisclosure';
 
 interface ToolGroupViewProps {
     group: ToolGroupItem;
@@ -35,11 +37,27 @@ interface ToolGroupViewProps {
 export const ToolGroupView = React.memo<ToolGroupViewProps>((props) => {
     const { group, metadata, sessionId, expanded, onToggle, nested, hideSingleToolChildren, forceCompleted } = props;
     const router = useRouter();
-    const summary = React.useMemo(() => generateGroupSummary(group.messages), [group.messages]);
+    const studioPresentation = useStudioToolPresentation();
+    const summary = React.useMemo(() => {
+        const parts = [generateGroupSummary(group.messages)];
+        if (studioPresentation) {
+            const metrics = resolveStudioToolGroupMetrics(group.messages);
+            if (metrics.durationMs !== null) {
+                parts.push(t('toolGroup.workedFor', { duration: formatWorkDuration(metrics.durationMs) }));
+            }
+            if (metrics.failureCount > 0) {
+                parts.push(t('toolGroup.failedTools', { count: metrics.failureCount }));
+            }
+        }
+        return parts.join(' · ');
+    }, [group.messages, studioPresentation]);
     const summaryCategory = React.useMemo(() => getGroupSummaryCategory(group.messages), [group.messages]);
     const hasRunning = !forceCompleted && group.hasRunning;
     const hasError = group.messages.some((message) => message.kind === 'tool-call' && message.tool.state === 'error');
     const suppressChildren = hideSingleToolChildren && group.messages.length === 1 && group.messages[0]?.kind === 'tool-call';
+    const keepStudioChildrenMounted = studioPresentation !== null && group.messages.some(
+        (message) => message.kind === 'tool-call' && resolveStudioToolOutputDisclosure(message.tool) !== null,
+    );
     const singleToolMessage = suppressChildren && group.messages[0]?.kind === 'tool-call'
         ? group.messages[0]
         : null;
@@ -77,8 +95,12 @@ export const ToolGroupView = React.memo<ToolGroupViewProps>((props) => {
                 state={hasRunning ? 'running' : hasError ? 'error' : 'completed'}
                 showChevron
             />
-            {expanded && !suppressChildren && (
-                <View style={styles.content}>
+            {!suppressChildren && (expanded || keepStudioChildrenMounted) && (
+                <View
+                    style={[styles.content, !expanded && styles.hiddenContent]}
+                    accessibilityElementsHidden={!expanded}
+                    importantForAccessibility={!expanded ? 'no-hide-descendants' : 'auto'}
+                >
                     {group.messages.map(renderGroupMessage)}
                 </View>
             )}
@@ -110,6 +132,7 @@ interface AgentWorkGroupViewProps {
 
 export const AgentWorkGroupView = React.memo<AgentWorkGroupViewProps>((props) => {
     const { group, metadata, sessionId, expanded, onToggle } = props;
+    const studioPresentation = useStudioToolPresentation();
     const isCompleted = group.completedAt !== null;
     const runningElapsedSeconds = useElapsedTime(group.completedAt === null ? group.startedAt : null);
     const durationMs = group.completedAt === null
@@ -128,13 +151,15 @@ export const AgentWorkGroupView = React.memo<AgentWorkGroupViewProps>((props) =>
     const [collapsedToolGroups, setCollapsedToolGroups] = React.useState<Set<string>>(() => {
         const initial = new Set<string>();
         for (const item of nestedItemsNewestFirst) {
-            if (item.type === 'tool-group' && !item.hasPendingPermission) {
+            if (item.type === 'tool-group'
+                && !item.hasPendingPermission
+                && !(studioPresentation !== null && !isCompleted && item.hasRunning)) {
                 initial.add(item.id);
             }
         }
         return initial;
     });
-    const manuallyCollapsedToolGroupsRef = React.useRef<Set<string>>(new Set());
+    const manuallyToggledToolGroupsRef = React.useRef<Set<string>>(new Set());
 
     React.useEffect(() => {
         setCollapsedToolGroups((prev) => {
@@ -144,30 +169,32 @@ export const AgentWorkGroupView = React.memo<AgentWorkGroupViewProps>((props) =>
                 if (item.type !== 'tool-group') {
                     continue;
                 }
-                if (item.hasPendingPermission && next.has(item.id) && !manuallyCollapsedToolGroupsRef.current.has(item.id)) {
-                    next.delete(item.id);
-                    changed = true;
+                if (manuallyToggledToolGroupsRef.current.has(item.id)) {
                     continue;
                 }
-                if (!item.hasPendingPermission && !next.has(item.id)) {
+                const shouldExpand = item.hasPendingPermission
+                    || (studioPresentation !== null && !isCompleted && item.hasRunning);
+                if (shouldExpand && next.has(item.id)) {
+                    next.delete(item.id);
+                    changed = true;
+                } else if (!shouldExpand && !next.has(item.id)) {
                     next.add(item.id);
                     changed = true;
                 }
             }
             return changed ? next : prev;
         });
-    }, [nestedItemsNewestFirst]);
+    }, [isCompleted, nestedItemsNewestFirst, studioPresentation]);
 
     const handleToggleNestedGroup = React.useCallback((groupId: string) => {
         setCollapsedToolGroups((prev) => {
             const next = new Set(prev);
             if (next.has(groupId)) {
                 next.delete(groupId);
-                manuallyCollapsedToolGroupsRef.current.delete(groupId);
             } else {
                 next.add(groupId);
-                manuallyCollapsedToolGroupsRef.current.add(groupId);
             }
+            manuallyToggledToolGroupsRef.current.add(groupId);
             return next;
         });
     }, []);
@@ -287,6 +314,7 @@ function ToolGroupMessageRow(props: {
     metadata: Metadata | null;
     sessionId: string;
 }) {
+    const studioPresentation = useStudioToolPresentation();
     if (props.message.kind !== 'tool-call') {
         return (
             <MessageView
@@ -297,8 +325,11 @@ function ToolGroupMessageRow(props: {
         );
     }
 
+    const shouldRenderStudioDisclosure = studioPresentation !== null
+        && resolveStudioToolOutputDisclosure(props.message.tool) !== null;
     const shouldRenderFullTool = props.message.tool.permission?.status === 'pending'
-        || props.message.tool.name === 'AskUserQuestion';
+        || props.message.tool.name === 'AskUserQuestion'
+        || shouldRenderStudioDisclosure;
     if (shouldRenderFullTool) {
         return (
             <MessageView
@@ -474,6 +505,9 @@ const styles = StyleSheet.create((theme) => ({
     content: {
         marginTop: 6,
         gap: 4,
+    },
+    hiddenContent: {
+        display: 'none',
     },
     toolSummaryRow: {
         flexDirection: 'row',

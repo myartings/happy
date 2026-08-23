@@ -38,7 +38,13 @@ vi.mock('@expo/vector-icons', async () => {
 });
 vi.mock('expo-router', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/hooks/useElapsedTime', () => ({ useElapsedTime: () => 1 }));
-vi.mock('@/text', () => ({ t: (key: string, values?: { count?: number }) => values?.count ? `${key}:${values.count}` : key }));
+vi.mock('@/text', () => ({
+    t: (key: string, values?: { count?: number; duration?: string }) => values?.count
+        ? `${key}:${values.count}`
+        : values?.duration
+            ? `${key}:${values.duration}`
+            : key,
+}));
 vi.mock('./layout', () => ({ layout: { maxWidth: 800 } }));
 vi.mock('@/components/tools/knownTools', () => ({ knownTools: {} }));
 vi.mock('./MessageView', async () => {
@@ -50,6 +56,7 @@ vi.mock('@/features/studio-tool-presentation/useStudioToolPresentation', () => (
 }));
 
 import { ToolGroupView } from './ToolGroupView';
+import { resolveStudioToolOutputDisclosure } from '@/features/studio-tool-output-disclosure/studioToolOutputDisclosure';
 
 const originalConsoleError = console.error;
 beforeAll(() => {
@@ -83,6 +90,102 @@ function message(name: string, state: 'running' | 'completed' | 'error' = 'compl
 }
 
 describe('actual ToolGroupView Studio activity wiring', () => {
+    it('opens a completed terminal group as child disclosure summaries without eager output', () => {
+        const first = message('Bash');
+        first.tool.input = { command: 'first-command' };
+        first.tool.result = { stdout: 'first eager-output sentinel' };
+        const second = message('CodexBash');
+        second.tool.input = { command: 'second-command' };
+        second.tool.result = { stdout: 'second eager-output sentinel' };
+
+        const renderer = render(React.createElement(ToolGroupView, {
+            group: { type: 'tool-group', id: 'group-terminal', messages: [first, second], hasRunning: false, hasPendingPermission: false },
+            metadata: null, sessionId: 'session-1', expanded: true, onToggle: vi.fn(),
+        }));
+
+        const childDisclosures = renderer.root.findAllByType('MessageView' as any);
+        expect(childDisclosures).toHaveLength(2);
+        expect(childDisclosures.map((node: any) => node.props.message.id)).toEqual([first.id, second.id]);
+        const text = renderer.root.findAllByType('Text' as any)
+            .map((node: any) => node.props.children)
+            .flat(Infinity)
+            .join('');
+        expect(text).not.toContain('eager-output sentinel');
+    });
+
+    it('adds available duration and non-zero failure count to the Studio group summary', () => {
+        const completed = message('Bash');
+        completed.tool.startedAt = 1000;
+        completed.tool.completedAt = 2000;
+        const failed = message('CodexBash', 'error');
+        failed.tool.startedAt = 1500;
+        failed.tool.completedAt = 3500;
+        const renderer = render(React.createElement(ToolGroupView, {
+            group: { type: 'tool-group', id: 'group-summary', messages: [completed, failed], hasRunning: false, hasPendingPermission: false },
+            metadata: null, sessionId: 'session-1', expanded: false, onToggle: vi.fn(),
+        }));
+
+        const text = renderer.root.findAllByType('Text' as any)
+            .map((node: any) => node.props.children)
+            .flat(Infinity)
+            .join('');
+        expect(text).toContain('toolGroup.ranCommands:2');
+        expect(text).toContain('toolGroup.workedFor:2s');
+        expect(text).toContain('toolGroup.failedTools:1');
+    });
+
+    it('keeps Studio disclosure children mounted while their group is collapsed', () => {
+        const terminal = message('Bash');
+        terminal.tool.input = { command: 'long-running-command' };
+        terminal.tool.result = { stdout: 'output' };
+        const props = {
+            group: { type: 'tool-group' as const, id: 'group-state', messages: [terminal], hasRunning: false, hasPendingPermission: false },
+            metadata: null, sessionId: 'session-1', onToggle: vi.fn(),
+        };
+        const renderer = render(React.createElement(ToolGroupView, { ...props, expanded: true }));
+        const childBeforeCollapse = renderer.root.findByType('MessageView' as any);
+
+        act(() => renderer.update(React.createElement(ToolGroupView, { ...props, expanded: false })));
+
+        const childWhileCollapsed = renderer.root.findByType('MessageView' as any);
+        expect(childWhileCollapsed).toBe(childBeforeCollapse);
+        expect(renderer.root.findAllByType('View' as any).some(
+            (node: any) => node.props.accessibilityElementsHidden === true,
+        )).toBe(true);
+
+        act(() => renderer.update(React.createElement(ToolGroupView, { ...props, expanded: true })));
+        expect(renderer.root.findByType('MessageView' as any)).toBe(childBeforeCollapse);
+    });
+
+    it('composes completed, running, failed, and pending terminal children through disclosure views', () => {
+        const completed = message('Bash');
+        completed.tool.input = { command: 'completed-command' };
+        completed.tool.result = { stdout: 'completed output' };
+        const running = message('CodexBash', 'running');
+        running.tool.input = { command: 'running-command' };
+        running.tool.result = { stdout: 'running output' };
+        const failed = message('Bash', 'error');
+        failed.id = 'Bash-error-2';
+        failed.tool.input = { command: 'failed-command' };
+        failed.tool.result = { stderr: 'failed output' };
+        const pending = message('CodexBash', 'running');
+        pending.id = 'CodexBash-pending';
+        pending.tool.input = { command: 'pending-command' };
+        pending.tool.permission = { status: 'pending' } as any;
+        const messages = [completed, running, failed, pending];
+
+        const renderer = render(React.createElement(ToolGroupView, {
+            group: { type: 'tool-group', id: 'group-mixed', messages, hasRunning: true, hasPendingPermission: true },
+            metadata: null, sessionId: 'session-1', expanded: true, onToggle: vi.fn(),
+        }));
+
+        expect(renderer.root.findAllByType('MessageView' as any).map((node: any) => node.props.message.id))
+            .toEqual(messages.map((item) => item.id));
+        expect(messages.map((item) => resolveStudioToolOutputDisclosure(item.tool)?.presentation))
+            .toEqual(['collapsed', 'preview', 'preview', 'collapsed']);
+        expect(resolveStudioToolOutputDisclosure(pending.tool)?.summary.status).toBe('pending-permission');
+    });
+
     it('colors completed explore activity using the Studio semantic role', () => {
         const read = message('Read');
         const renderer = render(React.createElement(ToolGroupView, {

@@ -122,6 +122,7 @@ const ChatListInternal = React.memo((props: {
         isTauriRuntime: isTauri(),
         visualStyle: desktopVisualStyle,
     });
+    const autoExpandRunningGroups = desktopVisualStyle === 'studio';
     const promptHistoryNavigatorEnabled = useLocalSetting('devPromptHistoryNavigatorEnabled');
     const flatListRef = React.useRef<FlatList>(null);
     const handledTargetRequestRef = React.useRef<string | null>(null);
@@ -208,59 +209,44 @@ const ChatListInternal = React.memo((props: {
     targetMessageIdRef.current = targetAction.type === 'scroll' ? targetAction.messageId : null;
     targetRequestKeyRef.current = targetRequestKey;
 
-    // Tracks which groups are explicitly collapsed. Groups start collapsed;
-    // pending approval groups are the only ones we auto-expand.
+    // Completed groups start collapsed. In Studio, active groups start open so
+    // bounded previews stay visible; permission-bearing groups open everywhere.
     const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(() => {
         const initial = new Set<string>();
         for (const item of displayItems) {
-            if (isCollapsibleDisplayItem(item) && !item.hasPendingPermission) {
+            if (isCollapsibleDisplayItem(item) && !shouldAutoExpandGroup(item, autoExpandRunningGroups)) {
                 initial.add(item.id);
             }
         }
         return initial;
     });
 
-    // Auto-expand groups that need user approval — but only if the user
-    // hasn't manually collapsed them.
-    // We track manually-collapsed IDs so we never force-reopen them.
-    const manuallyCollapsedRef = React.useRef<Set<string>>(new Set());
-    const initialSeenCollapsibleGroups = React.useMemo(() => {
-        const initial = new Set<string>();
-        for (const item of displayItems) {
-            if (isCollapsibleDisplayItem(item)) {
-                initial.add(item.id);
-            }
-        }
-        return initial;
-    }, []);
-    const seenCollapsibleGroupsRef = React.useRef<Set<string>>(initialSeenCollapsibleGroups);
+    // Automatic running/completed/permission transitions never override a
+    // manual open or collapse while this conversation view remains mounted.
+    const manuallyToggledGroupsRef = React.useRef<Set<string>>(new Set());
 
     React.useEffect(() => {
         setCollapsedGroups((prev) => {
             let changed = false;
             const next = new Set(prev);
-            const seen = seenCollapsibleGroupsRef.current;
             for (const item of displayItems) {
                 if (!isCollapsibleDisplayItem(item)) {
                     continue;
                 }
-                const isNewGroup = !seen.has(item.id);
-                if (isNewGroup) {
-                    seen.add(item.id);
-                }
-                if (item.hasPendingPermission && prev.has(item.id) && !manuallyCollapsedRef.current.has(item.id)) {
-                    next.delete(item.id);
-                    changed = true;
+                if (manuallyToggledGroupsRef.current.has(item.id)) {
                     continue;
                 }
-                if (isNewGroup && !item.hasPendingPermission) {
+                if (shouldAutoExpandGroup(item, autoExpandRunningGroups) && next.has(item.id)) {
+                    next.delete(item.id);
+                    changed = true;
+                } else if (!shouldAutoExpandGroup(item, autoExpandRunningGroups) && !next.has(item.id)) {
                     next.add(item.id);
                     changed = true;
                 }
             }
             return changed ? next : prev;
         });
-    }, [displayItems]);
+    }, [autoExpandRunningGroups, displayItems]);
 
     // Ref so AppState handler reads fresh items without re-subscribing
     const displayItemsRef = React.useRef(displayItems);
@@ -299,29 +285,32 @@ const ChatListInternal = React.memo((props: {
     React.useEffect(() => {
         if (latestUserMsgId && latestUserMsgId !== prevUserMsgIdRef.current) {
             prevUserMsgIdRef.current = latestUserMsgId;
-            manuallyCollapsedRef.current.clear();
+            manuallyToggledGroupsRef.current.clear();
             setCollapsedGroups((prev) => {
                 const next = new Set(prev);
                 for (const item of displayItemsRef.current) {
                     if (isCollapsibleDisplayItem(item)) {
-                        next.add(item.id);
+                        if (shouldAutoExpandGroup(item, autoExpandRunningGroups)) {
+                            next.delete(item.id);
+                        } else {
+                            next.add(item.id);
+                        }
                     }
                 }
                 return next;
             });
         }
-    }, [latestUserMsgId]);
+    }, [autoExpandRunningGroups, latestUserMsgId]);
 
     const handleToggleGroup = useCallback((groupId: string) => {
         setCollapsedGroups((prev) => {
             const next = new Set(prev);
             if (next.has(groupId)) {
                 next.delete(groupId);
-                manuallyCollapsedRef.current.delete(groupId);
             } else {
                 next.add(groupId);
-                manuallyCollapsedRef.current.add(groupId);
             }
+            manuallyToggledGroupsRef.current.add(groupId);
             return next;
         });
     }, []);
@@ -713,6 +702,13 @@ const ChatListInternal = React.memo((props: {
 
 function isCollapsibleDisplayItem(item: DisplayItem): item is ToolGroupItem | Extract<DisplayItem, { type: 'agent-work-group' }> {
     return item.type === 'tool-group' || item.type === 'agent-work-group';
+}
+
+function shouldAutoExpandGroup(
+    item: ToolGroupItem | Extract<DisplayItem, { type: 'agent-work-group' }>,
+    autoExpandRunningGroups: boolean,
+): boolean {
+    return item.hasPendingPermission || (autoExpandRunningGroups && item.hasRunning);
 }
 
 const styles = StyleSheet.create((theme) => ({

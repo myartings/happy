@@ -643,6 +643,7 @@ export const en = {
         ranTasks: ({ count }: { count: number }) => count === 1 ? 'Ran 1 task' : `Ran ${count} tasks`,
         usedTools: ({ count }: { count: number }) => count === 1 ? 'Used 1 tool' : `Used ${count} tools`,
         workedFor: ({ duration }: { duration: string }) => `Worked ${duration}`,
+        failedTools: ({ count }: { count: number }) => count === 1 ? '1 failed tool' : `${count} failed tools`,
     },
 
     tools: {
@@ -655,6 +656,18 @@ export const en = {
             noOutput: 'No output was produced',
             running: 'Tool is running...',
             rawJsonDevMode: 'Raw JSON (Dev Mode)',
+        },
+        outputDisclosure: {
+            copyCommand: 'Copy command',
+            copyOutput: 'Copy output',
+            openFullTranscript: 'Open full transcript',
+            cancelled: 'Cancelled',
+            interrupted: 'Interrupted',
+            pendingPermission: 'Waiting for permission',
+            exitCode: ({ code }: { code: number }) => `exit ${code}`,
+            lines: ({ count }: { count: number }) => `${count} ${count === 1 ? 'line' : 'lines'}`,
+            truncated: 'truncated',
+            omitted: '… output omitted',
         },
         taskView: {
             initializing: 'Initializing agent...',

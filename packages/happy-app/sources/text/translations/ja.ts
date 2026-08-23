@@ -620,6 +620,7 @@ export const ja: TranslationStructure = {
         ranTasks: ({ count }: { count: number }) => `${count}個のタスクを実行`,
         usedTools: ({ count }: { count: number }) => `${count}個のツールを使用`,
         workedFor: ({ duration }: { duration: string }) => `Worked ${duration}`,
+        failedTools: ({ count }: { count: number }) => `${count}件のツールが失敗`,
     },
 
     tools: {
@@ -632,6 +633,18 @@ export const ja: TranslationStructure = {
             noOutput: '出力がありません',
             running: 'ツールを実行中...',
             rawJsonDevMode: 'Raw JSON (開発モード)',
+        },
+        outputDisclosure: {
+            copyCommand: 'コマンドをコピー',
+            copyOutput: '出力をコピー',
+            openFullTranscript: '完全な記録を開く',
+            cancelled: 'キャンセル済み',
+            interrupted: '中断済み',
+            pendingPermission: '許可待ち',
+            exitCode: ({ code }: { code: number }) => `終了コード ${code}`,
+            lines: ({ count }: { count: number }) => `${count} 行`,
+            truncated: '切り詰め済み',
+            omitted: '… 出力を省略',
         },
         taskView: {
             initializing: 'エージェントを初期化中...',

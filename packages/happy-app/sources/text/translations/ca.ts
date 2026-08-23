@@ -619,6 +619,7 @@ export const ca: TranslationStructure = {
         ranTasks: ({ count }: { count: number }) => count === 1 ? 'S\'ha executat 1 tasca' : `S'han executat ${count} tasques`,
         usedTools: ({ count }: { count: number }) => count === 1 ? 'S\'ha usat 1 eina' : `S'han usat ${count} eines`,
         workedFor: ({ duration }: { duration: string }) => `Worked ${duration}`,
+        failedTools: ({ count }: { count: number }) => count === 1 ? '1 eina fallida' : `${count} eines fallides`,
     },
 
     tools: {
@@ -631,6 +632,18 @@ export const ca: TranslationStructure = {
             noOutput: 'No s\'ha produït cap sortida',
             running: 'L\'eina s\'està executant...',
             rawJsonDevMode: 'JSON en brut (mode desenvolupador)',
+        },
+        outputDisclosure: {
+            copyCommand: 'Copia l’ordre',
+            copyOutput: 'Copia la sortida',
+            openFullTranscript: 'Obre el registre complet',
+            cancelled: 'Cancel·lat',
+            interrupted: 'Interromput',
+            pendingPermission: 'Esperant permís',
+            exitCode: ({ code }: { code: number }) => `sortida ${code}`,
+            lines: ({ count }: { count: number }) => `${count} ${count === 1 ? 'línia' : 'línies'}`,
+            truncated: 'truncat',
+            omitted: '… sortida omesa',
         },
         taskView: {
             initializing: 'Inicialitzant l\'agent...',

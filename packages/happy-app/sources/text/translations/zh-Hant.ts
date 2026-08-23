@@ -618,6 +618,7 @@ export const zhHant: TranslationStructure = {
         ranTasks: ({ count }: { count: number }) => `執行了 ${count} 個任務`,
         usedTools: ({ count }: { count: number }) => `使用了 ${count} 個工具`,
         workedFor: ({ duration }: { duration: string }) => `Worked ${duration}`,
+        failedTools: ({ count }: { count: number }) => `${count} 個工具失敗`,
     },
 
     tools: {
@@ -630,6 +631,18 @@ export const zhHant: TranslationStructure = {
             noOutput: '未產生輸出',
             running: '工具正在執行...',
             rawJsonDevMode: '原始 JSON（開發模式）',
+        },
+        outputDisclosure: {
+            copyCommand: '複製命令',
+            copyOutput: '複製輸出',
+            openFullTranscript: '開啟完整記錄',
+            cancelled: '已取消',
+            interrupted: '已中斷',
+            pendingPermission: '等待授權',
+            exitCode: ({ code }: { code: number }) => `結束碼 ${code}`,
+            lines: ({ count }: { count: number }) => `${count} 行`,
+            truncated: '已截斷',
+            omitted: '… 已省略部分輸出',
         },
         taskView: {
             initializing: '正在初始化 agent...',

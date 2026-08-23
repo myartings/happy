@@ -617,6 +617,7 @@ export const it: TranslationStructure = {
         ranTasks: ({ count }: { count: number }) => count === 1 ? 'Eseguito 1 task' : `Eseguiti ${count} task`,
         usedTools: ({ count }: { count: number }) => count === 1 ? 'Usato 1 strumento' : `Usati ${count} strumenti`,
         workedFor: ({ duration }: { duration: string }) => `Worked ${duration}`,
+        failedTools: ({ count }: { count: number }) => count === 1 ? '1 strumento non riuscito' : `${count} strumenti non riusciti`,
     },
 
     tools: {
@@ -629,6 +630,18 @@ export const it: TranslationStructure = {
             noOutput: 'Nessun output prodotto',
             running: 'Strumento in esecuzione...',
             rawJsonDevMode: 'JSON grezzo (Modalità sviluppatore)',
+        },
+        outputDisclosure: {
+            copyCommand: 'Copia comando',
+            copyOutput: 'Copia output',
+            openFullTranscript: 'Apri trascrizione completa',
+            cancelled: 'Annullato',
+            interrupted: 'Interrotto',
+            pendingPermission: 'In attesa di autorizzazione',
+            exitCode: ({ code }: { code: number }) => `uscita ${code}`,
+            lines: ({ count }: { count: number }) => `${count} ${count === 1 ? 'riga' : 'righe'}`,
+            truncated: 'troncato',
+            omitted: '… output omesso',
         },
         taskView: {
             initializing: 'Inizializzazione agente...',

@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "slug": "studio-tool-output-disclosure",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Optional separate fixes for CRLF-sensitive App test and local attachment-route server test; commit/push remain unrequested",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User requested formal interaction specification after accepting the researched disclosure direction; docs/specs/studio-tool-output-disclosure.md",
+      "updated": "2026-08-23T15:20:22+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/studio-tool-output-disclosure/decisions.md D1-D14 and docs/specs/studio-tool-output-disclosure.md",
+      "updated": "2026-08-23T15:43:18+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "G0 ready: Feature intensity; accepted spec/tasks/decisions; exact detail, visual-line, group, and ChatList seams; role manifests populated; local-only feature branch; validation.md",
+      "updated": "2026-08-23T15:43:01+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "G0 trace confirms Studio presentation-only writes; .ai/project.json risk triggers, protected/generated paths, protocol, sync, permissions, execution, and deployment are excluded; decisions D13 and validation.md",
+      "updated": "2026-08-23T15:43:00+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "T1-T5 complete; T6 review finding fixed with Studio-only active-group auto expansion and manual-intent preservation; focused suite 64 passed and Happy App typecheck passed",
+      "updated": "2026-08-23T17:32:40+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted packaged interaction plus unchanged App CRLF assertion (1400/1401) and unchanged server attachment-route failure (101/102); focused 64/64, both typechecks, workflow regression tests, strict audit, diff integrity, Windows builds and packaged runtime inspection passed",
+      "updated": "2026-08-23T17:59:33+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review complete: one Studio active-group policy omission fixed by focused RED/GREEN; final focused suite 64 passed; no unresolved blocking/high/medium finding; protocol, sync, permissions, execution, structured diffs, Default, Web/mobile and server boundaries unchanged",
+      "updated": "2026-08-23T17:55:04+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "T1-T6 complete; every acceptance row is verified or an explicitly accepted gap; tasks, finish review, rollback, session summary and human acceptance recorded; no tracker/PR; commit remains pending",
+      "updated": "2026-08-23T18:00:29+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-23T15:15:45+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-23T15:20:22+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User requested formal interaction specification after accepting the researched disclosure direction; docs/specs/studio-tool-output-disclosure.md"
+    },
+    {
+      "at": "2026-08-23T15:20:23+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-tool-output-disclosure/decisions.md D1-D9 and docs/specs/studio-tool-output-disclosure.md"
+    },
+    {
+      "at": "2026-08-23T15:21:18+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Run generate-tasks, then scope the smallest implementation slice before editing product code"
+    },
+    {
+      "at": "2026-08-23T15:43:00+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "G0 trace confirms Studio presentation-only writes; .ai/project.json risk triggers, protected/generated paths, protocol, sync, permissions, execution, and deployment are excluded; decisions D13 and validation.md"
+    },
+    {
+      "at": "2026-08-23T15:43:01+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "G0 ready: Feature intensity; accepted spec/tasks/decisions; exact detail, visual-line, group, and ChatList seams; role manifests populated; local-only feature branch; validation.md"
+    },
+    {
+      "at": "2026-08-23T15:43:18+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/studio-tool-output-disclosure/decisions.md D1-D14 and docs/specs/studio-tool-output-disclosure.md"
+    },
+    {
+      "at": "2026-08-23T15:47:33+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T1 RED: add public disclosure model behavior test for successful completion default collapse"
+    },
+    {
+      "at": "2026-08-23T17:27:52+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T5 complete; validation.md records focused RED/GREEN cycles, 61-test T5 suite, Happy App typecheck, and diff integrity"
+    },
+    {
+      "at": "2026-08-23T17:27:53+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "T6: run complete applicable checks, whole-diff review, packaged Studio evidence, and human acceptance"
+    },
+    {
+      "at": "2026-08-23T17:29:25+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T4 review RED: running groups auto-expand while manual group choices remain authoritative"
+    },
+    {
+      "at": "2026-08-23T17:32:40+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T5 complete; T6 review finding fixed with Studio-only active-group auto expansion and manual-intent preservation; focused suite 64 passed and Happy App typecheck passed"
+    },
+    {
+      "at": "2026-08-23T17:32:40+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "T6 rerun full applicable checks, whole-diff review, packaged Studio evidence, and human acceptance"
+    },
+    {
+      "at": "2026-08-23T17:35:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 4 failures"
+    },
+    {
+      "at": "2026-08-23T17:55:04+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review complete: one Studio active-group policy omission fixed by focused RED/GREEN; final focused suite 64 passed; no unresolved blocking/high/medium finding; protocol, sync, permissions, execution, structured diffs, Default, Web/mobile and server boundaries unchanged"
+    },
+    {
+      "at": "2026-08-23T17:59:33+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted packaged interaction plus unchanged App CRLF assertion (1400/1401) and unchanged server attachment-route failure (101/102); focused 64/64, both typechecks, workflow regression tests, strict audit, diff integrity, Windows builds and packaged runtime inspection passed"
+    },
+    {
+      "at": "2026-08-23T17:59:33+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record final finish receipt and archive with commit pending"
+    },
+    {
+      "at": "2026-08-23T18:00:29+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "T1-T6 complete; every acceptance row is verified or an explicitly accepted gap; tasks, finish review, rollback, session summary and human acceptance recorded; no tracker/PR; commit remains pending"
+    },
+    {
+      "at": "2026-08-23T18:00:36+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Completed Studio tool-output disclosure T1-T6 with 64 focused tests, whole-diff review, Windows packaged runtime acceptance, and two explicitly accepted unrelated baseline gaps; commit: pending; follow-up: Optional separate fixes for CRLF-sensitive App test and local attachment-route server test; commit/push remain unrequested"
+    }
+  ],
+  "updated": "2026-08-23T18:00:36+00:00",
+  "archivedAt": "2026-08-23T18:00:36+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Completed Studio tool-output disclosure T1-T6 with 64 focused tests, whole-diff review, Windows packaged runtime acceptance, and two explicitly accepted unrelated baseline gaps",
+  "archiveFollowUp": "Optional separate fixes for CRLF-sensitive App test and local attachment-route server test; commit/push remain unrequested"
+}
