@@ -81,6 +81,8 @@ export const ja: TranslationStructure = {
         error: 'エラー',
         online: 'オンライン',
         offline: 'オフライン',
+        running: '実行中・接続済み',
+        idle: '待機中',
         lastSeen: ({ time }: { time: string }) => `最終アクセス: ${time}`,
         permissionRequired: '権限が必要です',
         activeNow: 'アクティブ',

@@ -79,6 +79,8 @@ export const pt: TranslationStructure = {
         error: 'erro',
         online: 'online',
         offline: 'offline',
+        running: 'em execução · conectado',
+        idle: 'inativo',
         lastSeen: ({ time }: { time: string }) => `visto por último ${time}`,
         permissionRequired: 'permissão necessária',
         activeNow: 'Ativo agora',

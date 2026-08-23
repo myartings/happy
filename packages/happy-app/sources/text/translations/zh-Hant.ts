@@ -80,6 +80,8 @@ export const zhHant: TranslationStructure = {
         error: '錯誤',
         online: '線上',
         offline: '離線',
+        running: '執行中 · 連線正常',
+        idle: '閒置',
         lastSeen: ({ time }: { time: string }) => `最後活躍時間 ${time}`,
         permissionRequired: '需要權限',
         activeNow: '目前活躍',

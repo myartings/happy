@@ -79,6 +79,8 @@ export const ca: TranslationStructure = {
         error: 'error',
         online: 'en línia',
         offline: 'fora de línia',
+        running: 'en execució · connectat',
+        idle: 'inactiu',
         lastSeen: ({ time }: { time: string }) => `vist per última vegada ${time}`,
         permissionRequired: 'permís requerit',
         activeNow: 'Actiu ara',

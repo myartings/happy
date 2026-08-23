@@ -1,0 +1,9 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/session-runtime-status/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/session-runtime-status.md","reason":"Acceptance criteria for verification"}
+{"path":"packages/happy-app/sources/utils/sessionUtils.ts","reason":"Implemented runtime-status mapping"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Deterministic status labels in the session list"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Obsolete random-status import cleanup"}
+{"path":"packages/happy-app/sources/utils/sessionRuntimeStatus.ts","reason":"Dependency-free resolver for observed runtime state"}
+{"path":"packages/happy-app/sources/utils/sessionRuntimeStatus.test.ts","reason":"Regression coverage for state mapping and precedence"}
+{"path":"packages/happy-app/sources/text/translations","reason":"Translation completeness and consistency"}

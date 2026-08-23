@@ -81,6 +81,8 @@ export const zhHans: TranslationStructure = {
         error: '错误',
         online: '在线',
         offline: '离线',
+        running: '执行中 · 连接正常',
+        idle: '空闲',
         lastSeen: ({ time }: { time: string }) => `最后活跃时间 ${time}`,
         permissionRequired: '需要权限',
         activeNow: '当前活跃',
