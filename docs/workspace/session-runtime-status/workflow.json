@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "session-runtime-status",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Install merged dev with Happy Manager and smoke a real long-running Codex turn",
+  "riskRequired": true,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/session-runtime-status.md defines four deterministic visible states and explicit non-goals",
+      "updated": "2026-08-23T07:46:24+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md D1-D2 select existing presence/thinking/permission signals and reject unsupported inference",
+      "updated": "2026-08-23T07:46:24+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature is one app utility/test/translation slice; local-only tracker reason recorded; focused Vitest plus app typecheck and installed-client smoke selected",
+      "updated": "2026-08-23T07:46:24+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Spec risk assessment clears UI-only change with precedence tests, no protocol/data changes, and trivial revert",
+      "updated": "2026-08-23T07:46:24+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Pure resolver added through RED/GREEN; conversation and list surfaces now use deterministic localized status labels; focused 4-test suite and app typecheck pass",
+      "updated": "2026-08-23T08:19:36+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User accepted the unrelated Studio sidebar source-string baseline failure; focused 4/4, app typecheck, workflow validation, workflow-core 14/14, workflow-ci 14/14, and strict audit pass on origin/dev ab9301e4",
+      "updated": "2026-08-23T09:01:23+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review on origin/dev ab9301e4 found no findings: app-only deterministic labels, state precedence matches storage derivation, no protocol/server/encryption changes, and focused tests cover all branches",
+      "updated": "2026-08-23T08:58:53+00:00"
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "All code acceptance and review evidence complete; user accepted the Studio baseline gap; installed-client smoke is deferred only to the immediately following authorized post-merge Manager install because supported packaging requires committed dev",
+      "updated": "2026-08-23T09:07:50+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-23T07:41:27+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-23T07:46:24+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/session-runtime-status.md defines four deterministic visible states and explicit non-goals"
+    },
+    {
+      "at": "2026-08-23T07:46:24+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md D1-D2 select existing presence/thinking/permission signals and reject unsupported inference"
+    },
+    {
+      "at": "2026-08-23T07:46:24+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Spec risk assessment clears UI-only change with precedence tests, no protocol/data changes, and trivial revert"
+    },
+    {
+      "at": "2026-08-23T07:46:24+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature is one app utility/test/translation slice; local-only tracker reason recorded; focused Vitest plus app typecheck and installed-client smoke selected"
+    },
+    {
+      "at": "2026-08-23T07:46:43+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add focused RED test for deterministic session status"
+    },
+    {
+      "at": "2026-08-23T08:19:36+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Pure resolver added through RED/GREEN; conversation and list surfaces now use deterministic localized status labels; focused 4-test suite and app typecheck pass"
+    },
+    {
+      "at": "2026-08-23T08:19:36+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run applicable checks and verify acceptance coverage"
+    },
+    {
+      "at": "2026-08-23T08:58:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review on origin/dev ab9301e4 found no findings: app-only deterministic labels, state precedence matches storage derivation, no protocol/server/encryption changes, and focused tests cover all branches"
+    },
+    {
+      "at": "2026-08-23T09:01:23+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User accepted the unrelated Studio sidebar source-string baseline failure; focused 4/4, app typecheck, workflow validation, workflow-core 14/14, workflow-ci 14/14, and strict audit pass on origin/dev ab9301e4"
+    },
+    {
+      "at": "2026-08-23T09:01:23+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive the validated implementation; publish to dev; install and run the post-merge real-session smoke"
+    },
+    {
+      "at": "2026-08-23T09:07:50+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "All code acceptance and review evidence complete; user accepted the Studio baseline gap; installed-client smoke is deferred only to the immediately following authorized post-merge Manager install because supported packaging requires committed dev"
+    },
+    {
+      "at": "2026-08-23T09:07:50+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Deterministic localized session runtime status validated on latest dev; commit: pending; follow-up: Install merged dev with Happy Manager and smoke a real long-running Codex turn"
+    }
+  ],
+  "updated": "2026-08-23T09:07:50+00:00",
+  "archivedAt": "2026-08-23T09:07:50+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Deterministic localized session runtime status validated on latest dev",
+  "archiveFollowUp": "Install merged dev with Happy Manager and smoke a real long-running Codex turn"
+}

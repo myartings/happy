@@ -64,3 +64,4 @@
 | 2026-08-21 | main-push-guard | pending | Implemented and cross-platform verified a clone-local fail-closed guard for personal main synchronization | Install the guard in each Windows clone after integrating this commit |
 | 2026-08-22 | happy-desktop-official-release | pending | Added and verified the local macOS official-baseline release Skill and happyctl workflow. | Review or replace the pre-existing dirty runtime baseline worktree before a real refresh. |
 | 2026-08-22 | happyctl-local-main-release | pending | Allow validated local main to lead origin/main during no-push official baseline release. | Rebuild the baseline worktree and execute the authorized local release. |
+| 2026-08-23 | session-runtime-status | pending | Deterministic localized session runtime status validated on latest dev | Install merged dev with Happy Manager and smoke a real long-running Codex turn |

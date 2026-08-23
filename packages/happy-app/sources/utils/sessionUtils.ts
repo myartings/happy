@@ -1,7 +1,7 @@
-import * as React from 'react';
 import { Session } from '@/sync/storageTypes';
 import { t } from '@/text';
 import { buildResumeCommand, buildResumeCommandBlock, ResumeCommandBlock } from './resumeCommand';
+import { resolveSessionRuntimeStatus } from './sessionRuntimeStatus';
 
 export type SessionState = 'disconnected' | 'thinking' | 'waiting' | 'permission_required';
 
@@ -22,12 +22,13 @@ export interface SessionStatus {
 export function useSessionStatus(session: Session): SessionStatus {
     const isOnline = session.presence === "online";
     const hasPermissions = (session.agentState?.requests && Object.keys(session.agentState.requests).length > 0 ? true : false);
+    const runtimeState = resolveSessionRuntimeStatus({
+        isOnline,
+        hasPermissions,
+        isThinking: session.thinking === true,
+    });
 
-    const vibingMessage = React.useMemo(() => {
-        return vibingMessages[Math.floor(Math.random() * vibingMessages.length)].toLowerCase() + '…';
-    }, [isOnline, hasPermissions, session.thinking]);
-
-    if (!isOnline) {
+    if (runtimeState === 'disconnected') {
         return {
             state: 'disconnected',
             isConnected: false,
@@ -39,7 +40,7 @@ export function useSessionStatus(session: Session): SessionStatus {
     }
 
     // Check if permission is required
-    if (hasPermissions) {
+    if (runtimeState === 'permission_required') {
         return {
             state: 'permission_required',
             isConnected: true,
@@ -51,11 +52,11 @@ export function useSessionStatus(session: Session): SessionStatus {
         };
     }
 
-    if (session.thinking === true) {
+    if (runtimeState === 'running') {
         return {
             state: 'thinking',
             isConnected: true,
-            statusText: vibingMessage,
+            statusText: t('status.running'),
             shouldShowStatus: true,
             statusColor: '#007AFF',
             statusDotColor: '#007AFF',
@@ -66,7 +67,7 @@ export function useSessionStatus(session: Session): SessionStatus {
     return {
         state: 'waiting',
         isConnected: true,
-        statusText: t('status.online'),
+        statusText: t('status.idle'),
         shouldShowStatus: false,
         statusColor: '#34C759',
         statusDotColor: '#34C759'
@@ -222,5 +223,3 @@ export function formatLastSeen(activeAt: number, isActive: boolean = false): str
         return date.toLocaleDateString(undefined, options);
     }
 }
-
-export const vibingMessages = ["Accomplishing", "Actioning", "Actualizing", "Baking", "Booping", "Brewing", "Calculating", "Cerebrating", "Channelling", "Churning", "Clauding", "Coalescing", "Cogitating", "Computing", "Combobulating", "Concocting", "Conjuring", "Considering", "Contemplating", "Cooking", "Crafting", "Creating", "Crunching", "Deciphering", "Deliberating", "Determining", "Discombobulating", "Divining", "Doing", "Effecting", "Elucidating", "Enchanting", "Envisioning", "Finagling", "Flibbertigibbeting", "Forging", "Forming", "Frolicking", "Generating", "Germinating", "Hatching", "Herding", "Honking", "Ideating", "Imagining", "Incubating", "Inferring", "Manifesting", "Marinating", "Meandering", "Moseying", "Mulling", "Mustering", "Musing", "Noodling", "Percolating", "Perusing", "Philosophising", "Pontificating", "Pondering", "Processing", "Puttering", "Puzzling", "Reticulating", "Ruminating", "Scheming", "Schlepping", "Shimmying", "Simmering", "Smooshing", "Spelunking", "Spinning", "Stewing", "Sussing", "Synthesizing", "Thinking", "Tinkering", "Transmuting", "Unfurling", "Unravelling", "Vibing", "Wandering", "Whirring", "Wibbling", "Wizarding", "Working", "Wrangling"];

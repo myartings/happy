@@ -4,7 +4,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { Text } from '@/components/StyledText';
 import { SessionRowData } from '@/sync/storage';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { type SessionState, formatPathRelativeToHome, vibingMessages, formatLastSeen } from '@/utils/sessionUtils';
+import { type SessionState, formatPathRelativeToHome, formatLastSeen } from '@/utils/sessionUtils';
 import { Avatar } from './Avatar';
 import { Typography } from '@/constants/Typography';
 import { StatusDot } from './StatusDot';

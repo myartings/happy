@@ -12,7 +12,7 @@ import {
 } from '@/sync/storage';
 import { filterProjectGroup, sessionMatchesQuery } from '@/sync/projectGroups';
 import { Ionicons } from '@expo/vector-icons';
-import { type SessionState, formatLastSeen, vibingMessages } from '@/utils/sessionUtils';
+import { type SessionState, formatLastSeen } from '@/utils/sessionUtils';
 import { Avatar } from './Avatar';
 import { ActiveSessionsGroupCompact } from './ActiveSessionsGroupCompact';
 import { ProjectGroup } from './ProjectGroup';
@@ -733,19 +733,15 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
         : baseStatus;
 
-    const vibingMessage = React.useMemo(() => {
-        return vibingMessages[Math.floor(Math.random() * vibingMessages.length)].toLowerCase() + '…';
-    }, [session.state]);
-
     const statusText = showUnreadAttentionState
         ? t('status.unread')
         : session.state === 'thinking'
-            ? vibingMessage
+            ? t('status.running')
             : session.state === 'disconnected'
                 ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
                 : session.state === 'permission_required'
                     ? t('status.permissionRequired')
-                    : t('status.online');
+                    : t('status.idle');
 
     const handlePress = React.useCallback(() => {
         navigateToSession(session.id);

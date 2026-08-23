@@ -431,6 +431,8 @@ export const ru: TranslationStructure = {
         error: 'ошибка',
         online: 'online',
         offline: 'offline',
+        running: 'выполняется · подключено',
+        idle: 'бездействует',
         lastSeen: ({ time }: { time: string }) => `в сети ${time}`,
         permissionRequired: 'требуется разрешение',
         activeNow: 'Активен сейчас',

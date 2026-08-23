@@ -90,6 +90,8 @@ export const pl: TranslationStructure = {
         error: 'błąd',
         online: 'online',
         offline: 'offline',
+        running: 'w trakcie · połączono',
+        idle: 'bezczynny',
         lastSeen: ({ time }: { time: string }) => `ostatnio widziano ${time}`,
         permissionRequired: 'wymagane uprawnienie',
         activeNow: 'Aktywny teraz',

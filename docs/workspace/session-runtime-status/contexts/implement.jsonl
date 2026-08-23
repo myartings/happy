@@ -1,0 +1,8 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/session-runtime-status.md","reason":"Accepted runtime-status behavior and explicit boundaries"}
+{"path":"packages/happy-app/sources/utils/sessionUtils.ts","reason":"Current session-state resolver used by the conversation status row"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Session list must present the same deterministic runtime labels"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Remove the obsolete random-status import after central cleanup"}
+{"path":"packages/happy-app/sources/utils/sessionRuntimeStatus.ts","reason":"Dependency-free resolver for observed runtime state"}
+{"path":"packages/happy-app/sources/utils/sessionRuntimeStatus.test.ts","reason":"Focused regression coverage for state mapping and precedence"}
+{"path":"packages/happy-app/sources/text/translations","reason":"Localized Running and Idle labels required by app policy"}
