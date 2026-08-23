@@ -1,14 +1,7 @@
 import { create } from "zustand";
 import { useShallow } from 'zustand/react/shallow'
 import equal from 'fast-deep-equal'
-
-function useDeepEqual<T>(selector: (state: StorageState) => T): (state: StorageState) => T {
-    const prev = React.useRef<T>(undefined);
-    return (state: StorageState) => {
-        const next = selector(state);
-        return equal(prev.current, next) ? prev.current! : (prev.current = next);
-    };
-}
+import { useDeepEqual } from './storeSelectors';
 import { Session, Machine, GitStatus, SessionAgentModesPatch } from "./storageTypes";
 import type { GitStatusFiles } from "./gitStatusFiles";
 import type { ProjectFilesList } from "./projectFiles";
@@ -35,7 +28,7 @@ import { getCurrentRealtimeSessionId, getVoiceSession } from '@/realtime/Realtim
 import { isMutableTool } from "@/components/tools/knownTools";
 import { DecryptedArtifact } from "./artifactTypes";
 import { FeedItem } from "./feedTypes";
-import { getRigActivityIndicators, getRigIdentity, isRigMetadata } from './rig';
+import { getRigActivityIndicators, getRigGitSummary, getRigIdentity, isRigMetadata } from './rig';
 import { indexSessionsById } from './sessionIdentity';
 import { t } from '@/text';
 
@@ -119,6 +112,10 @@ export interface SessionRowData {
     providerKind: string | null;
     modelName: string | null;
     activitySummary: string | null;
+    gitChangedFiles: number | null;
+    gitCountsExact: boolean;
+    gitDeletions: number | null;
+    gitInsertions: number | null;
     state: SessionState;
     // Only present on inactive sessions — active sessions never show "last seen"
     // and activeAt updates on every heartbeat, causing needless deep-equal diffs
@@ -173,6 +170,7 @@ function buildSessionRowData(
 
     const rigIdentity = getRigIdentity(session.metadata);
     const rigActivity = getRigActivityIndicators(session.metadata);
+    const rigGit = getRigGitSummary(session.metadata);
     const machineId = session.metadata?.machineId ?? null;
     const machine = machineId ? machines?.[machineId] : undefined;
     return {
@@ -188,6 +186,10 @@ function buildSessionRowData(
         activitySummary: rigActivity.length > 0
             ? rigActivity.map((item) => `${item.count}${item.queued ? `+${item.queued}` : ''} ${item.key}`).join(' · ')
             : null,
+        gitChangedFiles: rigGit?.changedFiles ?? null,
+        gitCountsExact: rigGit?.countsExact ?? true,
+        gitDeletions: rigGit?.deletions ?? null,
+        gitInsertions: rigGit?.insertions ?? null,
         state,
         createdAt: session.createdAt,
         lastActivityAt: getSessionActivityAt(session),
@@ -1625,9 +1627,19 @@ export function useSocketStatus() {
     })));
 }
 
-/** Agent-to-user communications this session is currently waiting on. */
+/**
+ * Agent-to-user communications this session is currently waiting on.
+ *
+ * Deep-equal, not shallow: this selector mints a fresh object per pending
+ * communication on every call, and shallow compares those elements by identity.
+ * Under `useShallow` a session with even one pending request therefore reports a
+ * changed snapshot on every read, which re-renders, which reads again — the
+ * render loop that used to crash any session holding a question. An empty list
+ * shallow-compares equal, which is why only sessions with a live request fell
+ * over.
+ */
 export function useSessionPendingCommunications(sessionId: string): PendingAgentCommunication[] {
-    return storage(useShallow((state) =>
+    return storage(useDeepEqual((state) =>
         selectPendingCommunications(state.sessions[sessionId]?.agentState ?? null)));
 }
 
