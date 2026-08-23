@@ -38,6 +38,7 @@ import {
     resolveStudioSidebarStateBackground,
 } from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
+import { RigGitLineChanges } from './RigGitLineChanges';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -519,29 +520,54 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     />
                 ) : null}
                 {showActiveSessionRuntime ? (
-                    <SessionRuntimeMetadata
-                        platformKind={displayPolicy.showPlatform ? runtimePlatformKind : null}
-                        projectName={displayPolicy.showProjectName ? resolveSessionProjectName(session.projectName, session.path) : null}
-                        providerKind={showSessionModel ? session.providerKind : null}
-                        providerName={showSessionModel ? session.providerName : null}
-                        modelName={showSessionModel ? session.modelName : null}
-                        identityLine={showSessionModel ? session.identityLine : null}
-                        activitySummary={session.activitySummary}
-                        contentInset={isStudio ? sessionRowStyle.metadataInset! : undefined}
-                        fontSize={isStudio ? sessionRowStyle.secondaryMetadataFontSize! : undefined}
-                    />
-                ) : showSessionModel && session.identityLine ? (
                     <View style={[
                         styles.sessionIdentityRow,
                         isStudio && { marginLeft: sessionRowStyle.metadataInset! },
                     ]}>
-                        <ProviderIcon kind={session.providerKind} size={11} />
-                        <Text style={[
-                            styles.sessionIdentity,
-                            isStudio && { fontSize: sessionRowStyle.secondaryMetadataFontSize! },
-                        ]} numberOfLines={1}>
-                            {session.identityLine}{showSessionModel && session.modelName ? ` · ${session.modelName}` : ''}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
-                        </Text>
+                        <SessionRuntimeMetadata
+                            platformKind={displayPolicy.showPlatform ? runtimePlatformKind : null}
+                            projectName={displayPolicy.showProjectName ? resolveSessionProjectName(session.projectName, session.path) : null}
+                            providerKind={showSessionModel ? session.providerKind : null}
+                            providerName={showSessionModel ? session.providerName : null}
+                            modelName={showSessionModel ? session.modelName : null}
+                            identityLine={showSessionModel ? session.identityLine : null}
+                            activitySummary={session.activitySummary}
+                            contentInset={0}
+                            fontSize={isStudio ? sessionRowStyle.secondaryMetadataFontSize! : undefined}
+                        />
+                        {session.gitChangedFiles !== null ? (
+                            <RigGitLineChanges
+                                changedFiles={session.gitChangedFiles}
+                                countsExact={session.gitCountsExact}
+                                deletions={session.gitDeletions ?? 0}
+                                insertions={session.gitInsertions ?? 0}
+                            />
+                        ) : null}
+                    </View>
+                ) : (showSessionModel && session.identityLine) || session.gitChangedFiles !== null ? (
+                    <View style={[
+                        styles.sessionIdentityRow,
+                        isStudio && { marginLeft: sessionRowStyle.metadataInset! },
+                    ]}>
+                        {showSessionModel && session.identityLine ? (
+                            <>
+                                <ProviderIcon kind={session.providerKind} size={11} />
+                                <Text style={[
+                                    styles.sessionIdentity,
+                                    isStudio && { fontSize: sessionRowStyle.secondaryMetadataFontSize! },
+                                ]} numberOfLines={1}>
+                                    {session.identityLine}{session.modelName ? ` · ${session.modelName}` : ''}{session.activitySummary ? ` · ${session.activitySummary}` : ''}
+                                </Text>
+                            </>
+                        ) : null}
+                        {session.gitChangedFiles !== null ? (
+                            <RigGitLineChanges
+                                changedFiles={session.gitChangedFiles}
+                                countsExact={session.gitCountsExact}
+                                deletions={session.gitDeletions ?? 0}
+                                insertions={session.gitInsertions ?? 0}
+                            />
+                        ) : null}
                     </View>
                 ) : null}
             </View>
@@ -766,6 +792,8 @@ const stylesheet = StyleSheet.create((theme) => ({
         fontSize: 11,
         color: theme.colors.textSecondary,
         ...Typography.default('regular'),
+        flex: 1,
+        minWidth: 0,
         flexShrink: 1,
     },
     sessionIdentityRow: {
