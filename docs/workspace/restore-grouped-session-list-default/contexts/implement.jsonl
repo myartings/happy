@@ -1,0 +1,2 @@
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Device-local list-layout default and migration"}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"Public parsing and persistence regression coverage"}
