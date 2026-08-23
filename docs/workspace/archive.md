@@ -65,3 +65,4 @@
 | 2026-08-22 | happy-desktop-official-release | pending | Added and verified the local macOS official-baseline release Skill and happyctl workflow. | Review or replace the pre-existing dirty runtime baseline worktree before a real refresh. |
 | 2026-08-22 | happyctl-local-main-release | pending | Allow validated local main to lead origin/main during no-push official baseline release. | Rebuild the baseline worktree and execute the authorized local release. |
 | 2026-08-23 | session-runtime-status | pending | Deterministic localized session runtime status validated on latest dev | Install merged dev with Happy Manager and smoke a real long-running Codex turn |
+| 2026-08-23 | active-session-runtime-status-label | pending | Show deterministic runtime status labels in compact active-session rows and align Idle with the existing waiting indicator | None |
