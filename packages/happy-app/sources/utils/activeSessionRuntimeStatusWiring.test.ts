@@ -5,6 +5,10 @@ const compactRows = readFileSync(
     new URL('../components/ActiveSessionsGroupCompact.tsx', import.meta.url),
     'utf8',
 );
+const flatRows = readFileSync(
+    new URL('../components/FlatSessionRow.tsx', import.meta.url),
+    'utf8',
+);
 
 describe('active session runtime status wiring', () => {
     it('renders every localized runtime state in the default compact row', () => {
@@ -29,5 +33,13 @@ describe('active session runtime status wiring', () => {
             "const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : baseStatus.color;",
         );
         expect(compactRows).toContain('{ color: statusTextColor }');
+    });
+
+    it('keeps the same runtime labels visible in the default flat list', () => {
+        expect(flatRows).toContain("t('status.running')");
+        expect(flatRows).toContain("t('status.idle')");
+        expect(flatRows).toContain("t('status.permissionRequired')");
+        expect(flatRows).toContain("t('status.lastSeen'");
+        expect(flatRows).toContain("session.state === 'waiting' ? theme.colors.textSecondary : status.color");
     });
 });
