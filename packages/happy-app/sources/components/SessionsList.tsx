@@ -349,7 +349,6 @@ export function SessionsList({
     // The flat variant replaces the machine → project → worktree hierarchy with
     // one full-width chronological column. Both shapes read the same data.
     const flatSessionList = useLocalSetting('flatSessionList');
-    const sortSessionsByActivity = useSetting('sortSessionsByActivity');
     const machines = useAllMachines();
     const pathname = usePathname();
     const isTablet = useIsTablet();
@@ -456,9 +455,12 @@ export function SessionsList({
             : [];
 
         if (flatSessionList) {
-            const flatRows = buildFlatSessionRows(groupedRows, {
-                sortByActivity: sortSessionsByActivity,
-            });
+            // Always by activity, regardless of `sortSessionsByActivity`. That
+            // setting exists for the project cards, where a card is a place and
+            // creation order is a reasonable way to list places. This is a chat
+            // list: a chat list that does not float the thing you just replied
+            // to is simply broken, and creation order would freeze it forever.
+            const flatRows = buildFlatSessionRows(groupedRows, { sortByActivity: true });
             const flatItems = flatRows.map<SessionListDisplayItem>((row, index) => ({
                 type: 'flat-session',
                 row,
@@ -506,7 +508,7 @@ export function SessionsList({
             item.type !== 'project' && item.type !== 'projects-header'
         ));
         return [...hierarchy, ...legacyItems, ...archiveToggle, ...archivedRows];
-    }, [flatSessionList, hasArchivedSessions, hideArchivedSessions, machines, searchQuery, sortSessionsByActivity, sourceData]);
+    }, [flatSessionList, hasArchivedSessions, hideArchivedSessions, machines, searchQuery, sourceData]);
 
     // Early return if no data yet
     if (!data) {
