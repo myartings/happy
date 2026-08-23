@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ActivityIndicator, Keyboard, LayoutChangeEvent, Modal as RNModal, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Keyboard, LayoutChangeEvent, Modal as RNModal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -17,7 +17,7 @@ import Animated, {
 import { MobileGlassSurface } from './MobileGlass';
 import { BubblePressable } from './BubblePressable';
 import { NativeOptionsPicker } from './NativeOptionsPicker';
-import { NativeSettingsMenu, type NativeSettingsMenuGroup } from './NativeSettingsMenu';
+import { NativeSettingsMenu, type NativeSettingsMenuGroup, type NativeSettingsMenuProps } from './NativeSettingsMenu';
 import { AgentInputAttachmentStrip } from './AgentInputAttachmentStrip';
 import { Typography } from '@/constants/Typography';
 import { layout } from './layout';
@@ -41,12 +41,23 @@ import type { NewSessionAgentType } from '@/sync/persistence';
 import { useImagePicker } from '@/hooks/useImagePicker';
 import { Modal } from '@/modal';
 import { resolveMultiTextInputLayout } from './multiTextInputLayout';
-import { resolveCustomProjectPathSelection } from './homeDockInteraction';
+import {
+    isHomeDockOptionSelectable,
+    resolveCustomProjectPathSelection,
+    resolveHomeDockBackdropPressAction,
+    resolveHomeDockMachineSelection,
+    resolveHomeDockPickerBackAction,
+    resolveHomeDockPromptPlaceholder,
+    shouldUseNativeHomeDockMenus,
+} from './homeDockInteraction';
+import { registerHomeDockFocusListener, useHomeDockFocusStore } from './homeDockFocus';
 import { resolveMachineAgent } from '@/utils/newSessionAgentSelection';
+import { getHarnessName, listAvailableHarnesses } from '@/utils/harnessCatalog';
+import { getPermissionModeMenuLabel, getPermissionModeShortLabel } from '@/utils/permissionModeLabels';
 import { findConnectedRigMachine, getRigMachineSessionCreation } from '@/sync/rigSessionCreation';
 import {
     MobileHeaderScrim,
-    MOBILE_STRONG_HEADER_SCRIM_RESTING_OPACITY,
+    MOBILE_HOME_SCRIM_OVERLAY_OPACITY,
 } from './navigation/MobileHeaderScrim';
 import {
     MOBILE_COMPOSER_LAYOUT,
@@ -62,21 +73,13 @@ export const MOBILE_HOME_DOCK_CONTENT_INSET = 108;
 
 type EnvironmentSetting = 'machine' | 'project' | 'worktree';
 type AgentSetting = 'agent' | 'model' | 'permission' | 'effort';
+type PickerPage = EnvironmentSetting | AgentSetting;
 
 const CUSTOM_PROJECT_PATH_KEY = '__custom_project_path__';
 
-const AGENTS: Array<{ key: NewSessionAgentType; name: string }> = [
-    { key: 'rig', name: 'Rig' },
-    { key: 'claude', name: 'Claude Code' },
-    { key: 'codex', name: 'Codex' },
-    { key: 'openclaw', name: 'OpenClaw' },
-    { key: 'gemini', name: 'Gemini' },
-    { key: 'agy', name: 'Agy' },
-];
-
-const MOBILE_ICON_MENU_GEOMETRY = resolveMobileComposerMenuGeometry('icon');
 const MOBILE_MODEL_MENU_GEOMETRY = resolveMobileComposerMenuGeometry('model');
 const MOBILE_EFFORT_MENU_GEOMETRY = resolveMobileComposerMenuGeometry('effort');
+const MOBILE_PERMISSION_MENU_GEOMETRY = resolveMobileComposerMenuGeometry('permission');
 const MOBILE_ACTION_ROW_GEOMETRY = resolveMobileComposerActionRowGeometry();
 const MOBILE_ICON_ACTION_GEOMETRY = resolveMobileComposerActionGeometry('icon');
 const MOBILE_PRIMARY_ACTION_GEOMETRY = resolveMobileComposerActionGeometry('primary');
@@ -86,14 +89,22 @@ const styles = StyleSheet.create((theme) => ({
     keyboardFollower: {
         width: '100%',
     },
+    // Reaches above the dock so the scrim's ramp lands on content rather than
+    // on the composer itself.
     bottomBackdrop: {
         ...StyleSheet.absoluteFillObject,
-        top: -36,
-        opacity: MOBILE_STRONG_HEADER_SCRIM_RESTING_OPACITY,
+        top: -26,
     },
     safeArea: {
         paddingHorizontal: 16,
         paddingTop: 8,
+    },
+    // The focused composer replaces the resting one rather than covering it:
+    // the modal sits a safe-area inset higher, so leaving this on screen showed
+    // its send button peeking out below. `display` rather than `opacity` because
+    // an ancestor below full alpha kills the native blur underneath.
+    safeAreaBehindFocus: {
+        display: 'none',
     },
     composerSurface: {
         width: '100%',
@@ -111,6 +122,17 @@ const styles = StyleSheet.create((theme) => ({
             android: theme.colors.glass.backgroundStrong,
             default: theme.colors.glass.backgroundStrong,
         }),
+    },
+    composerShadow: {
+        width: '100%',
+        maxWidth: layout.maxWidth,
+        alignSelf: 'center',
+        borderRadius: MOBILE_COLLAPSED_COMPOSER_GEOMETRY.shellRadius,
+        shadowColor: theme.colors.shadow.color,
+        shadowOffset: { width: 0, height: theme.dark ? 6 : 2 },
+        shadowOpacity: theme.dark ? 0.22 : 0.08,
+        shadowRadius: theme.dark ? 16 : 8,
+        elevation: theme.dark ? 4 : 2,
     },
     composerContent: {
         flex: 1,
@@ -172,6 +194,17 @@ const styles = StyleSheet.create((theme) => ({
         borderRadius: MOBILE_COMPOSER_METRICS.shellRadius,
         overflow: 'hidden',
     },
+    focusedComposerShadow: {
+        width: '100%',
+        maxWidth: layout.maxWidth,
+        alignSelf: 'center',
+        borderRadius: MOBILE_COMPOSER_METRICS.shellRadius,
+        shadowColor: theme.colors.shadow.color,
+        shadowOffset: { width: 0, height: theme.dark ? 6 : 2 },
+        shadowOpacity: theme.dark ? 0.22 : 0.08,
+        shadowRadius: theme.dark ? 16 : 8,
+        elevation: theme.dark ? 4 : 2,
+    },
     focusedComposerAnchored: {
         position: 'absolute',
         left: 0,
@@ -221,12 +254,12 @@ const styles = StyleSheet.create((theme) => ({
         paddingBottom: MOBILE_COMPOSER_METRICS.inputPaddingBottom,
     },
     focusedComposerActions: MOBILE_ACTION_ROW_GEOMETRY,
-    nativeIconMenuFrame: MOBILE_ICON_MENU_GEOMETRY.frame,
-    nativeIconMenuContent: MOBILE_ICON_MENU_GEOMETRY.content,
     nativeModeMenu: MOBILE_MODEL_MENU_GEOMETRY.frame,
     focusedModeButton: MOBILE_MODEL_MENU_GEOMETRY.content,
     nativeEffortMenu: MOBILE_EFFORT_MENU_GEOMETRY.frame,
     focusedEffortButton: MOBILE_EFFORT_MENU_GEOMETRY.content,
+    nativePermissionMenu: MOBILE_PERMISSION_MENU_GEOMETRY.frame,
+    focusedPermissionButton: MOBILE_PERMISSION_MENU_GEOMETRY.content,
     focusedModeText: {
         flexShrink: 1,
         minWidth: 0,
@@ -258,7 +291,7 @@ const styles = StyleSheet.create((theme) => ({
         bottom: 0,
     },
     focusBackdrop: {
-        backgroundColor: 'rgba(0, 0, 0, 0.88)',
+        backgroundColor: theme.dark ? 'rgba(0, 0, 0, 0.88)' : 'rgba(255, 255, 255, 0.88)',
     },
     focusDock: {
         position: 'absolute',
@@ -367,6 +400,9 @@ const styles = StyleSheet.create((theme) => ({
     optionPressed: {
         backgroundColor: theme.colors.surfacePressedOverlay,
     },
+    optionDisabled: {
+        opacity: 0.45,
+    },
     optionCopy: {
         flex: 1,
         minWidth: 0,
@@ -452,10 +488,16 @@ export const HomeDock = React.memo(({
     const focusedInputRef = React.useRef<TextInput>(null);
     const mountedRef = React.useRef(true);
     const focusAnimationTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const nativeMenuOpenRef = React.useRef(false);
     const focusPresentation = useSharedValue(0);
     const [isFocused, setIsFocused] = React.useState(false);
     const [focusModeVisible, setFocusModeVisible] = React.useState(false);
     const [focusedInputContentHeight, setFocusedInputContentHeight] = React.useState(0);
+    // Expo's Compose bridge can freeze a DropdownMenu trigger at 0x0 when it
+    // composes before React Native measures its child. Keep iOS/web unchanged,
+    // and use an in-modal React Native picker only on Android.
+    const useNativeMenus = shouldUseNativeHomeDockMenus(Platform.OS);
+    const [sheetPage, setSheetPage] = React.useState<PickerPage | null>(null);
     const expImageUpload = useSetting('expImageUpload');
     const { selectedImages, pickImages, removeImage, clearImages } = useImagePicker();
     const agentType = useNewSessionDraft((state) => state.agentType);
@@ -493,12 +535,16 @@ export const HomeDock = React.memo(({
             }))
     ), [machines]);
     const currentMachine = resolveOption(machineOptions, [selectedMachineId]);
+    const resolvedMachineId = resolveHomeDockMachineSelection(
+        selectedMachineId,
+        machineOptions.map((machine) => machine.key),
+    );
 
     React.useEffect(() => {
-        if (!selectedMachineId && machineOptions[0]) {
-            setMachineId(machineOptions[0].key);
+        if (resolvedMachineId !== selectedMachineId) {
+            setMachineId(resolvedMachineId);
         }
-    }, [machineOptions, selectedMachineId, setMachineId]);
+    }, [resolvedMachineId, selectedMachineId, setMachineId]);
 
     const projectOptions = React.useMemo<ModeOption[]>(() => {
         const paths = new Set<string>();
@@ -582,7 +628,7 @@ export const HomeDock = React.memo(({
             return [{
                 key: '__none__',
                 name: 'No worktree',
-                description: `Not supported by ${AGENTS.find((agent) => agent.key === agentType)?.name ?? agentType}`,
+                description: `Not supported by ${getHarnessName(agentType)}`,
             }];
         }
         const options: ModeOption[] = [
@@ -599,31 +645,17 @@ export const HomeDock = React.memo(({
         return options;
     }, [agentType, existingWorktrees, supportsWorktree, worktreeKey]);
     const currentWorktree = resolveOption(worktreeOptions, [selectedWorktreeKey]);
-    // Every agent stays listed so the picker always reads as a choice. The ones
-    // the selected machine has no CLI for are disabled rather than hidden, which
-    // otherwise leaves a single checked row that looks like it does nothing.
-    const availableAgents = React.useMemo<ModeOption[]>(() => {
-        const availability = selectedMachine?.metadata?.cliAvailability;
-        return AGENTS.map((agent) => {
-            const available = agent.key === 'rig'
-                ? rigSelectionMachine !== null
-                : !availability || availability[agent.key];
-            return available
-                ? agent
-                : {
-                    ...agent,
-                    disabled: true,
-                    description: agent.key === 'rig'
-                        ? 'Select a connected Rig machine'
-                        : 'Not installed on this machine',
-                };
-        });
-    }, [rigSelectionMachine, selectedMachine]);
-    const resolvedAgentType = agentType === 'rig' && !rigSelectionMachine
-        ? (availableAgents.find((agent) => !agent.disabled && agent.key !== 'rig')?.key as NewSessionAgentType | undefined) ?? agentType
-        : agentType === 'rig'
+    // Only the harnesses this machine can actually run, in pick order.
+    const availableAgents = React.useMemo<ModeOption[]>(() => listAvailableHarnesses({
+        availability: selectedMachine?.metadata?.cliAvailability,
+        happyAgentAvailable: rigSelectionMachine !== null,
+        selected: agentType,
+    }), [agentType, rigSelectionMachine, selectedMachine]);
+    const resolvedAgentType = agentType === 'rig'
+        ? rigSelectionMachine
             ? agentType
-            : resolveMachineAgent(agentType, selectedMachine?.metadata?.cliAvailability);
+            : (availableAgents.find((agent) => agent.key !== 'rig')?.key as NewSessionAgentType | undefined) ?? agentType
+        : resolveMachineAgent(agentType, selectedMachine?.metadata?.cliAvailability);
     const defaults = React.useMemo(() => rigCreation
         ? {
             permissionMode: rigCreation.defaultPermissionMode ?? '',
@@ -650,7 +682,11 @@ export const HomeDock = React.memo(({
     const currentEffortDefault = rigCreation?.defaultEffortForModel(currentModel?.key)
         ?? defaults.effortLevel;
     const currentEffort = resolveOption(effortOptions, [effortLevel, currentEffortDefault]);
-    const currentAgent = availableAgents.find((agent) => agent.key === agentType) ?? availableAgents[0] ?? AGENTS[0];
+    const currentAgent = availableAgents.find((agent) => agent.key === agentType)
+        ?? availableAgents[0]
+        ?? { key: agentType, name: getHarnessName(agentType) };
+    const permissionLabel = getPermissionModeShortLabel(currentPermission);
+    const focusedPromptPlaceholder = resolveHomeDockPromptPlaceholder(currentAgent.key, currentAgent.name);
     const canSubmit = !isSubmitting && (
         prompt.trim().length > 0 || (expImageUpload && selectedImages.length > 0)
     );
@@ -768,6 +804,7 @@ export const HomeDock = React.memo(({
         if (focusAnimationTimerRef.current) {
             clearTimeout(focusAnimationTimerRef.current);
         }
+        nativeMenuOpenRef.current = false;
         focusPresentation.value = 0;
         setIsFocused(true);
         setFocusModeVisible(true);
@@ -780,9 +817,23 @@ export const HomeDock = React.memo(({
         }, 16);
     }, [focusPresentation]);
 
+    // A "+" in the session list prefills the draft and then asks the dock to
+    // open. The last id seen is captured on mount so a remount after an earlier
+    // request does not re-open the composer on its own.
+    const focusRequestId = useHomeDockFocusStore((state) => state.requestId);
+    const servedFocusRequestRef = React.useRef(focusRequestId);
+    React.useEffect(() => registerHomeDockFocusListener(), []);
+    React.useEffect(() => {
+        if (focusRequestId === servedFocusRequestRef.current) return;
+        servedFocusRequestRef.current = focusRequestId;
+        openFocusMode();
+    }, [focusRequestId, openFocusMode]);
+
     const finishCloseFocusMode = React.useCallback(() => {
+        nativeMenuOpenRef.current = false;
         setIsFocused(false);
         setFocusModeVisible(false);
+        setSheetPage(null);
     }, []);
 
     const closeFocusMode = React.useCallback(() => {
@@ -802,6 +853,19 @@ export const HomeDock = React.memo(({
             }
         });
     }, [finishCloseFocusMode, focusPresentation]);
+
+    const closePicker = React.useCallback(() => {
+        setSheetPage(null);
+    }, []);
+
+    const handleFocusModeRequestClose = React.useCallback(() => {
+        const action = resolveHomeDockPickerBackAction({ hasPage: sheetPage !== null });
+        if (action === 'close-picker') {
+            closePicker();
+            return;
+        }
+        closeFocusMode();
+    }, [closeFocusMode, closePicker, sheetPage]);
 
     const selectAgent = React.useCallback((agent: NewSessionAgentType) => {
         const nextRigCreation = agent === 'rig' ? rigSelectionCreation : null;
@@ -840,15 +904,18 @@ export const HomeDock = React.memo(({
         icon: React.ComponentProps<typeof Ionicons>['name'];
     };
 
+    // The rows stacked above the focused composer. The harness sits with
+    // machine/project/worktree because all four say where and with what the
+    // session runs, and all four are settled before anything is typed.
     const environmentRows: SettingsRow[] = [
         { page: 'machine', label: 'MACHINE', value: currentMachine?.name ?? 'Select machine', icon: 'desktop-outline' },
         { page: 'project', label: 'PROJECT', value: currentProject?.name ?? '~', icon: 'folder-outline' },
         { page: 'worktree', label: 'WORKTREE', value: currentWorktree?.name ?? 'No worktree', icon: 'git-branch-outline' },
+        { page: 'agent', label: 'HARNESS', value: currentAgent.name, icon: 'hardware-chip-outline' },
     ];
     const agentRows: SettingsRow[] = [
-        { page: 'agent', label: 'AGENT', value: currentAgent.name, icon: 'hardware-chip-outline' },
         ...(currentModel ? [{ page: 'model', label: t('agentInput.model.title'), value: currentModel.name, icon: 'cube-outline' as const }] : []),
-        ...(currentPermission ? [{ page: 'permission', label: t('agentInput.permissionMode.title'), value: currentPermission.name, icon: 'shield-outline' as const }] : []),
+        ...(currentPermission ? [{ page: 'permission', label: t('agentInput.permissionMode.title'), value: permissionLabel ?? currentPermission.name, icon: 'shield-outline' as const }] : []),
         ...(currentEffort ? [{ page: 'effort', label: t('agentInput.effort.title'), value: currentEffort.name, icon: 'speedometer-outline' as const }] : []),
     ];
 
@@ -918,7 +985,7 @@ export const HomeDock = React.memo(({
 
     const getAgentPickerConfig = (setting: AgentSetting): PickerConfig => {
         if (setting === 'agent') {
-            return { title: 'Agent', options: availableAgents, selectedKey: agentType, onSelect: (key) => selectAgent(key as NewSessionAgentType) };
+            return { title: 'Harness', options: availableAgents, selectedKey: agentType, onSelect: (key) => selectAgent(key as NewSessionAgentType) };
         }
         if (setting === 'model') {
             return { title: t('agentInput.model.title'), options: modelOptions, selectedKey: currentModel?.key, onSelect: setModelMode };
@@ -943,56 +1010,104 @@ export const HomeDock = React.memo(({
             }[row.page],
             options: config.options.map((option) => ({
                 key: option.key,
-                label: option.name,
+                // The permission menu spells the mode out; only its chip is
+                // short on space. Model and effort read fine on their own.
+                label: row.page === 'permission' ? getPermissionModeMenuLabel(option) : option.name,
                 disabled: option.disabled,
             })),
             selectedKey: config.selectedKey,
             onSelect: config.onSelect,
         };
     });
-    const gearSettingsGroups = agentSettingsGroups.filter((group) => (
-        group.key === 'agent' || group.key === 'permission'
-    ));
     const modelSettingsGroup = agentSettingsGroups.find((group) => group.key === 'model');
     const effortSettingsGroup = agentSettingsGroups.find((group) => group.key === 'effort');
+    const permissionSettingsGroup = agentSettingsGroups.find((group) => group.key === 'permission');
 
-    const renderNativePicker = (row: SettingsRow, config: PickerConfig, compact: boolean) => (
-        <NativeOptionsPicker
-            key={row.page}
-            title={config.title}
-            triggerLabel={row.value}
-            systemImage={{
-                machine: 'desktopcomputer',
-                project: 'folder',
-                worktree: 'arrow.triangle.branch',
-                agent: 'cpu',
-                model: 'cube',
-                permission: 'shield',
-                effort: 'bolt',
-            }[row.page]}
-            options={config.options.map((option) => ({ key: option.key, label: option.name }))}
-            selectedKey={config.selectedKey}
-            onSelect={config.onSelect}
-        >
-            <View style={compact ? styles.focusConfigRow : styles.option}>
-                <View style={styles.focusConfigIcon}>
-                    <Ionicons
-                        name={row.icon}
-                        size={compact ? 21 : 18}
-                        color={theme.colors.text}
-                    />
-                </View>
-                {compact ? (
-                    <Text style={styles.focusConfigValue} numberOfLines={1}>{row.value}</Text>
-                ) : (
-                    <View style={styles.optionCopy}>
-                        <Text style={styles.optionLabel}>{row.label}</Text>
-                        <Text style={styles.optionValue} numberOfLines={1}>{row.value}</Text>
-                    </View>
-                )}
-            </View>
-        </NativeOptionsPicker>
+    const getPickerConfig = (page: PickerPage): PickerConfig => (
+        page === 'machine' || page === 'project' || page === 'worktree'
+            ? getEnvironmentPickerConfig(page)
+            : getAgentPickerConfig(page)
     );
+    const sheetVisible = !useNativeMenus && sheetPage !== null;
+    const markNativeMenuOpen = React.useCallback(() => {
+        nativeMenuOpenRef.current = true;
+    }, []);
+    const handleFocusBackdropPress = React.useCallback(() => {
+        const action = resolveHomeDockBackdropPressAction({
+            nativeMenuOpen: useNativeMenus && nativeMenuOpenRef.current,
+            pickerVisible: sheetVisible,
+        });
+        nativeMenuOpenRef.current = false;
+        if (action === 'dismiss-menu') {
+            return;
+        }
+        if (action === 'close-picker') {
+            closePicker();
+            return;
+        }
+        closeFocusMode();
+    }, [closeFocusMode, closePicker, sheetVisible, useNativeMenus]);
+
+    const renderPickerRowContent = (row: SettingsRow, compact: boolean) => (
+        <View style={compact ? styles.focusConfigRow : styles.option}>
+            <View style={styles.focusConfigIcon}>
+                <Ionicons
+                    name={row.icon}
+                    size={compact ? 21 : 18}
+                    color={theme.colors.text}
+                />
+            </View>
+            {compact ? (
+                <Text style={styles.focusConfigValue} numberOfLines={1}>{row.value}</Text>
+            ) : (
+                <View style={styles.optionCopy}>
+                    <Text style={styles.optionLabel}>{row.label}</Text>
+                    <Text style={styles.optionValue} numberOfLines={1}>{row.value}</Text>
+                </View>
+            )}
+        </View>
+    );
+
+    const renderPickerRow = (row: SettingsRow, config: PickerConfig, compact: boolean) => {
+        if (!useNativeMenus) {
+            return (
+                <Pressable
+                    key={row.page}
+                    onPress={() => setSheetPage(row.page as PickerPage)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${row.label}: ${row.value}`}
+                >
+                    {renderPickerRowContent(row, compact)}
+                </Pressable>
+            );
+        }
+        return (
+            <NativeOptionsPicker
+                key={row.page}
+                title={config.title}
+                tintColor={compact ? theme.colors.text : undefined}
+                triggerLabel={row.value}
+                systemImage={{
+                    machine: 'desktopcomputer',
+                    project: 'folder',
+                    worktree: 'arrow.triangle.branch',
+                    agent: 'cpu',
+                    model: 'cube',
+                    permission: 'shield',
+                    effort: 'bolt',
+                }[row.page]}
+                options={config.options.map((option) => ({ key: option.key, label: option.name }))}
+                selectedKey={config.selectedKey}
+                onMenuOpen={markNativeMenuOpen}
+                onSelect={(key) => {
+                    nativeMenuOpenRef.current = false;
+                    config.onSelect(key);
+                }}
+            >
+                {renderPickerRowContent(row, compact)}
+            </NativeOptionsPicker>
+        );
+    };
 
     const renderEnvironmentPickers = () => environmentRows.map((row, index) => (
         <FocusConfigRevealRow
@@ -1000,9 +1115,131 @@ export const HomeDock = React.memo(({
             progress={focusPresentation}
             index={index}
         >
-            {renderNativePicker(row, getEnvironmentPickerConfig(row.page as EnvironmentSetting), true)}
+            {renderPickerRow(row, getPickerConfig(row.page as PickerPage), true)}
         </FocusConfigRevealRow>
     ));
+
+    const renderMenuControl = ({
+        page,
+        groups,
+        flat,
+        style,
+        accessibilityLabel,
+        triggerSystemImage,
+        triggerLabel,
+        triggerAlignment,
+        children,
+    }: {
+        page: PickerPage;
+        groups: NativeSettingsMenuGroup[];
+        flat?: boolean;
+        style: NativeSettingsMenuProps['style'];
+        accessibilityLabel: string;
+        triggerSystemImage?: NativeSettingsMenuProps['triggerSystemImage'];
+        triggerLabel?: NativeSettingsMenuProps['triggerLabel'];
+        triggerAlignment?: NativeSettingsMenuProps['triggerAlignment'];
+        children: React.ReactNode;
+    }) => {
+        if (!useNativeMenus) {
+            return (
+                <Pressable
+                    onPress={() => setSheetPage(page)}
+                    style={style}
+                    accessibilityRole="button"
+                    accessibilityLabel={accessibilityLabel}
+                >
+                    {children}
+                </Pressable>
+            );
+        }
+        return (
+            <NativeSettingsMenu
+                accessibilityLabel={accessibilityLabel}
+                groups={groups.map((group) => ({
+                    ...group,
+                    onSelect: (key) => {
+                        nativeMenuOpenRef.current = false;
+                        group.onSelect(key);
+                    },
+                }))}
+                onMenuOpen={markNativeMenuOpen}
+                flat={flat}
+                style={style}
+                triggerSystemImage={triggerSystemImage}
+                triggerLabel={triggerLabel}
+                triggerAlignment={triggerAlignment}
+            >
+                {children}
+            </NativeSettingsMenu>
+        );
+    };
+
+    // Only reached with a page selected: `sheetVisible` gates the whole sheet.
+    const renderSettingsSheet = (page: PickerPage) => {
+        const config = getPickerConfig(page);
+        return (
+            <View style={styles.settingsStack}>
+                <MobileGlassSurface
+                    nativeEffect
+                    intensity={78}
+                    glassEffectStyle="regular"
+                    style={styles.settingsSurface}
+                >
+                    <View style={styles.settingsHeader}>
+                        <Pressable
+                            onPress={closePicker}
+                            style={styles.backButton}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('common.cancel')}
+                        >
+                            <Ionicons name="close" size={20} color={theme.colors.text} />
+                        </Pressable>
+                        <Text style={styles.settingsTitle} numberOfLines={1}>
+                            {config.title}
+                        </Text>
+                    </View>
+                    <ScrollView style={styles.optionList} keyboardShouldPersistTaps="always">
+                        {config.options.map((option) => {
+                            const selectable = isHomeDockOptionSelectable(option.disabled);
+                            const selected = option.key === config.selectedKey;
+                            return (
+                                <Pressable
+                                    key={option.key}
+                                    disabled={!selectable}
+                                    onPress={() => {
+                                        if (!selectable) return;
+                                        config.onSelect(option.key);
+                                        closePicker();
+                                    }}
+                                    style={({ pressed }) => [
+                                        styles.option,
+                                        !selectable && styles.optionDisabled,
+                                        pressed && selectable && styles.optionPressed,
+                                    ]}
+                                    accessibilityRole="button"
+                                    accessibilityState={{ disabled: !selectable, selected }}
+                                >
+                                    <View style={styles.focusConfigIcon}>
+                                        {selected && (
+                                            <Ionicons name="checkmark" size={16} color={theme.colors.text} />
+                                        )}
+                                    </View>
+                                    <View style={styles.optionCopy}>
+                                        <Text style={styles.optionValue} numberOfLines={1}>{option.name}</Text>
+                                        {!!option.description && (
+                                            <Text style={styles.optionDescription} numberOfLines={2}>
+                                                {option.description}
+                                            </Text>
+                                        )}
+                                    </View>
+                                </Pressable>
+                            );
+                        })}
+                    </ScrollView>
+                </MobileGlassSurface>
+            </View>
+        );
+    };
 
     const renderComposer = ({
         ref,
@@ -1017,59 +1254,61 @@ export const HomeDock = React.memo(({
         onSend: () => void;
         activateOnPress?: () => void;
     }) => (
-        <MobileGlassSurface
-            nativeEffect
-            material="frosted"
-            intensity={92}
-            style={styles.composerSurface}
-        >
-            <View style={styles.composerContent}>
-                {activateOnPress ? (
-                    <Pressable onPress={activateOnPress} style={styles.inputEntry}>
-                        <Text
-                            style={[styles.inputEntryText, !prompt && styles.inputEntryPlaceholder]}
-                            numberOfLines={1}
-                        >
-                            {prompt || 'Plan, ask, build…'}
-                        </Text>
-                    </Pressable>
-                ) : (
-                    <TextInput
-                        ref={ref}
-                        value={prompt}
-                        onChangeText={onPromptChange}
-                        onSubmitEditing={() => canSubmit && onSend()}
-                        onFocus={onFocus}
-                        onBlur={onBlur}
-                        placeholder="Plan, ask, build…"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        selectionColor={theme.colors.text}
-                        returnKeyType="send"
-                        autoCorrect
-                        style={styles.input}
-                    />
-                )}
-                <BubblePressable
-                    onPress={onSend}
-                    disabled={!canSubmit}
-                    style={[styles.sendButton, canSubmit && styles.sendButtonActive]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Send"
-                >
-                    {isSubmitting ? (
-                        <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+        <View style={styles.composerShadow}>
+            <MobileGlassSurface
+                nativeEffect
+                material="frosted"
+                intensity={92}
+                style={styles.composerSurface}
+            >
+                <View style={styles.composerContent}>
+                    {activateOnPress ? (
+                        <Pressable onPress={activateOnPress} style={styles.inputEntry}>
+                            <Text
+                                style={[styles.inputEntryText, !prompt && styles.inputEntryPlaceholder]}
+                                numberOfLines={1}
+                            >
+                                {prompt || 'Plan, ask, build…'}
+                            </Text>
+                        </Pressable>
                     ) : (
-                        <Ionicons
-                            name="arrow-up"
-                            size={16}
-                            color={canSubmit
-                                ? theme.dark ? '#111111' : theme.colors.button.primary.tint
-                                : theme.colors.textSecondary}
+                        <TextInput
+                            ref={ref}
+                            value={prompt}
+                            onChangeText={onPromptChange}
+                            onSubmitEditing={() => canSubmit && onSend()}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                            placeholder="Plan, ask, build…"
+                            placeholderTextColor={theme.colors.textSecondary}
+                            selectionColor={theme.colors.text}
+                            returnKeyType="send"
+                            autoCorrect
+                            style={styles.input}
                         />
                     )}
-                </BubblePressable>
-            </View>
-        </MobileGlassSurface>
+                    <BubblePressable
+                        onPress={onSend}
+                        disabled={!canSubmit}
+                        style={[styles.sendButton, canSubmit && styles.sendButtonActive]}
+                        accessibilityRole="button"
+                        accessibilityLabel="Send"
+                    >
+                        {isSubmitting ? (
+                            <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+                        ) : (
+                            <Ionicons
+                                name="arrow-up"
+                                size={16}
+                                color={canSubmit
+                                    ? theme.dark ? '#111111' : theme.colors.button.primary.tint
+                                    : theme.colors.textSecondary}
+                            />
+                        )}
+                    </BubblePressable>
+                </View>
+            </MobileGlassSurface>
+        </View>
     );
 
     const submit = async () => {
@@ -1084,21 +1323,23 @@ export const HomeDock = React.memo(({
         if (!canSubmit) return;
         setFocusModeVisible(false);
         setIsFocused(false);
+        closePicker();
         void submit();
     };
 
     const renderFocusedComposer = () => (
-        <Animated.View style={[styles.focusedComposerAnimationShell, focusedComposerAnimationStyle]}>
-            <MobileGlassSurface
-                nativeEffect
-                material="frosted"
-                intensity={92}
-                style={[
-                    styles.focusedComposerSurface,
-                    styles.focusedComposerAnchored,
-                    { height: focusedComposerHeight },
-                ]}
-            >
+        <View style={styles.focusedComposerShadow}>
+            <Animated.View style={[styles.focusedComposerAnimationShell, focusedComposerAnimationStyle]}>
+                <MobileGlassSurface
+                    nativeEffect
+                    material="frosted"
+                    intensity={92}
+                    style={[
+                        styles.focusedComposerSurface,
+                        styles.focusedComposerAnchored,
+                        { height: focusedComposerHeight },
+                    ]}
+                >
                 <View style={styles.focusedComposerContent}>
                     {expImageUpload && selectedImages.length > 0 && (
                         <Animated.View style={focusedInputRevealStyle}>
@@ -1123,7 +1364,7 @@ export const HomeDock = React.memo(({
                             value={prompt}
                             onChangeText={onPromptChange}
                             onFocus={() => setIsFocused(true)}
-                            placeholder="Ask Codex"
+                            placeholder={focusedPromptPlaceholder}
                             placeholderTextColor={theme.colors.textSecondary}
                             selectionColor={theme.colors.text}
                             autoCorrect
@@ -1147,34 +1388,50 @@ export const HomeDock = React.memo(({
                                 />
                             </BubblePressable>
                         )}
-                        <NativeSettingsMenu
-                            accessibilityLabel={t('settings.title')}
-                            groups={gearSettingsGroups}
-                            triggerSystemImage="gearshape"
-                            style={styles.nativeIconMenuFrame}
-                        >
-                            <View style={styles.nativeIconMenuContent}>
-                                <Ionicons name="settings-outline" size={20} color={theme.colors.text} />
-                            </View>
-                        </NativeSettingsMenu>
+                        {/* The permission mode reads out in words instead of
+                            hiding behind a gear: it is the one setting here that
+                            changes what the agent is allowed to do to your
+                            machine, so it is worth the width. */}
+                        {permissionSettingsGroup && permissionLabel && renderMenuControl({
+                            page: 'permission',
+                            groups: [permissionSettingsGroup],
+                            flat: true,
+                            style: styles.nativePermissionMenu,
+                            accessibilityLabel: t('agentInput.permissionMode.title'),
+                            triggerLabel: permissionLabel,
+                            // Centered to agree with the React Native chip this
+                            // stands in for on iOS: the frame is sized by that
+                            // chip, so a leading trigger would print the word
+                            // flush left while the chip reserves padding.
+                            triggerAlignment: 'center',
+                            children: (
+                                <View style={styles.focusedPermissionButton}>
+                                    <Text style={styles.focusedModeText} numberOfLines={1}>
+                                        {permissionLabel}
+                                    </Text>
+                                </View>
+                            ),
+                        })}
                         {/* Pushes model/effort right so the pair sits against the
                             send button instead of drifting when a label changes. */}
                         <View style={{ flex: 1 }} />
                         {modelSettingsGroup ? (
-                            <NativeSettingsMenu
-                                accessibilityLabel={t('agentInput.model.title')}
-                                groups={[modelSettingsGroup]}
-                                flat
-                                triggerLabel={currentModel?.name ?? currentAgent.name}
-                                triggerAlignment="trailing"
-                                style={styles.nativeModeMenu}
-                            >
-                                <View style={styles.focusedModeButton}>
-                                    <Text style={styles.focusedModeText} numberOfLines={1}>
-                                        {currentModel?.name ?? currentAgent.name}
-                                    </Text>
-                                </View>
-                            </NativeSettingsMenu>
+                            renderMenuControl({
+                                page: 'model',
+                                groups: [modelSettingsGroup],
+                                flat: true,
+                                style: styles.nativeModeMenu,
+                                accessibilityLabel: t('agentInput.model.title'),
+                                triggerLabel: currentModel?.name ?? currentAgent.name,
+                                triggerAlignment: 'trailing',
+                                children: (
+                                    <View style={styles.focusedModeButton}>
+                                        <Text style={styles.focusedModeText} numberOfLines={1}>
+                                            {currentModel?.name ?? currentAgent.name}
+                                        </Text>
+                                    </View>
+                                ),
+                            })
                         ) : (
                             <View style={styles.nativeModeMenu}>
                                 <View style={styles.focusedModeButton}>
@@ -1190,22 +1447,22 @@ export const HomeDock = React.memo(({
                         {effortSettingsGroup && (
                             <Text style={styles.focusedModeSeparator}>·</Text>
                         )}
-                        {effortSettingsGroup && (
-                            <NativeSettingsMenu
-                                accessibilityLabel={t('agentInput.effort.title')}
-                                groups={[effortSettingsGroup]}
-                                flat
-                                triggerLabel={currentEffort?.name ?? t('agentInput.effort.title')}
-                                triggerAlignment="leading"
-                                style={styles.nativeEffortMenu}
-                            >
+                        {effortSettingsGroup && renderMenuControl({
+                            page: 'effort',
+                            groups: [effortSettingsGroup],
+                            flat: true,
+                            style: styles.nativeEffortMenu,
+                            accessibilityLabel: t('agentInput.effort.title'),
+                            triggerLabel: currentEffort?.name ?? t('agentInput.effort.title'),
+                            triggerAlignment: 'leading',
+                            children: (
                                 <View style={styles.focusedEffortButton}>
                                     <Text style={styles.focusedModeText} numberOfLines={1}>
                                         {currentEffort?.name ?? t('agentInput.effort.title')}
                                     </Text>
                                 </View>
-                            </NativeSettingsMenu>
-                        )}
+                            ),
+                        })}
                         <BubblePressable
                             onPress={submitFromFocusMode}
                             disabled={!canSubmit}
@@ -1227,8 +1484,9 @@ export const HomeDock = React.memo(({
                         </BubblePressable>
                     </Animated.View>
                 </View>
-            </MobileGlassSurface>
-        </Animated.View>
+                </MobileGlassSurface>
+            </Animated.View>
+        </View>
     );
 
     return (
@@ -1239,14 +1497,19 @@ export const HomeDock = React.memo(({
             >
                 {showBottomBackdrop && (
                     <View pointerEvents="none" style={styles.bottomBackdrop}>
-                        <MobileHeaderScrim variant="strong" edge="bottom" />
+                        <MobileHeaderScrim
+                            variant="strong"
+                            edge="bottom"
+                            overlayOpacity={MOBILE_HOME_SCRIM_OVERLAY_OPACITY}
+                        />
                     </View>
                 )}
                 <View
-                    pointerEvents="box-none"
+                    pointerEvents={focusModeVisible ? 'none' : 'box-none'}
                     style={[
                         styles.safeArea,
                         { paddingBottom: isFocused ? 8 : Math.max(10, safeArea.bottom) },
+                        focusModeVisible && styles.safeAreaBehindFocus,
                     ]}
                 >
                     {renderComposer({
@@ -1265,7 +1528,7 @@ export const HomeDock = React.memo(({
                 visible={focusModeVisible}
                 transparent
                 animationType="none"
-                onRequestClose={closeFocusMode}
+                onRequestClose={handleFocusModeRequestClose}
             >
                 <View style={styles.modalRoot}>
                     <Animated.View
@@ -1274,7 +1537,7 @@ export const HomeDock = React.memo(({
                     >
                         <Pressable
                             style={styles.modalBackdrop}
-                            onPress={closeFocusMode}
+                            onPress={handleFocusBackdropPress}
                         />
                     </Animated.View>
                     {/* No back affordance here on purpose: tapping the backdrop
@@ -1283,9 +1546,11 @@ export const HomeDock = React.memo(({
 
                     <Animated.View style={[styles.focusDock, keyboardStyle]}>
                         <View style={styles.focusConfig}>
-                            <View style={styles.focusConfigGroup}>
-                                {renderEnvironmentPickers()}
-                            </View>
+                            {sheetVisible && sheetPage ? renderSettingsSheet(sheetPage) : (
+                                <View style={styles.focusConfigGroup}>
+                                    {renderEnvironmentPickers()}
+                                </View>
+                            )}
                         </View>
                         <View style={[
                             styles.focusComposerArea,
