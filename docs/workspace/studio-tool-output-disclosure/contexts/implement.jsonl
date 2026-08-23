@@ -1,0 +1,12 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/studio-tool-output-disclosure.md","reason":"Accepted observable behavior and compatibility boundary"}
+{"path":"docs/tasks/studio-tool-output-disclosure-tasks.md","reason":"Dependency order, allowed files, stop conditions, and AC ownership"}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/studioExecutionTranscript.ts","reason":"Existing pure structured transcript and sanitized output contract"}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/StudioExecutionTranscriptView.tsx","reason":"Current eager Studio transcript renderer to replace with bounded disclosure"}
+{"path":"packages/happy-app/sources/components/tools/ToolView.tsx","reason":"Narrow individual-tool Studio host seam"}
+{"path":"packages/happy-app/sources/components/tools/ToolFullView.tsx","reason":"Existing complete-detail host reused by T3"}
+{"path":"packages/happy-app/sources/components/tools/views/_all.tsx","reason":"Current full-view registry including incomplete CodexBash mapping"}
+{"path":"packages/happy-app/sources/components/ToolGroupView.tsx","reason":"Activity-group summary and child disclosure host"}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Existing group state and inverted-list scroll anchoring host"}
+{"path":"packages/happy-app/sources/hooks/useGroupedMessages.ts","reason":"Existing grouping and group-summary contract"}
+{"path":"packages/happy-app/sources/app/(app)/session/[id]/message/[messageId].tsx","reason":"Existing full transcript navigation destination"}

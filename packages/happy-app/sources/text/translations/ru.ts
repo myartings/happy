@@ -635,6 +635,7 @@ export const ru: TranslationStructure = {
         ranTasks: ({ count }: { count: number }) => `${plural({ count, one: 'Выполнена', few: 'Выполнено', many: 'Выполнено' })} ${count} ${plural({ count, one: 'задача', few: 'задачи', many: 'задач' })}`,
         usedTools: ({ count }: { count: number }) => `${plural({ count, one: 'Использован', few: 'Использовано', many: 'Использовано' })} ${count} ${plural({ count, one: 'инструмент', few: 'инструмента', many: 'инструментов' })}`,
         workedFor: ({ duration }: { duration: string }) => `Работало ${duration}`,
+        failedTools: ({ count }: { count: number }) => `Ошибок инструментов: ${count}`,
     },
 
     tools: {
@@ -647,6 +648,18 @@ export const ru: TranslationStructure = {
             noOutput: 'Результат не получен',
             running: 'Выполняется...',
             rawJsonDevMode: 'Исходный JSON (режим разработчика)',
+        },
+        outputDisclosure: {
+            copyCommand: 'Копировать команду',
+            copyOutput: 'Копировать вывод',
+            openFullTranscript: 'Открыть полную запись',
+            cancelled: 'Отменено',
+            interrupted: 'Прервано',
+            pendingPermission: 'Ожидание разрешения',
+            exitCode: ({ code }: { code: number }) => `код ${code}`,
+            lines: ({ count }: { count: number }) => `${count} строк`,
+            truncated: 'обрезано',
+            omitted: '… часть вывода скрыта',
         },
         taskView: {
             initializing: 'Инициализация агента...',

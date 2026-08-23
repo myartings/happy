@@ -10,6 +10,8 @@ import { useLocalSetting } from '@/sync/storage';
 import { StyleSheet } from 'react-native-unistyles';
 import { t } from '@/text';
 import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
+import { resolveStudioExecutionTranscript } from '@/features/studio-execution-transcript/studioExecutionTranscript';
+import { StudioToolFullTranscriptView } from '@/features/studio-tool-output-disclosure/StudioToolFullTranscriptView';
 
 interface ToolFullViewProps {
     tool: ToolCall;
@@ -21,6 +23,9 @@ export function ToolFullView({ tool, metadata, messages = [] }: ToolFullViewProp
     const studioPresentation = useStudioToolPresentation();
     // Check if there's a specialized content view for this tool
     const SpecializedFullView = getToolFullViewComponent(tool.name);
+    const studioTranscript = studioPresentation
+        ? resolveStudioExecutionTranscript(tool, { allowEmptyCommand: true })
+        : null;
     const screenWidth = useWindowDimensions().width;
     const devModeEnabled = (useLocalSetting('devModeEnabled') || __DEV__);
     console.log('ToolFullView', devModeEnabled);
@@ -33,7 +38,9 @@ export function ToolFullView({ tool, metadata, messages = [] }: ToolFullViewProp
         ]}>
             <View style={styles.contentWrapper}>
                 {/* Tool-specific content or generic fallback */}
-                {SpecializedFullView ? (
+                {studioTranscript && studioPresentation ? (
+                    <StudioToolFullTranscriptView presentation={studioPresentation} tool={tool} />
+                ) : SpecializedFullView ? (
                     <SpecializedFullView tool={tool} metadata={metadata || null} messages={messages} />
                 ) : (
                     <>

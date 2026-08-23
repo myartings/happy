@@ -53,6 +53,10 @@ function parseOutput(value: unknown): ParsedSemanticText | null {
     return { text, runs };
 }
 
+function sanitizeCommand(value: string): string {
+    return parseAnsiSgr(value.replace(/\r\n?/g, '\n')).text.replace(controlCharacters, '').trim();
+}
+
 function extractCwd(tool: ToolCall): string | null {
     const direct = tool.input?.cwd ?? tool.input?.working_directory ?? tool.input?.workdir;
     if (typeof direct === 'string' && direct.trim()) return direct.trim();
@@ -104,10 +108,14 @@ function outputFields(tool: ToolCall): { stdout: unknown; stderr: unknown; error
         : { stdout: tool.result, stderr: null, error: null };
 }
 
-export function resolveStudioExecutionTranscript(tool: ToolCall): StudioExecutionTranscript | null {
+export function resolveStudioExecutionTranscript(
+    tool: ToolCall,
+    options: Readonly<{ allowEmptyCommand?: boolean }> = {},
+): StudioExecutionTranscript | null {
     if (!terminalToolNames.has(tool.name)) return null;
-    const command = extractCommand(tool);
-    if (!command) return null;
+    const rawCommand = extractCommand(tool);
+    const command = rawCommand ? sanitizeCommand(rawCommand) : '';
+    if (!command && !options.allowEmptyCommand) return null;
     const output = outputFields(tool);
     const providerDurationMs = tool.result && typeof tool.result === 'object' && !Array.isArray(tool.result)
         && typeof tool.result.durationMs === 'number' && Number.isFinite(tool.result.durationMs) && tool.result.durationMs >= 0

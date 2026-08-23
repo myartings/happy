@@ -25,6 +25,7 @@ import { useSetting } from '@/sync/storage';
 import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
 import { resolveStudioExecutionTranscript } from '@/features/studio-execution-transcript/studioExecutionTranscript';
 import { StudioExecutionTranscriptView } from '@/features/studio-execution-transcript/StudioExecutionTranscriptView';
+import { StudioToolOutputActions } from '@/features/studio-tool-output-disclosure/StudioToolOutputActions';
 import { hasRenderableCodexPatchInput } from './views/CodexPatchView';
 
 interface ToolViewProps {
@@ -183,13 +184,15 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     const isStudioInlinePatch = studioPresentation !== null
         && tool.name === 'CodexPatch'
         && hasRenderableCodexPatchInput(tool.input);
+    const isStudioCompactTranscript = studioExecutionTranscript !== null && compactToolCalls;
     const isCompactTerminalTool = terminalCommand !== null && !studioExecutionTranscript;
     const isCompactActivityTool = !studioExecutionTranscript && !isStudioInlinePatch && (shouldUseCompactToolRow(tool, compactToolCalls)
         || minimal
         || isCompactTerminalTool);
     const activityLabel = getToolActivityLabel(tool);
     const isInlineCodexPatch = Platform.OS === 'web' && tool.name === 'CodexPatch';
-    const renderCardHeader = isCompactActivityTool || shouldRenderToolCardHeader(tool.name, Platform.OS);
+    const renderCardHeader = !isStudioCompactTranscript
+        && (isCompactActivityTool || shouldRenderToolCardHeader(tool.name, Platform.OS));
     const renderPermissionFooter = () => (
         tool.permission && sessionId && tool.name !== 'AskUserQuestion'
             ? <PermissionFooter permission={tool.permission} sessionId={sessionId} toolName={tool.name} toolInput={tool.input} metadata={props.metadata} />
@@ -256,7 +259,7 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     };
 
     return (
-        <View style={isCompactActivityTool
+        <View style={isCompactActivityTool || isStudioCompactTranscript
             ? styles.compactContainer
             : isInlineCodexPatch
                 ? styles.inlineContainer
@@ -292,6 +295,11 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
                     return (
                         <View style={styles.content}>
                             <StudioExecutionTranscriptView tool={tool} presentation={studioPresentation} />
+                            <StudioToolOutputActions
+                                tool={tool}
+                                presentation={studioPresentation}
+                                onOpenFullTranscript={isPressable ? handlePress : undefined}
+                            />
                         </View>
                     );
                 }

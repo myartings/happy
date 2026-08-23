@@ -1,0 +1,9 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/studio-tool-output-disclosure/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/studio-tool-output-disclosure.md","reason":"AC1-AC13 acceptance-to-evidence contract"}
+{"path":"docs/tasks/studio-tool-output-disclosure-tasks.md","reason":"Task-local focused commands and integration gates"}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript/studioExecutionTranscript.test.ts","reason":"Existing pure transcript and edge-case regression suite"}
+{"path":"packages/happy-app/sources/components/tools/ToolViewStudioPresentation.test.ts","reason":"Existing mounted individual Studio tool host suite"}
+{"path":"packages/happy-app/sources/components/ToolGroupViewStudioPresentation.test.ts","reason":"Existing mounted activity-group Studio suite"}
+{"path":"packages/happy-app/sources/hooks/useGroupedMessages.test.ts","reason":"Existing grouping and summary public-behavior suite"}
+{"path":"packages/happy-app/package.json","reason":"Happy App focused test and typecheck entrypoints"}

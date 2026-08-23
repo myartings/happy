@@ -635,6 +635,7 @@ export const pl: TranslationStructure = {
         ranTasks: ({ count }: { count: number }) => `${plural({ count, one: 'Wykonano 1 zadanie', few: `Wykonano ${count} zadania`, many: `Wykonano ${count} zadań` })}`,
         usedTools: ({ count }: { count: number }) => `${plural({ count, one: 'Użyto 1 narzędzie', few: `Użyto ${count} narzędzia`, many: `Użyto ${count} narzędzi` })}`,
         workedFor: ({ duration }: { duration: string }) => `Worked ${duration}`,
+        failedTools: ({ count }: { count: number }) => `Nieudane narzędzia: ${count}`,
     },
 
     tools: {
@@ -647,6 +648,18 @@ export const pl: TranslationStructure = {
             noOutput: 'Nie wygenerowano żadnego wyjścia',
             running: 'Narzędzie działa...',
             rawJsonDevMode: 'Surowy JSON (tryb deweloperski)',
+        },
+        outputDisclosure: {
+            copyCommand: 'Kopiuj polecenie',
+            copyOutput: 'Kopiuj dane wyjściowe',
+            openFullTranscript: 'Otwórz pełny zapis',
+            cancelled: 'Anulowano',
+            interrupted: 'Przerwano',
+            pendingPermission: 'Oczekiwanie na uprawnienie',
+            exitCode: ({ code }: { code: number }) => `kod ${code}`,
+            lines: ({ count }: { count: number }) => `${count} ${count === 1 ? 'wiersz' : 'wierszy'}`,
+            truncated: 'obcięto',
+            omitted: '… pominięto część wyjścia',
         },
         taskView: {
             initializing: 'Inicjalizacja agenta...',

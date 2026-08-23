@@ -1,5 +1,10 @@
 # Studio Execution Transcript
 
+> Disclosure update: `studio-tool-output-disclosure.md` supersedes this
+> specification's initial expansion and inline-height behavior. Complete output
+> remains available in the full transcript, while the Studio conversation
+> timeline uses bounded summaries, previews, and inline disclosure.
+
 ## Evidence and authority
 
 Reference precedence:
