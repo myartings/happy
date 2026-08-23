@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "restore-grouped-session-list-default",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Merge into dev, rebuild, reinstall, and visually smoke",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/restore-grouped-session-list-default.md requires grouped compact layout for new and existing clients while preserving later explicit opt-in",
+      "updated": "2026-08-23T12:54:43+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "A parser-level one-time local migration is the smallest deterministic way to repair persisted true values without removing the optional feature",
+      "updated": "2026-08-23T12:54:44+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Two product files plus low-risk workflow evidence; public seam is localSettingsParse and installed-client visual smoke",
+      "updated": "2026-08-23T12:54:44+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Device-local boolean migration only; no protocol, authentication, remote data, or protected path changes",
+      "updated": "2026-08-23T12:54:44+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD RED reproduced persisted flat-list true; one-time parser migration restores grouped layout, defaults new clients to grouped, and preserves later opt-in; related 41/41 and App typecheck pass",
+      "updated": "2026-08-23T12:56:52+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Related App tests 41/41, App typecheck, and git diff check passed; installed-client smoke is mandatory post-merge because Manager packages dev",
+      "updated": "2026-08-23T12:56:53+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no remaining issue: device-local parser migration is bounded, idempotent, and preserves later explicit opt-in",
+      "updated": "2026-08-23T12:56:53+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records validation, rollback, no learning promotion, and mandatory installed-client visual smoke",
+      "updated": "2026-08-23T12:56:53+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-23T12:54:17+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-23T12:54:43+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/restore-grouped-session-list-default.md requires grouped compact layout for new and existing clients while preserving later explicit opt-in"
+    },
+    {
+      "at": "2026-08-23T12:54:44+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "A parser-level one-time local migration is the smallest deterministic way to repair persisted true values without removing the optional feature"
+    },
+    {
+      "at": "2026-08-23T12:54:44+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Device-local boolean migration only; no protocol, authentication, remote data, or protected path changes"
+    },
+    {
+      "at": "2026-08-23T12:54:44+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Two product files plus low-risk workflow evidence; public seam is localSettingsParse and installed-client visual smoke"
+    },
+    {
+      "at": "2026-08-23T12:54:44+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED migration regression, implement one-time grouped-default restoration, then verify"
+    },
+    {
+      "at": "2026-08-23T12:56:52+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD RED reproduced persisted flat-list true; one-time parser migration restores grouped layout, defaults new clients to grouped, and preserves later opt-in; related 41/41 and App typecheck pass"
+    },
+    {
+      "at": "2026-08-23T12:56:52+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Review full diff, validate workflow evidence, then prepare integration"
+    },
+    {
+      "at": "2026-08-23T12:56:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Related App tests 41/41, App typecheck, and git diff check passed; installed-client smoke is mandatory post-merge because Manager packages dev"
+    },
+    {
+      "at": "2026-08-23T12:56:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no remaining issue: device-local parser migration is bounded, idempotent, and preserves later explicit opt-in"
+    },
+    {
+      "at": "2026-08-23T12:56:53+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive with commit pending, integrate through dev, rebuild, reinstall, and visually smoke"
+    },
+    {
+      "at": "2026-08-23T12:56:53+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records validation, rollback, no learning promotion, and mandatory installed-client visual smoke"
+    },
+    {
+      "at": "2026-08-23T12:56:54+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Restore grouped compact session list for new and existing clients; commit: pending; follow-up: Merge into dev, rebuild, reinstall, and visually smoke"
+    }
+  ],
+  "updated": "2026-08-23T12:56:54+00:00",
+  "archivedAt": "2026-08-23T12:56:54+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Restore grouped compact session list for new and existing clients",
+  "archiveFollowUp": "Merge into dev, rebuild, reinstall, and visually smoke"
+}

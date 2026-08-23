@@ -67,3 +67,4 @@
 | 2026-08-23 | session-runtime-status | pending | Deterministic localized session runtime status validated on latest dev | Install merged dev with Happy Manager and smoke a real long-running Codex turn |
 | 2026-08-23 | active-session-runtime-status-label | pending | Show deterministic runtime status labels in compact active-session rows and align Idle with the existing waiting indicator | None |
 | 2026-08-23 | flat-session-runtime-status-label | pending | Restore explicit runtime labels in the default flat session list | Merge into dev, rebuild, install, and visually smoke |
+| 2026-08-23 | restore-grouped-session-list-default | pending | Restore grouped compact session list for new and existing clients | Merge into dev, rebuild, reinstall, and visually smoke |
