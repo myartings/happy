@@ -333,6 +333,14 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const status = displayPolicy.showUnreadAttentionState && session.hasUnread
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
         : baseStatus;
+    const statusText = session.state === 'thinking'
+        ? t('status.running')
+        : session.state === 'disconnected'
+            ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
+            : session.state === 'permission_required'
+                ? t('status.permissionRequired')
+                : t('status.idle');
+    const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : baseStatus.color;
     const machine = useMachine(session.machineId ?? '');
     const runtimePlatformKind = session.platformKind === 'unknown'
         ? getSessionPlatformKind(machine?.metadata?.platform)
@@ -469,6 +477,19 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         numberOfLines={isStudio ? 1 : 2}
                     >
                         {session.name}
+                    </Text>
+                    <Text
+                        style={[
+                            styles.sessionStatusText,
+                            { color: statusTextColor },
+                            isStudio && {
+                                fontSize: sessionRowStyle.secondaryMetadataFontSize!,
+                                lineHeight: 13,
+                            },
+                        ]}
+                        numberOfLines={1}
+                    >
+                        {statusText}
                     </Text>
                     {isPinned && (
                         <Ionicons
@@ -723,6 +744,13 @@ const stylesheet = StyleSheet.create((theme) => ({
     sessionShortcutBadge: {
         flexShrink: 0,
         marginLeft: 8,
+    },
+    sessionStatusText: {
+        flexShrink: 0,
+        marginLeft: 8,
+        fontSize: 11,
+        lineHeight: 14,
+        ...Typography.default('regular'),
     },
     pinnedIcon: {
         flexShrink: 0,

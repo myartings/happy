@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "slug": "active-session-runtime-status-label",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/active-session-runtime-status-label.md requires visible localized status text on every default compact active-session row",
+      "updated": "2026-08-23T09:53:23+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "Existing state mappings, translations, colors, and last-seen formatting fully determine the patch",
+      "updated": "2026-08-23T09:53:23+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Low-risk single-component follow-up with source wiring regression, App typecheck/tests, review, and installed-client smoke; local-only tracker reason recorded",
+      "updated": "2026-08-23T09:53:24+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "App-only text presentation changes no protocol, persistence, protected path, or configured risk trigger",
+      "updated": "2026-08-23T09:53:23+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Review finding resolved with a RED regression; Idle now uses the existing waiting indicator color; 7 focused tests and App typecheck pass",
+      "updated": "2026-08-23T11:20:44+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Local verification passed: focused 7/7, App typecheck, workflow checks, and 1317/1318 App tests; user previously accepted the unrelated Studio baseline gap and authorized the mandatory post-merge Manager install smoke",
+      "updated": "2026-08-23T11:47:55+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no remaining issue after aligning Idle text to the unchanged waiting indicator; status derivation, unread attention, and other indicator branches are unchanged",
+      "updated": "2026-08-23T11:24:05+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records verification, whole-diff review, rollback, no learning promotion, and mandatory post-merge Manager smoke follow-up",
+      "updated": "2026-08-23T11:48:27+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-23T09:52:17+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-23T09:53:23+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/active-session-runtime-status-label.md requires visible localized status text on every default compact active-session row"
+    },
+    {
+      "at": "2026-08-23T09:53:23+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "Existing state mappings, translations, colors, and last-seen formatting fully determine the patch"
+    },
+    {
+      "at": "2026-08-23T09:53:23+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "App-only text presentation changes no protocol, persistence, protected path, or configured risk trigger"
+    },
+    {
+      "at": "2026-08-23T09:53:24+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Low-risk single-component follow-up with source wiring regression, App typecheck/tests, review, and installed-client smoke; local-only tracker reason recorded"
+    },
+    {
+      "at": "2026-08-23T09:53:42+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add focused RED wiring test for compact-row runtime labels"
+    },
+    {
+      "at": "2026-08-23T10:00:22+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Focused RED proved compact rows lacked status text; compact title rows now render localized running, idle, permission-required, and last-seen labels outside optional metadata; 6 focused tests and App typecheck pass"
+    },
+    {
+      "at": "2026-08-23T10:00:23+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run full App and workflow checks, then whole-diff review"
+    },
+    {
+      "at": "2026-08-23T11:19:10+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Resolve review finding: align idle label with existing waiting indicator and add regression coverage"
+    },
+    {
+      "at": "2026-08-23T11:20:44+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review finding resolved with a RED regression; Idle now uses the existing waiting indicator color; 7 focused tests and App typecheck pass"
+    },
+    {
+      "at": "2026-08-23T11:20:44+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run full App and workflow checks, then whole-diff review"
+    },
+    {
+      "at": "2026-08-23T11:24:05+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no remaining issue after aligning Idle text to the unchanged waiting indicator; status derivation, unread attention, and other indicator branches are unchanged"
+    },
+    {
+      "at": "2026-08-23T11:47:55+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Local verification passed: focused 7/7, App typecheck, workflow checks, and 1317/1318 App tests; user previously accepted the unrelated Studio baseline gap and authorized the mandatory post-merge Manager install smoke"
+    },
+    {
+      "at": "2026-08-23T11:47:56+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record finish evidence, archive with commit pending, and run staged workflow CI"
+    },
+    {
+      "at": "2026-08-23T11:48:27+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records verification, whole-diff review, rollback, no learning promotion, and mandatory post-merge Manager smoke follow-up"
+    },
+    {
+      "at": "2026-08-23T11:48:28+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Show deterministic runtime status labels in compact active-session rows and align Idle with the existing waiting indicator; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-23T11:48:28+00:00",
+  "archivedAt": "2026-08-23T11:48:28+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Show deterministic runtime status labels in compact active-session rows and align Idle with the existing waiting indicator",
+  "archiveFollowUp": "None"
+}

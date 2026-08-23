@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/active-session-runtime-status-label/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/active-session-runtime-status-label.md","reason":"Acceptance criteria"}
+{"path":"docs/workspace/active-session-runtime-status-label/validation.md","reason":"Exact verification evidence"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Implemented compact-row seam"}

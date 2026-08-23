@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/active-session-runtime-status-label.md","reason":"Accepted behavior and boundaries"}
+{"path":"packages/happy-app/sources/components/ActiveSessionsGroupCompact.tsx","reason":"Missing compact active-row status label"}
+{"path":"packages/happy-app/sources/utils/sessionUtils.ts","reason":"Existing last-seen formatter and session state type"}
+{"path":"packages/happy-app/sources/text/_default.ts","reason":"Existing runtime status translation contract"}
