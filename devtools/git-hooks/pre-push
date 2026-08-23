@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+_remote_name="${1:-}"
+repo_root="$(git rev-parse --show-toplevel)"
+validator="${HAPPY_MAIN_PUSH_GUARD_VALIDATOR:-$repo_root/devtools/happyctl}"
+
+while read -r local_ref local_oid remote_ref _remote_oid; do
+  if [[ "$remote_ref" != "refs/heads/main" ]]; then
+    continue
+  fi
+
+  if [[ ! -x "$validator" ]]; then
+    echo "Happy main push guard validator is missing or not executable: $validator" >&2
+    exit 1
+  fi
+
+  HAPPY_REPO="$repo_root" "$validator" validate-main-push "$local_ref" "$local_oid"
+done

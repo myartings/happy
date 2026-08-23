@@ -11,7 +11,7 @@ source "$REPO_ROOT/devtools/happyctl" help >/dev/null
 
 fixture_repo="$TEMP_ROOT/repo"
 mkdir -p "$fixture_repo"
-git -C "$fixture_repo" init -q
+git -C "$fixture_repo" init -q -b main
 git -C "$fixture_repo" config user.name "Happyctl Test"
 git -C "$fixture_repo" config user.email "happyctl-test@example.invalid"
 printf 'official\n' >"$fixture_repo/product.txt"

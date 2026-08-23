@@ -48,6 +48,7 @@ HAPPY_DEVTOOLS_BASE_BRANCH="${HAPPY_DEVTOOLS_BASE_BRANCH:-main}"
 HAPPY_DEVTOOLS_BASE_UPSTREAM="${HAPPY_DEVTOOLS_BASE_UPSTREAM:-upstream/main}"
 HAPPY_DEVTOOLS_PATCH_BRANCHES="${HAPPY_DEVTOOLS_PATCH_BRANCHES:-dev}"
 HAPPY_DEVTOOLS_FINAL_BRANCH="${HAPPY_DEVTOOLS_FINAL_BRANCH:-dev}"
+HAPPY_GIT_HOOKS_SOURCE="${HAPPY_GIT_HOOKS_SOURCE:-devtools/git-hooks}"
 HAPPY_PRIMARY_WORKTREE="$(git -C "$HAPPY_REPO" worktree list --porcelain 2>/dev/null | awk '/^worktree / && !found { sub(/^worktree /, ""); print; found=1 }')"
 HAPPY_PRIMARY_WORKTREE="${HAPPY_PRIMARY_WORKTREE:-$HAPPY_REPO}"
 HAPPY_OFFICIAL_BASELINE_WORKTREE="${HAPPY_OFFICIAL_BASELINE_WORKTREE:-$HAPPY_PRIMARY_WORKTREE/.baseline/worktree/official-main}"
@@ -166,6 +167,7 @@ Usage:
   devtools/happyctl doctor
   devtools/happyctl status
   devtools/happyctl check-upstream
+  devtools/happyctl install-git-guards
   devtools/happyctl sync-dev [--dry-run]
   devtools/happyctl sync-patch-stack [--dry-run]  # compatibility alias
   devtools/happyctl update-cli
@@ -668,6 +670,64 @@ validate_base_branch_for_refresh() {
     "$HAPPY_DEVTOOLS_BASE_UPSTREAM" "$HAPPY_DEVTOOLS_BASE_BRANCH"
 }
 
+check_git_push_guard() {
+  local configured hooks_path source_hook expected_hook
+  configured="$(git -C "$HAPPY_REPO" config --local --get core.hooksPath || true)"
+  hooks_path="$(git_push_guard_install_dir)"
+  source_hook="$HAPPY_REPO/$HAPPY_GIT_HOOKS_SOURCE/pre-push"
+  expected_hook="$hooks_path/pre-push"
+  if [[ "$configured" != "$hooks_path" || ! -x "$source_hook" || ! -x "$expected_hook" || ! -s "$expected_hook" ]] || ! cmp -s "$source_hook" "$expected_hook"; then
+    echo "Happy Git push guard is not active; run: devtools/happyctl install-git-guards" >&2
+    echo "Expected core.hooksPath=$hooks_path and an up-to-date executable $expected_hook" >&2
+    return 1
+  fi
+  printf 'ok   %-14s %s\n' "Git push guard" "$expected_hook"
+}
+
+git_push_guard_install_dir() {
+  local git_common_dir
+  git_common_dir="$(git -C "$HAPPY_REPO" rev-parse --path-format=absolute --git-common-dir)"
+  printf '%s/happy-hooks\n' "$git_common_dir"
+}
+
+install_git_push_guard() {
+  ensure_repo
+  local configured hooks_path source_hook installed_hook
+  configured="$(git -C "$HAPPY_REPO" config --local --get core.hooksPath || true)"
+  hooks_path="$(git_push_guard_install_dir)"
+  source_hook="$HAPPY_REPO/$HAPPY_GIT_HOOKS_SOURCE/pre-push"
+  installed_hook="$hooks_path/pre-push"
+  if [[ ! -x "$source_hook" ]]; then
+    echo "Tracked Happy pre-push hook is missing or not executable: $source_hook" >&2
+    return 1
+  fi
+  if [[ -n "$configured" && "$configured" != "$hooks_path" && "$configured" != "$HAPPY_GIT_HOOKS_SOURCE" ]]; then
+    echo "Refusing to replace existing core.hooksPath=$configured" >&2
+    echo "Review the existing hooks before installing the Happy guard." >&2
+    return 1
+  fi
+  mkdir -p "$hooks_path"
+  cp "$source_hook" "$installed_hook"
+  chmod +x "$installed_hook"
+  git -C "$HAPPY_REPO" config --local core.hooksPath "$hooks_path"
+  check_git_push_guard >/dev/null
+  echo "Installed Happy Git push guard: $installed_hook"
+}
+
+validate_main_push_candidate() {
+  local local_ref="${1:-}" candidate_ref="${2:-}"
+  local expected_local_ref="refs/heads/$HAPPY_DEVTOOLS_BASE_BRANCH"
+  if [[ "$local_ref" != "$expected_local_ref" ]]; then
+    echo "Pushes to origin/main must originate from local $HAPPY_DEVTOOLS_BASE_BRANCH; got $local_ref." >&2
+    return 1
+  fi
+  if [[ "${HAPPY_MAIN_PUSH_GUARD:-}" != "happyctl-sync" ]]; then
+    echo "Pushes to origin/main must run through devtools/happyctl sync-dev." >&2
+    return 1
+  fi
+  assert_official_product_equivalence "$HAPPY_DEVTOOLS_BASE_UPSTREAM" "$candidate_ref"
+}
+
 validate_patch_stack() {
   local branches=()
   # shellcheck disable=SC2206
@@ -834,7 +894,10 @@ sync_patch_stack_locally() {
 
 push_patch_stack() {
   local branches=() branch
-  if ! run git -C "$HAPPY_REPO" push origin "$HAPPY_DEVTOOLS_BASE_BRANCH:$HAPPY_DEVTOOLS_BASE_BRANCH"; then
+  if ! (
+    export HAPPY_MAIN_PUSH_GUARD=happyctl-sync
+    run git -C "$HAPPY_REPO" push origin "$HAPPY_DEVTOOLS_BASE_BRANCH:$HAPPY_DEVTOOLS_BASE_BRANCH"
+  ); then
     return 1
   fi
   # shellcheck disable=SC2206
@@ -868,6 +931,8 @@ sync_patch_stack_command() {
     echo "No changes made."
     return
   fi
+
+  check_git_push_guard >/dev/null
 
   local state
   state="$(happy_patch_stack_state fetch)"
@@ -1054,6 +1119,10 @@ doctor() {
     echo "ok   Happy repo     $HAPPY_REPO"
   else
     echo "miss Happy repo     $HAPPY_REPO"
+    failed=1
+  fi
+
+  if ! check_git_push_guard; then
     failed=1
   fi
 
@@ -2269,6 +2338,8 @@ case "$cmd" in
   doctor) doctor ;;
   status) status ;;
   check-upstream) check_upstream ;;
+  install-git-guards) install_git_push_guard ;;
+  validate-main-push) shift; validate_main_push_candidate "${1:-}" "${2:-}" ;;
   sync-dev|sync-patch-stack) shift; sync_patch_stack_command "${1:-}" ;;
   update-cli) update_cli ;;
   build-desktop) build_desktop ;;
