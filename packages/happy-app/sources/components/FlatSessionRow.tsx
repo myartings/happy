@@ -75,21 +75,19 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
         ? t('status.lastSeen', { time: formatLastSeen(session.activeAt, false) })
         : t('status.offline');
 
-    // A session that is merely connected and idle has nothing worth saying: the
-    // row already gives its name and where it runs, and "online" on every line
-    // just repeats itself down the list. Only a state worth acting on — working,
-    // waiting on you, or gone — earns the third line.
+    // Keep the runtime state explicit in the default list. The dot still carries
+    // connection/attention colour, while the label explains what the session is
+    // actually doing.
     const statusText = archived
         ? lastSeenText
-        : session.hasUnread
-            ? t('status.unread')
-            : session.state === 'thinking'
-                ? t('status.running')
-                : session.state === 'permission_required'
-                    ? t('status.permissionRequired')
-                    : session.state === 'disconnected'
-                        ? lastSeenText
-                        : null;
+        : session.state === 'thinking'
+            ? t('status.running')
+            : session.state === 'permission_required'
+                ? t('status.permissionRequired')
+                : session.state === 'disconnected'
+                    ? lastSeenText
+                    : t('status.idle');
+    const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : status.color;
 
     const statusLine = [statusText, session.activitySummary].filter(Boolean).join(' · ');
 
@@ -177,7 +175,7 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
                     {statusLine !== '' && (
                         <>
                             <StatusDot color={status.dotColor} isPulsing={status.isPulsing} />
-                            <Text style={[styles.statusText, { color: status.color }]} numberOfLines={1}>
+                            <Text style={[styles.statusText, { color: statusTextColor }]} numberOfLines={1}>
                                 {statusLine}
                             </Text>
                         </>

@@ -1,0 +1,4 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"packages/happy-app/sources/components/FlatSessionRow.tsx","reason":"Review the default flat-list integration"}
+{"path":"packages/happy-app/sources/utils/activeSessionRuntimeStatusWiring.test.ts","reason":"Verify every runtime state remains wired"}
+{"path":"docs/workspace/flat-session-runtime-status-label/validation.md","reason":"Evidence ledger for exact check outcomes"}

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "flat-session-runtime-status-label",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Merge into dev, rebuild, install, and visually smoke",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Installed default flat list must visibly expose localized runtime state for every session row",
+      "updated": "2026-08-23T12:29:48+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "Existing status translations, state mapping, and established Idle secondary color fully determine the fix",
+      "updated": "2026-08-23T12:29:48+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Local-only installed-smoke follow-up limited to FlatSessionRow and its regression test",
+      "updated": "2026-08-23T12:29:48+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Two-file presentation-only change with no protocol, persistence, or protected-path impact",
+      "updated": "2026-08-23T12:29:48+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "RED reproduced missing Idle wiring; implementation now renders all four states with secondary Idle text; focused 8/8 and App typecheck pass",
+      "updated": "2026-08-23T12:29:49+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Focused runtime tests 8/8, App typecheck, and diff check passed",
+      "updated": "2026-08-23T12:29:49+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff is limited to FlatSessionRow runtime text/color semantics, regression coverage, and workflow evidence; no remaining finding",
+      "updated": "2026-08-23T12:29:49+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review records verification, rollback, and mandatory installed-client smoke",
+      "updated": "2026-08-23T12:29:50+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-23T12:28:51+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-23T12:29:48+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Installed default flat list must visibly expose localized runtime state for every session row"
+    },
+    {
+      "at": "2026-08-23T12:29:48+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "Existing status translations, state mapping, and established Idle secondary color fully determine the fix"
+    },
+    {
+      "at": "2026-08-23T12:29:48+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Two-file presentation-only change with no protocol, persistence, or protected-path impact"
+    },
+    {
+      "at": "2026-08-23T12:29:48+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Local-only installed-smoke follow-up limited to FlatSessionRow and its regression test"
+    },
+    {
+      "at": "2026-08-23T12:29:49+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED reproduced missing Idle wiring; implementation now renders all four states with secondary Idle text; focused 8/8 and App typecheck pass"
+    },
+    {
+      "at": "2026-08-23T12:29:49+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Focused runtime tests 8/8, App typecheck, and diff check passed"
+    },
+    {
+      "at": "2026-08-23T12:29:49+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff is limited to FlatSessionRow runtime text/color semantics, regression coverage, and workflow evidence; no remaining finding"
+    },
+    {
+      "at": "2026-08-23T12:29:50+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review records verification, rollback, and mandatory installed-client smoke"
+    },
+    {
+      "at": "2026-08-23T12:30:08+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED flat-row wiring regression and restore explicit runtime labels"
+    },
+    {
+      "at": "2026-08-23T12:30:09+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run staged workflow checks and whole-diff review"
+    },
+    {
+      "at": "2026-08-23T12:30:09+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive with commit pending, then merge, rebuild, install, and visually smoke"
+    },
+    {
+      "at": "2026-08-23T12:30:09+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Restore explicit runtime labels in the default flat session list; commit: pending; follow-up: Merge into dev, rebuild, install, and visually smoke"
+    }
+  ],
+  "updated": "2026-08-23T12:30:09+00:00",
+  "archivedAt": "2026-08-23T12:30:09+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Restore explicit runtime labels in the default flat session list",
+  "archiveFollowUp": "Merge into dev, rebuild, install, and visually smoke"
+}

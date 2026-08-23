@@ -1,0 +1,2 @@
+{"path":"packages/happy-app/sources/components/FlatSessionRow.tsx","reason":"Default flat-list session status presentation"}
+{"path":"packages/happy-app/sources/utils/activeSessionRuntimeStatusWiring.test.ts","reason":"Regression coverage for runtime labels and idle color"}
