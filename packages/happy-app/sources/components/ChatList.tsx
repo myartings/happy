@@ -22,7 +22,7 @@ import { revealWebMessage } from '@/utils/webMessageReveal';
 import { isTauri } from '@/utils/isTauri';
 import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { resolveStudioConversationLayout } from '@/features/studio-conversation-layout/studioConversationLayout';
-import { buildAgentTurnCopyTextByMessageId } from '@/utils/agentTurnCopy';
+import { useAgentTurnCopyResolvers } from '@/features/client-performance/agentTurnCopyResolver';
 
 const SCROLL_THRESHOLD = 300;
 const DOCK_DETAILS_SHOW_OFFSET = 16;
@@ -194,26 +194,29 @@ const ChatListInternal = React.memo((props: {
         : null;
     const targetRequestKey = localMessageTarget?.requestKey ?? routeTargetKey;
     const targetAction = React.useMemo(
-        () => resolveMessageTargetAction(
-            displayItems.map((item) => ({
+        () => {
+            if (!targetMessageId) return { type: 'none' } as const;
+            return resolveMessageTargetAction(
+                displayItems.map((item) => ({
                 id: item.id,
                 localId: item.type === 'message' && 'localId' in item.message ? item.message.localId : null,
                 createdAt: item.type === 'message' ? item.message.createdAt : null,
-            })),
-            targetMessageId,
-            targetMessageLocalId,
-            targetMessageCreatedAt,
-            props.hasMoreOlder,
-            props.isLoadingOlder,
-        ),
+                })),
+                targetMessageId,
+                targetMessageLocalId,
+                targetMessageCreatedAt,
+                props.hasMoreOlder,
+                props.isLoadingOlder,
+            );
+        },
         [displayItems, props.hasMoreOlder, props.isLoadingOlder, targetMessageId, targetMessageLocalId, targetMessageCreatedAt],
     );
     targetIndexRef.current = targetAction.type === 'scroll' ? targetAction.index : null;
     targetMessageIdRef.current = targetAction.type === 'scroll' ? targetAction.messageId : null;
     targetRequestKeyRef.current = targetRequestKey;
-    const agentCopyTextByMessageId = React.useMemo(
-        () => buildAgentTurnCopyTextByMessageId(props.messages, { currentTurnComplete: collapseCurrentTurn }),
-        [collapseCurrentTurn, props.messages],
+    const agentCopyResolversByMessageId = useAgentTurnCopyResolvers(
+        props.messages,
+        collapseCurrentTurn,
     );
 
     // Completed groups start collapsed. In Studio, active groups start open so
@@ -497,10 +500,10 @@ const ChatListInternal = React.memo((props: {
                 metadata={props.metadata}
                 sessionId={props.sessionId}
                 highlighted={item.message.id === highlightedMessageId}
-                copyText={agentCopyTextByMessageId.get(item.message.id)}
+                copyTextResolver={agentCopyResolversByMessageId.get(item.message.id)}
             />
         );
-    }, [agentCopyTextByMessageId, props.metadata, props.sessionId, collapsedGroups, handleToggleGroup, highlightedMessageId]);
+    }, [agentCopyResolversByMessageId, props.metadata, props.sessionId, collapsedGroups, handleToggleGroup, highlightedMessageId]);
 
     // In inverted FlatList, offset 0 = latest messages (visual bottom).
     // Offset increases as user scrolls up to see older messages.
@@ -561,7 +564,7 @@ const ChatListInternal = React.memo((props: {
                 initialNumToRender={10}
                 maxToRenderPerBatch={10}
                 updateCellsBatchingPeriod={50}
-                windowSize={21}
+                windowSize={9}
                 keyExtractor={keyExtractor}
                 maintainVisibleContentPosition={{
                     // Anchor on the second-newest message (index 1), not the
@@ -594,7 +597,7 @@ const ChatListInternal = React.memo((props: {
                 onScroll={handleScroll}
                 onViewableItemsChanged={handleViewableItemsChanged}
                 viewabilityConfig={viewabilityConfig}
-                scrollEventThrottle={16}
+                scrollEventThrottle={32}
                 onLayout={(event) => {
                     scrollMetricsRef.current.viewportHeight = event.nativeEvent.layout.height;
                     updateHeaderBackdropVisibility();

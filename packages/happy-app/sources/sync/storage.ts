@@ -39,6 +39,7 @@ import { indexSessionsById } from './sessionIdentity';
 import { resolveSessionRuntimeDisplay, type SessionPlatformKind } from '@/utils/sessionRuntimeDisplay';
 import { resolveLatestSessionActivityAt } from '@/utils/sessionActivity';
 import { t } from '@/text';
+import { SessionRowProjectionCache } from '@/features/client-performance/sessionRowProjectionCache';
 import type { Project } from './projectTypes';
 import { getSessionProjectId, isHappyAgentSession } from './projectTypes';
 
@@ -345,6 +346,8 @@ interface StorageState {
     setCurrentViewingSession: (sessionId: string | null) => void;
 }
 
+const sessionRowProjectionCache = new SessionRowProjectionCache<Session, Machine, SessionRowData>();
+
 // Helper function to build unified list view data from sessions and machines
 function buildSessionListViewData(
     sessions: Record<string, Session>,
@@ -356,6 +359,7 @@ function buildSessionListViewData(
     machines: Record<string, Machine>,
     projects: Record<string, Project> = {},
 ): SessionListViewItem[] {
+    sessionRowProjectionCache.prune(new Set(Object.keys(sessions)));
     const rigProjectSessions: Session[] = [];
     const rigPathSessions: Session[] = [];
     const happySessions: Session[] = [];
@@ -398,7 +402,20 @@ function buildSessionListViewData(
     archivedSessions.sort((a, b) => sortKey(b) - sortKey(a));
 
     const listData: SessionListViewItem[] = [];
-    const toRow = (session: Session) => buildSessionRowData(session, unreadSessionIds, machines, projects);
+    const toRow = (session: Session) => {
+        const machineId = session.metadata?.machineId;
+        const machine = machineId ? machines[machineId] : undefined;
+        const projectId = getSessionProjectId(session);
+        const project = projectId ? projects[projectId] : undefined;
+        return sessionRowProjectionCache.project({
+            id: session.id,
+            source: session,
+            unread: unreadSessionIds.has(session.id),
+            machine,
+            context: project,
+            build: () => buildSessionRowData(session, unreadSessionIds, machines, projects),
+        });
+    };
 
     const rigProjects = [
         ...buildProjectGroups(rigProjectSessions, toRow, isSessionActive),

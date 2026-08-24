@@ -71,4 +71,5 @@
 | 2026-08-24 | studio-tool-output-disclosure | pending | Completed Studio tool-output disclosure T1-T6 with 64 focused tests, whole-diff review, Windows packaged runtime acceptance, and two explicitly accepted unrelated baseline gaps | Optional separate fixes for CRLF-sensitive App test and local attachment-route server test; commit/push remain unrequested |
 | 2026-08-24 | session-phase-history | pending | Preserve Codex assistant phases end-to-end and only collapse explicitly classified commentary/tool work | None |
 | 2026-08-24 | restore-flat-session-list-toggle | pending | Restore the personal Flat Session List preference after the official always-flat merge regression. | None |
+| 2026-08-25 | client-performance-bounded-state | pending | Implemented and desktop-verified bounded incremental Happy client state for large Session indexes and long transcripts | Profile the installed desktop client before any normalized-ordering or protocol-pagination escalation |
 | 2026-08-24 | codex-active-turn-steering | pending | Add native Codex active-turn steering with race-safe queue fallback | None |

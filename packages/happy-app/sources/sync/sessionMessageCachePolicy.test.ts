@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
     MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
+    MAX_RETAINED_HIDDEN_SESSION_MESSAGE_BYTES,
+    MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
+    shouldEvictHiddenSessionMessageCache,
     selectVisibleSessionIds,
     selectSessionMessageCacheEvictions,
 } from './sessionMessageCachePolicy';
@@ -70,5 +73,20 @@ describe('selectVisibleSessionIds', () => {
             ['hidden', 0],
             ['invalid', -1],
         ]))).toEqual(['primary', 'side-chat']);
+    });
+});
+
+describe('shouldEvictHiddenSessionMessageCache', () => {
+    it('drops an oversized hidden transcript cache instead of retaining it in the LRU', () => {
+        expect(shouldEvictHiddenSessionMessageCache(
+            MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION + 1,
+        )).toBe(true);
+        expect(shouldEvictHiddenSessionMessageCache(
+            MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION,
+        )).toBe(false);
+        expect(shouldEvictHiddenSessionMessageCache(
+            1,
+            MAX_RETAINED_HIDDEN_SESSION_MESSAGE_BYTES + 1,
+        )).toBe(true);
     });
 });

@@ -130,9 +130,10 @@ describe('ChatList Studio disclosure scroll wiring', () => {
             minIndexForVisible: 1,
             autoscrollToTopThreshold: 50,
         });
+        expect(list.props.windowSize).toBe(9);
+        expect(list.props.scrollEventThrottle).toBe(32);
         expect(renderer.root.findByType('ToolGroupView' as any).props.expanded).toBe(false);
 
-        act(() => list.props.onScrollBeginDrag());
         act(() => list.props.onScroll({ nativeEvent: { contentOffset: { y: 400 } } }));
         act(() => renderer.root.findByType('ToolGroupView' as any).props.onToggle());
         expect(renderer.root.findByType('ToolGroupView' as any).props.expanded).toBe(true);

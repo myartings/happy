@@ -26,7 +26,7 @@ export const MessageView = React.memo((props: {
   sessionId: string;
   highlighted?: boolean;
   getMessageById?: (id: string) => Message | null;
-  copyText?: string;
+  copyTextResolver?: () => string;
 }) => {
   return (
     <View
@@ -40,7 +40,7 @@ export const MessageView = React.memo((props: {
           metadata={props.metadata}
           sessionId={props.sessionId}
           getMessageById={props.getMessageById}
-          copyText={props.copyText}
+          copyTextResolver={props.copyTextResolver}
         />
       </View>
     </View>
@@ -53,7 +53,7 @@ function RenderBlock(props: {
   metadata: Metadata | null;
   sessionId: string;
   getMessageById?: (id: string) => Message | null;
-  copyText?: string;
+  copyTextResolver?: () => string;
 }): React.ReactElement {
   switch (props.message.kind) {
     case 'user-text':
@@ -66,7 +66,7 @@ function RenderBlock(props: {
       );
 
     case 'agent-text':
-      return <AgentTextBlock message={props.message} sessionId={props.sessionId} copyText={props.copyText} />;
+      return <AgentTextBlock message={props.message} sessionId={props.sessionId} copyTextResolver={props.copyTextResolver} />;
 
     case 'tool-call':
       return <ToolCallBlock
@@ -177,7 +177,7 @@ function UserTextBlock(props: {
 function AgentTextBlock(props: {
   message: AgentTextMessage;
   sessionId: string;
-  copyText?: string;
+  copyTextResolver?: () => string;
 }) {
   const handleOptionPress = React.useCallback((option: Option) => {
     sync.sendMessage(props.sessionId, option.title, { source: 'option' });
@@ -191,7 +191,7 @@ function AgentTextBlock(props: {
   return (
     <View style={styles.agentMessageContainer}>
       <MarkdownView markdown={props.message.text} onOptionPress={handleOptionPress} sessionId={props.sessionId} />
-      {props.copyText ? <MessageCopyButton text={props.copyText} /> : null}
+      {props.copyTextResolver ? <MessageCopyButton resolveText={props.copyTextResolver} /> : null}
     </View>
   );
 }
@@ -199,7 +199,7 @@ function AgentTextBlock(props: {
 // The glyph is deliberately small, so widen the touch target well past it.
 const COPY_HIT_SLOP = { top: 14, bottom: 14, left: 14, right: 20 };
 
-function MessageCopyButton(props: { text: string }) {
+function MessageCopyButton(props: { resolveText: () => string }) {
   const { theme } = useUnistyles();
   const [copied, setCopied] = React.useState(false);
   const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -212,7 +212,9 @@ function MessageCopyButton(props: { text: string }) {
 
   const handleCopy = React.useCallback(async () => {
     try {
-      await Clipboard.setStringAsync(props.text);
+      const text = props.resolveText();
+      if (!text) return;
+      await Clipboard.setStringAsync(text);
       setCopied(true);
       if (resetTimerRef.current) {
         clearTimeout(resetTimerRef.current);
@@ -221,7 +223,7 @@ function MessageCopyButton(props: { text: string }) {
     } catch (error) {
       console.error('Failed to copy message:', error);
     }
-  }, [props.text]);
+  }, [props.resolveText]);
 
   return (
     <Pressable

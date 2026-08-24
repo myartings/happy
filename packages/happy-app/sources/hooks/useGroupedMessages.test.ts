@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { generateGroupSummary, groupMessagesForDisplay, groupToolCallsForDisplay } from './useGroupedMessages';
+import { generateGroupSummary, groupMessagesForDisplay, groupMessagesWithTurnProjection, groupToolCallsForDisplay } from './useGroupedMessages';
 import { Message, ToolCallMessage } from '@/sync/typesMessage';
+import { TurnProjectionCache } from '@/features/client-performance/turnProjectionCache';
 
 vi.mock('@/components/tools/knownTools', () => ({
     knownTools: {
@@ -52,6 +53,25 @@ function namedToolMessage(id: string, name: string, createdAt: number): ToolCall
 }
 
 describe('useGroupedMessages', () => {
+    it('keeps incremental multi-turn output equivalent to full-history grouping', () => {
+        const messages: Message[] = [
+            { kind: 'agent-text', id: 'final-2', localId: null, createdAt: 8, text: 'done 2', phase: 'final_answer' },
+            toolMessage('tool-2', 7),
+            { kind: 'user-text', id: 'user-2', localId: null, createdAt: 6, text: 'second' },
+            { kind: 'agent-text', id: 'final-1', localId: null, createdAt: 5, text: 'done 1', phase: 'final_answer' },
+            toolMessage('tool-1', 4),
+            { kind: 'agent-text', id: 'progress-1', localId: null, createdAt: 3, text: 'working', phase: 'commentary' },
+            { kind: 'user-text', id: 'user-1', localId: null, createdAt: 2, text: 'first' },
+        ];
+
+        expect(groupMessagesWithTurnProjection(
+            new TurnProjectionCache(),
+            messages,
+            true,
+            true,
+        )).toEqual(groupMessagesForDisplay(messages, true, { collapseCurrentTurn: true }));
+    });
+
     it('classifies Rig tool families in group summaries', () => {
         const messages = [
             namedToolMessage('terminal', 'exec_command', 1),
