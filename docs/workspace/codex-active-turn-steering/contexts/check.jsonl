@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/codex-active-turn-steering/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/codex-active-turn-steering.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/tasks/codex-active-turn-steering-tasks.md","reason":"Complete intended delivery scope"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"App-server steering request coverage"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.test.ts","reason":"Active routing and fallback acceptance coverage"}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Complete host integration seam"}

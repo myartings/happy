@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "codex-active-turn-steering",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/codex-active-turn-steering.md; user accepted direct implementation and dev release",
+      "updated": "2026-08-24T14:06:44+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-active-turn-steering/decisions.md",
+      "updated": "2026-08-24T14:06:44+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope limited to Happy CLI Codex adapter; targeted client and routing tests; PR delivery boundary recorded",
+      "updated": "2026-08-24T14:06:44+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/specs/codex-active-turn-steering.md compatibility controls; docs/workspace/codex-active-turn-steering/journal.md",
+      "updated": "2026-08-24T14:06:44+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Happy CLI typecheck passed; Codex unit suite 18 files/131 tests passed; docs/workspace/codex-active-turn-steering/validation.md",
+      "updated": "2026-08-24T14:14:28+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Feature acceptance fully verified: Happy CLI 90 files/829 tests; Codex 18 files/131 tests; CLI/app/server typechecks and workflow core checks pass. Two repository App test failures are proven hash-identical to origin/dev and outside the no-App-diff scope; see validation.md",
+      "updated": "2026-08-24T14:18:40+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues; concurrency, expected-turn precondition, fallback, special commands, attachments, old-runtime compatibility, and rollback inspected; tests assert public request/routing behavior",
+      "updated": "2026-08-24T14:19:14+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-active-turn-steering/finish.md; all acceptance rows verified; rollback and baseline notes recorded",
+      "updated": "2026-08-24T14:19:38+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-24T14:03:31+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-24T14:06:44+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/codex-active-turn-steering.md; user accepted direct implementation and dev release"
+    },
+    {
+      "at": "2026-08-24T14:06:44+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-active-turn-steering/decisions.md"
+    },
+    {
+      "at": "2026-08-24T14:06:44+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/specs/codex-active-turn-steering.md compatibility controls; docs/workspace/codex-active-turn-steering/journal.md"
+    },
+    {
+      "at": "2026-08-24T14:06:44+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope limited to Happy CLI Codex adapter; targeted client and routing tests; PR delivery boundary recorded"
+    },
+    {
+      "at": "2026-08-24T14:07:15+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED tests for turn/steer request and active-message routing"
+    },
+    {
+      "at": "2026-08-24T14:14:28+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Happy CLI typecheck passed; Codex unit suite 18 files/131 tests passed; docs/workspace/codex-active-turn-steering/validation.md"
+    },
+    {
+      "at": "2026-08-24T14:14:28+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run full Happy CLI unit suite and workflow-check recording"
+    },
+    {
+      "at": "2026-08-24T14:15:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-24T14:18:40+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Feature acceptance fully verified: Happy CLI 90 files/829 tests; Codex 18 files/131 tests; CLI/app/server typechecks and workflow core checks pass. Two repository App test failures are proven hash-identical to origin/dev and outside the no-App-diff scope; see validation.md"
+    },
+    {
+      "at": "2026-08-24T14:19:14+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues; concurrency, expected-turn precondition, fallback, special commands, attachments, old-runtime compatibility, and rollback inspected; tests assert public request/routing behavior"
+    },
+    {
+      "at": "2026-08-24T14:19:14+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Write finish evidence, archive, stage, and run workflow CI"
+    },
+    {
+      "at": "2026-08-24T14:19:38+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-active-turn-steering/finish.md; all acceptance rows verified; rollback and baseline notes recorded"
+    },
+    {
+      "at": "2026-08-24T14:19:38+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Add native Codex active-turn steering with race-safe queue fallback; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-24T14:19:38+00:00",
+  "archivedAt": "2026-08-24T14:19:38+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Add native Codex active-turn steering with race-safe queue fallback",
+  "archiveFollowUp": "None"
+}
