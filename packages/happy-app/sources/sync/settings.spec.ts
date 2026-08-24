@@ -279,6 +279,7 @@ describe('settings', () => {
                 agentInputEnterToSend: true,
                 avatarStyle: 'brutalist',
                 showFlavorIcons: false,
+                showHarnessIconInSessionHeader: true,
                 userMessageBubbleColor: 'gray',
                 sessionStatusBarDisplay: 'hidden',
                 usageLimitShowRemaining: false,
@@ -309,6 +310,13 @@ describe('settings', () => {
                 agentDefaultOverrides: {},
                 projectTodos: {},
                 dismissedCLIWarnings: { perMachine: {}, global: {} },
+            });
+        });
+
+        it('keeps the legacy list setting while defaulting the header setting on', () => {
+            expect(settingsParse({ showFlavorIcons: true })).toMatchObject({
+                showFlavorIcons: true,
+                showHarnessIconInSessionHeader: true,
             });
         });
 

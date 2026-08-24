@@ -94,6 +94,7 @@ export const pl: TranslationStructure = {
         idle: 'bezczynny',
         lastSeen: ({ time }: { time: string }) => `ostatnio widziano ${time}`,
         permissionRequired: 'wymagane uprawnienie',
+        inputRequired: 'oczekuje na Twoją odpowiedź',
         activeNow: 'Aktywny teraz',
         unknown: 'nieznane',
         unread: 'nowe wyniki',
@@ -230,8 +231,10 @@ export const pl: TranslationStructure = {
             gradient: 'Gradientowy',
             brutalist: 'Brutalistyczny',
         },
-        showFlavorIcons: 'Pokaż ikony dostawcy AI',
-        showFlavorIconsDescription: 'Wyświetlaj ikony dostawcy AI na awatarach sesji',
+        showHarnessIconInSessionHeader: 'Pokaż ikonę harnessu w nagłówku sesji',
+        showHarnessIconInSessionHeaderDescription: 'Wyświetlaj ikonę harnessu w nagłówku sesji',
+        showHarnessIconsInSessionList: 'Pokaż ikony harnessów na liście sesji',
+        showHarnessIconsInSessionListDescription: 'Wyświetlaj ikony harnessów na awatarach listy sesji',
     },
 
     settingsFeatures: {

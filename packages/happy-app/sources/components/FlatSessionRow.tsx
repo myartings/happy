@@ -14,7 +14,7 @@ import { useSessionActionAlert } from '@/hooks/useSessionQuickActions';
 import { useHappyAction } from '@/hooks/useHappyAction';
 import { HappyError } from '@/utils/errors';
 import { sessionKill } from '@/sync/ops';
-import { type SessionState, formatLastSeen } from '@/utils/sessionUtils';
+import { type SessionState, formatLastSeen, vibingMessages } from '@/utils/sessionUtils';
 import type { FlatSessionRowData } from '@/utils/flatSessionList';
 import { formatSessionListTimestamp } from '@/utils/sessionListTimestamp';
 import type { Theme } from '@/theme';
@@ -46,6 +46,7 @@ const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isP
     thinking: { color: '#007AFF', dotColor: '#007AFF', isPulsing: true, isConnected: true },
     waiting: { color: '#34C759', dotColor: '#34C759', isPulsing: false, isConnected: true },
     permission_required: { color: '#FF9500', dotColor: '#FF9500', isPulsing: true, isConnected: true },
+    input_required: { color: '#FF9500', dotColor: '#FF9500', isPulsing: true, isConnected: true },
 };
 
 /**
@@ -77,12 +78,18 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
     const faded = !!archived || session.machineOffline;
 
     // Archived work reads as retired whatever its connection says, so it never
-    // pulses or shows a live colour. Otherwise unread results outrank the live
-    // state: blue and steady, like an unread chat.
+    // pulses or shows a live colour. A request that is blocking on the user
+    // outranks the ordinary unread-result badge; otherwise unread is blue and
+    // steady, like an unread chat.
     const baseStatus = faded ? STATUS_CONFIG.disconnected : STATUS_CONFIG[session.state];
-    const status = session.hasUnread && !faded
+    const needsUserAction = session.state === 'permission_required' || session.state === 'input_required';
+    const status = session.hasUnread && !faded && !needsUserAction
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false }
         : baseStatus;
+
+    const vibingMessage = React.useMemo(() => (
+        vibingMessages[Math.floor(Math.random() * vibingMessages.length)].toLowerCase() + '…'
+    ), [session.state]);
 
     // The same `lastActivityAt` the flat list sorts on, so the stamps run in
     // the order the rows do.
@@ -101,11 +108,15 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
     // whole row look retired.
     const statusText = faded || session.state === 'disconnected'
         ? lastSeenText
-        : session.state === 'thinking'
-            ? t('status.running')
+        : session.state === 'input_required'
+            ? t('status.inputRequired')
             : session.state === 'permission_required'
                 ? t('status.permissionRequired')
-                : t('status.idle');
+                : session.hasUnread
+                    ? t('status.unread')
+                    : session.state === 'thinking'
+                        ? vibingMessage
+                        : null;
     const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : status.color;
 
     const statusLine = [statusText, session.activitySummary].filter(Boolean).join(' · ');
@@ -156,6 +167,7 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
                     monochrome={faded}
                     flavor={session.flavor}
                     clientId={session.clientId}
+                    badgeLocation="sessionList"
                 />
             </View>
 

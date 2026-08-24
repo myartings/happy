@@ -329,6 +329,7 @@ function ToolGroupMessageRow(props: {
         && resolveStudioToolOutputDisclosure(props.message.tool) !== null;
     const shouldRenderFullTool = props.message.tool.permission?.status === 'pending'
         || props.message.tool.name === 'AskUserQuestion'
+        || props.message.tool.name === 'request_user_input'
         || shouldRenderStudioDisclosure;
     if (shouldRenderFullTool) {
         return (

@@ -82,6 +82,7 @@ export const en = {
         idle: 'idle',
         lastSeen: ({ time }: { time: string }) => `last seen ${time}`,
         permissionRequired: 'permission required',
+        inputRequired: 'waiting for your answer',
         activeNow: 'Active now',
         unknown: 'unknown',
         unread: 'new results',
@@ -211,8 +212,10 @@ export const en = {
             gradient: 'Gradient',
             brutalist: 'Brutalist',
         },
-        showFlavorIcons: 'Show AI Provider Icons',
-        showFlavorIconsDescription: 'Display AI provider icons on session avatars',
+        showHarnessIconInSessionHeader: 'Show Harness Icon in Session Header',
+        showHarnessIconInSessionHeaderDescription: 'Display the harness icon in the session header',
+        showHarnessIconsInSessionList: 'Show Harness Icons in Session List',
+        showHarnessIconsInSessionListDescription: 'Display harness icons on session-list avatars',
     },
 
     settingsFeatures: {

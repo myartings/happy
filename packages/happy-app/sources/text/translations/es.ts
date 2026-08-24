@@ -83,6 +83,7 @@ export const es: TranslationStructure = {
         idle: 'inactivo',
         lastSeen: ({ time }: { time: string }) => `visto por última vez ${time}`,
         permissionRequired: 'permiso requerido',
+        inputRequired: 'esperando tu respuesta',
         activeNow: 'Activo ahora',
         unknown: 'desconocido',
         unread: 'nuevos resultados',
@@ -213,8 +214,10 @@ export const es: TranslationStructure = {
             gradient: 'Gradiente',
             brutalist: 'Brutalista',
         },
-        showFlavorIcons: 'Mostrar íconos de proveedor de IA',
-        showFlavorIconsDescription: 'Mostrar íconos del proveedor de IA en los avatares de sesión',
+        showHarnessIconInSessionHeader: 'Mostrar el icono del harness en el encabezado de la sesión',
+        showHarnessIconInSessionHeaderDescription: 'Mostrar el icono del harness en el encabezado de la sesión',
+        showHarnessIconsInSessionList: 'Mostrar iconos de harness en la lista de sesiones',
+        showHarnessIconsInSessionListDescription: 'Mostrar iconos de harness en los avatares de la lista de sesiones',
     },
 
     settingsFeatures: {

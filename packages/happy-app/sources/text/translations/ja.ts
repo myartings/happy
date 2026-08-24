@@ -85,6 +85,7 @@ export const ja: TranslationStructure = {
         idle: '待機中',
         lastSeen: ({ time }: { time: string }) => `最終アクセス: ${time}`,
         permissionRequired: '権限が必要です',
+        inputRequired: '回答を待っています',
         activeNow: 'アクティブ',
         unknown: '不明',
         unread: '新しい結果',
@@ -214,8 +215,10 @@ export const ja: TranslationStructure = {
             gradient: 'グラデーション',
             brutalist: 'ブルータリスト',
         },
-        showFlavorIcons: 'AIプロバイダーアイコンを表示',
-        showFlavorIconsDescription: 'セッションアバターにAIプロバイダーアイコンを表示',
+        showHarnessIconInSessionHeader: 'セッションヘッダーにハーネスアイコンを表示',
+        showHarnessIconInSessionHeaderDescription: 'セッションヘッダーにハーネスアイコンを表示',
+        showHarnessIconsInSessionList: 'セッションリストにハーネスアイコンを表示',
+        showHarnessIconsInSessionListDescription: 'セッションリストのアバターにハーネスアイコンを表示',
     },
 
     settingsFeatures: {

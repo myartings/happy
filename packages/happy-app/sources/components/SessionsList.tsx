@@ -12,7 +12,7 @@ import {
 } from '@/sync/storage';
 import { filterProjectGroup, sessionMatchesQuery } from '@/sync/projectGroups';
 import { Ionicons } from '@expo/vector-icons';
-import { type SessionState, formatLastSeen } from '@/utils/sessionUtils';
+import { type SessionState, formatLastSeen, vibingMessages } from '@/utils/sessionUtils';
 import { Avatar } from './Avatar';
 import { ActiveSessionsGroupCompact } from './ActiveSessionsGroupCompact';
 import { ProjectGroup } from './ProjectGroup';
@@ -779,6 +779,7 @@ const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isP
     thinking: { color: '#007AFF', dotColor: '#007AFF', isPulsing: true, isConnected: true },
     waiting: { color: '#34C759', dotColor: '#34C759', isPulsing: false, isConnected: true },
     permission_required: { color: '#FF9500', dotColor: '#FF9500', isPulsing: true, isConnected: true },
+    input_required: { color: '#FF9500', dotColor: '#FF9500', isPulsing: true, isConnected: true },
 };
 
 const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, sessionRowStyle }: {
@@ -807,21 +808,28 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
     const navigateToSession = useNavigateToSession();
     const [actionsAnchor, setActionsAnchor] = React.useState<SessionActionsAnchor | null>(null);
     const baseStatus = STATUS_CONFIG[session.state];
-    // Override to solid blue when session has unread results
     const showUnreadAttentionState = needsAttentionSessionsEnabled && session.hasUnread;
-    const status = showUnreadAttentionState
+    const needsUserAction = session.state === 'permission_required' || session.state === 'input_required';
+    // User action stays orange and pulsing even when the request also marked the session unread.
+    const status = showUnreadAttentionState && !needsUserAction
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
         : baseStatus;
 
-    const statusText = showUnreadAttentionState
-        ? t('status.unread')
-        : session.state === 'thinking'
-            ? t('status.running')
-            : session.state === 'disconnected'
-                ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
-                : session.state === 'permission_required'
-                    ? t('status.permissionRequired')
-                    : t('status.idle');
+    const vibingMessage = React.useMemo(() => {
+        return vibingMessages[Math.floor(Math.random() * vibingMessages.length)].toLowerCase() + '…';
+    }, [session.state]);
+
+    const statusText = session.state === 'input_required'
+        ? t('status.inputRequired')
+        : session.state === 'permission_required'
+            ? t('status.permissionRequired')
+            : showUnreadAttentionState
+                ? t('status.unread')
+                : session.state === 'thinking'
+                    ? vibingMessage
+                    : session.state === 'disconnected'
+                        ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
+                        : t('status.online');
 
     const handlePress = React.useCallback(() => {
         navigateToSession(session.id);
@@ -899,7 +907,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                 styles.avatarContainer,
                 isStudio && { width: 32, height: 32 },
             ]}>
-                <Avatar id={session.avatarId} size={isStudio ? 32 : 48} monochrome={!status.isConnected} flavor={session.flavor} clientId={session.clientId} />
+                <Avatar id={session.avatarId} size={isStudio ? 32 : 48} monochrome={!status.isConnected} flavor={session.flavor} clientId={session.clientId} badgeLocation="sessionList" />
                 {session.hasDraft && (
                     <View style={[
                         styles.draftIconContainer,

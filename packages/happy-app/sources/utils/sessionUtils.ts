@@ -1,9 +1,11 @@
+import * as React from 'react';
 import { Session } from '@/sync/storageTypes';
+import { resolveSessionState } from '@/sync/sessionState';
+import type { SessionState } from '@/sync/sessionState';
 import { t } from '@/text';
 import { buildResumeCommand, buildResumeCommandBlock, ResumeCommandBlock } from './resumeCommand';
-import { resolveSessionRuntimeStatus } from './sessionRuntimeStatus';
 
-export type SessionState = 'disconnected' | 'thinking' | 'waiting' | 'permission_required';
+export type { SessionState } from '@/sync/sessionState';
 
 export interface SessionStatus {
     state: SessionState;
@@ -21,16 +23,19 @@ export interface SessionStatus {
  */
 export function useSessionStatus(session: Session): SessionStatus {
     const isOnline = session.presence === "online";
-    const hasPermissions = (session.agentState?.requests && Object.keys(session.agentState.requests).length > 0 ? true : false);
-    const runtimeState = resolveSessionRuntimeStatus({
+    const state = resolveSessionState({
+        agentState: session.agentState,
+        thinking: session.thinking,
         isOnline,
-        hasPermissions,
-        isThinking: session.thinking === true,
     });
 
-    if (runtimeState === 'disconnected') {
+    const vibingMessage = React.useMemo(() => {
+        return vibingMessages[Math.floor(Math.random() * vibingMessages.length)].toLowerCase() + '…';
+    }, [state]);
+
+    if (state === 'disconnected') {
         return {
-            state: 'disconnected',
+            state,
             isConnected: false,
             statusText: t('status.lastSeen', { time: formatLastSeen(session.activeAt, false) }),
             shouldShowStatus: true,
@@ -39,10 +44,9 @@ export function useSessionStatus(session: Session): SessionStatus {
         };
     }
 
-    // Check if permission is required
-    if (runtimeState === 'permission_required') {
+    if (state === 'permission_required') {
         return {
-            state: 'permission_required',
+            state,
             isConnected: true,
             statusText: t('status.permissionRequired'),
             shouldShowStatus: true,
@@ -52,11 +56,23 @@ export function useSessionStatus(session: Session): SessionStatus {
         };
     }
 
-    if (runtimeState === 'running') {
+    if (state === 'input_required') {
         return {
-            state: 'thinking',
+            state,
             isConnected: true,
-            statusText: t('status.running'),
+            statusText: t('status.inputRequired'),
+            shouldShowStatus: true,
+            statusColor: '#FF9500',
+            statusDotColor: '#FF9500',
+            isPulsing: true,
+        };
+    }
+
+    if (state === 'thinking') {
+        return {
+            state,
+            isConnected: true,
+            statusText: vibingMessage,
             shouldShowStatus: true,
             statusColor: '#007AFF',
             statusDotColor: '#007AFF',
@@ -65,14 +81,16 @@ export function useSessionStatus(session: Session): SessionStatus {
     }
 
     return {
-        state: 'waiting',
+        state,
         isConnected: true,
-        statusText: t('status.idle'),
+        statusText: t('status.online'),
         shouldShowStatus: false,
         statusColor: '#34C759',
         statusDotColor: '#34C759'
     };
 }
+
+export const vibingMessages = ["Accomplishing", "Actioning", "Actualizing", "Baking", "Booping", "Brewing", "Calculating", "Cerebrating", "Channelling", "Churning", "Clauding", "Coalescing", "Cogitating", "Computing", "Combobulating", "Concocting", "Conjuring", "Considering", "Contemplating", "Cooking", "Crafting", "Creating", "Crunching", "Deciphering", "Deliberating", "Determining", "Discombobulating", "Divining", "Doing", "Effecting", "Elucidating", "Enchanting", "Envisioning", "Finagling", "Flibbertigibbeting", "Forging", "Forming", "Frolicking", "Generating", "Germinating", "Hatching", "Herding", "Honking", "Ideating", "Imagining", "Incubating", "Inferring", "Manifesting", "Marinating", "Meandering", "Moseying", "Mulling", "Mustering", "Musing", "Noodling", "Percolating", "Perusing", "Philosophising", "Pontificating", "Pondering", "Processing", "Puttering", "Puzzling", "Reticulating", "Ruminating", "Scheming", "Schlepping", "Shimmying", "Simmering", "Smooshing", "Spelunking", "Spinning", "Stewing", "Sussing", "Synthesizing", "Thinking", "Tinkering", "Transmuting", "Unfurling", "Unravelling", "Vibing", "Wandering", "Whirring", "Wibbling", "Wizarding", "Working", "Wrangling"];
 
 /**
  * Extracts a display name from a session's metadata path.

@@ -28,8 +28,9 @@ import { useImagePicker } from '@/hooks/useImagePicker';
 import { Modal } from '@/modal';
 import { voiceHooks } from '@/realtime/hooks/voiceHooks';
 import { getCurrentVoiceConversationId, getCurrentVoiceSessionDurationSeconds, startRealtimeSession, stopRealtimeSession } from '@/realtime/RealtimeSession';
-import { sessionAbort, sessionGoalAction, sessionSetAgentModes, spawnSideChat, sessionKill, sessionArchive } from '@/sync/ops';
-import { storage, useIsDataReady, useLocalSetting, useLocalSettingMutable, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
+import { gitStatusSync } from '@/sync/gitStatusSync';
+import { sessionAbort, sessionCancelCommunication, sessionGoalAction, sessionSetAgentModes, spawnSideChat, sessionKill, sessionArchive } from '@/sync/ops';
+import { storage, useIsDataReady, useLocalSetting, useLocalSettingMutable, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionPendingCommunications, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
 import { useSession } from '@/sync/storage';
 import { getSessionForkSource } from '@/utils/sessionFork';
 import { isTauri } from '@/utils/isTauri';
@@ -67,7 +68,6 @@ import { resolveAgentDefaultConfig } from '@/sync/agentDefaults';
 import { performAgentGoalAction } from './agentGoalActionHandler';
 import { MOBILE_GLASS_HEADER_HEIGHT } from '@/components/navigation/headerMetrics';
 import {
-    getRigIdentity,
     getRigReasoningSelection,
     isRigMetadata,
     isRigModelSelectionEnabled,
@@ -114,7 +114,6 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const { width: windowWidth } = useWindowDimensions();
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
     const sideChatQuickPanelEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
-    const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
     const zenMode = useLocalSetting('zenMode');
     const requestedVisualStyle = useLocalSetting('visualStyle');
@@ -450,25 +449,21 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     // Compute header props based on session state
     const headerProps = useMemo(() => {
         if (!isDataReady) {
-            return { title: '', folderName: undefined, isConnected: false, identityLine: undefined };
+            return { title: '', folderName: undefined, isConnected: false };
         }
         if (!session) {
-            return { title: t('errors.sessionDeleted'), folderName: undefined, isConnected: false, identityLine: undefined };
+            return { title: t('errors.sessionDeleted'), folderName: undefined, isConnected: false };
         }
         const isConnected = session.presence === 'online';
         const pathSegments = session.metadata?.path?.split(/[/\\]/).filter(Boolean);
         const folderName = pathSegments?.[pathSegments.length - 1];
         const sessionName = getSessionName(session);
-        const rigIdentity = getRigIdentity(session.metadata);
         return {
             title: sessionName,
             folderName,
             isConnected,
-            identityLine: showSessionModel && rigIdentity
-                ? `${rigIdentity.clientName} · ${rigIdentity.providerName}${rigIdentity.modelName ? ` — ${rigIdentity.modelName}` : ''}`
-                : undefined,
         };
-    }, [session, isDataReady, showSessionModel]);
+    }, [session, isDataReady]);
     const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
         enabled: githubIssuesEnabled,
         hasSession: !!session,
@@ -512,6 +507,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                             monochrome={!headerProps.isConnected}
                             flavor={session.metadata?.flavor}
                             clientId={session.metadata?.client?.id}
+                            badgeLocation="sessionHeader"
                         />
                     </Pressable>
                 ) : null}
@@ -594,7 +590,6 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                         folderName={headerProps.folderName}
                         isConnected={headerProps.isConnected}
                         backdropVisible={headerBackdropVisible}
-                        identityLine={headerProps.identityLine}
                         extraPathSegment={fileViewPath ?? undefined}
                         rightSlot={(diffViewOpen || !!fileViewPath) ? headerRightSlot : headerRight}
                         rightSlotPinnedToEdge={!!quickPanelHeaderControls && !diffViewOpen && !fileViewPath}
@@ -891,6 +886,7 @@ export function SessionViewLoaded({
 
     const realtimeStatus = useRealtimeStatus();
     const { messages, isLoaded } = useSessionMessages(sessionId);
+    const pendingCommunications = useSessionPendingCommunications(sessionId);
     const acknowledgedCliVersions = useLocalSetting('acknowledgedCliVersions');
     const zenMode = useLocalSetting('zenMode');
     const sessionInputHorizontalPadding = Platform.OS === 'web' || isRunningOnMac() || isTablet ? 12 : 8;
@@ -1032,11 +1028,35 @@ export function SessionViewLoaded({
         const liveMessage = composerHandleRef.current?.getMessage() ?? '';
         if (liveMessage.trim() || (expImageUpload && selectedImages.length > 0)) {
             const attachments = expImageUpload ? selectedImages : undefined;
+            const communicationsToDismiss = [...pendingCommunications];
             composerHandleRef.current?.clearMessage();
             if (expImageUpload) clearImages();
-            sync.sendMessage(sessionId, liveMessage, { source: 'chat', attachments });
+
+            void (async () => {
+                try {
+                    // Deliver the user's message while the question tool is still
+                    // blocked, then dismiss the forms. This keeps the regular text
+                    // available as the user's custom response before the agent is
+                    // allowed to continue its turn.
+                    await sync.sendMessage(sessionId, liveMessage, {
+                        source: 'chat',
+                        attachments,
+                        awaitDelivery: communicationsToDismiss.length > 0,
+                    });
+                    const dismissals = await Promise.allSettled(communicationsToDismiss.map(communication => (
+                        sessionCancelCommunication(sessionId, communication.id, communication.kind)
+                    )));
+                    for (const dismissal of dismissals) {
+                        if (dismissal.status === 'rejected') {
+                            console.error('Failed to dismiss an agent question:', dismissal.reason);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to send message while dismissing agent questions:', error);
+                }
+            })();
         }
-    }, [sessionId, expImageUpload, selectedImages, clearImages]);
+    }, [sessionId, expImageUpload, selectedImages, clearImages, pendingCommunications]);
 
     const handleAbort = React.useCallback(() => {
         // Mode picks live in synced metadata — clear them there, otherwise the
@@ -1241,11 +1261,11 @@ export function SessionViewLoaded({
             onAbort={isDisconnected || !rigCanAbort(session.metadata) ? undefined : handleAbort}
             showAbortButton={rigCanAbort(session.metadata) && (
                 sessionStatus.state === 'thinking'
-                // A pending selection (AskUserQuestion / permission request) parks the
-                // session in 'permission_required', where the agent is blocked inside the
-                // tool call — aborting is the only way to ignore the choices and keep
-                // typing, so Stop has to stay reachable on every platform.
+                // A pending selection or permission request parks the agent inside
+                // a tool call. Keep Stop reachable on every platform while either
+                // kind of user action is outstanding.
                 || sessionStatus.state === 'permission_required'
+                || sessionStatus.state === 'input_required'
                 || (Platform.OS === 'web' && sessionStatus.state === 'waiting')
             )}
             onFileViewerPress={experiments && !isTablet && rigCanBrowseFiles(session.metadata) && rigCanReadFiles(session.metadata) ? handleFileViewerPress : undefined}

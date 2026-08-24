@@ -45,6 +45,7 @@ const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isP
     thinking: { color: '#007AFF', dotColor: '#007AFF', isPulsing: true, isConnected: true },
     waiting: { color: '#34C759', dotColor: '#34C759', isPulsing: false, isConnected: true },
     permission_required: { color: '#FF9500', dotColor: '#FF9500', isPulsing: true, isConnected: true },
+    input_required: { color: '#FF9500', dotColor: '#FF9500', isPulsing: true, isConnected: true },
 };
 
 interface ActiveSessionsGroupProps {
@@ -331,16 +332,22 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
         needsAttentionSessionsEnabled,
     });
     // Unread blue is part of the personal needs-attention treatment.
-    const status = displayPolicy.showUnreadAttentionState && session.hasUnread
+    const needsUserAction = session.state === 'permission_required' || session.state === 'input_required';
+    // User action stays orange and pulsing even when the request also marked the session unread.
+    const status = displayPolicy.showUnreadAttentionState && session.hasUnread && !needsUserAction
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
         : baseStatus;
-    const statusText = session.state === 'thinking'
-        ? t('status.running')
-        : session.state === 'disconnected'
-            ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
-            : session.state === 'permission_required'
-                ? t('status.permissionRequired')
-                : t('status.idle');
+    const statusText = session.state === 'input_required'
+        ? t('status.inputRequired')
+        : session.state === 'permission_required'
+            ? t('status.permissionRequired')
+            : displayPolicy.showUnreadAttentionState && session.hasUnread
+                ? t('status.unread')
+                : session.state === 'thinking'
+                    ? t('status.running')
+                    : session.state === 'disconnected'
+                        ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
+                        : t('status.idle');
     const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : baseStatus.color;
     const machine = useMachine(session.machineId ?? '');
     const runtimePlatformKind = session.platformKind === 'unknown'
@@ -392,7 +399,11 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const renderLeadingIndicator = () => {
         let indicator: React.ReactNode = null;
 
-        if (displayPolicy.showUnreadAttentionState && session.hasUnread) {
+        if (needsUserAction) {
+            indicator = enhancedStatusDotsEnabled
+                ? <StatusDot color={status.dotColor} isPulsing={status.isPulsing} size={9} pulseOpacity={0.2} />
+                : <StatusDot color={status.dotColor} isPulsing={status.isPulsing} />;
+        } else if (displayPolicy.showUnreadAttentionState && session.hasUnread) {
             indicator = <StatusDot color={status.dotColor} isPulsing={false} />;
         } else if (session.state === 'waiting' && session.hasDraft) {
             indicator = (
@@ -402,7 +413,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     color={theme.colors.textSecondary}
                 />
             );
-        } else if (session.state === 'permission_required' || session.state === 'thinking') {
+        } else if (session.state === 'thinking') {
             indicator = enhancedStatusDotsEnabled
                 ? <StatusDot color={status.dotColor} isPulsing={status.isPulsing} size={9} pulseOpacity={0.2} />
                 : <StatusDot color={status.dotColor} isPulsing={status.isPulsing} />;

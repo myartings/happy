@@ -6,12 +6,17 @@ import { Session, Machine, GitStatus, SessionAgentModesPatch } from "./storageTy
 import type { GitStatusFiles } from "./gitStatusFiles";
 import type { ProjectFilesList } from "./projectFiles";
 import { buildPathProjectGroups, buildProjectGroups, isProjectSession, type ProjectGroupData } from "./projectGroups";
-import { selectPendingCommunications, type PendingAgentCommunication } from "./agentCommunications";
+import {
+    selectAgentFormCommunication,
+    selectPendingCommunications,
+    type PendingAgentCommunication,
+} from "./agentCommunications";
 import { createReducer, reducer, ReducerState } from "./reducer/reducer";
 import { Message } from "./typesMessage";
 import { NormalizedMessage } from "./typesRaw";
 import { isMachineOnline } from '@/utils/machineUtils';
-import { getSessionName, getSessionSubtitle, getSessionAvatarId, type SessionState } from '@/utils/sessionUtils';
+import { getSessionName, getSessionSubtitle, getSessionAvatarId } from '@/utils/sessionUtils';
+import { resolveSessionState, type SessionState } from './sessionState';
 import { getSessionActivityAt } from '@/utils/sessionActivity';
 import { applySettings, Settings } from "./settings";
 import { LocalSettings, applyLocalSettings } from "./localSettings";
@@ -162,18 +167,11 @@ function buildSessionRowData(
     machines?: Record<string, Machine>,
 ): SessionRowData {
     const isOnline = session.presence === "online";
-    const hasPermissions = !!(session.agentState?.requests && Object.keys(session.agentState.requests).length > 0);
-
-    let state: SessionState;
-    if (!isOnline) {
-        state = 'disconnected';
-    } else if (hasPermissions) {
-        state = 'permission_required';
-    } else if (session.thinking) {
-        state = 'thinking';
-    } else {
-        state = 'waiting';
-    }
+    const state = resolveSessionState({
+        agentState: session.agentState,
+        thinking: session.thinking,
+        isOnline,
+    });
 
     const rigIdentity = getRigIdentity(session.metadata);
     const rigActivity = getRigActivityIndicators(session.metadata);
@@ -1686,6 +1684,18 @@ export function useSocketStatus() {
 export function useSessionPendingCommunications(sessionId: string): PendingAgentCommunication[] {
     return storage(useDeepEqual((state) =>
         selectPendingCommunications(state.sessions[sessionId]?.agentState ?? null)));
+}
+
+/**
+ * Agent form joined to one transcript tool call, pending or completed.
+ *
+ * Deep-equal for the same reason as the hook above: the selection is a fresh
+ * object whose `questions` is a fresh array, so shallow compares those by
+ * identity and never settles.
+ */
+export function useSessionAgentFormCommunication(sessionId: string, toolUseId: string) {
+    return storage(useDeepEqual((state) =>
+        selectAgentFormCommunication(state.sessions[sessionId]?.agentState ?? null, toolUseId)));
 }
 
 export function useSessionGitStatus(sessionId: string): GitStatus | null {
