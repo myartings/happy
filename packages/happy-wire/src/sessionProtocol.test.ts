@@ -53,6 +53,32 @@ describe('session protocol schemas', () => {
     expect(sessionEventSchema.safeParse({ t: 'not-real' }).success).toBe(false);
   });
 
+  it('preserves supported assistant text phases and rejects unknown phases', () => {
+    expect(sessionEventSchema.parse({
+      t: 'text',
+      text: 'Checking the mapper.',
+      phase: 'commentary',
+    })).toEqual({
+      t: 'text',
+      text: 'Checking the mapper.',
+      phase: 'commentary',
+    });
+    expect(sessionEventSchema.parse({
+      t: 'text',
+      text: 'The fix is complete.',
+      phase: 'final_answer',
+    })).toEqual({
+      t: 'text',
+      text: 'The fix is complete.',
+      phase: 'final_answer',
+    });
+    expect(sessionEventSchema.safeParse({
+      t: 'text',
+      text: 'Future phase.',
+      phase: 'future_phase',
+    }).success).toBe(false);
+  });
+
   it('preserves optional structured tool completion metadata while accepting legacy completions', () => {
     const legacy = sessionEventSchema.parse({ t: 'tool-call-end', call: 'call-legacy' });
     expect(legacy).toEqual({ t: 'tool-call-end', call: 'call-legacy' });

@@ -277,6 +277,32 @@ describe('reducer', () => {
             }
         });
 
+        it('should preserve explicit assistant text phase', () => {
+            const state = createReducer();
+            const messages: NormalizedMessage[] = [{
+                id: 'agent-phase-1',
+                localId: null,
+                createdAt: 1000,
+                role: 'agent',
+                isSidechain: false,
+                content: [{
+                    type: 'text',
+                    text: 'Done',
+                    phase: 'final_answer',
+                    uuid: 'test-phase-uuid-1',
+                    parentUUID: null,
+                }],
+            }];
+
+            const result = reducer(state, messages);
+
+            expect(result.messages[0]).toMatchObject({
+                kind: 'agent-text',
+                text: 'Done',
+                phase: 'final_answer',
+            });
+        });
+
         it('should update latest usage from agent messages', () => {
             const state = createReducer();
             const messages: NormalizedMessage[] = [

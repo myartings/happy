@@ -278,10 +278,27 @@ function collectAgentWorkGroups(messages: Message[], turnOf: number[], collapseC
             return true;
         });
 
-        const finalTextIndex = visibleAgentIndexes.find((index) => messages[index].kind === 'agent-text');
+        // Legacy and future providers may not classify assistant text. Do not
+        // guess in mixed turns: preserving the transcript is safer than
+        // relocating or hiding an unclassified message.
+        const hasUnclassifiedAgentText = visibleAgentIndexes.some((index) => {
+            const msg = messages[index];
+            return msg.kind === 'agent-text' && msg.phase === undefined;
+        });
+        if (hasUnclassifiedAgentText) continue;
+
+        const finalTextIndex = visibleAgentIndexes.find((index) => {
+            const msg = messages[index];
+            return msg.kind === 'agent-text' && msg.phase === 'final_answer';
+        });
         if (finalTextIndex === undefined) continue;
 
-        const hiddenIndexes = visibleAgentIndexes.filter((index) => index > finalTextIndex);
+        const hiddenIndexes = visibleAgentIndexes.filter((index) => {
+            if (index <= finalTextIndex) return false;
+            const msg = messages[index];
+            return msg.kind === 'tool-call'
+                || (msg.kind === 'agent-text' && msg.phase === 'commentary');
+        });
         if (hiddenIndexes.length === 0) continue;
 
         const oldestIdx = Math.max(...hiddenIndexes);

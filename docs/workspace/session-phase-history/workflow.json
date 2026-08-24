@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "session-phase-history",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/session-phase-history.md",
+      "updated": "2026-08-24T10:22:38+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/session-phase-history/decisions.md",
+      "updated": "2026-08-24T10:22:39+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/tasks/session-phase-history-tasks.md; docs/workspace/session-phase-history/context.md; docs/workspace/session-phase-history/task-links.md",
+      "updated": "2026-08-24T10:22:40+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/workspace/session-phase-history/decisions.md; docs/specs/session-phase-history.md#compatibility-and-risk-controls",
+      "updated": "2026-08-24T10:22:39+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Phase propagation and phase-aware grouping implemented; validation.md RED/GREEN evidence",
+      "updated": "2026-08-24T10:44:05+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the named unrelated App/Server baseline failures on 2026-08-24; details in validation.md",
+      "updated": "2026-08-24T10:57:13+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review recorded in docs/workspace/session-phase-history/validation.md",
+      "updated": "2026-08-24T10:44:05+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/session-phase-history/finish.md; validation.md; review=passed; check=accepted_gaps",
+      "updated": "2026-08-24T10:58:03+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-24T10:20:09+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-24T10:22:38+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/session-phase-history.md"
+    },
+    {
+      "at": "2026-08-24T10:22:39+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/session-phase-history/decisions.md"
+    },
+    {
+      "at": "2026-08-24T10:22:39+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/session-phase-history/decisions.md; docs/specs/session-phase-history.md#compatibility-and-risk-controls"
+    },
+    {
+      "at": "2026-08-24T10:22:40+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/tasks/session-phase-history-tasks.md; docs/workspace/session-phase-history/context.md; docs/workspace/session-phase-history/task-links.md"
+    },
+    {
+      "at": "2026-08-24T10:22:50+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED tests for optional phase propagation"
+    },
+    {
+      "at": "2026-08-24T10:41:55+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 2 failures"
+    },
+    {
+      "at": "2026-08-24T10:44:05+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Phase propagation and phase-aware grouping implemented; validation.md RED/GREEN evidence"
+    },
+    {
+      "at": "2026-08-24T10:44:05+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Accept unrelated baseline test gaps or remediate separately"
+    },
+    {
+      "at": "2026-08-24T10:44:05+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review recorded in docs/workspace/session-phase-history/validation.md"
+    },
+    {
+      "at": "2026-08-24T10:57:13+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the named unrelated App/Server baseline failures on 2026-08-24; details in validation.md"
+    },
+    {
+      "at": "2026-08-24T10:57:13+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive completed phase-aware history implementation with commit pending"
+    },
+    {
+      "at": "2026-08-24T10:58:03+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/session-phase-history/finish.md; validation.md; review=passed; check=accepted_gaps"
+    },
+    {
+      "at": "2026-08-24T10:58:03+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Preserve Codex assistant phases end-to-end and only collapse explicitly classified commentary/tool work; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-24T10:58:03+00:00",
+  "archivedAt": "2026-08-24T10:58:03+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Preserve Codex assistant phases end-to-end and only collapse explicitly classified commentary/tool work",
+  "archiveFollowUp": "None"
+}

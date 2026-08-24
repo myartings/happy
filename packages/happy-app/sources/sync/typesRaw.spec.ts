@@ -1529,6 +1529,31 @@ describe('Zod Transform - WOLOG Content Normalization', () => {
             }
         });
 
+        it('preserves assistant text phase during session normalization', () => {
+            const normalized = normalizeRawMessage('db-phase-1', null, 1, {
+                ...base,
+                content: {
+                    type: 'session',
+                    data: {
+                        id: 'env-phase-1',
+                        time: 1,
+                        role: 'agent',
+                        turn: 'turn-phase-1',
+                        ev: { t: 'text', text: 'working', phase: 'commentary' }
+                    }
+                }
+            });
+
+            expect(normalized?.role).toBe('agent');
+            if (normalized?.role === 'agent') {
+                expect(normalized.content[0]).toMatchObject({
+                    type: 'text',
+                    text: 'working',
+                    phase: 'commentary',
+                });
+            }
+        });
+
         it('preserves session protocol usage for context tracking', () => {
             const usage = {
                 input_tokens: 1200,

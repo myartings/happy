@@ -50,6 +50,24 @@ describe('mapCodexMcpMessageToSessionEnvelopes', () => {
         expect(result.envelopes[0].ev).toEqual({ t: 'text', text: 'hello' });
     });
 
+    it('preserves supported phases on live agent text and omits unknown phases', () => {
+        const commentary = mapCodexMcpMessageToSessionEnvelopes(
+            { type: 'agent_message', message: 'checking', phase: 'commentary' },
+            { currentTurnId: 'turn-1' }
+        );
+        const unknown = mapCodexMcpMessageToSessionEnvelopes(
+            { type: 'agent_message', message: 'future', phase: 'future_phase' },
+            { currentTurnId: 'turn-1' }
+        );
+
+        expect(commentary.envelopes[0].ev).toEqual({
+            t: 'text',
+            text: 'checking',
+            phase: 'commentary',
+        });
+        expect(unknown.envelopes[0].ev).toEqual({ t: 'text', text: 'future' });
+    });
+
     it('drops control-only background task notifications from live agent text', () => {
         const result = mapCodexMcpMessageToSessionEnvelopes(
             {
@@ -694,6 +712,29 @@ describe('mapCodexThreadToSessionEnvelopes', () => {
             turn: 'turn-1',
             codexItemId: 'agent-1',
             ev: { t: 'text', text: 'hello human' },
+        });
+    });
+
+    it('preserves supported phases when backfilling agent text', () => {
+        const envelopes = mapCodexThreadToSessionEnvelopes({
+            turns: [{
+                id: 'turn-1',
+                startedAt: 100,
+                completedAt: 101,
+                status: 'completed',
+                items: [{
+                    id: 'agent-1',
+                    type: 'agentMessage',
+                    text: 'done',
+                    phase: 'final_answer',
+                }],
+            }],
+        });
+
+        expect(envelopes.find((envelope) => envelope.ev.t === 'text')?.ev).toEqual({
+            t: 'text',
+            text: 'done',
+            phase: 'final_answer',
         });
     });
 
