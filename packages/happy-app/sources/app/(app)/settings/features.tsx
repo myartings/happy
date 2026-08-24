@@ -14,13 +14,11 @@ export default function FeaturesSettingsScreen() {
     const githubIssuesSupported = Platform.OS !== 'web' || isTauri();
     const router = useRouter();
     const [experiments, setExperiments] = useSettingMutable('experiments');
-    const [analyticsOptOut, setAnalyticsOptOut] = useSettingMutable('analyticsOptOut');
     const [agentInputEnterToSend, setAgentInputEnterToSend] = useSettingMutable('agentInputEnterToSend');
     const [commandPaletteEnabled, setCommandPaletteEnabled] = useLocalSettingMutable('commandPaletteEnabled');
     const [markdownCopyV2, setMarkdownCopyV2] = useLocalSettingMutable('markdownCopyV2');
     const [desktopSessionNotificationsEnabled, setDesktopSessionNotificationsEnabled] = useLocalSettingMutable('desktopSessionNotificationsEnabled');
     const [hideInactiveSessions, setHideInactiveSessions] = useSettingMutable('hideInactiveSessions');
-    const [expResumeSession, setExpResumeSession] = useSettingMutable('expResumeSession');
     const [fileDiffsSidebar, setFileDiffsSidebar] = useSettingMutable('fileDiffsSidebar');
     const [groupToolCalls, setGroupToolCalls] = useSettingMutable('groupToolCalls');
     const [expImageUpload, setExpImageUpload] = useSettingMutable('expImageUpload');
@@ -65,30 +63,6 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={groupToolCalls}
                             onValueChange={setGroupToolCalls}
-                        />
-                    }
-                    showChevron={false}
-                />
-                <Item
-                    title="Flat Session List"
-                    subtitle="One full-width list on the home screen instead of project cards"
-                    icon={<Ionicons name="reorder-four-outline" size={29} color="#34C759" />}
-                    rightElement={
-                        <Switch
-                            value={flatSessionList}
-                            onValueChange={setFlatSessionList}
-                        />
-                    }
-                    showChevron={false}
-                />
-                <Item
-                    title="Sort by Recent Activity"
-                    subtitle="Order the session list by last activity instead of creation date"
-                    icon={<Ionicons name="swap-vertical-outline" size={29} color="#FF9500" />}
-                    rightElement={
-                        <Switch
-                            value={sortSessionsByActivity}
-                            onValueChange={setSortSessionsByActivity}
                         />
                     }
                     showChevron={false}
@@ -259,18 +233,6 @@ export default function FeaturesSettingsScreen() {
                     showChevron={false}
                 />
                 <Item
-                    title="Resume Session"
-                    subtitle="Resume disconnected Claude Code and Codex sessions via the machine daemon"
-                    icon={<Ionicons name="play-circle-outline" size={29} color="#30D158" />}
-                    rightElement={
-                        <Switch
-                            value={expResumeSession}
-                            onValueChange={setExpResumeSession}
-                        />
-                    }
-                    showChevron={false}
-                />
-                <Item
                     title={t('settingsFeatures.imageUpload')}
                     subtitle={t('settingsFeatures.imageUploadSubtitle')}
                     icon={<Ionicons name="image-outline" size={29} color="#FF2D55" />}
@@ -278,25 +240,6 @@ export default function FeaturesSettingsScreen() {
                         <Switch
                             value={expImageUpload}
                             onValueChange={setExpImageUpload}
-                        />
-                    }
-                    showChevron={false}
-                />
-            </ItemGroup>
-
-            {/* Privacy */}
-            <ItemGroup
-                title={t('settingsFeatures.privacy')}
-                footer={t('settingsFeatures.privacyDescription')}
-            >
-                <Item
-                    title={t('settingsFeatures.disableAnalytics')}
-                    subtitle={analyticsOptOut ? t('settingsFeatures.analyticsDisabled') : t('settingsFeatures.analyticsEnabled')}
-                    icon={<Ionicons name="analytics-outline" size={29} color="#FF3B30" />}
-                    rightElement={
-                        <Switch
-                            value={analyticsOptOut}
-                            onValueChange={setAnalyticsOptOut}
                         />
                     }
                     showChevron={false}

@@ -30,6 +30,11 @@ export const MarkdownView = React.memo((props: {
     markdown: string;
     onOptionPress?: (option: Option) => void;
     sessionId?: string;
+    /**
+     * The parent owns long-press copy (see LongPressCopyable). Suppresses native
+     * selection and the built-in copy gesture so only one of them fires.
+     */
+    externalCopyHandler?: boolean;
 }) => {
     // Backwards compatibility: The original version just returned the view, wrapping the list of blocks.
     // It made each of the individual text elements selectable. When we enable the markdownCopyV2 feature,
@@ -37,7 +42,7 @@ export const MarkdownView = React.memo((props: {
     // will be handled by a wrapper Pressable. If we don't disable the selectable property, then you will see
     // the native copy modal come up at the same time as the long press handler is fired.
     const markdownCopyV2 = useLocalSetting('markdownCopyV2');
-    const selectable = Platform.OS === 'web' || !markdownCopyV2;
+    const selectable = Platform.OS === 'web' || !(markdownCopyV2 || props.externalCopyHandler);
     const router = useRouter();
     const studioPresentation = useStudioSemanticTextPresentation();
     const enableStudioExtensions = studioPresentation !== null;
@@ -100,7 +105,7 @@ export const MarkdownView = React.memo((props: {
         );
     }
 
-    if (!markdownCopyV2) {
+    if (props.externalCopyHandler || !markdownCopyV2) {
         return renderContent();
     }
     

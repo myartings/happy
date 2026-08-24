@@ -101,6 +101,18 @@ function getResumeAvailability(session: Session, machine: Machine | null | undef
         };
     }
 
+    // Older daemons do not publish resumeSupport and do not implement the
+    // resume RPC. Capability presence is the compatibility check; the UI is
+    // hidden instead of offering an action that the machine cannot execute.
+    if (machine.metadata?.resumeSupport?.rpcAvailable !== true) {
+        return {
+            canResume: false,
+            canShowResume: false,
+            subtitle: '',
+            message: '',
+        };
+    }
+
     return {
         canResume: true,
         canShowResume: true,
@@ -123,18 +135,18 @@ export function useSessionQuickActions(
     const machineId = session.metadata?.machineId ?? '';
     const machine = useMachine(machineId);
     const devModeEnabled = useLocalSetting('devModeEnabled');
-    const expResumeSession = useSetting('expResumeSession');
+    const continuationExperimentsEnabled = useSetting('expResumeSession');
     const [pinnedSessionIds, setPinnedSessionIds] = useSettingMutable('pinnedSessionIds');
     const isPinned = pinnedSessionIds.includes(session.id);
     const resumeAvailability = React.useMemo(
-        () => expResumeSession ? getResumeAvailability(session, machine, sessionStatus.isConnected) : { canResume: false, canShowResume: false, subtitle: '', message: '' },
-        [machine, session, sessionStatus.isConnected, expResumeSession],
+        () => getResumeAvailability(session, machine, sessionStatus.isConnected),
+        [machine, session, sessionStatus.isConnected],
     );
 
     // Fork eligibility — separate from resume because fork works on both
-    // active AND inactive provider sessions. The user-facing toggle is the same
-    // expResumeSession experiment so all three flows (resume / fork /
-    // duplicate) ride a single switch on settings/features.
+    // active AND inactive provider sessions. Fork/duplicate still use the
+    // legacy rollout flag because resumeSupport does not prove that the daemon
+    // implements the newer fork RPC.
     const forkSource = React.useMemo(() => getSessionForkSource(session), [
         session.id,
         session.metadata?.flavor,
@@ -144,11 +156,11 @@ export function useSessionQuickActions(
         session.metadata?.codexThreadId,
     ]);
     const canFork = Boolean(
-        expResumeSession
+        continuationExperimentsEnabled
         && !isRigMetadata(session.metadata)
         && forkSource
         && machine
-        && isMachineOnline(machine),
+        && isMachineOnline(machine)
     );
 
     const openDetails = React.useCallback(() => {
