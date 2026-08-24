@@ -82,6 +82,7 @@ export const zhHant: TranslationStructure = {
         offline: '離線',
         lastSeen: ({ time }: { time: string }) => `最後活躍時間 ${time}`,
         permissionRequired: '需要權限',
+        inputRequired: '等待你的回答',
         activeNow: '目前活躍',
         unknown: '未知',
         unread: '新結果',
@@ -211,8 +212,10 @@ export const zhHant: TranslationStructure = {
             gradient: '漸層',
             brutalist: '粗獷風格',
         },
-        showFlavorIcons: '顯示 AI 提供者圖示',
-        showFlavorIconsDescription: '在工作階段頭像上顯示 AI 提供者圖示',
+        showHarnessIconInSessionHeader: '在工作階段標題中顯示 harness 圖示',
+        showHarnessIconInSessionHeaderDescription: '在工作階段標題中顯示 harness 圖示',
+        showHarnessIconsInSessionList: '在工作階段列表中顯示 harness 圖示',
+        showHarnessIconsInSessionListDescription: '在工作階段列表的頭像上顯示 harness 圖示',
     },
 
     settingsFeatures: {

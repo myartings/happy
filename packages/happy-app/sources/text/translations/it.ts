@@ -80,6 +80,7 @@ export const it: TranslationStructure = {
         offline: 'offline',
         lastSeen: ({ time }: { time: string }) => `visto l'ultima volta ${time}`,
         permissionRequired: 'permesso richiesto',
+        inputRequired: 'in attesa della tua risposta',
         activeNow: 'Attivo ora',
         unknown: 'sconosciuto',
         unread: 'nuovi risultati',
@@ -209,8 +210,10 @@ export const it: TranslationStructure = {
             gradient: 'Gradiente',
             brutalist: 'Brutalista',
         },
-        showFlavorIcons: 'Mostra icone provider IA',
-        showFlavorIconsDescription: 'Mostra le icone del provider IA sugli avatar di sessione',
+        showHarnessIconInSessionHeader: 'Mostra l\'icona harness nell\'intestazione della sessione',
+        showHarnessIconInSessionHeaderDescription: 'Mostra l\'icona harness nell\'intestazione della sessione',
+        showHarnessIconsInSessionList: 'Mostra le icone harness nell\'elenco delle sessioni',
+        showHarnessIconsInSessionListDescription: 'Mostra le icone harness negli avatar dell\'elenco delle sessioni',
     },
 
     settingsFeatures: {

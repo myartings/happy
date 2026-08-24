@@ -197,8 +197,10 @@ export const ru: TranslationStructure = {
             gradient: 'Градиентная',
             brutalist: 'Бруталистская',
         },
-        showFlavorIcons: 'Показывать иконки провайдеров ИИ',
-        showFlavorIconsDescription: 'Отображать иконки провайдеров ИИ на аватарах сессий',
+        showHarnessIconInSessionHeader: 'Показывать значок harness в заголовке сессии',
+        showHarnessIconInSessionHeaderDescription: 'Отображать значок harness в заголовке сессии',
+        showHarnessIconsInSessionList: 'Показывать значки harness в списке сессий',
+        showHarnessIconsInSessionListDescription: 'Отображать значки harness на аватарах в списке сессий',
     },
 
     settingsFeatures: {
@@ -427,6 +429,7 @@ export const ru: TranslationStructure = {
         offline: 'offline',
         lastSeen: ({ time }: { time: string }) => `в сети ${time}`,
         permissionRequired: 'требуется разрешение',
+        inputRequired: 'ожидает вашего ответа',
         activeNow: 'Активен сейчас',
         unknown: 'неизвестно',
         unread: 'новые результаты',

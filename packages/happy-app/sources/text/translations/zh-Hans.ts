@@ -83,6 +83,7 @@ export const zhHans: TranslationStructure = {
         offline: '离线',
         lastSeen: ({ time }: { time: string }) => `最后活跃时间 ${time}`,
         permissionRequired: '需要权限',
+        inputRequired: '等待你的回答',
         activeNow: '当前活跃',
         unknown: '未知',
         unread: '新结果',
@@ -212,8 +213,10 @@ export const zhHans: TranslationStructure = {
             gradient: '渐变',
             brutalist: '粗糙风格',
         },
-        showFlavorIcons: '显示 AI 提供商图标',
-        showFlavorIconsDescription: '在会话头像上显示 AI 提供商图标',
+        showHarnessIconInSessionHeader: '在会话标题中显示 harness 图标',
+        showHarnessIconInSessionHeaderDescription: '在会话标题中显示 harness 图标',
+        showHarnessIconsInSessionList: '在会话列表中显示 harness 图标',
+        showHarnessIconsInSessionListDescription: '在会话列表的头像上显示 harness 图标',
     },
 
     settingsFeatures: {
