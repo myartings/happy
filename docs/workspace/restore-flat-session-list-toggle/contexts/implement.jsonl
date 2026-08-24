@@ -1,0 +1,3 @@
+{"path":"packages/happy-app/sources/app/(app)/settings/features.tsx","reason":"Restore the visible Flat Session List preference control."}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Restore runtime selection between grouped and flat session layouts."}
+{"path":"packages/happy-app/sources/utils","reason":"Add focused regression coverage for both public wiring seams."}

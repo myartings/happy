@@ -67,6 +67,18 @@ export default function FeaturesSettingsScreen() {
                     }
                     showChevron={false}
                 />
+                <Item
+                    title="Flat Session List"
+                    subtitle="One full-width list on the home screen instead of project cards"
+                    icon={<Ionicons name="reorder-four-outline" size={29} color="#34C759" />}
+                    rightElement={
+                        <Switch
+                            value={flatSessionList}
+                            onValueChange={setFlatSessionList}
+                        />
+                    }
+                    showChevron={false}
+                />
             </ItemGroup>
 
             <ItemGroup
