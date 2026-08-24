@@ -2,6 +2,7 @@ type ProjectionEntry<TSource, TMachine, TRow> = {
     source: TSource;
     unread: boolean;
     machine: TMachine | undefined;
+    context: unknown;
     row: TRow;
 };
 
@@ -10,6 +11,7 @@ export type SessionRowProjectionRequest<TSource, TMachine, TRow> = {
     source: TSource;
     unread: boolean;
     machine: TMachine | undefined;
+    context?: unknown;
     build: () => TRow;
 };
 
@@ -31,6 +33,7 @@ export class SessionRowProjectionCache<TSource, TMachine, TRow> {
             && existing.source === request.source
             && existing.unread === request.unread
             && existing.machine === request.machine
+            && existing.context === request.context
         ) {
             return existing.row;
         }
@@ -40,6 +43,7 @@ export class SessionRowProjectionCache<TSource, TMachine, TRow> {
             source: request.source,
             unread: request.unread,
             machine: request.machine,
+            context: request.context,
             row,
         });
         return row;

@@ -1,5 +1,6 @@
 /**
- * Cherry-picked types from `codex app-server generate-ts` (Codex 0.107.0).
+ * Cherry-picked types from `codex app-server generate-ts` (initially Codex
+ * 0.107.0, selectively refreshed through Codex 0.148.0).
  * Only the essential types needed for our integration.
  */
 
@@ -212,6 +213,16 @@ export type SendUserTurnParams = {
     effort: ReasoningEffort | null;
     summary: ReasoningSummary;
     outputSchema: unknown | null;
+};
+
+export type TurnSteerParams = {
+    threadId: ThreadId;
+    input: InputItem[];
+    expectedTurnId: string;
+};
+
+export type TurnSteerResponse = {
+    turnId: string;
 };
 
 export type InterruptConversationParams = {

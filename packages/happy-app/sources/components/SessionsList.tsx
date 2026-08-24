@@ -920,7 +920,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                 styles.avatarContainer,
                 isStudio && { width: 32, height: 32 },
             ]}>
-                <Avatar id={session.avatarId} size={isStudio ? 32 : 48} monochrome={!status.isConnected} flavor={session.flavor} clientId={session.clientId} badgeLocation="sessionList" />
+                <Avatar id={session.avatarId} size={isStudio ? 32 : 48} monochrome={!status.isConnected} flavor={session.flavor} clientId={session.clientId} imageUrl={session.projectAvatarUri} thumbhash={session.projectAvatarThumbhash} badgeLocation="sessionList" />
                 {session.hasDraft && (
                     <View style={[
                         styles.draftIconContainer,

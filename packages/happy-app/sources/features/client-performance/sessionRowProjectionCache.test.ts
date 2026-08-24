@@ -68,4 +68,24 @@ describe('SessionRowProjectionCache', () => {
         cache.prune(new Set());
         expect(cache.size).toBe(0);
     });
+
+    it('invalidates a row when an external presentation context changes', () => {
+        const cache = new SessionRowProjectionCache<Source, Machine, Row>();
+        const source = { id: 'session', value: 1 };
+        const machine = { online: true };
+        const firstProject = { name: 'First' };
+        const secondProject = { name: 'Second' };
+        const build = vi.fn((value: Source): Row => ({
+            id: value.id,
+            value: value.value,
+            unread: false,
+            online: true,
+        }));
+
+        cache.project({ id: source.id, source, unread: false, machine, context: firstProject, build: () => build(source) });
+        cache.project({ id: source.id, source, unread: false, machine, context: firstProject, build: () => build(source) });
+        cache.project({ id: source.id, source, unread: false, machine, context: secondProject, build: () => build(source) });
+
+        expect(build).toHaveBeenCalledTimes(2);
+    });
 });

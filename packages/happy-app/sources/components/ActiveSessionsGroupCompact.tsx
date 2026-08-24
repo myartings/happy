@@ -133,7 +133,7 @@ const SectionHeader = React.memo(({ session, displayPath, sessionRowStyle }: {
         >
             {/* Avatar — vertically centered */}
             <View style={styles.sectionHeaderAvatar}>
-                <Avatar id={session.avatarId} size={isStudio ? 20 : 24} flavor={null} />
+                <Avatar id={session.avatarId} size={isStudio ? 20 : 24} flavor={null} imageUrl={session.projectAvatarUri} thumbhash={session.projectAvatarThumbhash} />
             </View>
 
             {/* Project name + aggregate changes */}

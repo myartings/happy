@@ -36,7 +36,8 @@ import {
 } from './utils/sessionProtocolMapper';
 import { resumeExistingThread } from './resumeExistingThread';
 import { emitReadyIfIdle } from './emitReadyIfIdle';
-import { enqueueCodexUserText, isCodexClearText } from './codexClearCommand';
+import { isCodexClearText } from './codexClearCommand';
+import { routeCodexUserText } from './codexUserMessageRouter';
 import { downloadCodexFileEventAttachment } from './utils/attachmentEvents';
 import { prepareCodexImageInputItems } from './utils/imageInput';
 import { withCodexRuntimeModelMetadata } from './codexRuntimeModelMetadata';
@@ -389,14 +390,43 @@ export async function runCodex(opts: {
             appendSystemPrompt: messageAppendSystemPrompt,
             effort: messageEffort,
         };
-        const enqueueResult = enqueueCodexUserText({
+        const routeResult = await routeCodexUserText({
             text: message.content.text,
             mode: enhancedMode,
             queue: messageQueue,
             attachments: attachmentsForThisMessage,
+            activeTurnId: client?.turnId ?? null,
+            forceQueue: parseCodexGoalCommand(message.content.text) !== null,
+            steer: async ({ text, attachments, expectedTurnId }) => {
+                const imageInputs = await prepareCodexImageInputItems(attachments, {
+                    sessionId: session.sessionId,
+                });
+                if ((attachments?.length ?? 0) > 0) {
+                    logger.debug('[Codex] Prepared image inputs for active-turn steering', {
+                        inputCount: imageInputs.inputItems.length,
+                        skippedCount: imageInputs.skipped,
+                    });
+                }
+
+                const hasUserText = text.trim().length > 0;
+                if ((attachments?.length ?? 0) > 0 && imageInputs.inputItems.length === 0 && !hasUserText) {
+                    session.sendSessionEvent({
+                        type: 'message',
+                        message: 'No supported images were available to send to Codex.',
+                    });
+                    return;
+                }
+
+                await client.steerTurn(text, {
+                    expectedTurnId,
+                    extraInputItems: imageInputs.inputItems,
+                });
+            },
         });
-        if (enqueueResult === 'clear') {
+        if (routeResult === 'clear') {
             logger.debug('[Codex] /clear command pushed to isolated queue');
+        } else if (routeResult === 'steered') {
+            logger.debug('[Codex] User message steered into the active turn');
         }
     }, (error) => {
         logger.warn('[Codex] Failed to handle user message', {
