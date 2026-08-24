@@ -5,7 +5,6 @@ import {
     Text,
     Pressable,
     Platform,
-    Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -111,7 +110,7 @@ const styles = StyleSheet.create((theme) => ({
     },
     titleContainer: {
         flex: 1,
-        alignItems: Platform.OS === 'web' ? 'center' : 'flex-start',
+        alignItems: 'center',
         justifyContent: Platform.OS === 'web' ? 'flex-start' : 'center',
     },
     titleText: {
@@ -299,19 +298,24 @@ export const MainView = React.memo(({ variant }: MainViewProps) => {
     const friendRequests = useFriendRequests();
     const realtimeStatus = useRealtimeStatus();
     const safeArea = useSafeAreaInsets();
-    const { isStarting: isStartingHomeSession, startSession: startHomeSession } = useStartSessionFromDraft();
+    const {
+        isStarting: isStartingHomeSession,
+        phase: homeSessionPhase,
+        startSession: startHomeSession,
+        cancelStart: cancelHomeSession,
+    } = useStartSessionFromDraft();
 
     // Tab state management
     // NOTE: Zen tab removed - the feature never got to a useful state
     const [activeTab, setActiveTab] = React.useState<ActiveTabType>('sessions');
     const [homePrompt, setHomePrompt] = React.useState('');
     const showHeaderRight = activeTab !== 'settings' || isUsingCustomServer();
-    const topContentInset = Platform.OS === 'web'
+    const topChromeInset = Platform.OS === 'web'
         ? 0
         : safeArea.top
             + MOBILE_GLASS_HEADER_HEIGHT
-            + (realtimeStatus !== 'disconnected' ? 32 : 0)
-            + 12;
+            + (realtimeStatus !== 'disconnected' ? 32 : 0);
+    const topContentInset = topChromeInset + (Platform.OS === 'web' ? 0 : 12);
     const bottomContentInset = Platform.OS === 'web'
         ? 0
         : MOBILE_HOME_DOCK_CONTENT_INSET;
@@ -323,7 +327,8 @@ export const MainView = React.memo(({ variant }: MainViewProps) => {
             return false;
         }
         useNewSessionDraft.getState().setInput(prompt);
-        Keyboard.dismiss();
+        // The keyboard stays up: the dock reports what is happening above the
+        // composer and closes itself once the session is open.
         const started = await startHomeSession();
         if (started) setHomePrompt('');
         return started;
@@ -403,6 +408,7 @@ export const MainView = React.memo(({ variant }: MainViewProps) => {
                 headerShadowVisible={false}
                 headerTransparent={true}
                 mobileTitleSurface="plain"
+                mobileTitleAlignment="center"
             />
             {realtimeStatus !== 'disconnected' && (
                 <VoiceAssistantStatusBar variant="full" />
@@ -418,6 +424,7 @@ export const MainView = React.memo(({ variant }: MainViewProps) => {
                     <View style={styles.phoneSceneStack}>
                         <SessionsListWrapper
                             topContentInset={topContentInset}
+                            scrollIndicatorTopInset={topChromeInset}
                             bottomContentInset={bottomContentInset}
                         />
                     </View>
@@ -437,6 +444,8 @@ export const MainView = React.memo(({ variant }: MainViewProps) => {
                         onPromptChange={setHomePrompt}
                         onSubmit={handleHomePromptSubmit}
                         isSubmitting={isStartingHomeSession}
+                        submitPhase={homeSessionPhase}
+                        onSubmitCancel={cancelHomeSession}
                         showBottomBackdrop={sessionListViewData !== null && sessionListViewData.length > 0}
                     />
                 </View>

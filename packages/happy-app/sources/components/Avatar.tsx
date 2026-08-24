@@ -48,18 +48,13 @@ const styles = StyleSheet.create((theme) => ({
         shadowRadius: 2,
         elevation: 3,
     },
-    rigHarnessIcon: {
-        backgroundColor: 'transparent',
-        padding: 0,
-        shadowOpacity: 0,
-        shadowRadius: 0,
-        elevation: 0,
-    },
 }));
 
 export const Avatar = React.memo((props: AvatarProps) => {
     const { flavor, clientId, badgeLocation = 'none', size = 48, imageUrl, thumbhash, ...avatarProps } = props;
-    const avatarStyle = useSetting('avatarStyle');
+    // Brutalist is the product default now. Keep the renderer branches below
+    // so another style can be restored without rebuilding the avatar variants.
+    const avatarStyle: string = 'brutalist';
     const showFlavorIcons = useSetting('showFlavorIcons');
     const showHarnessIconInSessionHeader = useSetting('showHarnessIconInSessionHeader');
     const { theme } = useUnistyles();
@@ -93,12 +88,14 @@ export const Avatar = React.memo((props: AvatarProps) => {
                 ? Math.round(size * 0.25)
                 : effectiveHarness === 'claude'
                     ? Math.round(size * 0.28)
-                    : Math.round(size * 0.35);
+                    : effectiveHarness === 'rig'
+                        ? Math.round(size * 0.29)
+                        : Math.round(size * 0.35);
 
             return (
                 <View style={[styles.container, { width: size, height: size }]}>
                     {imageElement}
-                    <View style={[styles.harnessIcon, effectiveHarness === 'rig' && styles.rigHarnessIcon, {
+                    <View style={[styles.harnessIcon, {
                         width: circleSize,
                         height: circleSize,
                         alignItems: 'center',
@@ -138,7 +135,9 @@ export const Avatar = React.memo((props: AvatarProps) => {
         ? Math.round(size * 0.25)
         : effectiveHarness === 'claude'
             ? Math.round(size * 0.28)
-            : Math.round(size * 0.35);
+            : effectiveHarness === 'rig'
+                ? Math.round(size * 0.29)
+                : Math.round(size * 0.35);
 
     // Only wrap in a container when this caller explicitly opts into a badge
     // location and the session has an identifiable harness.
@@ -146,7 +145,7 @@ export const Avatar = React.memo((props: AvatarProps) => {
         return (
             <View style={[styles.container, { width: size, height: size }]}>
                 <AvatarComponent {...avatarProps} size={size} />
-                <View style={[styles.harnessIcon, effectiveHarness === 'rig' && styles.rigHarnessIcon, {
+                <View style={[styles.harnessIcon, {
                     width: circleSize,
                     height: circleSize,
                     alignItems: 'center',

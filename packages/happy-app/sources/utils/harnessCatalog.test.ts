@@ -23,12 +23,12 @@ describe('harness catalog', () => {
             selected: 'claude',
         });
 
-        expect(harnesses.map((harness) => harness.key)).toEqual(['claude', 'codex', 'rig', 'agy']);
+        expect(harnesses.map((harness) => harness.key)).toEqual(['claude', 'codex', 'agy', 'rig']);
         expect(harnesses.map((harness) => harness.name)).toEqual([
             'Claude Code',
             'Codex',
-            'Happy',
             'Antigravity',
+            'Happy',
         ]);
     });
 
@@ -79,17 +79,31 @@ describe('harness catalog', () => {
         expect(harnesses.map((harness) => harness.key)).toEqual(['claude', 'codex']);
     });
 
+    it('never lists Antigravity without an explicit installation report', () => {
+        expect(listAvailableHarnesses({
+            availability: { claude: true, agy: false },
+            happyAgentAvailable: false,
+            selected: 'agy',
+        }).map((harness) => harness.key)).toEqual(['claude']);
+
+        expect(listAvailableHarnesses({
+            availability: null,
+            happyAgentAvailable: false,
+            selected: 'agy',
+        }).map((harness) => harness.key)).toEqual(['claude', 'codex']);
+    });
+
     it('falls back to the whole catalog when a machine reports no capabilities', () => {
         expect(listAvailableHarnesses({
             availability: null,
             happyAgentAvailable: false,
             selected: null,
-        }).map((harness) => harness.key)).toEqual(['claude', 'codex', 'agy']);
+        }).map((harness) => harness.key)).toEqual(['claude', 'codex']);
 
         expect(listAvailableHarnesses({
             availability: {},
             happyAgentAvailable: false,
             selected: null,
-        }).map((harness) => harness.key)).toEqual(['claude', 'codex', 'rig', 'agy']);
+        }).map((harness) => harness.key)).toEqual(['claude', 'codex', 'rig']);
     });
 });
