@@ -3,6 +3,7 @@ import { Message } from '@/sync/typesMessage';
 import { knownTools } from '@/components/tools/knownTools';
 import { getToolSummaryCategory, isInteractiveQuestionToolName } from '@/utils/toolDisplay';
 import { t } from '@/text';
+import { TurnProjectionCache } from '@/features/client-performance/turnProjectionCache';
 
 // Display item types for the grouped message list
 export type TextItem = {
@@ -46,9 +47,38 @@ export function useGroupedMessages(
     options: { collapseCurrentTurn?: boolean } = {},
 ): DisplayItem[] {
     const collapseCurrentTurn = options.collapseCurrentTurn ?? true;
+    const cacheRef = React.useRef<TurnProjectionCache<Message, DisplayItem[]> | null>(null);
+    if (!cacheRef.current) {
+        cacheRef.current = new TurnProjectionCache<Message, DisplayItem[]>();
+    }
     return React.useMemo(() => {
-        return groupMessagesForDisplay(messages, enabled, { collapseCurrentTurn });
+        return groupMessagesWithTurnProjection(
+            cacheRef.current!,
+            messages,
+            enabled,
+            collapseCurrentTurn,
+        );
     }, [messages, enabled, collapseCurrentTurn]);
+}
+
+export function groupMessagesWithTurnProjection(
+    cache: TurnProjectionCache<Message, DisplayItem[]>,
+    messages: readonly Message[],
+    enabled: boolean,
+    collapseCurrentTurn: boolean,
+): DisplayItem[] {
+    const segments = cache.project({
+        items: messages,
+        getId: (message) => message.id,
+        isBoundary: (message) => message.kind === 'user-text',
+        variantForSegment: (segmentIndex) => `${enabled}:${segmentIndex === 0 ? collapseCurrentTurn : true}`,
+        projectSegment: (segment, segmentIndex) => groupMessagesForDisplay(
+            segment as Message[],
+            enabled,
+            { collapseCurrentTurn: segmentIndex === 0 ? collapseCurrentTurn : true },
+        ),
+    });
+    return segments.flat();
 }
 
 export function groupMessagesForDisplay(

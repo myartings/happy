@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "client-performance-bounded-state",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Profile the installed desktop client before any normalized-ordering or protocol-pagination escalation",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/client-performance-bounded-state.md; user accepted ordered baseline-to-client-to-escalation sequence",
+      "updated": "2026-08-24T14:49:02+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/client-performance-bounded-state/decisions.md resolves client-first, bounded-history, list-engine, and upstream-conflict decisions",
+      "updated": "2026-08-24T14:49:02+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope and ordered seams recorded in docs/specs/client-performance-bounded-state.md and docs/tasks/client-performance-bounded-state-tasks.md; local-only tracker reason recorded",
+      "updated": "2026-08-24T14:49:03+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Client-first slice excludes protocol, server, persistence, encryption, cross-device synchronization, deployment, and destructive operations; durable history is never deleted",
+      "updated": "2026-08-24T14:49:02+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "T1-T6 implemented: deterministic baseline, stable Session/turn projections, on-demand copy, target-only indexing, hidden-cache bound, and ChatList tuning; focused tests pass",
+      "updated": "2026-08-24T15:23:24+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the recorded baseline-suite, human IME, residual linear-scan, and protocol-pagination gaps on 2026-08-25; focused tests, typecheck, desktop build/install/smoke, and workflow checks pass",
+      "updated": "2026-08-24T18:22:53+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking correctness, compatibility, data-integrity, security, or rollback issues; focused 36 tests, app typecheck, installed Windows/Tauri smoke, and workflow core checks pass",
+      "updated": "2026-08-24T18:18:38+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records completed scope, final verification, passed whole-diff review, explicit accepted gaps, rollback, and evidence-based follow-up",
+      "updated": "2026-08-24T18:24:01+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-24T14:47:03+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-24T14:49:02+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/client-performance-bounded-state.md; user accepted ordered baseline-to-client-to-escalation sequence"
+    },
+    {
+      "at": "2026-08-24T14:49:02+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/client-performance-bounded-state/decisions.md resolves client-first, bounded-history, list-engine, and upstream-conflict decisions"
+    },
+    {
+      "at": "2026-08-24T14:49:02+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Client-first slice excludes protocol, server, persistence, encryption, cross-device synchronization, deployment, and destructive operations; durable history is never deleted"
+    },
+    {
+      "at": "2026-08-24T14:49:03+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope and ordered seams recorded in docs/specs/client-performance-bounded-state.md and docs/tasks/client-performance-bounded-state-tasks.md; local-only tracker reason recorded"
+    },
+    {
+      "at": "2026-08-24T14:49:46+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T1: establish generated performance fixtures and deterministic work counters"
+    },
+    {
+      "at": "2026-08-24T15:23:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T6 implemented: deterministic baseline, stable Session/turn projections, on-demand copy, target-only indexing, hidden-cache bound, and ChatList tuning; focused tests pass"
+    },
+    {
+      "at": "2026-08-24T15:23:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured checks, map acceptance evidence, and review the whole diff"
+    },
+    {
+      "at": "2026-08-24T15:25:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 4 failures"
+    },
+    {
+      "at": "2026-08-24T18:18:38+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking correctness, compatibility, data-integrity, security, or rollback issues; focused 36 tests, app typecheck, installed Windows/Tauri smoke, and workflow core checks pass"
+    },
+    {
+      "at": "2026-08-24T18:22:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the recorded baseline-suite, human IME, residual linear-scan, and protocol-pagination gaps on 2026-08-25; focused tests, typecheck, desktop build/install/smoke, and workflow checks pass"
+    },
+    {
+      "at": "2026-08-24T18:22:59+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record accepted gaps, rollback, installed desktop evidence, and archive for commit"
+    },
+    {
+      "at": "2026-08-24T18:24:01+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records completed scope, final verification, passed whole-diff review, explicit accepted gaps, rollback, and evidence-based follow-up"
+    },
+    {
+      "at": "2026-08-24T18:24:25+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and desktop-verified bounded incremental Happy client state for large Session indexes and long transcripts; commit: pending; follow-up: Profile the installed desktop client before any normalized-ordering or protocol-pagination escalation"
+    }
+  ],
+  "updated": "2026-08-24T18:24:25+00:00",
+  "archivedAt": "2026-08-24T18:24:25+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and desktop-verified bounded incremental Happy client state for large Session indexes and long transcripts",
+  "archiveFollowUp": "Profile the installed desktop client before any normalized-ordering or protocol-pagination escalation"
+}

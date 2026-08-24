@@ -1,0 +1,9 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/client-performance-bounded-state.md","reason":"Accepted observable behavior and compatibility boundary"}
+{"path":"docs/tasks/client-performance-bounded-state-tasks.md","reason":"Dependency-ordered implementation slices and validation seams"}
+{"path":"packages/happy-app/sources/sync/storage.ts","reason":"Current Session projection and message-store integration seams"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Current latest/older message paging and cache lifecycle"}
+{"path":"packages/happy-app/sources/sync/sessionMessageCachePolicy.ts","reason":"Existing Session-cache protection and eviction policy"}
+{"path":"packages/happy-app/sources/hooks/useGroupedMessages.ts","reason":"Current whole-transcript display derivation"}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Current chat virtualization, message targeting, and copy seams"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Current Session-list virtualization and presentation seam"}

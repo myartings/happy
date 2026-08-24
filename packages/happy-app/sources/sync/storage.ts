@@ -39,6 +39,7 @@ import { indexSessionsById } from './sessionIdentity';
 import { resolveSessionRuntimeDisplay, type SessionPlatformKind } from '@/utils/sessionRuntimeDisplay';
 import { resolveLatestSessionActivityAt } from '@/utils/sessionActivity';
 import { t } from '@/text';
+import { SessionRowProjectionCache } from '@/features/client-performance/sessionRowProjectionCache';
 
 // Debounce timer for realtimeMode changes
 let realtimeModeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -330,6 +331,8 @@ interface StorageState {
     setCurrentViewingSession: (sessionId: string | null) => void;
 }
 
+const sessionRowProjectionCache = new SessionRowProjectionCache<Session, Machine, SessionRowData>();
+
 // Helper function to build unified list view data from sessions and machines
 function buildSessionListViewData(
     sessions: Record<string, Session>,
@@ -340,6 +343,7 @@ function buildSessionListViewData(
     // map would quietly report every machine as online.
     machines: Record<string, Machine>,
 ): SessionListViewItem[] {
+    sessionRowProjectionCache.prune(new Set(Object.keys(sessions)));
     const rigProjectSessions: Session[] = [];
     const rigPathSessions: Session[] = [];
     const happySessions: Session[] = [];
@@ -382,7 +386,17 @@ function buildSessionListViewData(
     archivedSessions.sort((a, b) => sortKey(b) - sortKey(a));
 
     const listData: SessionListViewItem[] = [];
-    const toRow = (session: Session) => buildSessionRowData(session, unreadSessionIds, machines);
+    const toRow = (session: Session) => {
+        const machineId = session.metadata?.machineId;
+        const machine = machineId ? machines[machineId] : undefined;
+        return sessionRowProjectionCache.project({
+            id: session.id,
+            source: session,
+            unread: unreadSessionIds.has(session.id),
+            machine,
+            build: () => buildSessionRowData(session, unreadSessionIds, machines),
+        });
+    };
 
     const rigProjects = [
         ...buildProjectGroups(rigProjectSessions, toRow, isSessionActive),

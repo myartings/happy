@@ -201,3 +201,88 @@ Observable success:
   or any other public distribution.
 - Building official baseline artifacts from `dev` or from a dirty worktree.
 - Replacing, stopping, or relabeling the personal development client.
+
+# Bounded Client Performance
+
+## Problem
+
+Happy becomes progressively less responsive as the account accumulates many
+Sessions and an opened Session accumulates a long, tool-heavy transcript. The
+failure is client-wide: navigation and scrolling degrade, and renderer main
+thread stalls can delay IME composition and ordinary text entry.
+
+Virtualized lists alone do not bound the work performed before rendering.
+Session updates still rebuild a projection of the complete Session collection,
+while message updates can repeatedly derive display groups and copy metadata
+from the complete loaded transcript.
+
+## Desired outcome
+
+Happy remains responsive while an account contains a large Session index and
+while a long Session receives streaming updates. Work performed for one Session
+or one active turn scales with the changed data, not with all retained Sessions
+or all historical messages.
+
+## Product requirements
+
+1. A repeatable development benchmark records Session-index mutation work,
+   message-derivation work, retained message state, and representative client
+   latency before and after optimization.
+2. Updating one Session does not rebuild unchanged row projections for every
+   other Session.
+3. Streaming one active turn does not repeatedly derive completed historical
+   turns or eagerly construct copy payloads for every message.
+4. The client retains a bounded working set of hidden Session message caches.
+   An opened Session keeps its loaded history intact so existing one-way
+   backward pagination cannot create an unrecoverable middle-page gap.
+5. Session and chat list virtualization uses platform-appropriate bounded
+   render windows without breaking newest-message anchoring, scroll-up history,
+   message targeting, or IME input.
+6. Existing Session protocol, encryption, persistence, cross-device behavior,
+   and server compatibility remain unchanged in the client-first delivery.
+7. A server/protocol pagination redesign is considered only when post-change
+   evidence attributes a material remaining bottleneck to an unpageable or
+   oversized transport contract.
+
+## Observable success
+
+- Deterministic tests prove unchanged Session rows retain stable projections
+  across unrelated Session updates.
+- Deterministic tests prove completed message-turn projections are reusable
+  across active-turn updates and expensive copy text is generated on demand.
+- Cache-policy tests prove configured Session and hidden-transcript bounds,
+  including protection for active send/outbox work and latest-page reload.
+- Representative 100, 500, and 2,000 Session fixtures and 100, 1,000, and 5,000
+  message fixtures complete the recorded benchmark without unbounded retained
+  state or full-collection work on a single-item update.
+- Happy app typecheck, focused tests, full applicable app tests, and repository
+  workflow checks pass.
+
+## Scope
+
+- Client-side benchmark and diagnostic counters that are absent from normal
+  production behavior unless explicitly enabled.
+- Incremental Session-index projection with stable unchanged rows.
+- Incremental or turn-scoped message display derivation and on-demand copy
+  payload generation.
+- Bounded hidden-message-cache policy integrated with existing backward paging.
+- Evidence-based Chat and Session list window tuning.
+
+## Non-goals
+
+- Changing Session wire formats, server database schemas, encryption, or agent
+  runtime behavior in the client-first delivery.
+- Deleting durable history or preventing users from loading older messages.
+- Replacing React Native, Zustand, or every list component.
+- Treating model-context compaction as a substitute for UI-state bounds.
+- Shipping a speculative server protocol redesign without post-change evidence.
+
+## Constraints
+
+- Product logic should live in focused performance modules; `storage.ts`,
+  `sync.ts`, `ChatList.tsx`, and `SessionsList.tsx` should contain narrow seams
+  to reduce future upstream merge conflicts.
+- Benchmarks must use generated, non-sensitive fixtures and must not capture or
+  commit real Session content.
+- Bounds must fail safe: active turns, pending permissions, unsent outbox data,
+  and the currently targeted message cannot be silently discarded.

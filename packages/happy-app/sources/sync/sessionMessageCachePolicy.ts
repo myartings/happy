@@ -1,5 +1,29 @@
 export const MAX_RETAINED_SESSION_MESSAGE_CACHES = 3;
 export const MAX_BACKGROUND_SESSION_MESSAGE_CACHES = 1;
+export const MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION = 500;
+export const MAX_RETAINED_HIDDEN_SESSION_MESSAGE_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Large transcripts are useful only while they are visible. Evicting the whole
+ * hidden cache is safer than slicing individual pages because the next open can
+ * rebuild its cursors from the server's latest page without creating a gap.
+ */
+export function shouldEvictHiddenSessionMessageCache(
+    messageCount: number,
+    estimatedBytes = 0,
+): boolean {
+    return messageCount > MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION ||
+        estimatedBytes > MAX_RETAINED_HIDDEN_SESSION_MESSAGE_BYTES;
+}
+
+/** Conservative UTF-16 estimate used only when a Session becomes hidden. */
+export function estimateNormalizedMessageCacheBytes(messages: readonly unknown[]): number {
+    let bytes = 0;
+    for (const message of messages) {
+        bytes += JSON.stringify(message).length * 2;
+    }
+    return bytes;
+}
 
 type SelectSessionMessageCacheEvictionsOptions = {
     cachedSessionIds: Iterable<string>;

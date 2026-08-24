@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/client-performance-bounded-state/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/client-performance-bounded-state.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/tasks/client-performance-bounded-state-tasks.md","reason":"Expected focused and integration validation seams"}
+{"path":"packages/happy-app/sources","reason":"Bounded whole-feature client diff and tests"}

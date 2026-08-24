@@ -68,10 +68,13 @@ import { resolveControlHandoffDirection } from './controlHandoff';
 import { resolveMessageModeMeta } from './messageMeta';
 import { getUserMessageActivityAt } from '@/utils/sessionActivity';
 import {
+    estimateNormalizedMessageCacheBytes,
     MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
+    MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
     selectSessionMessageCacheEvictions,
     selectVisibleSessionIds,
+    shouldEvictHiddenSessionMessageCache,
 } from './sessionMessageCachePolicy';
 import type { AttachmentPreview, UploadedAttachment } from './attachmentTypes';
 import { requestAttachmentUpload, uploadEncryptedBlob } from './apiAttachments';
@@ -391,10 +394,43 @@ class Sync {
         } else {
             this.visibleSessionRefCounts.delete(sessionId);
         }
+
+        if (nextCount <= 0 && this.evictOversizedHiddenSessionMessageCache(sessionId)) {
+            return;
+        }
+
         this.pruneSessionMessageCaches(
             MAX_RETAINED_SESSION_MESSAGE_CACHES,
             'session-hidden'
         );
+    }
+
+    private isSessionMessageCacheBusy(sessionId: string) {
+        return this.sessionQueueProcessing.has(sessionId) ||
+            this.sendAbortControllers.has(sessionId) ||
+            (this.pendingOutbox.get(sessionId)?.length ?? 0) > 0;
+    }
+
+    private evictOversizedHiddenSessionMessageCache(sessionId: string): boolean {
+        if (this.visibleSessionRefCounts.has(sessionId) || this.isSessionMessageCacheBusy(sessionId)) {
+            return false;
+        }
+        const cachedMessages = storage.getState().sessionMessages[sessionId]?.messages ?? [];
+        const cachedMessageCount = cachedMessages.length;
+        const estimatedCacheBytes = cachedMessageCount > MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION
+            ? 0
+            : estimateNormalizedMessageCacheBytes(cachedMessages);
+        if (!shouldEvictHiddenSessionMessageCache(cachedMessageCount, estimatedCacheBytes)) {
+            return false;
+        }
+
+        this.evictSessionMessageCache(sessionId);
+        log.log(
+            `💾 Oversized hidden session message cache evicted: session=${sessionId} ` +
+            `evictedMessages=${cachedMessageCount} estimatedBytes=${estimatedCacheBytes} ` +
+            `threshold=${MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION}`
+        );
+        return true;
     }
 
     private touchSessionMessageCache(sessionId: string) {
@@ -536,6 +572,8 @@ class Sync {
             const pending = this.sessionMessageQueue.get(sessionId);
             if (pending && pending.length > 0) {
                 this.scheduleQueuedMessagesProcessing(sessionId);
+            } else {
+                this.evictOversizedHiddenSessionMessageCache(sessionId);
             }
         });
     }
@@ -2103,6 +2141,7 @@ class Sync {
         } else if (this.appState !== 'active') {
             this.maybeStartBackgroundSendWatchdog();
         }
+        this.evictOversizedHiddenSessionMessageCache(sessionId);
     }
 
     private fetchMessages = async (sessionId: string) => {
