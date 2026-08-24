@@ -36,6 +36,8 @@ import type {
     ThreadGoalClearParams,
     ThreadGoalClearResponse,
     Thread,
+    TurnSteerParams,
+    TurnSteerResponse,
     InterruptConversationParams,
     ReviewDecision,
     EventMsg,
@@ -1191,6 +1193,31 @@ export class CodexAppServerClient {
         const aborted = await completion;
         if (timer) clearTimeout(timer);
         return { aborted };
+    }
+
+    async steerTurn(prompt: string, opts: {
+        expectedTurnId: string;
+        extraInputItems?: InputItem[];
+    }): Promise<TurnSteerResponse> {
+        const threadId = this._threadId;
+        const expectedTurnId = opts.expectedTurnId;
+        if (!threadId || !expectedTurnId) {
+            throw new Error('No active turn to steer.');
+        }
+
+        const extraInputItems = opts.extraInputItems ?? [];
+        const input: InputItem[] = [];
+        if (prompt.length > 0 || extraInputItems.length === 0) {
+            input.push({ type: 'text', text: prompt });
+        }
+        input.push(...extraInputItems);
+
+        const params: TurnSteerParams = {
+            threadId,
+            expectedTurnId,
+            input,
+        };
+        return await this.request('turn/steer', params) as TurnSteerResponse;
     }
 
     async interruptTurn(opts?: { timeoutMs?: number }): Promise<void> {

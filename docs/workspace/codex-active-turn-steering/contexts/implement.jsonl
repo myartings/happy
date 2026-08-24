@@ -1,0 +1,11 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/specs/codex-active-turn-steering.md","reason":"Accepted observable behavior and compatibility contract"}
+{"path":"docs/tasks/codex-active-turn-steering-tasks.md","reason":"Bounded implementation and validation slices"}
+{"path":"packages/happy-cli/src/codex/codexAppServerTypes.ts","reason":"App-server input and request types"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.ts","reason":"Codex app-server request lifecycle"}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Inbound Codex message routing host seam"}
+{"path":"packages/happy-cli/src/codex/codexClearCommand.ts","reason":"Existing special-command queue boundary"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.ts","reason":"Active-turn steering and exactly-once queue fallback"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"Steering request contract tests"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.test.ts","reason":"Routing, fallback, and special-command tests"}
