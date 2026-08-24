@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/restore-flat-session-list-toggle/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/workspace/restore-flat-session-list-toggle/context.md","reason":"Verify acceptance criteria and bounded scope."}
+{"path":"packages/happy-app/sources/app/(app)/settings/features.tsx","reason":"Inspect the restored preference control."}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"Inspect the restored runtime setting read."}
+{"path":"packages/happy-app/sources/utils","reason":"Run and review focused regression coverage."}

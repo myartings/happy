@@ -351,10 +351,9 @@ export function SessionsList({
     // Stored under its original `hideInactiveSessions` key — synced settings
     // have no rename migration — but it hides archived sessions only.
     const [hideArchivedSessions, setHideArchivedSessions] = useSettingMutable('hideInactiveSessions');
-    // The home screen has one canonical, activity-sorted chat list. Keep the
-    // legacy project-card implementation below for now while the old synced
-    // setting ages out, but do not expose a layout fork to users.
-    const flatSessionList = true;
+    // The flat variant replaces the machine → project → worktree hierarchy with
+    // one full-width chronological column. Both shapes read the same data.
+    const flatSessionList = useLocalSetting('flatSessionList');
     const machines = useAllMachines();
     const pathname = usePathname();
     const isTablet = useIsTablet();
