@@ -39,6 +39,8 @@ import { indexSessionsById } from './sessionIdentity';
 import { resolveSessionRuntimeDisplay, type SessionPlatformKind } from '@/utils/sessionRuntimeDisplay';
 import { resolveLatestSessionActivityAt } from '@/utils/sessionActivity';
 import { t } from '@/text';
+import type { Project } from './projectTypes';
+import { getSessionProjectId, isHappyAgentSession } from './projectTypes';
 
 // Debounce timer for realtimeMode changes
 let realtimeModeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -159,12 +161,16 @@ export interface SessionRowData {
     // Names the git worktree this session runs in; null in the primary tree.
     workspaceId: string | null;
     workspaceName: string | null;
+    // Private project art is already materialized as a local/data URI by sync.
+    projectAvatarUri?: string | null;
+    projectAvatarThumbhash?: string | null;
 }
 
 function buildSessionRowData(
     session: Session,
     unreadSessionIds?: Set<string>,
     machines?: Record<string, Machine>,
+    projects: Record<string, Project> = {},
 ): SessionRowData {
     const isOnline = session.presence === "online";
     const state = resolveSessionState({
@@ -182,6 +188,10 @@ function buildSessionRowData(
     const rigGit = getRigGitSummary(session.metadata);
     const machineId = session.metadata?.machineId ?? null;
     const machine = machineId ? machines?.[machineId] : undefined;
+    const projectId = getSessionProjectId(session);
+    const linkedProject = projectId ? projects[projectId] : undefined;
+    const metadataProject = session.metadata?.project;
+    const projectAvatar = isHappyAgentSession(session) ? linkedProject?.avatar : null;
     return {
         id: session.id,
         name: getSessionName(session),
@@ -217,10 +227,12 @@ function buildSessionRowData(
         completedTodosCount: session.todos?.filter(todo => todo.status === 'completed').length ?? 0,
         totalTodosCount: session.todos?.length ?? 0,
         hasUnread: unreadSessionIds?.has(session.id) ?? false,
-        projectId: session.metadata?.project?.id ?? null,
-        projectName: session.metadata?.project?.name ?? null,
+        projectId,
+        projectName: linkedProject?.name ?? metadataProject?.name ?? null,
         workspaceId: session.metadata?.workspace?.id ?? null,
         workspaceName: session.metadata?.workspace?.name ?? null,
+        projectAvatarUri: projectAvatar?.uri || null,
+        projectAvatarThumbhash: projectAvatar?.thumbhash || null,
     };
 }
 
@@ -256,6 +268,7 @@ interface StorageState {
     pathProjectFiles: Record<string, ProjectFilesList | null>;  // keyed by "machineId:path"
     sessionFileCache: Record<string, Record<string, { content: string | null; diff: string | null; isBinary: boolean; cachedAt: number }>>;
     machines: Record<string, Machine>;
+    projects: Record<string, Project>;
     artifacts: Record<string, DecryptedArtifact>;  // New artifacts storage
     friends: Record<string, UserProfile>;  // All relationships (friends, pending, requested, etc.)
     users: Record<string, UserProfile | null>;  // Global user cache, null = 404/failed fetch
@@ -275,6 +288,8 @@ interface StorageState {
     nativeUpdateStatus: { available: boolean; updateUrl?: string } | null;
     applySessions: (sessions: (Omit<Session, 'presence'> & { presence?: "online" | number })[]) => void;
     applyMachines: (machines: Machine[], replace?: boolean) => void;
+    applyProjects: (projects: Project[], replace?: boolean) => void;
+    applyProjectAvatar: (projectId: string, avatar: Project['avatar']) => void;
     deleteMachine: (machineId: string) => void;
     applyLoaded: () => void;
     applyReady: () => void;
@@ -339,6 +354,7 @@ function buildSessionListViewData(
     // Also required: rows grey out on their machine's presence, and an omitted
     // map would quietly report every machine as online.
     machines: Record<string, Machine>,
+    projects: Record<string, Project> = {},
 ): SessionListViewItem[] {
     const rigProjectSessions: Session[] = [];
     const rigPathSessions: Session[] = [];
@@ -382,7 +398,7 @@ function buildSessionListViewData(
     archivedSessions.sort((a, b) => sortKey(b) - sortKey(a));
 
     const listData: SessionListViewItem[] = [];
-    const toRow = (session: Session) => buildSessionRowData(session, unreadSessionIds, machines);
+    const toRow = (session: Session) => buildSessionRowData(session, unreadSessionIds, machines, projects);
 
     const rigProjects = [
         ...buildProjectGroups(rigProjectSessions, toRow, isSessionActive),
@@ -439,6 +455,7 @@ export const storage = create<StorageState>()((set, get) => {
         profile,
         sessions: {},
         machines: {},
+        projects: {},
         artifacts: {},  // Initialize artifacts
         friends: {},  // Initialize relationships cache
         users: {},  // Initialize global user cache
@@ -690,6 +707,7 @@ export const storage = create<StorageState>()((set, get) => {
                 mergedSessions,
                 unreadSessionIds,
                 state.machines,
+                state.projects,
             );
 
             return {
@@ -1124,7 +1142,7 @@ export const storage = create<StorageState>()((set, get) => {
             return {
                 ...state,
                 sessions: updatedSessions,
-                sessionListViewData: buildSessionListViewData(updatedSessions, state.unreadSessionIds, state.machines)
+                sessionListViewData: buildSessionListViewData(updatedSessions, state.unreadSessionIds, state.machines, state.projects)
             };
         }),
         // Permission / model / effort picks are local mirrors of synced session
@@ -1178,7 +1196,7 @@ export const storage = create<StorageState>()((set, get) => {
             return {
                 ...state,
                 sessions: updatedSessions,
-                sessionListViewData: buildSessionListViewData(updatedSessions, state.unreadSessionIds, state.machines)
+                sessionListViewData: buildSessionListViewData(updatedSessions, state.unreadSessionIds, state.machines, state.projects)
             };
         }),
         getSessionPathKey: (sessionId: string): string | null => {
@@ -1211,12 +1229,47 @@ export const storage = create<StorageState>()((set, get) => {
                 state.sessions,
                 state.unreadSessionIds,
                 mergedMachines,
+                state.projects,
             );
 
             return {
                 ...state,
                 machines: mergedMachines,
                 sessionListViewData
+            };
+        }),
+        applyProjects: (projects: Project[], replace: boolean = false) => set((state) => {
+            const mergedProjects: Record<string, Project> = replace ? {} : { ...state.projects };
+            projects.forEach((project) => {
+                mergedProjects[project.id] = project;
+            });
+            return {
+                ...state,
+                projects: mergedProjects,
+                sessionListViewData: buildSessionListViewData(
+                    state.sessions,
+                    state.unreadSessionIds,
+                    state.machines,
+                    mergedProjects,
+                ),
+            };
+        }),
+        applyProjectAvatar: (projectId: string, avatar: Project['avatar']) => set((state) => {
+            const project = state.projects[projectId];
+            if (!project) return state;
+            const projects = {
+                ...state.projects,
+                [projectId]: { ...project, avatar },
+            };
+            return {
+                ...state,
+                projects,
+                sessionListViewData: buildSessionListViewData(
+                    state.sessions,
+                    state.unreadSessionIds,
+                    state.machines,
+                    projects,
+                ),
             };
         }),
         deleteMachine: (machineId: string) => set((state) => {
@@ -1227,7 +1280,7 @@ export const storage = create<StorageState>()((set, get) => {
             return {
                 ...state,
                 machines: remaining,
-                sessionListViewData: buildSessionListViewData(state.sessions, state.unreadSessionIds, remaining)
+                sessionListViewData: buildSessionListViewData(state.sessions, state.unreadSessionIds, remaining, state.projects)
             };
         }),
         // Artifact methods
@@ -1295,7 +1348,7 @@ export const storage = create<StorageState>()((set, get) => {
 
             // Rebuild sessionListViewData without the deleted session.
             // Pass unreadSessionIds so the remaining sessions keep their unread badges.
-            const sessionListViewData = buildSessionListViewData(remainingSessions, state.unreadSessionIds, state.machines);
+            const sessionListViewData = buildSessionListViewData(remainingSessions, state.unreadSessionIds, state.machines, state.projects);
             
             return {
                 ...state,
@@ -1435,7 +1488,7 @@ export const storage = create<StorageState>()((set, get) => {
             return {
                 ...state,
                 unreadSessionIds: next,
-                sessionListViewData: buildSessionListViewData(state.sessions, next, state.machines),
+                sessionListViewData: buildSessionListViewData(state.sessions, next, state.machines, state.projects),
             };
         }),
         markSessionUnread: (sessionId: string) => set((state) => {
@@ -1445,7 +1498,7 @@ export const storage = create<StorageState>()((set, get) => {
             return {
                 ...state,
                 unreadSessionIds: next,
-                sessionListViewData: buildSessionListViewData(state.sessions, next, state.machines),
+                sessionListViewData: buildSessionListViewData(state.sessions, next, state.machines, state.projects),
             };
         }),
         setCurrentViewingSession: (sessionId: string | null) => set((state) => {
@@ -1459,7 +1512,7 @@ export const storage = create<StorageState>()((set, get) => {
                 currentViewingSessionId: sessionId,
                 unreadSessionIds: next,
                 ...(next !== state.unreadSessionIds ? {
-                    sessionListViewData: buildSessionListViewData(state.sessions, next, state.machines),
+                    sessionListViewData: buildSessionListViewData(state.sessions, next, state.machines, state.projects),
                 } : {}),
             };
         }),
@@ -1472,6 +1525,19 @@ export function useSessions() {
 
 export function useSession(id: string): Session | null {
     return storage(useShallow((state) => state.sessions[id] ?? null));
+}
+
+export function useProjects(): Record<string, Project> {
+    return storage(useShallow((state) => state.projects));
+}
+
+export function useSessionProjectAvatar(sessionId: string): Project['avatar'] {
+    return storage(useShallow((state) => {
+        const session = state.sessions[sessionId];
+        if (!session || !isHappyAgentSession(session)) return null;
+        const projectId = getSessionProjectId(session);
+        return projectId ? state.projects[projectId]?.avatar ?? null : null;
+    }));
 }
 
 /**
