@@ -111,6 +111,7 @@
  */
 
 import { Message, ToolCall } from "../typesMessage";
+import type { SessionTextPhase } from "@slopus/happy-wire";
 import { AgentEvent, NormalizedMessage, UsageData } from "../typesRaw";
 import { createTracer, traceMessages, TracerState } from "./reducerTracer";
 import { AgentState, TodoItem, TodoItemsSchema } from "../storageTypes";
@@ -124,6 +125,7 @@ type ReducerMessage = {
     createdAt: number;
     role: 'user' | 'agent';
     text: string | null;
+    phase?: SessionTextPhase;
     isThinking?: boolean;
     event: AgentEvent | null;
     tool: ToolCall | null;
@@ -725,6 +727,7 @@ export function reducer(state: ReducerState, messages: NormalizedMessage[], agen
                         role: 'agent',
                         createdAt: msg.createdAt,
                         text: isThinking ? `*${c.thinking}*` : c.text,
+                        ...(c.type === 'text' && c.phase ? { phase: c.phase } : {}),
                         isThinking,
                         tool: null,
                         event: null,
@@ -957,6 +960,7 @@ export function reducer(state: ReducerState, messages: NormalizedMessage[], agen
                         role: 'agent',
                         createdAt: msg.createdAt,
                         text: isThinking ? `*${c.thinking}*` : c.text,
+                        ...(c.type === 'text' && c.phase ? { phase: c.phase } : {}),
                         isThinking,
                         tool: null,
                         event: null,
@@ -1216,6 +1220,7 @@ function convertReducerMessageToMessage(reducerMsg: ReducerMessage, state: Reduc
             createdAt: reducerMsg.createdAt,
             kind: 'agent-text',
             text: reducerMsg.text,
+            ...(reducerMsg.phase ? { phase: reducerMsg.phase } : {}),
             ...(reducerMsg.isThinking && { isThinking: true }),
             meta: reducerMsg.meta
         };

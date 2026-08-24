@@ -144,6 +144,7 @@ describe('useGroupedMessages', () => {
                 localId: null,
                 createdAt: 5,
                 text: 'done',
+                phase: 'final_answer',
             },
             toolMessage('tool-latest', 4),
             {
@@ -152,6 +153,7 @@ describe('useGroupedMessages', () => {
                 localId: null,
                 createdAt: 3,
                 text: 'checking',
+                phase: 'commentary',
             },
             toolMessage('tool-earliest', 2),
             {
@@ -186,6 +188,7 @@ describe('useGroupedMessages', () => {
                 localId: null,
                 createdAt: 5,
                 text: 'done',
+                phase: 'final_answer',
             },
             toolMessage('tool-stale-running', 4, { state: 'running' }),
             {
@@ -215,6 +218,7 @@ describe('useGroupedMessages', () => {
                 localId: null,
                 createdAt: 5,
                 text: 'still working',
+                phase: 'commentary',
             },
             toolMessage('tool-latest', 4),
             {
@@ -223,6 +227,7 @@ describe('useGroupedMessages', () => {
                 localId: null,
                 createdAt: 3,
                 text: 'checking',
+                phase: 'commentary',
             },
             toolMessage('tool-earliest', 2),
             {
@@ -281,6 +286,73 @@ describe('useGroupedMessages', () => {
             'tool-earliest',
             'user',
         ]);
+    });
+
+    it('does not infer a final answer when phase metadata is absent', () => {
+        const messages: Message[] = [
+            {
+                kind: 'agent-text',
+                id: 'agent-unclassified',
+                localId: null,
+                createdAt: 4,
+                text: 'legacy response',
+            },
+            toolMessage('tool-latest', 3),
+            toolMessage('tool-earliest', 2),
+            {
+                kind: 'user-text',
+                id: 'user',
+                localId: null,
+                createdAt: 1,
+                text: 'run tools',
+            },
+        ];
+
+        const items = groupMessagesForDisplay(messages, true);
+
+        expect(items.some((item) => item.type === 'agent-work-group')).toBe(false);
+        expect(items.some((item) => item.id === 'agent-unclassified')).toBe(true);
+    });
+
+    it('keeps the whole turn conservative when unclassified assistant text is mixed with phases', () => {
+        const messages: Message[] = [
+            {
+                kind: 'agent-text',
+                id: 'agent-final',
+                localId: null,
+                createdAt: 5,
+                text: 'done',
+                phase: 'final_answer',
+            },
+            toolMessage('tool', 4),
+            {
+                kind: 'agent-text',
+                id: 'agent-legacy',
+                localId: null,
+                createdAt: 3,
+                text: 'legacy progress',
+            },
+            {
+                kind: 'agent-text',
+                id: 'agent-commentary',
+                localId: null,
+                createdAt: 2,
+                text: 'checking',
+                phase: 'commentary',
+            },
+            {
+                kind: 'user-text',
+                id: 'user',
+                localId: null,
+                createdAt: 1,
+                text: 'run tools',
+            },
+        ];
+
+        const items = groupMessagesForDisplay(messages, true);
+
+        expect(items.some((item) => item.type === 'agent-work-group')).toBe(false);
+        expect(items.filter((item) => item.type === 'message').map((item) => item.id)).toContain('agent-legacy');
     });
 
     it('marks a tool group when it contains a pending permission', () => {
@@ -356,6 +428,7 @@ describe('useGroupedMessages', () => {
                 localId: null,
                 createdAt: 5,
                 text: 'done',
+                phase: 'final_answer',
             },
             toolMessage('tool-latest', 4),
             namedToolMessage('question', 'request_user_input', 3),

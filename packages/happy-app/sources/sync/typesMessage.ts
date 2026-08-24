@@ -1,5 +1,6 @@
 import { AgentEvent } from "./typesRaw";
 import { MessageMeta } from "./typesMessageMeta";
+import type { SessionTextPhase } from "@slopus/happy-wire";
 
 export type ToolCall = {
     /** Provider/session-protocol tool-call id used to join side-channel UI state. */
@@ -59,6 +60,7 @@ export type AgentTextMessage = {
     localId: string | null;
     createdAt: number;
     text: string;
+    phase?: SessionTextPhase;
     isThinking?: boolean;
     meta?: MessageMeta;
 }

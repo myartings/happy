@@ -1,0 +1,9 @@
+{"path":"CONTEXT.md","reason":"Session protocol boundary and personal feature constraints"}
+{"path":"docs/specs/session-phase-history.md","reason":"Accepted behavior and compatibility contract"}
+{"path":"docs/tasks/session-phase-history-tasks.md","reason":"Dependency-aware implementation slices"}
+{"path":"packages/happy-wire/src/sessionProtocol.ts","reason":"Optional synchronized text phase contract"}
+{"path":"packages/happy-cli/src/codex/utils/sessionProtocolMapper.ts","reason":"Historical and live Codex phase mapping"}
+{"path":"packages/happy-app/sources/sync/typesRaw.ts","reason":"Session envelope normalization"}
+{"path":"packages/happy-app/sources/sync/reducer/reducer.ts","reason":"Normalized-to-display message conversion"}
+{"path":"packages/happy-app/sources/sync/typesMessage.ts","reason":"App agent text display contract"}
+{"path":"packages/happy-app/sources/hooks/useGroupedMessages.ts","reason":"Phase-aware conversation presentation"}

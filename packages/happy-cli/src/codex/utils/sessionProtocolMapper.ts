@@ -8,6 +8,7 @@ import {
     stripLeadingTaskNotificationWrappers,
     type CreateEnvelopeOptions,
     type SessionEnvelope,
+    type SessionTextPhase,
     type SessionUsage,
 } from '@slopus/happy-wire';
 import type { Thread, ThreadItem, ThreadTurn } from '../codexAppServerTypes';
@@ -597,6 +598,10 @@ function visibleCodexMessageText(text: string): string | null {
     return visibleText.trim().length > 0 ? visibleText : null;
 }
 
+function supportedTextPhase(value: unknown): SessionTextPhase | undefined {
+    return value === 'commentary' || value === 'final_answer' ? value : undefined;
+}
+
 function reasoningText(item: ThreadItem): string | null {
     const summary = (item as { summary?: unknown }).summary;
     const content = (item as { content?: unknown }).content;
@@ -721,8 +726,13 @@ export function mapCodexThreadItemToSessionEnvelopes(
                 ...(subagent ? { subagent } : {}),
             } satisfies CreateEnvelopeOptions;
             const envelopes: SessionEnvelope[] = [];
+            const phase = supportedTextPhase(item.phase);
             maybeEmitSubagentStart(subagent, opts, startedSubagents, activeSubagents, subagentTitles, envelopes);
-            envelopes.push(createEnvelope('agent', { t: 'text', text: visibleText }, opts));
+            envelopes.push(createEnvelope('agent', {
+                t: 'text',
+                text: visibleText,
+                ...(phase ? { phase } : {}),
+            }, opts));
             return envelopes;
         }
         case 'reasoning': {
@@ -1211,8 +1221,13 @@ export function mapCodexMcpMessageToSessionEnvelopes(message: Record<string, unk
         }
 
         const envelopes: SessionEnvelope[] = [];
+        const phase = supportedTextPhase(message.phase);
         maybeEmitSubagentStart(subagent, opts, startedSubagents, activeSubagents, subagentTitles, envelopes);
-        envelopes.push(createEnvelope('agent', { t: 'text', text: visibleText }, opts));
+        envelopes.push(createEnvelope('agent', {
+            t: 'text',
+            text: visibleText,
+            ...(phase ? { phase } : {}),
+        }, opts));
         return {
             currentTurnId: state.currentTurnId,
             startedSubagents,

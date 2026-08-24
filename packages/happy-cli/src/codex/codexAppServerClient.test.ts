@@ -1048,7 +1048,11 @@ describe('CodexAppServerClient sandbox integration', () => {
                 agentThreadId: 'thread-child-1',
                 agentPath: 'Auth explorer',
             }),
-            expect.objectContaining({ type: 'agent_message', message: 'done' }),
+            expect.objectContaining({
+                type: 'agent_message',
+                message: 'done',
+                phase: 'final_answer',
+            }),
         ]));
         expect(events.filter((event) => event.type === 'subagent_activity')).toHaveLength(2);
         expect(events.filter((event) => event.type === 'task_complete')).toHaveLength(1);

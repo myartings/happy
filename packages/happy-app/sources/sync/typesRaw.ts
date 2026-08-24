@@ -1,6 +1,10 @@
 import * as z from 'zod';
 import { isCuid } from '@paralleldrive/cuid2';
-import { stripLeadingTaskNotificationWrappers } from '@slopus/happy-wire';
+import {
+    sessionTextPhaseSchema,
+    stripLeadingTaskNotificationWrappers,
+    type SessionTextPhase,
+} from '@slopus/happy-wire';
 import { MessageMetaSchema, MessageMeta } from './typesMessageMeta';
 
 //
@@ -37,6 +41,7 @@ const sessionTextEventSchema = z.object({
     t: z.literal('text'),
     text: z.string(),
     thinking: z.boolean().optional(),
+    phase: sessionTextPhaseSchema.optional(),
 });
 
 const sessionServiceMessageEventSchema = z.object({
@@ -499,6 +504,7 @@ type NormalizedAgentContent =
     {
         type: 'text';
         text: string;
+        phase?: SessionTextPhase;
         uuid: string;
         parentUUID: string | null;
     } | {
@@ -672,6 +678,7 @@ function normalizeSessionEnvelope(
                 } : {
                     type: 'text',
                     text: visibleText,
+                    ...(envelope.ev.phase ? { phase: envelope.ev.phase } : {}),
                     uuid: contentUUID,
                     parentUUID
                 }

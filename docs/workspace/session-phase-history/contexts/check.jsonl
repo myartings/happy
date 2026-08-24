@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/session-phase-history/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/session-phase-history.md","reason":"Acceptance criteria for verification"}
+{"path":"docs/tasks/session-phase-history-tasks.md","reason":"Required integration and review checks"}
+{"path":"packages/happy-wire/src/sessionProtocol.test.ts","reason":"Wire compatibility evidence"}
+{"path":"packages/happy-cli/src/codex/__tests__/sessionProtocolMapper.test.ts","reason":"Codex mapping evidence"}
+{"path":"packages/happy-app/sources/hooks/useGroupedMessages.test.ts","reason":"Presentation regression evidence"}

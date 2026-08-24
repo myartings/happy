@@ -19,10 +19,14 @@ import * as z from 'zod';
 export const sessionRoleSchema = z.enum(['user', 'agent']);
 export type SessionRole = z.infer<typeof sessionRoleSchema>;
 
+export const sessionTextPhaseSchema = z.enum(['commentary', 'final_answer']);
+export type SessionTextPhase = z.infer<typeof sessionTextPhaseSchema>;
+
 export const sessionTextEventSchema = z.object({
   t: z.literal('text'),
   text: z.string(),
   thinking: z.boolean().optional(),
+  phase: sessionTextPhaseSchema.optional(),
 });
 
 export const sessionUsageSchema = z
