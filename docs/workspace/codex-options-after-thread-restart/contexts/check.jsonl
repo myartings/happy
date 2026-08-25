@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/codex-options-after-thread-restart/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-cli/src/codex/codexPrompt.ts","reason":"Verify thread-keyed injection semantics."}
+{"path":"packages/happy-cli/src/codex/codexPrompt.test.ts","reason":"Verify regression coverage exercises observable prompt output."}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Verify production wiring across start, resume, clear, and replacement threads."}
+{"path":"docs/workspace/codex-options-after-thread-restart/context.md","reason":"Accepted behavior contract."}
+{"path":"docs/workspace/codex-options-after-thread-restart/validation.md","reason":"Deterministic verification record."}

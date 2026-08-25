@@ -70,3 +70,33 @@ export function buildCodexTurnPrompt(opts: {
 
     return parts.join('\n\n');
 }
+
+/**
+ * Build one turn while tracking Happy's append-prompt injection by Codex
+ * thread identity. A replacement thread needs the instructions again even
+ * when another thread in the same Happy session already received them.
+ */
+export function buildCodexThreadTurnPrompt(opts: {
+    message: string;
+    mode: Pick<CodexEnhancedMode, 'appendSystemPrompt'>;
+    threadId: string;
+    appendSystemPromptInjectedThreadId: string | null;
+    includeTitleInstruction: boolean;
+}): { prompt: string; appendSystemPromptInjectedThreadId: string | null } {
+    const includeAppendSystemPrompt = Boolean(
+        opts.mode.appendSystemPrompt
+        && opts.appendSystemPromptInjectedThreadId !== opts.threadId,
+    );
+
+    return {
+        prompt: buildCodexTurnPrompt({
+            message: opts.message,
+            mode: opts.mode,
+            includeAppendSystemPrompt,
+            includeTitleInstruction: opts.includeTitleInstruction,
+        }),
+        appendSystemPromptInjectedThreadId: includeAppendSystemPrompt
+            ? opts.threadId
+            : opts.appendSystemPromptInjectedThreadId,
+    };
+}
