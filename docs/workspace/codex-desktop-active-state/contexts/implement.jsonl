@@ -1,0 +1,8 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Desktop new-message sync applies lifecycle-derived thinking state."}
+{"path":"packages/happy-app/sources/sync/typesRaw.ts","reason":"Existing public normalization boundary for raw persisted message shapes."}
+{"path":"packages/happy-app/sources/sync/typesRaw.spec.ts","reason":"Existing focused test seam for modern and legacy raw message compatibility."}
+{"path":"packages/happy-app/sources/sync/reducer/sessionUpdateMerge.ts","reason":"Pure merge boundary that preserves live client state after asynchronous decrypts."}
+{"path":"packages/happy-app/sources/sync/reducer/sessionUpdateMerge.test.ts","reason":"Regression coverage for stale update-session snapshots overwriting live thinking state."}
+{"path":"docs/tasks/codex-desktop-active-state-tasks.md","reason":"Accepted behavior and bounded implementation checklist."}
+{"path":"docs/workspace/codex-desktop-active-state/validation.md","reason":"RED/GREEN and incremental validation evidence."}

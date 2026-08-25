@@ -1,0 +1,9 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/codex-desktop-active-state/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Verify the production integration seam."}
+{"path":"packages/happy-app/sources/sync/typesRaw.ts","reason":"Verify compatibility behavior and malformed-input neutrality."}
+{"path":"packages/happy-app/sources/sync/typesRaw.spec.ts","reason":"Verify regression coverage."}
+{"path":"packages/happy-app/sources/sync/reducer/sessionUpdateMerge.ts","reason":"Verify current-session merge semantics after asynchronous work."}
+{"path":"packages/happy-app/sources/sync/reducer/sessionUpdateMerge.test.ts","reason":"Verify stale-snapshot regression coverage."}
+{"path":"docs/tasks/codex-desktop-active-state-tasks.md","reason":"Map checks to accepted behavior."}
+{"path":"docs/workspace/codex-desktop-active-state/validation.md","reason":"Record exact verification results."}
