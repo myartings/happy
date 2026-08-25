@@ -21,6 +21,7 @@ import { Session, Machine } from './storageTypes';
 import { InvalidateSync } from '@/utils/sync';
 import { delay } from '@/utils/time';
 import { ActivityUpdateAccumulator } from './reducer/activityUpdateAccumulator';
+import { mergeDecryptedSessionUpdate } from './reducer/sessionUpdateMerge';
 import { randomUUID } from 'expo-crypto';
 import * as Notifications from 'expo-notifications';
 import { syncCurrentPushToken } from './pushRegistration';
@@ -2824,29 +2825,44 @@ class Sync {
 
                 const agentState = updateData.body.agentState && sessionEncryption
                     ? await sessionEncryption.decryptAgentState(updateData.body.agentState.version, updateData.body.agentState.value)
-                    : session.agentState;
+                    : undefined;
                 const metadata = updateData.body.metadata && sessionEncryption
                     ? await sessionEncryption.decryptMetadata(updateData.body.metadata.version, updateData.body.metadata.value)
-                    : session.metadata;
+                    : undefined;
 
-                const nextProjectId = updateData.body.projectId !== undefined
-                    ? updateData.body.projectId
-                    : session.projectId;
-                this.applySessions([{
-                    ...session,
-                    agentState,
-                    agentStateVersion: updateData.body.agentState
-                        ? updateData.body.agentState.version
-                        : session.agentStateVersion,
-                    metadata,
-                    metadataVersion: updateData.body.metadata
-                        ? updateData.body.metadata.version
-                        : session.metadataVersion,
-                    projectId: nextProjectId,
+                // Decryption yields to the event loop. A lifecycle message or
+                // activity ephemeral may update `thinking` while we await it,
+                // so merge server-owned fields into the latest session rather
+                // than restoring the pre-decrypt snapshot captured above.
+                const currentSession = storage.getState().sessions[updateData.body.id];
+                if (!currentSession) {
+                    this.fetchSessions();
+                    return;
+                }
+                const updatedSession = mergeDecryptedSessionUpdate(currentSession, {
+                    ...(updateData.body.agentState ? {
+                        agentState: {
+                            value: agentState ?? null,
+                            version: updateData.body.agentState.version,
+                        },
+                    } : {}),
+                    ...(updateData.body.metadata ? {
+                        metadata: {
+                            value: metadata ?? null,
+                            version: updateData.body.metadata.version,
+                        },
+                    } : {}),
+                    ...(updateData.body.projectId !== undefined ? {
+                        projectId: updateData.body.projectId,
+                    } : {}),
                     updatedAt: updateData.createdAt,
-                    seq: updateData.seq
-                }]);
-                if (nextProjectId !== session.projectId) this.projectsSync.invalidate();
+                    seq: updateData.seq,
+                });
+
+                this.applySessions([updatedSession]);
+                if (updatedSession.projectId !== currentSession.projectId) {
+                    this.projectsSync.invalidate();
+                }
 
                 // Invalidate git status when agent state changes (files may have been modified)
                 if (updateData.body.agentState) {
@@ -2862,9 +2878,9 @@ class Sync {
 
                     // Re-fetch messages on control handoff so the newly active
                     // side catches up on messages exchanged while it was passive.
-                    const wasControlledByUser = session.agentState?.controlledByUser;
-                    const isNowControlledByUser = agentState?.controlledByUser;
-                    const handoffDirection = usesControlledSessionUi(metadata)
+                    const wasControlledByUser = currentSession.agentState?.controlledByUser;
+                    const isNowControlledByUser = updatedSession.agentState?.controlledByUser;
+                    const handoffDirection = usesControlledSessionUi(updatedSession.metadata)
                         ? resolveControlHandoffDirection(wasControlledByUser, isNowControlledByUser)
                         : null;
                     if (handoffDirection) {
