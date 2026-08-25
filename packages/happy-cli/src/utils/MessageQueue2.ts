@@ -9,6 +9,10 @@ interface QueueItem<T> {
     isolate?: boolean; // If true, this message must be processed alone
     /** Decoded image attachments owned by *this* message (per-message ownership). */
     attachments?: PendingAttachment[];
+    /** Stable caller identity used to correlate delivery with an agent runtime. */
+    clientUserMessageId?: string;
+    /** The runtime may already have accepted this item; reconcile before retrying. */
+    deliveryUncertain?: boolean;
 }
 
 /**
@@ -42,7 +46,7 @@ export class MessageQueue2<T> {
      * Push a message to the queue with a mode and an optional list of
      * attachments that travel with this message.
      */
-    push(message: string, mode: T, attachments?: PendingAttachment[]): void {
+    push(message: string, mode: T, attachments?: PendingAttachment[], clientUserMessageId?: string): void {
         if (this.closed) {
             throw new Error('Cannot push to closed queue');
         }
@@ -56,6 +60,7 @@ export class MessageQueue2<T> {
             modeHash,
             isolate: false,
             attachments,
+            clientUserMessageId,
         });
 
         // Trigger message handler if set
@@ -72,6 +77,31 @@ export class MessageQueue2<T> {
         }
 
         logger.debug(`[MessageQueue2] push() completed. Queue size: ${this.queue.length}`);
+    }
+
+    /** Preserve an item whose remote delivery is unknown without making it retryable yet. */
+    pushUncertain(message: string, mode: T, attachments: PendingAttachment[] | undefined, clientUserMessageId: string): void {
+        if (this.closed) {
+            throw new Error('Cannot push to closed queue');
+        }
+
+        const modeHash = this.modeHasher(mode);
+        this.queue.push({
+            message,
+            mode,
+            modeHash,
+            isolate: true,
+            attachments,
+            clientUserMessageId,
+            deliveryUncertain: true,
+        });
+
+        if (this.onMessageHandler) this.onMessageHandler(message, mode);
+        if (this.waiter) {
+            const waiter = this.waiter;
+            this.waiter = null;
+            waiter(true);
+        }
     }
 
     /**
@@ -114,7 +144,7 @@ export class MessageQueue2<T> {
      * Clears any pending messages and ensures this message is never batched with others.
      * Used for special commands that require dedicated processing.
      */
-    pushIsolateAndClear(message: string, mode: T, attachments?: PendingAttachment[]): void {
+    pushIsolateAndClear(message: string, mode: T, attachments?: PendingAttachment[], clientUserMessageId?: string): void {
         if (this.closed) {
             throw new Error('Cannot push to closed queue');
         }
@@ -131,6 +161,7 @@ export class MessageQueue2<T> {
             modeHash,
             isolate: true,
             attachments,
+            clientUserMessageId,
         });
 
         // Trigger message handler if set
@@ -153,7 +184,7 @@ export class MessageQueue2<T> {
      * Push a message that must be processed alone without discarding
      * already-queued user prompts.
      */
-    pushIsolated(message: string, mode: T, attachments?: PendingAttachment[]): void {
+    pushIsolated(message: string, mode: T, attachments?: PendingAttachment[], clientUserMessageId?: string): void {
         if (this.closed) {
             throw new Error('Cannot push to closed queue');
         }
@@ -167,6 +198,7 @@ export class MessageQueue2<T> {
             modeHash,
             isolate: true,
             attachments,
+            clientUserMessageId,
         });
 
         // Trigger message handler if set
@@ -264,7 +296,7 @@ export class MessageQueue2<T> {
      * Wait for messages and return all messages with the same mode as a single string
      * Returns { message: string, mode: T } or null if aborted/closed
      */
-    async waitForMessagesAndGetAsString(abortSignal?: AbortSignal): Promise<{ message: string, mode: T, isolate: boolean, hash: string, attachments?: PendingAttachment[] } | null> {
+    async waitForMessagesAndGetAsString(abortSignal?: AbortSignal): Promise<{ message: string, mode: T, isolate: boolean, hash: string, attachments?: PendingAttachment[], clientUserMessageId?: string, deliveryUncertain?: boolean } | null> {
         // If we have messages, return them immediately
         if (this.queue.length > 0) {
             return this.collectBatch();
@@ -288,7 +320,7 @@ export class MessageQueue2<T> {
     /**
      * Collect a batch of messages with the same mode, respecting isolation requirements
      */
-    private collectBatch(): { message: string, mode: T, hash: string, isolate: boolean, attachments?: PendingAttachment[] } | null {
+    private collectBatch(): { message: string, mode: T, hash: string, isolate: boolean, attachments?: PendingAttachment[], clientUserMessageId?: string, deliveryUncertain?: boolean } | null {
         if (this.queue.length === 0) {
             return null;
         }
@@ -301,7 +333,7 @@ export class MessageQueue2<T> {
         const targetModeHash = firstItem.modeHash;
 
         // If the first message requires isolation, only process it alone
-        if (firstItem.isolate) {
+        if (firstItem.isolate || firstItem.clientUserMessageId) {
             const item = this.queue.shift()!;
             sameModeMessages.push(item.message);
             if (item.attachments) collectedAttachments.push(...item.attachments);
@@ -327,6 +359,8 @@ export class MessageQueue2<T> {
             hash: targetModeHash,
             isolate,
             attachments: collectedAttachments.length > 0 ? collectedAttachments : undefined,
+            clientUserMessageId: firstItem.clientUserMessageId,
+            deliveryUncertain: firstItem.deliveryUncertain,
         };
     }
 

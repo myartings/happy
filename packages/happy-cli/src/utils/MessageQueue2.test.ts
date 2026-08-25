@@ -3,6 +3,19 @@ import { MessageQueue2 } from './MessageQueue2';
 import { hashObject } from './deterministicJson';
 
 describe('MessageQueue2', () => {
+    it('preserves uncertain delivery metadata for later reconciliation', async () => {
+        const queue = new MessageQueue2<string>(mode => mode);
+
+        queue.pushUncertain('check before retrying', 'default', undefined, 'uncertain-1');
+
+        await expect(queue.waitForMessagesAndGetAsString()).resolves.toMatchObject({
+            message: 'check before retrying',
+            mode: 'default',
+            clientUserMessageId: 'uncertain-1',
+            deliveryUncertain: true,
+        });
+    });
+
     it('should create a queue', () => {
         const queue = new MessageQueue2<string>(mode => mode);
         expect(queue.size()).toBe(0);
@@ -21,6 +34,22 @@ describe('MessageQueue2', () => {
         expect(result?.message).toBe('message1\nmessage2\nmessage3');
         expect(result?.mode).toBe('local');
         expect(queue.size()).toBe(0);
+    });
+
+    it('keeps client-identified messages as separate ordered deliveries', async () => {
+        const queue = new MessageQueue2<string>(mode => mode);
+
+        queue.push('first', 'local', undefined, 'client-message-1');
+        queue.push('second', 'local', undefined, 'client-message-2');
+
+        await expect(queue.waitForMessagesAndGetAsString()).resolves.toMatchObject({
+            message: 'first',
+            clientUserMessageId: 'client-message-1',
+        });
+        await expect(queue.waitForMessagesAndGetAsString()).resolves.toMatchObject({
+            message: 'second',
+            clientUserMessageId: 'client-message-2',
+        });
     });
 
     it('should return only messages with same mode and keep others', async () => {

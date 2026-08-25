@@ -1,7 +1,7 @@
 import { render } from "ink";
 import React from "react";
 import { ApiClient } from '@/api/api';
-import { CodexAppServerClient } from './codexAppServerClient';
+import { CodexAppServerClient, CodexTurnStartDeliveryUnknownError } from './codexAppServerClient';
 import type { ReasoningEffort } from './codexAppServerTypes';
 import { CodexPermissionHandler } from './utils/permissionHandler';
 import { ReasoningProcessor } from './utils/reasoningProcessor';
@@ -37,7 +37,7 @@ import {
 import { resumeExistingThread } from './resumeExistingThread';
 import { emitReadyIfIdle } from './emitReadyIfIdle';
 import { isCodexClearText } from './codexClearCommand';
-import { routeCodexUserText } from './codexUserMessageRouter';
+import { resolveCodexUncertainDelivery, routeCodexUserText } from './codexUserMessageRouter';
 import { downloadCodexFileEventAttachment } from './utils/attachmentEvents';
 import { prepareCodexImageInputItems } from './utils/imageInput';
 import { withCodexRuntimeModelMetadata } from './codexRuntimeModelMetadata';
@@ -341,14 +341,16 @@ export async function runCodex(opts: {
             appendSystemPrompt: messageAppendSystemPrompt,
             effort: modeResolution.effort,
         };
+        const clientUserMessageId = message.localKey ?? randomUUID();
         const routeResult = await routeCodexUserText({
             text: message.content.text,
             mode: enhancedMode,
             queue: messageQueue,
             attachments: attachmentsForThisMessage,
+            clientUserMessageId,
             activeTurnId: client?.turnId ?? null,
             forceQueue: parseCodexGoalCommand(message.content.text) !== null,
-            steer: async ({ text, attachments, expectedTurnId }) => {
+            steer: async ({ text, attachments, expectedTurnId, clientUserMessageId: steerMessageId }) => {
                 const imageInputs = await prepareCodexImageInputItems(attachments, {
                     sessionId: session.sessionId,
                 });
@@ -370,14 +372,34 @@ export async function runCodex(opts: {
 
                 await client.steerTurn(text, {
                     expectedTurnId,
+                    clientUserMessageId: steerMessageId,
                     extraInputItems: imageInputs.inputItems,
+                    timeoutMs: 5_000,
                 });
+            },
+            reconcileSteerFailure: async ({ clientUserMessageId: failedMessageId }) => {
+                if (!client.supportsClientUserMessageIds()) {
+                    return 'unknown';
+                }
+                const reconciliation = await client.reconcilePendingTurn({
+                    clientUserMessageId: failedMessageId,
+                    timeoutMs: 5_000,
+                });
+                if (reconciliation.messageDelivery === 'delivered') {
+                    return 'delivered';
+                }
+                return reconciliation.messageDelivery === 'absent' ? 'queue' : 'unknown';
             },
         });
         if (routeResult === 'clear') {
             logger.debug('[Codex] /clear command pushed to isolated queue');
         } else if (routeResult === 'steered') {
             logger.debug('[Codex] User message steered into the active turn');
+        } else if (routeResult === 'pending') {
+            session.sendSessionEvent({
+                type: 'message',
+                message: 'Codex did not confirm the follow-up. Happy preserved it and will verify delivery before retrying.',
+            });
         }
     }, (error) => {
         logger.warn('[Codex] Failed to handle user message', {
@@ -754,6 +776,20 @@ export async function runCodex(opts: {
             if (failure) {
                 messageBuffer.addMessage(`Turn aborted: ${failure}`, 'status');
                 session.sendSessionEvent({ type: 'message', message: `Codex error: ${failure}` });
+            } else if ((msg as any).automatic_recovery === true) {
+                if ((msg as any).recovery_resumed === true) {
+                    messageBuffer.addMessage('Codex backend recovered after the active turn stopped responding', 'status');
+                    session.sendSessionEvent({
+                        type: 'message',
+                        message: 'Codex stopped responding, so Happy restarted the backend and resumed this thread. Preserved messages will continue automatically.',
+                    });
+                } else {
+                    messageBuffer.addMessage('Codex backend restarted, but the thread could not be resumed', 'status');
+                    session.sendSessionEvent({
+                        type: 'message',
+                        message: 'Codex stopped responding. Happy restarted the backend but could not confirm that this thread resumed; pending messages remain preserved for reconciliation.',
+                    });
+                }
             } else {
                 messageBuffer.addMessage('Turn aborted', 'status');
             }
@@ -910,11 +946,11 @@ export async function runCodex(opts: {
             }));
         }
 
-        let pending: { message: string; mode: EnhancedMode; isolate: boolean; hash: string; attachments?: PendingAttachment[] } | null = null;
+        let pending: { message: string; mode: EnhancedMode; isolate: boolean; hash: string; attachments?: PendingAttachment[]; clientUserMessageId?: string; deliveryUncertain?: boolean; messageDisplayed?: boolean } | null = null;
 
         while (!shouldExit) {
             logActiveHandles('loop-top');
-            let message: { message: string; mode: EnhancedMode; isolate: boolean; hash: string; attachments?: PendingAttachment[] } | null = pending;
+            let message: { message: string; mode: EnhancedMode; isolate: boolean; hash: string; attachments?: PendingAttachment[]; clientUserMessageId?: string; deliveryUncertain?: boolean; messageDisplayed?: boolean } | null = pending;
             pending = null;
             if (!message) {
                 // Capture the current signal to distinguish idle-abort from queue close
@@ -935,6 +971,37 @@ export async function runCodex(opts: {
             // Defensive check for TS narrowing
             if (!message) {
                 break;
+            }
+
+            if (message.deliveryUncertain && message.clientUserMessageId) {
+                const messageDelivery = await resolveCodexUncertainDelivery({
+                    clientUserMessageId: message.clientUserMessageId,
+                    canCorrelate: client.supportsClientUserMessageIds(),
+                    reconcile: async (clientUserMessageId) => await client.reconcilePendingTurn({
+                        clientUserMessageId,
+                        timeoutMs: 5_000,
+                    }),
+                    recover: async () => {
+                        const resumedThread = await client.reconnectAndResumeThread();
+                        logger.warn('[Codex] Reconnected while resolving uncertain message delivery', { resumedThread });
+                    },
+                });
+
+                if (messageDelivery === 'delivered') {
+                    logger.warn('[Codex] Preserved message was already delivered; suppressing duplicate retry');
+                    continue;
+                }
+                if (messageDelivery === 'unknown') {
+                    pending = message;
+                    await new Promise((resolve) => setTimeout(resolve, 1_000));
+                    continue;
+                }
+
+                message = { ...message, deliveryUncertain: false };
+                session.sendSessionEvent({
+                    type: 'message',
+                    message: 'Codex confirmed the preserved message was not delivered. Retrying it now.',
+                });
             }
 
             if (isCodexClearText(message.message)) {
@@ -970,8 +1037,9 @@ export async function runCodex(opts: {
             }
 
             // Display user messages in the UI
-            if (message.message.trim().length > 0) {
+            if (!message.messageDisplayed && message.message.trim().length > 0) {
                 messageBuffer.addMessage(message.message, 'user');
+                message.messageDisplayed = true;
             }
 
             try {
@@ -1032,6 +1100,8 @@ export async function runCodex(opts: {
                 });
 
                 const result = await client.sendTurnAndWait(turnPromptResult.prompt, {
+                    clientUserMessageId: message.clientUserMessageId,
+                    startAckTimeoutMs: 5_000,
                     model: message.mode.model,
                     approvalPolicy: executionPolicy.approvalPolicy,
                     sandbox: executionPolicy.sandbox,
@@ -1047,6 +1117,17 @@ export async function runCodex(opts: {
                     logger.debug('[Codex] Turn aborted');
                 }
             } catch (error) {
+                if (error instanceof CodexTurnStartDeliveryUnknownError && message.clientUserMessageId) {
+                    pending = { ...message, deliveryUncertain: true };
+                    logger.warn('[Codex] turn/start delivery is unknown; preserving the dequeued input', {
+                        clientUserMessageId: message.clientUserMessageId,
+                    });
+                    session.sendSessionEvent({
+                        type: 'message',
+                        message: 'Codex did not confirm the new turn. Happy preserved your message and will verify delivery before retrying.',
+                    });
+                    continue;
+                }
                 // Only actual errors reach here (process crash, connection failure, etc.)
                 logger.warn('Error in codex session:', error);
                 messageBuffer.addMessage('Process exited unexpectedly', 'status');
