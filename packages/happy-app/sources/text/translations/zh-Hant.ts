@@ -17,6 +17,13 @@ function plural({ count, singular, plural }: { count: number; singular: string; 
 }
 
 export const zhHant: TranslationStructure = {
+    voiceStatusBar: {
+        tapToEnd: '點按結束',
+        connecting: '連接中…',
+        error: '連接錯誤',
+        active: '語音助手運行中',
+    },
+
     tabs: {
         // Tab navigation labels
         inbox: '收件匣',
@@ -164,13 +171,6 @@ export const zhHant: TranslationStructure = {
         },
         chat: '聊天',
         chatDescription: '自訂聊天訊息外觀',
-        sessionStatusBar: '工作階段狀態資訊',
-        sessionStatusBarDescription: '選擇分支、模型、工作量和上下文的顯示位置',
-        sessionStatusDisplayOptions: {
-            hidden: '隱藏',
-            above: '輸入框上方',
-            below: '輸入框下方',
-        },
         usageLimitShowRemaining: '顯示剩餘額度',
         usageLimitShowRemainingDescription: '額度指示器顯示剩餘量，而非已用量',
         userMessageBubbleColor: '使用者氣泡顏色',
@@ -189,8 +189,10 @@ export const zhHant: TranslationStructure = {
         compactToolCallsDescription: '將非互動式工具呼叫顯示為單行；開啟該行可查看詳細資訊',
         showLineNumbersInToolViews: '在工具檢視中顯示行號',
         showLineNumbersInToolViewsDescription: '在工具檢視差異中顯示行號',
-        alwaysShowContextSize: '始終顯示上下文大小',
-        alwaysShowContextSizeDescription: '即使未接近限制時也顯示上下文使用情況',
+        alwaysShowContextSize: '顯示用量',
+        alwaysShowContextSizeDescription: '在輸入框下方顯示上下文和方案用量。接近上限時始終顯示警告。',
+        input: '輸入',
+        inputDescription: '配置訊息輸入框',
         showHarnessIconInSessionHeader: '在工作階段標題中顯示 harness 圖示',
         showHarnessIconInSessionHeaderDescription: '在工作階段標題中顯示 harness 圖示',
         showHarnessIconsInSessionList: '在工作階段列表中顯示 harness 圖示',
@@ -438,14 +440,6 @@ export const zhHant: TranslationStructure = {
             stopGoal: '停止目標',
             editGoal: '編輯目標',
         },
-        sessionStatusBar: {
-            contextUsage: ({ used, total, percent }: { used: string; total: string; percent: number }) => `上下文 ${used}/${total} 個權杖，${percent}%`,
-            limitFiveHour: '5 小時額度',
-            limitSevenDay: '7 天額度',
-            limitResets: ({ time }: { time: string }) => `${time} 重置`,
-            limitAsOf: ({ age }: { age: string }) => `數據為 ${age} 前`,
-            limitRemaining: ({ percent }: { percent: number }) => `剩餘 ${percent}%`,
-        },
     },
 
     agentInput: {
@@ -512,7 +506,14 @@ export const zhHant: TranslationStructure = {
             badgePlan: '計畫',
         },
         context: {
-            remaining: ({ percent }: { percent: number }) => `剩餘 ${percent}%`,
+            detailContext: ({ used, total }: { used: string; total: string }) => `上下文 ${used} / ${total}`,
+            percentContext: ({ percent }: { percent: number }) => `上下文 ${percent}%`,
+            percentWeek: ({ percent }: { percent: number }) => `本週 ${percent}%`,
+        },
+        usagePopup: {
+            session: '會話',
+            week: '週',
+            resets: ({ time }: { time: string }) => `重置於 ${time}`,
         },
         suggestion: {
             fileLabel: '檔案',
