@@ -396,7 +396,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
         onLongPress: showActionAlert,
     };
 
-    const renderLeadingIndicator = () => {
+    const renderTrailingIndicator = () => {
         let indicator: React.ReactNode = null;
 
         if (needsUserAction) {
@@ -423,7 +423,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
 
         return (
             <View style={[
-                styles.leadingIndicatorSlot,
+                isStudio ? styles.leadingIndicatorSlot : styles.trailingIndicatorSlot,
                 isStudio && {
                     width: sessionRowStyle.leadingIndicatorWidth!,
                     marginRight: sessionRowStyle.leadingIndicatorGap!,
@@ -473,8 +473,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
         >
             <View style={styles.sessionContent}>
                 <View style={styles.sessionTitleRow}>
-                    {renderLeadingIndicator()}
-
+                    {isStudio && renderTrailingIndicator()}
                     <Text
                         style={[
                             styles.sessionTitle,
@@ -516,6 +515,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                         sessionId={session.id}
                         style={styles.sessionShortcutBadge}
                     />
+                    {!isStudio && renderTrailingIndicator()}
                 </View>
                 {displayPolicy.environmentPlacement === 'full' && environment ? (
                     <SessionEnvironmentMetadata
@@ -756,7 +756,11 @@ const stylesheet = StyleSheet.create((theme) => ({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 8,
-        backgroundColor: 'transparent',
+        // Solid, and the same color the card behind it paints: the row is the
+        // thing that slides during the archive swipe, so it must cover the red
+        // action underneath the way the flat list's rows do — a transparent
+        // row lets the red show through the moment the drag starts.
+        backgroundColor: theme.colors.surface,
     },
     sessionRowWithBorder: {
         borderBottomWidth: StyleSheet.hairlineWidth,
@@ -820,6 +824,15 @@ const stylesheet = StyleSheet.create((theme) => ({
         width: 16,
         height: 16,
         marginRight: 8,
+    },
+    // 18 wide so the dot's center lines up with the center of the project
+    // header's "+" button above the card, on both platform paddings.
+    trailingIndicatorSlot: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 18,
+        height: 18,
+        marginLeft: 8,
     },
     swipeAction: {
         width: 112,

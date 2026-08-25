@@ -58,9 +58,10 @@ import {
     findMachineChoice,
     machineChoiceAgentAvailable,
     resolveAgentMachine,
-    resolveNewSessionAgent,
+    resolveChoiceAgent,
 } from '@/sync/machineChoices';
 import {
+    filterPermissionModesForCli,
     getHardcodedPermissionModes,
     getHardcodedModelModes,
     getEffortLevelsForModel,
@@ -78,7 +79,7 @@ import {
     cancelPendingPickerOpenState,
     resolvePickerToggleAction,
 } from '@/utils/newSessionPickerInteraction';
-import { resolveAgentDefaultConfig } from '@/sync/agentDefaults';
+import { getCodeAgentDefaults, resolveAgentDefaultConfig } from '@/sync/agentDefaults';
 import { delay } from '@/utils/time';
 import {
     buildRigSpawnConfiguration,
@@ -834,7 +835,6 @@ function NewSessionScreen() {
     const sessions = useSessions();
     const agentInputEnterToSend = useSetting('agentInputEnterToSend');
     const agentDefaultOverrides = useSetting('agentDefaultOverrides');
-    const experiments = useSetting('experiments');
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
     const zenMode = useLocalSetting('zenMode');
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -911,7 +911,7 @@ function NewSessionScreen() {
         () => findMachineChoice(machineChoices, selectedMachineId),
         [machineChoices, selectedMachineId],
     );
-    const selectedAgent = resolveNewSessionAgent(selectedChoice, draftAgent, experiments);
+    const selectedAgent = resolveChoiceAgent(selectedChoice, draftAgent);
     const selectedMachine = React.useMemo(
         () => resolveAgentMachine(selectedChoice, selectedAgent),
         [selectedAgent, selectedChoice],
@@ -1163,11 +1163,8 @@ function NewSessionScreen() {
     // Filter available agents based on the daemon that actually runs each harness on this
     // computer, rather than the machine id that happened to be stored in the draft.
     const availableAgents = React.useMemo(() => {
-        return ALL_AGENTS.filter((agent) => (
-            (experiments || agent.key !== 'rig')
-            && machineChoiceAgentAvailable(selectedChoice, agent.key)
-        ));
-    }, [experiments, selectedChoice]);
+        return ALL_AGENTS.filter((agent) => machineChoiceAgentAvailable(selectedChoice, agent.key));
+    }, [selectedChoice]);
 
     // If current agent not available on this machine, switch to first available
     React.useEffect(() => {
@@ -1176,10 +1173,15 @@ function NewSessionScreen() {
         }
     }, [availableAgents, draftAgent, selectedAgent, setSelectedAgent]);
 
-    // Derive options from agent type
+    // Derive options from agent type. The CLI daemon on the picked computer is
+    // what will parse the mode; older CLIs drop the whole prompt on modes they
+    // do not know (`auto`), so those are not offered.
     const permissionModes = React.useMemo<PermissionMode[]>(
-        () => rigCreation?.permissionModes ?? getHardcodedPermissionModes(selectedAgent, t),
-        [selectedAgent, rigCreation],
+        () => rigCreation?.permissionModes ?? filterPermissionModesForCli(
+            getHardcodedPermissionModes(selectedAgent, t),
+            selectedChoice?.happyMachine?.metadata?.happyCliVersion,
+        ),
+        [selectedAgent, rigCreation, selectedChoice],
     );
     const effectiveAgentDefaults = React.useMemo(() => rigCreation
         ? {
@@ -1217,6 +1219,10 @@ function NewSessionScreen() {
         setPermissionIndex(findPreferredModeIndex(permissionModes, [
             draft.permissionMode,
             effectiveAgentDefaults.permissionMode,
+            // When the saved and default modes were both filtered out for an
+            // old CLI, land on the flavor's code default rather than whichever
+            // mode happens to lead the list.
+            rigCreation ? null : getCodeAgentDefaults(selectedAgent).permissionMode,
         ]));
 
         setModelIndex(findPreferredModeIndex(modelModes, [
@@ -1234,6 +1240,8 @@ function NewSessionScreen() {
         draft.modelMode,
         effectiveAgentDefaults.permissionMode,
         effectiveAgentDefaults.modelMode,
+        rigCreation,
+        selectedAgent,
     ]);
 
     // Reset effort when model changes
@@ -1531,7 +1539,7 @@ function NewSessionScreen() {
         }
         // Resolve again at the moment of use: the draft can outlive a daemon restart, a machine
         // pairing update, or a change in the CLI catalog.
-        const agentType = resolveNewSessionAgent(choice, selectedAgent, experiments);
+        const agentType = resolveChoiceAgent(choice, selectedAgent);
         const machine = resolveAgentMachine(choice, agentType);
         if (!machine) {
             Modal.alert(
@@ -1640,29 +1648,16 @@ function NewSessionScreen() {
                     completeSpawnRequest();
                     await sync.refreshSessions();
 
-                    // Store only per-session overrides. Matching the effective
-                    // default stays null so future code default changes apply.
-                    const permissionOverride = permissionKey === effectiveAgentDefaults.permissionMode
-                        ? null
-                        : permissionKey;
-                    const modelOverride = currentModelKey === effectiveAgentDefaults.modelMode
-                        ? null
-                        : currentModelKey;
                     const currentEffortKey = currentEffort?.key ?? null;
-                    const effortOverride = currentEffortKey === effectiveAgentDefaults.effortLevel
-                        ? null
-                        : currentEffortKey;
-                    // Mode picks sync via session metadata (#1492). Nothing to
-                    // push when they match the defaults — a fresh session has
-                    // no picks in its metadata yet.
+                    // Pin the actual launch selection to this session. A
+                    // later settings/default change must not silently rewrite
+                    // an existing session's permission, model, or effort.
                     if (!spawnRigCreation) {
-                        const modesPatch: SessionAgentModesPatch = {};
-                        if (permissionOverride !== null) modesPatch.permissionMode = permissionOverride;
-                        if (modelOverride !== null) modesPatch.modelMode = modelOverride;
-                        if (effortOverride !== null) modesPatch.effortLevel = effortOverride;
-                        if (Object.keys(modesPatch).length > 0) {
-                            sessionSetAgentModes(result.sessionId, modesPatch);
-                        }
+                        sessionSetAgentModes(result.sessionId, {
+                            permissionMode: permissionKey,
+                            modelMode: currentModelKey,
+                            effortLevel: currentEffortKey,
+                        });
                     }
 
                     // Pull live prompt and clear it. We read via getState() so this
@@ -1713,7 +1708,7 @@ function NewSessionScreen() {
         } finally {
             if (isMountedRef.current) setIsSpawning(false);
         }
-    }, [allMachines, canPickWorktree, currentEffort?.key, currentModelKey, currentPermission?.key, effectiveAgentDefaults.effortLevel, effectiveAgentDefaults.modelMode, effectiveAgentDefaults.permissionMode, experiments, navigateToSession, router, selectedAgent, selectedMachineId, selectedPath, worktreeKey]);
+    }, [allMachines, canPickWorktree, currentEffort?.key, currentModelKey, currentPermission?.key, effectiveAgentDefaults.effortLevel, effectiveAgentDefaults.modelMode, effectiveAgentDefaults.permissionMode, navigateToSession, router, selectedAgent, selectedMachineId, selectedPath, worktreeKey]);
 
     const canSend = selectedMachineId && selectedMachine && isMachineOnline(selectedMachine) && !isSpawning;
     React.useEffect(() => {

@@ -327,10 +327,10 @@ function StudioMarkdownOption(props: {
     return (
         <Pressable
             {...interaction.interactionProps}
-            accessibilityRole={optionPresentation ? 'button' : undefined}
+            accessibilityRole="button"
             style={({ pressed }) => [
                 style.optionPressable,
-                style.optionItem,
+                optionPresentation ? style.optionItem : style.optionButton,
                 optionPresentation && {
                     minHeight: optionPresentation.minHeight,
                     justifyContent: 'center' as const,
@@ -339,7 +339,7 @@ function StudioMarkdownOption(props: {
                     borderRadius: optionPresentation.borderRadius,
                     borderWidth: optionPresentation.borderWidth,
                 },
-                pressed && !optionPresentation && style.optionItemPressed,
+                pressed && !optionPresentation && style.optionButtonPressed,
                 optionPresentation && resolveStudioMarkdownOptionState(props.studioPresentation!, {
                     focused: interaction.focused,
                     hovered: interaction.hovered,
@@ -349,7 +349,7 @@ function StudioMarkdownOption(props: {
             onPress={props.onPress}
         >
             <Text selectable={props.selectable} style={[
-                style.optionText,
+                optionPresentation ? style.optionText : style.optionButtonText,
                 optionPresentation && {
                     color: optionPresentation.textColor,
                     fontSize: optionPresentation.fontSize,
@@ -751,6 +751,24 @@ const style = StyleSheet.create((theme) => ({
         opacity: Platform.select({ web: 0.7, default: 1 }),
     },
     optionText: {
+        ...Typography.default(),
+        fontSize: 16,
+        lineHeight: 24,
+        color: theme.colors.text,
+    },
+    // Tapping an option sends it as your message. Full-width rows in the
+    // composer send button's resting grey — flat, no border.
+    optionButton: {
+        backgroundColor: theme.colors.surfaceHighest,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        overflow: 'hidden',
+    },
+    optionButtonPressed: {
+        opacity: 0.7,
+    },
+    optionButtonText: {
         ...Typography.default(),
         fontSize: 16,
         lineHeight: 24,

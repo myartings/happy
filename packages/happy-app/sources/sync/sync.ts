@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import * as Device from 'expo-device';
 import { apiSocket, getCurrentAppState, getHappyClientId, setDesktopWindowFocused } from '@/sync/apiSocket';
 import { notifyUnreadMessage } from '@/sync/webTabTitle';
 import { AuthCredentials } from '@/auth/tokenStorage';
@@ -65,7 +66,7 @@ import { fetchFeed } from './apiFeed';
 import { FeedItem } from './feedTypes';
 import { UserProfile } from './friendTypes';
 import { resolveControlHandoffDirection } from './controlHandoff';
-import { resolveMessageModeMeta } from './messageMeta';
+import { resolveMessageModeMeta, UnsupportedPermissionModeError } from './messageMeta';
 import { getUserMessageActivityAt } from '@/utils/sessionActivity';
 import {
     estimateNormalizedMessageCacheBytes,
@@ -837,7 +838,18 @@ class Sync {
             return;
         }
 
-        const modeMeta = resolveMessageModeMeta(session, storage.getState().settings);
+        let modeMeta: ReturnType<typeof resolveMessageModeMeta>;
+        try {
+            modeMeta = resolveMessageModeMeta(session, storage.getState().settings);
+        } catch (error) {
+            if (error instanceof UnsupportedPermissionModeError) {
+                // Refuse loudly instead of substituting a mode: swapping in a
+                // default would silently change what the agent may do.
+                Modal.alert(t('common.error'), error.message);
+                return;
+            }
+            throw error;
+        }
         const { displayText, source = 'chat', attachments, awaitDelivery = false } = options ?? {};
 
         const flavor = session.metadata?.flavor;
@@ -2219,8 +2231,12 @@ class Sync {
                 console.log('RevenueCat initialized successfully');
             }
 
-            // Sync purchases
-            await RevenueCat.syncPurchases();
+            // Sync purchases. Skip on iOS simulator: syncPurchases posts the App
+            // Store receipt, and a missing receipt triggers SKReceiptRefreshRequest,
+            // which opens the Apple Account sign-in sheet on every app foreground.
+            if (!(Platform.OS === 'ios' && !Device.isDevice)) {
+                await RevenueCat.syncPurchases();
+            }
 
             // Fetch customer info
             const customerInfo = await RevenueCat.getCustomerInfo();
