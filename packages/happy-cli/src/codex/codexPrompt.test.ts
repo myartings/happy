@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CHANGE_TITLE_INSTRUCTION } from '@/gemini/constants';
 import {
+    buildCodexThreadTurnPrompt,
     buildCodexTurnPrompt,
     hashCodexEnhancedMode,
     stripHappySystemBlocks,
@@ -58,6 +59,45 @@ describe('buildCodexTurnPrompt', () => {
         });
 
         expect(prompt).toBe(`${wrapped(APPEND)}\n\nstart fresh`);
+    });
+});
+
+describe('buildCodexThreadTurnPrompt', () => {
+    it('injects the Happy append prompt once per Codex thread', () => {
+        const first = buildCodexThreadTurnPrompt({
+            message: 'first turn',
+            mode: { appendSystemPrompt: APPEND },
+            threadId: 'thread-a',
+            appendSystemPromptInjectedThreadId: null,
+            includeTitleInstruction: false,
+        });
+        const followUp = buildCodexThreadTurnPrompt({
+            message: 'same thread',
+            mode: { appendSystemPrompt: APPEND },
+            threadId: 'thread-a',
+            appendSystemPromptInjectedThreadId: first.appendSystemPromptInjectedThreadId,
+            includeTitleInstruction: false,
+        });
+        const replacement = buildCodexThreadTurnPrompt({
+            message: 'replacement thread',
+            mode: { appendSystemPrompt: APPEND },
+            threadId: 'thread-b',
+            appendSystemPromptInjectedThreadId: followUp.appendSystemPromptInjectedThreadId,
+            includeTitleInstruction: false,
+        });
+
+        expect(first).toEqual({
+            prompt: `${wrapped(APPEND)}\n\nfirst turn`,
+            appendSystemPromptInjectedThreadId: 'thread-a',
+        });
+        expect(followUp).toEqual({
+            prompt: 'same thread',
+            appendSystemPromptInjectedThreadId: 'thread-a',
+        });
+        expect(replacement).toEqual({
+            prompt: `${wrapped(APPEND)}\n\nreplacement thread`,
+            appendSystemPromptInjectedThreadId: 'thread-b',
+        });
     });
 });
 

@@ -44,7 +44,7 @@ import { withCodexRuntimeModelMetadata } from './codexRuntimeModelMetadata';
 import { createSerialAsyncHandler } from './utils/serialAsyncHandler';
 import { buildCodexThreadBackfillEnvelopes } from './utils/threadImageBackfill';
 import {
-    buildCodexTurnPrompt,
+    buildCodexThreadTurnPrompt,
     hashCodexEnhancedMode,
     type CodexEnhancedMode,
 } from './codexPrompt';
@@ -905,7 +905,7 @@ export async function runCodex(opts: {
         }
     } as const;
     let first = true;
-    let appendSystemPromptInjected = false;
+    let appendSystemPromptInjectedThreadId: string | null = null;
 
     try {
         logger.debug('[codex]: client.connect begin');
@@ -924,7 +924,7 @@ export async function runCodex(opts: {
                 announce: !isSideChat,
             });
             first = false;
-            appendSystemPromptInjected = true;
+            appendSystemPromptInjectedThreadId = client.threadId;
         }
 
         const forkCodexThreadId = process.env.HAPPY_FORK_CODEX_THREAD_ID;
@@ -999,7 +999,7 @@ export async function runCodex(opts: {
                 permissionHandler.reset();
                 reasoningProcessor.abort();
                 diffProcessor.reset();
-                appendSystemPromptInjected = false;
+                appendSystemPromptInjectedThreadId = null;
                 thinking = false;
                 session.keepAlive(thinking, 'remote');
                 messageBuffer.addMessage('Context was reset', 'status');
@@ -1055,9 +1055,6 @@ export async function runCodex(opts: {
                     continue;
                 }
 
-                const includeAppendSystemPrompt = Boolean(
-                    message.mode.appendSystemPrompt && !appendSystemPromptInjected,
-                );
                 const imageInputs = await prepareCodexImageInputItems(message.attachments, {
                     sessionId: session.sessionId,
                 });
@@ -1075,14 +1072,15 @@ export async function runCodex(opts: {
                     });
                     continue;
                 }
-                const turnPrompt = buildCodexTurnPrompt({
+                const turnPromptResult = buildCodexThreadTurnPrompt({
                     message: message.message,
                     mode: message.mode,
-                    includeAppendSystemPrompt,
+                    threadId: activeThreadId,
+                    appendSystemPromptInjectedThreadId,
                     includeTitleInstruction: first,
                 });
 
-                const result = await client.sendTurnAndWait(turnPrompt, {
+                const result = await client.sendTurnAndWait(turnPromptResult.prompt, {
                     model: message.mode.model,
                     approvalPolicy: executionPolicy.approvalPolicy,
                     sandbox: executionPolicy.sandbox,
@@ -1090,9 +1088,7 @@ export async function runCodex(opts: {
                     extraInputItems: imageInputs.inputItems,
                 });
                 first = false;
-                if (includeAppendSystemPrompt) {
-                    appendSystemPromptInjected = true;
-                }
+                appendSystemPromptInjectedThreadId = turnPromptResult.appendSystemPromptInjectedThreadId;
 
                 if (result.aborted) {
                     // Turn was aborted (user abort or permission cancel).

@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-cli/src/codex/codexPrompt.ts","reason":"Owns construction and state decision for Happy instructions in Codex turns."}
+{"path":"packages/happy-cli/src/codex/codexPrompt.test.ts","reason":"Focused regression seam for same-thread and replacement-thread injection."}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Integrates prompt injection state with actual Codex thread identity."}
+{"path":"docs/workspace/codex-options-after-thread-restart/validation.md","reason":"Records exact RED, GREEN, and suite evidence."}

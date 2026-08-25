@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "codex-options-after-thread-restart",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Install/restart the client for live-session observation, then commit and push only with explicit authorization",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-options-after-thread-restart/context.md accepted behavior",
+      "updated": "2026-08-25T04:46:44+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "decisions.md records resolved low-risk implementation choices; no material open decision",
+      "updated": "2026-08-25T04:46:44+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Low-risk single-slice scope, thread-keyed prompt state, focused CLI test seam, local-only tracker reason recorded",
+      "updated": "2026-08-25T04:46:45+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Localized CLI prompt-state fix; no protocol/schema, auth, data, protected path, deployment, or destructive change",
+      "updated": "2026-08-25T04:46:44+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Thread-keyed prompt injection implemented with RED/GREEN regression coverage and successful happy CLI build",
+      "updated": "2026-08-25T04:53:26+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Targeted prompt regression 9/9 and happy CLI build passed; configured typechecks and workflow tests passed; unrelated app/server/Windows baseline failures documented in validation.md",
+      "updated": "2026-08-25T04:59:04+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue; thread identity is wired across new-thread creation, same-thread reuse, explicit resume, and clear reset without protocol or renderer changes",
+      "updated": "2026-08-25T04:59:04+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records validation, whole-diff review, rollback, lessons, and explicit follow-up; all task items completed",
+      "updated": "2026-08-25T04:59:36+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-25T04:45:45+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-25T04:46:44+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-options-after-thread-restart/context.md accepted behavior"
+    },
+    {
+      "at": "2026-08-25T04:46:44+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "decisions.md records resolved low-risk implementation choices; no material open decision"
+    },
+    {
+      "at": "2026-08-25T04:46:44+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Localized CLI prompt-state fix; no protocol/schema, auth, data, protected path, deployment, or destructive change"
+    },
+    {
+      "at": "2026-08-25T04:46:45+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Low-risk single-slice scope, thread-keyed prompt state, focused CLI test seam, local-only tracker reason recorded"
+    },
+    {
+      "at": "2026-08-25T04:47:11+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED replacement-thread prompt injection test"
+    },
+    {
+      "at": "2026-08-25T04:53:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Thread-keyed prompt injection implemented with RED/GREEN regression coverage and successful happy CLI build"
+    },
+    {
+      "at": "2026-08-25T04:53:26+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run formal workflow checks and whole-diff review"
+    },
+    {
+      "at": "2026-08-25T04:59:04+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Targeted prompt regression 9/9 and happy CLI build passed; configured typechecks and workflow tests passed; unrelated app/server/Windows baseline failures documented in validation.md"
+    },
+    {
+      "at": "2026-08-25T04:59:04+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue; thread identity is wired across new-thread creation, same-thread reuse, explicit resume, and clear reset without protocol or renderer changes"
+    },
+    {
+      "at": "2026-08-25T04:59:05+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive validated local fix without commit or push"
+    },
+    {
+      "at": "2026-08-25T04:59:36+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records validation, whole-diff review, rollback, lessons, and explicit follow-up; all task items completed"
+    },
+    {
+      "at": "2026-08-25T04:59:37+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Fix Happy option-instruction reinjection when Codex creates a replacement thread; commit: pending; follow-up: Install/restart the client for live-session observation, then commit and push only with explicit authorization"
+    }
+  ],
+  "updated": "2026-08-25T04:59:37+00:00",
+  "archivedAt": "2026-08-25T04:59:37+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Fix Happy option-instruction reinjection when Codex creates a replacement thread",
+  "archiveFollowUp": "Install/restart the client for live-session observation, then commit and push only with explicit authorization"
+}
