@@ -10,7 +10,7 @@
 import os from 'node:os';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 
 /** Default command name for the agy binary (looked up on PATH). */
 export const AGY_BIN = 'agy';
@@ -34,10 +34,14 @@ export function findAgyBin(): string | undefined {
 
   // Already on PATH? Then the bare name is enough (and respects PATH ordering).
   try {
-    const probe = process.platform === 'win32'
-      ? `where ${AGY_BIN}`
-      : `command -v ${AGY_BIN}`;
-    execSync(probe, { stdio: 'ignore' });
+    if (process.platform === 'win32') {
+      execFileSync('where.exe', [AGY_BIN], {
+        stdio: 'ignore',
+        windowsHide: true,
+      });
+    } else {
+      execSync(`command -v ${AGY_BIN}`, { stdio: 'ignore' });
+    }
     return AGY_BIN;
   } catch {
     // not on PATH — fall through to the known install location

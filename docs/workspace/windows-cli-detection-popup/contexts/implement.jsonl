@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-cli/src/utils/detectCLI.ts","reason":"Windows CLI availability implementation"}
+{"path":"packages/happy-cli/src/utils/detectCLI.test.ts","reason":"Focused regression test seam"}
+{"path":"packages/happy-cli/package.json","reason":"Targeted and complete package commands"}
+{"path":"docs/workspace/windows-cli-detection-popup/context.md","reason":"Accepted scope and behavior contract"}
+{"path":"docs/workspace/windows-cli-detection-popup/validation.md","reason":"RED/GREEN evidence ledger"}

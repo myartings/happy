@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import os from 'os';
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -53,7 +53,16 @@ function detectPosix(): CLIAvailability {
 function detectWindows(): CLIAvailability {
   const checkCommand = (name: string): boolean => {
     try {
-      execSync(`powershell -NoProfile -Command "Get-Command ${name} -ErrorAction SilentlyContinue"`, { stdio: 'ignore', windowsHide: true });
+      execFileSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          `Get-Command -Name '${name}' -ErrorAction Stop | Out-Null`,
+        ],
+        { stdio: 'ignore', windowsHide: true },
+      );
       return true;
     } catch {
       return false;

@@ -74,3 +74,4 @@
 | 2026-08-25 | client-performance-bounded-state | pending | Implemented and desktop-verified bounded incremental Happy client state for large Session indexes and long transcripts | Profile the installed desktop client before any normalized-ordering or protocol-pagination escalation |
 | 2026-08-24 | codex-active-turn-steering | pending | Add native Codex active-turn steering with race-safe queue fallback | None |
 | 2026-08-25 | codex-options-after-thread-restart | pending | Fix Happy option-instruction reinjection when Codex creates a replacement thread | Install/restart the client for live-session observation, then commit and push only with explicit authorization |
+| 2026-08-25 | windows-cli-detection-popup | pending | Fix Windows Terminal heartbeat popups by replacing PowerShell and Antigravity string shell probes with direct hidden executable calls | Optional upstream PR; separately address unrelated Windows unit-suite baseline |
