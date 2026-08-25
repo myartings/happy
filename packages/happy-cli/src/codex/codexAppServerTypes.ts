@@ -69,7 +69,7 @@ export type CollabAgentState = { status: CollabAgentStatus | string; message?: s
 export type SubAgentActivityKind = "started" | "interacted" | "interrupted";
 
 export type ThreadItem =
-    | { type: "userMessage"; id: string; content: InputItem[] }
+    | { type: "userMessage"; id: string; clientId?: string | null; content: InputItem[] }
     | { type: "agentMessage"; id: string; text: string; phase?: string | null; memoryCitation?: unknown | null }
     | { type: "reasoning"; id: string; summary?: string[]; content?: string[] }
     | { type: "commandExecution"; id: string; command: string; cwd?: string; status?: string; aggregatedOutput?: string | null; exitCode?: number | null; durationMs?: number | null }
@@ -106,6 +106,7 @@ export type Thread = {
     forkedFromId?: string | null;
     path?: string | null;
     cwd?: string;
+    status?: { type?: string; [key: string]: unknown };
     turns?: ThreadTurn[];
     [key: string]: unknown;
 };
@@ -205,6 +206,7 @@ export type InjectItemsResponse = Record<string, never>;
 
 export type SendUserTurnParams = {
     threadId: ThreadId;
+    clientUserMessageId?: string | null;
     input: InputItem[];
     cwd: string;
     approvalPolicy: ApprovalPolicy;
@@ -217,6 +219,7 @@ export type SendUserTurnParams = {
 
 export type TurnSteerParams = {
     threadId: ThreadId;
+    clientUserMessageId?: string | null;
     input: InputItem[];
     expectedTurnId: string;
 };

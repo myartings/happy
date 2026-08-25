@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative verification commands"}
+{"path":"docs/specs/codex-stalled-turn-recovery.md","reason":"Acceptance criteria"}
+{"path":"docs/tasks/codex-stalled-turn-recovery-tasks.md","reason":"Complete intended scope"}
+{"path":"docs/workspace/codex-stalled-turn-recovery/validation.md","reason":"Exact evidence ledger"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"Recovery and reconciliation coverage"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.test.ts","reason":"Exactly-once fallback coverage"}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Host integration and user visibility inspection"}

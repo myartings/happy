@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "slug": "codex-stalled-turn-recovery-hardening",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Rebuild and install the desktop test client, then repeat live consecutive-message acceptance",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/codex-stalled-turn-recovery-hardening.md; user authorized fixing all final-review findings on 2026-08-26",
+      "updated": "2026-08-25T17:20:08+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-stalled-turn-recovery-hardening/decisions.md resolves retry, preservation, timeout, protocol, and execution boundaries",
+      "updated": "2026-08-25T17:20:08+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: high-risk single-owner local slice; focused Codex client/router seams; no tracker/delegation; exact contexts and validation plan recorded",
+      "updated": "2026-08-25T17:20:08+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: tri-state reconciliation, stable IDs, bounded operations, deterministic failure injection, no migration/deployment; docs/specs/codex-stalled-turn-recovery-hardening.md",
+      "updated": "2026-08-25T17:20:08+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "All hardening plus final-review recovery serialization complete; focused RED/GREEN and full targeted suite evidence recorded",
+      "updated": "2026-08-25T17:38:21+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-25T17:39:34+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole staged diff reviewed after recovery-serialization fix; no remaining correctness, duplication, loss, compatibility, concurrency, or visibility findings",
+      "updated": "2026-08-25T17:40:50+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records implementation outcome, validation, whole-diff review, rollback, limitations, and follow-up",
+      "updated": "2026-08-25T17:41:48+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-25T17:19:06+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-25T17:20:08+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/codex-stalled-turn-recovery-hardening.md; user authorized fixing all final-review findings on 2026-08-26"
+    },
+    {
+      "at": "2026-08-25T17:20:08+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-stalled-turn-recovery-hardening/decisions.md resolves retry, preservation, timeout, protocol, and execution boundaries"
+    },
+    {
+      "at": "2026-08-25T17:20:08+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: tri-state reconciliation, stable IDs, bounded operations, deterministic failure injection, no migration/deployment; docs/specs/codex-stalled-turn-recovery-hardening.md"
+    },
+    {
+      "at": "2026-08-25T17:20:08+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: high-risk single-owner local slice; focused Codex client/router seams; no tracker/delegation; exact contexts and validation plan recorded"
+    },
+    {
+      "at": "2026-08-25T17:20:09+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write failing regression tests for all four review findings, then implement the smallest tri-state recovery fixes"
+    },
+    {
+      "at": "2026-08-25T17:32:06+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T3 complete with RED/GREEN evidence in validation.md: tri-state pending delivery, start-timeout reconciliation, owned recovery rejection, accurate recovery outcome"
+    },
+    {
+      "at": "2026-08-25T17:32:06+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run formal acceptance checks, workflow validation, and whole-diff review"
+    },
+    {
+      "at": "2026-08-25T17:33:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-25T17:34:40+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "P1: sendTurnAndWait completion can resolve during disconnect before detached automatic reconnect/resume finishes, allowing queued input to race the reconnect"
+    },
+    {
+      "at": "2026-08-25T17:34:40+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Serialize sendTurnAndWait completion behind in-flight inactivity recovery, then rerun verification"
+    },
+    {
+      "at": "2026-08-25T17:38:21+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "All hardening plus final-review recovery serialization complete; focused RED/GREEN and full targeted suite evidence recorded"
+    },
+    {
+      "at": "2026-08-25T17:38:21+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Re-run workflow checks and perform final whole-diff review"
+    },
+    {
+      "at": "2026-08-25T17:39:34+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-25T17:40:50+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole staged diff reviewed after recovery-serialization fix; no remaining correctness, duplication, loss, compatibility, concurrency, or visibility findings"
+    },
+    {
+      "at": "2026-08-25T17:41:20+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive validated hardening with commit pending"
+    },
+    {
+      "at": "2026-08-25T17:41:48+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records implementation outcome, validation, whole-diff review, rollback, limitations, and follow-up"
+    },
+    {
+      "at": "2026-08-25T17:41:48+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Closed all stalled-turn recovery review findings with tri-state delivery preservation, start-timeout reconciliation, owned recovery errors, and serialized reconnect completion; commit: pending; follow-up: Rebuild and install the desktop test client, then repeat live consecutive-message acceptance"
+    }
+  ],
+  "updated": "2026-08-25T17:41:48+00:00",
+  "archivedAt": "2026-08-25T17:41:48+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Closed all stalled-turn recovery review findings with tri-state delivery preservation, start-timeout reconciliation, owned recovery errors, and serialized reconnect completion",
+  "archiveFollowUp": "Rebuild and install the desktop test client, then repeat live consecutive-message acceptance"
+}

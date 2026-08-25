@@ -723,18 +723,22 @@ describe('CodexAppServerClient sandbox integration', () => {
             sandbox: 'danger-full-access',
         });
         await client.sendTurnAndWait('', {
+            clientUserMessageId: 'unsupported-on-old-runtime',
             extraInputItems: [{ type: 'localImage', path: '/tmp/happy-image.png' }],
         });
 
-        expect(requests.find((msg) => msg.method === 'turn/start')?.params).toMatchObject({
+        const turnStartParams = requests.find((msg) => msg.method === 'turn/start')?.params;
+        expect(turnStartParams).toMatchObject({
             threadId: 'thread-images',
             input: [{ type: 'localImage', path: '/tmp/happy-image.png' }],
         });
+        expect(turnStartParams).not.toHaveProperty('clientUserMessageId');
 
         await client.disconnect();
     });
 
     it('steers text and images into the expected active turn', async () => {
+        mockExecSync.mockReturnValue('codex-cli 0.148.0');
         const requests: MockRpcMessage[] = [];
         const proc = createMockProcess({
             pid: 2803,
@@ -791,12 +795,14 @@ describe('CodexAppServerClient sandbox integration', () => {
         await client.sendTurn('keep working');
         await client.steerTurn('answer this too', {
             expectedTurnId: 'turn-original',
+            clientUserMessageId: 'happy-message-123',
             extraInputItems: [{ type: 'localImage', path: '/tmp/steered-image.png' }],
         });
 
         expect(requests.find((msg) => msg.method === 'turn/steer')?.params).toEqual({
             threadId: 'thread-steer',
             expectedTurnId: 'turn-original',
+            clientUserMessageId: 'happy-message-123',
             input: [
                 { type: 'text', text: 'answer this too' },
                 { type: 'localImage', path: '/tmp/steered-image.png' },
@@ -806,7 +812,373 @@ describe('CodexAppServerClient sandbox integration', () => {
         await client.disconnect();
     });
 
+    it('reconciles an acknowledged user message and a missed idle completion from thread history', async () => {
+        const requests: MockRpcMessage[] = [];
+        const proc = createMockProcess({
+            pid: 2804,
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-reconcile', path: '/tmp/thread-reconcile' },
+                            model: 'gpt-test',
+                            modelProvider: 'openai',
+                            cwd: '/tmp/project',
+                            approvalPolicy: 'never',
+                            sandbox: { type: 'dangerFullAccess' },
+                            reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, {
+                            id: msg.id,
+                            result: { turn: { id: 'turn-reconcile', items: [], status: 'inProgress', error: null } },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'turn/started',
+                            params: {
+                                threadId: 'thread-reconcile',
+                                turn: { id: 'turn-reconcile', items: [], status: 'inProgress', error: null },
+                            },
+                        });
+                    }, 0);
+                }
+
+                if (msg.method === 'thread/read' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: {
+                                id: 'thread-reconcile',
+                                status: { type: 'idle' },
+                                turns: [{
+                                    id: 'turn-reconcile',
+                                    status: 'completed',
+                                    items: [{
+                                        type: 'userMessage',
+                                        id: 'user-item-1',
+                                        clientId: 'message-correlated',
+                                        content: [{ type: 'text', text: 'follow up' }],
+                                    }],
+                                }],
+                            },
+                        },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        await client.connect();
+        await client.startThread({
+            model: 'gpt-test',
+            cwd: '/tmp/project',
+            approvalPolicy: 'never',
+            sandbox: 'danger-full-access',
+        });
+
+        const pendingTurn = client.sendTurnAndWait('keep working', { turnTimeoutMs: 5000 });
+        await waitFor(() => client.turnId === 'turn-reconcile');
+
+        await expect(client.reconcilePendingTurn({
+            clientUserMessageId: 'message-correlated',
+            timeoutMs: 100,
+        })).resolves.toEqual({
+            messageDelivery: 'delivered',
+            turnState: 'settled',
+        });
+        await expect(pendingTurn).resolves.toEqual({ aborted: false });
+        expect(requests.some((msg) => msg.method === 'thread/read')).toBe(true);
+
+        await client.disconnect();
+    });
+
+    it('uses an inactivity deadline instead of aborting a turn at a fixed wall-clock limit', async () => {
+        const proc = createMockProcess({
+            pid: 2805,
+            onRequest: (msg, stdout) => {
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-active-deadline', path: '/tmp/thread-active-deadline' },
+                            model: 'gpt-test',
+                            modelProvider: 'openai',
+                            cwd: '/tmp/project',
+                            approvalPolicy: 'never',
+                            sandbox: { type: 'dangerFullAccess' },
+                            reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, { id: msg.id, result: { turn: { id: 'turn-active-deadline' } } });
+                        pushJsonLine(stdout, {
+                            method: 'turn/started',
+                            params: { threadId: 'thread-active-deadline', turn: { id: 'turn-active-deadline', status: 'inProgress' } },
+                        });
+                    }, 0);
+                    setTimeout(() => pushJsonLine(stdout, {
+                        method: 'item/agentMessage/delta',
+                        params: { threadId: 'thread-active-deadline', turnId: 'turn-active-deadline', delta: 'still working' },
+                    }), 70);
+                    setTimeout(() => pushJsonLine(stdout, {
+                        method: 'turn/completed',
+                        params: {
+                            threadId: 'thread-active-deadline',
+                            turn: { id: 'turn-active-deadline', items: [], status: 'completed', error: null },
+                        },
+                    }), 140);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        await client.connect();
+        await client.startThread({
+            model: 'gpt-test',
+            cwd: '/tmp/project',
+            approvalPolicy: 'never',
+            sandbox: 'danger-full-access',
+        });
+
+        await expect(client.sendTurnAndWait('take your time', { turnTimeoutMs: 100 }))
+            .resolves.toEqual({ aborted: false });
+
+        await client.disconnect();
+    });
+
+    it('does not let a stale notification from another turn postpone recovery', async () => {
+        vi.useFakeTimers();
+        const requests: MockRpcMessage[] = [];
+        const proc = createMockProcess({
+            pid: 2808,
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-current', path: '/tmp/thread-current' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, { id: msg.id, result: { turn: { id: 'turn-current' } } });
+                        pushJsonLine(stdout, {
+                            method: 'turn/started',
+                            params: { threadId: 'thread-current', turn: { id: 'turn-current', status: 'inProgress' } },
+                        });
+                    }, 0);
+                    setTimeout(() => pushJsonLine(stdout, {
+                        method: 'item/agentMessage/delta',
+                        params: { threadId: 'thread-old', turnId: 'turn-old', delta: 'late output' },
+                    }), 70);
+                }
+                if (msg.method === 'thread/read' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: {
+                                id: 'thread-current', status: { type: 'idle' },
+                                turns: [{ id: 'turn-current', status: 'completed', items: [] }],
+                            },
+                        },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        let pendingTurn: Promise<{ aborted: boolean }> | null = null;
+        try {
+            const connecting = client.connect();
+            await vi.advanceTimersByTimeAsync(5);
+            await connecting;
+            const starting = client.startThread({
+                model: 'gpt-test', cwd: '/tmp/project', approvalPolicy: 'never', sandbox: 'danger-full-access',
+            });
+            await vi.advanceTimersByTimeAsync(0);
+            await starting;
+
+            pendingTurn = client.sendTurnAndWait('current work', { turnTimeoutMs: 100 });
+            await vi.advanceTimersByTimeAsync(100);
+            await vi.advanceTimersByTimeAsync(0);
+
+            expect(requests.some((msg) => msg.method === 'thread/read')).toBe(true);
+        } finally {
+            client.clearThreadState();
+            if (pendingTurn) await pendingTurn;
+            await client.disconnect();
+            vi.useRealTimers();
+        }
+    });
+
+    it('automatically restarts and resumes an inactive turn that remains active after reconciliation', async () => {
+        const firstRequests: MockRpcMessage[] = [];
+        const secondRequests: MockRpcMessage[] = [];
+        const proc1 = createMockProcess({
+            pid: 2806,
+            onRequest: (msg, stdout) => {
+                firstRequests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-auto-recover', path: '/tmp/thread-auto-recover' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, { id: msg.id, result: { turn: { id: 'turn-auto-recover' } } });
+                        pushJsonLine(stdout, {
+                            method: 'turn/started',
+                            params: { threadId: 'thread-auto-recover', turn: { id: 'turn-auto-recover', status: 'inProgress' } },
+                        });
+                    }, 0);
+                }
+                if (msg.method === 'thread/read' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: {
+                                id: 'thread-auto-recover',
+                                status: { type: 'active', activeFlags: [] },
+                                turns: [{ id: 'turn-auto-recover', status: 'inProgress', items: [] }],
+                            },
+                        },
+                    }), 0);
+                }
+                // A wedged backend does not answer turn/interrupt.
+            },
+        });
+        const proc2 = createMockProcess({
+            pid: 2807,
+            onRequest: (msg, stdout) => {
+                secondRequests.push(msg);
+                if (msg.method === 'thread/resume' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-auto-recover', path: '/tmp/thread-auto-recover' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementationOnce(() => proc1).mockImplementationOnce(() => proc2);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        const events: Array<{ type: string; [key: string]: unknown }> = [];
+        client.setEventHandler((event) => events.push(event as { type: string; [key: string]: unknown }));
+        await client.connect();
+        await client.startThread({
+            model: 'gpt-test', cwd: '/tmp/project', approvalPolicy: 'never', sandbox: 'danger-full-access',
+        });
+
+        await expect(client.sendTurnAndWait('this backend wedges', { turnTimeoutMs: 40 }))
+            .resolves.toEqual({ aborted: true });
+
+        expect(firstRequests.some((msg) => msg.method === 'thread/read')).toBe(true);
+        expect(firstRequests.some((msg) => msg.method === 'turn/interrupt')).toBe(true);
+        expect(events).toContainEqual(expect.objectContaining({
+            type: 'turn_aborted',
+            turn_id: 'turn-auto-recover',
+            forced_restart: true,
+            automatic_recovery: true,
+        }));
+        expect(client.threadId).toBe('thread-auto-recover');
+
+        await client.disconnect();
+    });
+
+    it('owns an inactivity recovery rejection and reports that resume failed', async () => {
+        const proc1 = createMockProcess({
+            pid: 2809,
+            onRequest: (msg, stdout) => {
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-recovery-fails', path: '/tmp/thread-recovery-fails' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, { id: msg.id, result: { turn: { id: 'turn-recovery-fails' } } }), 0);
+                }
+                if (msg.method === 'thread/read' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: {
+                                id: 'thread-recovery-fails', status: { type: 'active', activeFlags: [] },
+                                turns: [{ id: 'turn-recovery-fails', status: 'inProgress', items: [] }],
+                            },
+                        },
+                    }), 0);
+                }
+            },
+        });
+        const proc2 = createMockProcess({
+            pid: 2813,
+            onRequest: (msg, stdout) => {
+                if (msg.method === 'initialize' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        error: { code: -32000, message: 'reconnect initialize failed' },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementationOnce(() => proc1).mockImplementationOnce(() => proc2);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        const events: Array<{ type: string; [key: string]: unknown }> = [];
+        client.setEventHandler((event) => events.push(event as { type: string; [key: string]: unknown }));
+        await client.connect();
+        await client.startThread({ model: 'gpt-test', cwd: '/tmp/project', approvalPolicy: 'never', sandbox: 'danger-full-access' });
+
+        await expect(client.sendTurnAndWait('recovery must own errors', { turnTimeoutMs: 40 }))
+            .resolves.toEqual({ aborted: true });
+        expect(events).toContainEqual(expect.objectContaining({
+            type: 'turn_aborted',
+            automatic_recovery: true,
+            recovery_resumed: false,
+            recovery_error: expect.stringContaining('reconnect initialize failed'),
+        }));
+
+        await client.disconnect();
+    });
+
     it('keeps text-only turn input unchanged when no extra input items are supplied', async () => {
+        mockExecSync.mockReturnValue('codex-cli 0.148.0');
         const requests: MockRpcMessage[] = [];
         const proc = createMockProcess({
             pid: 2802,
@@ -861,12 +1233,198 @@ describe('CodexAppServerClient sandbox integration', () => {
             approvalPolicy: 'never',
             sandbox: 'danger-full-access',
         });
-        await client.sendTurnAndWait('hello');
+        await client.sendTurnAndWait('hello', { clientUserMessageId: 'happy-start-message' });
 
         expect(requests.find((msg) => msg.method === 'turn/start')?.params).toMatchObject({
             threadId: 'thread-text',
+            clientUserMessageId: 'happy-start-message',
             input: [{ type: 'text', text: 'hello' }],
         });
+
+        await client.disconnect();
+    });
+
+    it('does not duplicate a turn/start whose timed-out acknowledgement is found in history', async () => {
+        mockExecSync.mockReturnValue('codex-cli 0.148.0');
+        const requests: MockRpcMessage[] = [];
+        const proc = createMockProcess({
+            pid: 2810,
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-start-accepted', path: '/tmp/thread-start-accepted' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+                // Deliberately omit the turn/start response although Codex accepted it.
+                if (msg.method === 'thread/read' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: {
+                                id: 'thread-start-accepted', status: { type: 'idle' },
+                                turns: [{
+                                    id: 'turn-start-accepted', status: 'completed',
+                                    items: [{ type: 'userMessage', id: 'u1', clientId: 'start-accepted', content: [] }],
+                                }],
+                            },
+                        },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        await client.connect();
+        await client.startThread({ model: 'gpt-test', cwd: '/tmp/project', approvalPolicy: 'never', sandbox: 'danger-full-access' });
+
+        await expect(client.sendTurnAndWait('accepted once', {
+            clientUserMessageId: 'start-accepted',
+            startAckTimeoutMs: 20,
+        })).resolves.toEqual({ aborted: false });
+        expect(requests.filter((msg) => msg.method === 'turn/start')).toHaveLength(1);
+
+        await client.disconnect();
+    });
+
+    it('retries turn/start once when timed-out delivery is confirmed absent', async () => {
+        mockExecSync.mockReturnValue('codex-cli 0.148.0');
+        const requests: MockRpcMessage[] = [];
+        let startCount = 0;
+        const proc = createMockProcess({
+            pid: 2811,
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-start-absent', path: '/tmp/thread-start-absent' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    startCount += 1;
+                    if (startCount === 2) {
+                        setTimeout(() => {
+                            pushJsonLine(stdout, { id: msg.id, result: { turn: { id: 'turn-start-retry' } } });
+                            pushJsonLine(stdout, {
+                                method: 'turn/completed',
+                                params: { threadId: 'thread-start-absent', turn: { id: 'turn-start-retry', status: 'completed', items: [] } },
+                            });
+                        }, 0);
+                    }
+                }
+                if (msg.method === 'thread/read' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: { thread: { id: 'thread-start-absent', status: { type: 'idle' }, turns: [] } },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        await client.connect();
+        await client.startThread({ model: 'gpt-test', cwd: '/tmp/project', approvalPolicy: 'never', sandbox: 'danger-full-access' });
+
+        await expect(client.sendTurnAndWait('retry only when absent', {
+            clientUserMessageId: 'start-absent',
+            startAckTimeoutMs: 20,
+        })).resolves.toEqual({ aborted: false });
+        expect(requests.filter((msg) => msg.method === 'turn/start')).toHaveLength(2);
+        expect(requests.filter((msg) => msg.method === 'turn/start').map((msg) => msg.params.clientUserMessageId))
+            .toEqual(['start-absent', 'start-absent']);
+
+        await client.disconnect();
+    });
+
+    it('reports unknown turn/start delivery without retrying it', async () => {
+        mockExecSync.mockReturnValue('codex-cli 0.148.0');
+        const requests: MockRpcMessage[] = [];
+        const proc = createMockProcess({
+            pid: 2812,
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-start-unknown', path: '/tmp/thread-start-unknown' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+                // Neither turn/start nor thread/read responds.
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient, CodexTurnStartDeliveryUnknownError } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        await client.connect();
+        await client.startThread({ model: 'gpt-test', cwd: '/tmp/project', approvalPolicy: 'never', sandbox: 'danger-full-access' });
+
+        await expect(client.sendTurnAndWait('preserve unknown start', {
+            clientUserMessageId: 'start-unknown',
+            startAckTimeoutMs: 20,
+        })).rejects.toBeInstanceOf(CodexTurnStartDeliveryUnknownError);
+        expect(requests.filter((msg) => msg.method === 'turn/start')).toHaveLength(1);
+
+        await client.disconnect();
+    });
+
+    it('does not retry a timed-out turn/start when the runtime cannot correlate client IDs', async () => {
+        mockExecSync.mockReturnValue('codex-cli 0.147.0');
+        const requests: MockRpcMessage[] = [];
+        const proc = createMockProcess({
+            pid: 2814,
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-old-correlation', path: '/tmp/thread-old-correlation' },
+                            model: 'gpt-test', modelProvider: 'openai', cwd: '/tmp/project',
+                            approvalPolicy: 'never', sandbox: { type: 'dangerFullAccess' }, reasoningEffort: null,
+                        },
+                    }), 0);
+                }
+                if (msg.method === 'thread/read' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: { thread: { id: 'thread-old-correlation', status: { type: 'idle' }, turns: [] } },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient, CodexTurnStartDeliveryUnknownError } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        await client.connect();
+        await client.startThread({ model: 'gpt-test', cwd: '/tmp/project', approvalPolicy: 'never', sandbox: 'danger-full-access' });
+
+        await expect(client.sendTurnAndWait('cannot correlate this', {
+            clientUserMessageId: 'old-runtime-id',
+            startAckTimeoutMs: 20,
+        })).rejects.toBeInstanceOf(CodexTurnStartDeliveryUnknownError);
+        expect(requests.filter((msg) => msg.method === 'turn/start')).toHaveLength(1);
+        expect(requests.find((msg) => msg.method === 'turn/start')?.params)
+            .not.toHaveProperty('clientUserMessageId');
 
         await client.disconnect();
     });
