@@ -103,7 +103,9 @@ import {
     LocalBlurHalo,
 } from '@/components/AnimatedOverlay';
 import {
+    RECENT_PROJECT_PREVIEW_LIMIT,
     WorkspaceProjectDiscoveryLoader,
+    buildRecentProjectPreview,
     buildWorkspaceProjectSections,
     type ListWorkspaceProjectsResult,
 } from '@/utils/workspaceProjectDiscovery';
@@ -535,6 +537,11 @@ function PathPickerContent({
     const inputRef = React.useRef<TextInput>(null);
     const currentValue = value ?? '';
     const [selection, setSelection] = React.useState<{ start: number; end: number } | undefined>(undefined);
+    const [showAllRecent, setShowAllRecent] = React.useState(false);
+    const recentPreview = React.useMemo(
+        () => buildRecentProjectPreview(recentItems, showAllRecent),
+        [recentItems, showAllRecent],
+    );
 
     React.useEffect(() => {
         // Embedded mobile pickers are positioned next to their trigger. Opening
@@ -660,15 +667,48 @@ function PathPickerContent({
             )}
 
             <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Recent
+                Workspace Projects
             </Text>
+
+            <View style={[pickerStyles.pathInputRow, { borderColor: theme.colors.divider }]}>
+                <Ionicons name="search-outline" size={16} color={theme.colors.textSecondary} />
+                <TextInput
+                    value={searchQuery}
+                    onChangeText={onChangeSearchQuery}
+                    placeholder="Search workspace projects"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                />
+            </View>
+
+            {discoveryStatus === 'loading' && (
+                <View style={pickerStyles.discoveryStatusRow}>
+                    <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+                    <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
+                        scanning workspace projects…
+                    </Text>
+                </View>
+            )}
+
+            {discoveryStatus === 'unavailable' && (
+                <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
+                    workspace projects unavailable; recent and custom paths still work
+                </Text>
+            )}
 
             <ScrollView
                 style={[pickerStyles.optionList, embedded && pickerStyles.embeddedOptionList]}
                 contentContainerStyle={embedded && pickerStyles.embeddedOptionListContent}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator
             >
-                {recentItems.map((item) => {
+                <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
+                    Recent
+                </Text>
+
+                {recentPreview.visibleItems.map((item) => {
                     const isSelected = item.key === matchedItemKey;
 
                     return (
@@ -709,35 +749,32 @@ function PathPickerContent({
                     </Text>
                 )}
 
-                <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                    Workspace Projects
-                </Text>
-
-                <View style={[pickerStyles.pathInputRow, { borderColor: theme.colors.divider }]}>
-                    <Ionicons name="search-outline" size={16} color={theme.colors.textSecondary} />
-                    <TextInput
-                        value={searchQuery}
-                        onChangeText={onChangeSearchQuery}
-                        placeholder="Search workspace projects"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-                </View>
-
-                {discoveryStatus === 'loading' && (
-                    <View style={pickerStyles.discoveryStatusRow}>
-                        <ActivityIndicator size="small" color={theme.colors.textSecondary} />
-                        <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
-                            scanning workspace projects…
+                {(recentPreview.hiddenCount > 0 || showAllRecent)
+                    && recentItems.length > RECENT_PROJECT_PREVIEW_LIMIT && (
+                    <BubblePressable
+                        scaleFeedback={false}
+                        style={(p) => [
+                            pickerStyles.recentDisclosure,
+                            p.pressed && pickerStyles.optionPressed,
+                        ]}
+                        onPress={() => setShowAllRecent((value) => !value)}
+                    >
+                        <Text style={[pickerStyles.recentDisclosureText, { color: theme.colors.textSecondary }]}>
+                            {showAllRecent
+                                ? 'Show fewer recent projects'
+                                : `View all recent projects (${recentItems.length})`}
                         </Text>
-                    </View>
+                        <Ionicons
+                            name={showAllRecent ? 'chevron-up' : 'chevron-down'}
+                            size={15}
+                            color={theme.colors.textSecondary}
+                        />
+                    </BubblePressable>
                 )}
 
-                {discoveryStatus === 'unavailable' && (
-                    <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
-                        workspace projects unavailable; recent and custom paths still work
+                {discoveryStatus === 'ready' && (
+                    <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
+                        Workspace Results
                     </Text>
                 )}
 
@@ -3217,11 +3254,31 @@ const pickerStyles = {
         maxWidth: '100%',
         minWidth: 0,
         maxHeight: 176,
+        ...Platform.select({
+            web: { overflowY: 'auto', overscrollBehavior: 'contain' } as any,
+            default: {},
+        }),
     } as const,
     embeddedOptionListContent: {
         width: '100%',
         maxWidth: '100%',
         minWidth: 0,
+    } as const,
+    recentDisclosure: {
+        minHeight: 36,
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        justifyContent: 'space-between' as const,
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+    } as const,
+    recentDisclosureText: {
+        flex: 1,
+        fontSize: 13,
+        ...Typography.default('semiBold'),
+        ...Platform.select({ web: { userSelect: 'none' } as any, default: {} }),
     } as const,
     emptyText: {
         fontSize: 14,

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "workspace-project-picker-discoverability",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Run an authorized Windows Desktop refresh and visual smoke",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/context.md",
+      "updated": "2026-08-26T09:41:26+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/decisions.md",
+      "updated": "2026-08-26T09:41:26+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: bounded single-component UI slice, stable pure test seam, local-only execution; docs/workspace/workspace-project-picker-discoverability/context.md; docs/workspace/workspace-project-picker-discoverability/task-links.md",
+      "updated": "2026-08-26T09:41:27+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Low-risk presentation-only change; no .ai/project.json risk trigger applies; docs/workspace/workspace-project-picker-discoverability/context.md",
+      "updated": "2026-08-26T09:41:26+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "packages/happy-app/sources/app/(app)/new/index.tsx; packages/happy-app/sources/utils/workspaceProjectDiscovery.ts; packages/happy-app/sources/utils/workspaceProjectDiscovery.test.ts; docs/workspace/workspace-project-picker-discoverability/validation.md",
+      "updated": "2026-08-26T09:48:22+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/validation.md; targeted 13/13 pass; happy-app typecheck pass; full-suite 17 failures reproduced unchanged in clean base checkout",
+      "updated": "2026-08-26T09:51:16+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: no blocking findings; search precedes result ScrollView, Recent preview/disclosure preserves order, web scrolling is bounded, no RPC/data/risk boundary changed; docs/workspace/workspace-project-picker-discoverability/validation.md",
+      "updated": "2026-08-26T09:51:16+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/finish.md; docs/workspace/workspace-project-picker-discoverability/validation.md; docs/workspace/workspace-project-picker-discoverability/sessions/20260826T095141Z-Codex-implementation-and-verification-in-quiet-harbor-worktree.md",
+      "updated": "2026-08-26T09:52:15+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-26T09:38:26+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-26T09:41:26+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/context.md"
+    },
+    {
+      "at": "2026-08-26T09:41:26+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/decisions.md"
+    },
+    {
+      "at": "2026-08-26T09:41:26+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Low-risk presentation-only change; no .ai/project.json risk trigger applies; docs/workspace/workspace-project-picker-discoverability/context.md"
+    },
+    {
+      "at": "2026-08-26T09:41:27+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: bounded single-component UI slice, stable pure test seam, local-only execution; docs/workspace/workspace-project-picker-discoverability/context.md; docs/workspace/workspace-project-picker-discoverability/task-links.md"
+    },
+    {
+      "at": "2026-08-26T09:41:44+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write Recent preview RED test, then move search above results and wire disclosure"
+    },
+    {
+      "at": "2026-08-26T09:48:22+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "packages/happy-app/sources/app/(app)/new/index.tsx; packages/happy-app/sources/utils/workspaceProjectDiscovery.ts; packages/happy-app/sources/utils/workspaceProjectDiscovery.test.ts; docs/workspace/workspace-project-picker-discoverability/validation.md"
+    },
+    {
+      "at": "2026-08-26T09:48:22+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run bounded acceptance check and whole-diff review"
+    },
+    {
+      "at": "2026-08-26T09:51:16+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/validation.md; targeted 13/13 pass; happy-app typecheck pass; full-suite 17 failures reproduced unchanged in clean base checkout"
+    },
+    {
+      "at": "2026-08-26T09:51:16+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: no blocking findings; search precedes result ScrollView, Recent preview/disclosure preserves order, web scrolling is bounded, no RPC/data/risk boundary changed; docs/workspace/workspace-project-picker-discoverability/validation.md"
+    },
+    {
+      "at": "2026-08-26T09:51:17+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence and archive without commit"
+    },
+    {
+      "at": "2026-08-26T09:52:15+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/workspace-project-picker-discoverability/finish.md; docs/workspace/workspace-project-picker-discoverability/validation.md; docs/workspace/workspace-project-picker-discoverability/sessions/20260826T095141Z-Codex-implementation-and-verification-in-quiet-harbor-worktree.md"
+    },
+    {
+      "at": "2026-08-26T09:52:15+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Keep workspace-project search visible, preview five Recent paths with disclosure, and restore embedded desktop scrolling; commit: pending; follow-up: Run an authorized Windows Desktop refresh and visual smoke"
+    }
+  ],
+  "updated": "2026-08-26T09:52:15+00:00",
+  "archivedAt": "2026-08-26T09:52:15+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Keep workspace-project search visible, preview five Recent paths with disclosure, and restore embedded desktop scrolling",
+  "archiveFollowUp": "Run an authorized Windows Desktop refresh and visual smoke"
+}

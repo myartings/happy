@@ -19,6 +19,22 @@ export type WorkspaceProjectSections = {
     workspaceProjects: WorkspaceProjectPickerItem[];
 };
 
+export const RECENT_PROJECT_PREVIEW_LIMIT = 5;
+
+export function buildRecentProjectPreview<T>(
+    recentItems: readonly T[],
+    expanded: boolean,
+): { visibleItems: readonly T[]; hiddenCount: number } {
+    if (expanded || recentItems.length <= RECENT_PROJECT_PREVIEW_LIMIT) {
+        return { visibleItems: recentItems, hiddenCount: 0 };
+    }
+
+    return {
+        visibleItems: recentItems.slice(0, RECENT_PROJECT_PREVIEW_LIMIT),
+        hiddenCount: recentItems.length - RECENT_PROJECT_PREVIEW_LIMIT,
+    };
+}
+
 export type ListWorkspaceProjectsResult = {
     root: string;
     projects: WorkspaceProject[];

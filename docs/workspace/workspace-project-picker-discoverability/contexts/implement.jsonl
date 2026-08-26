@@ -1,0 +1,5 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Existing Project picker rendering and desktop/web scroll styles"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.ts","reason":"Public pure picker-model seam for Recent preview behavior"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.test.ts","reason":"Targeted regression coverage for Recent preview behavior"}
+{"path":"docs/workspace/workspace-project-picker-discoverability","reason":"Workflow contract and incremental validation evidence"}

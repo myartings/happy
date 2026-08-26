@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Verify search placement, disclosure wiring, and scroll styling"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.ts","reason":"Verify Recent preview model behavior"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.test.ts","reason":"Verify regression coverage"}
+{"path":"docs/workspace/workspace-project-picker-discoverability/validation.md","reason":"Evidence ledger for exact check outcomes"}
