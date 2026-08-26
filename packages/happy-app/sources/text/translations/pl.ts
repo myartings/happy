@@ -254,8 +254,6 @@ export const pl: TranslationStructure = {
         commandPaletteDisabled: 'Szybki dostęp do poleceń wyłączony',
         markdownCopyV2: 'Markdown Copy v2',
         markdownCopyV2Subtitle: 'Długie naciśnięcie otwiera modal kopiowania',
-        hideInactiveSessions: 'Ukryj nieaktywne sesje',
-        hideInactiveSessionsSubtitle: 'Wyświetlaj tylko aktywne czaty na liście',
         groupToolCalls: 'Grupuj wywołania narzędzi',
         groupToolCallsSubtitle: 'Zwijaj kolejne wywołania narzędzi w jeden kontener',
         showActiveSessionRuntime: 'Pokaż środowisko aktywnych sesji',

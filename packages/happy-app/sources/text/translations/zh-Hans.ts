@@ -238,8 +238,6 @@ export const zhHans: TranslationStructure = {
         commandPaletteDisabled: '快速命令访问已禁用',
         markdownCopyV2: 'Markdown 复制 v2',
         markdownCopyV2Subtitle: '长按打开复制模态框',
-        hideInactiveSessions: '隐藏非活跃会话',
-        hideInactiveSessionsSubtitle: '仅在列表中显示活跃的聊天',
         groupToolCalls: '分组工具调用',
         groupToolCallsSubtitle: '将连续的工具调用折叠到一个容器中',
         showActiveSessionRuntime: '显示活跃会话运行环境',

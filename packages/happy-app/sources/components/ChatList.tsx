@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { useHeaderHeight } from '@/utils/responsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MessageView } from './MessageView';
-import { AgentWorkGroupView, ToolGroupView } from './ToolGroupView';
+import { AgentWorkGroupView, type ToolGroupLayoutAnchor, ToolGroupView } from './ToolGroupView';
 import { Metadata, Session } from '@/sync/storageTypes';
 import { ChatFooter } from './ChatFooter';
 import { Message } from '@/sync/typesMessage';
@@ -160,6 +160,25 @@ const ChatListInternal = React.memo((props: {
         contentHeight: 0,
         viewportHeight: 0,
     });
+    const preserveToolGroupAnchor = React.useCallback((anchor: ToolGroupLayoutAnchor) => {
+        // Inverted FlatList rows keep their visual bottom edge fixed when their
+        // height changes. Measure the pressed header after layout and offset the
+        // list by the movement so details grow below it instead.
+        requestAnimationFrame(() => {
+            anchor.node.measureInWindow((_x, nextY, _width, height) => {
+                if (!Number.isFinite(nextY) || height <= 0) {
+                    return;
+                }
+                const adjustment = anchor.y - nextY;
+                if (Math.abs(adjustment) < 0.5) {
+                    return;
+                }
+                const nextOffset = Math.max(0, scrollMetricsRef.current.offsetY + adjustment);
+                scrollMetricsRef.current.offsetY = nextOffset;
+                flatListRef.current?.scrollToOffset({ offset: nextOffset, animated: false });
+            });
+        });
+    }, []);
     const session = useSession(props.sessionId);
     const controlMode = resolveControlMode(usesControlledSessionUi(session?.metadata) ? session?.agentState?.controlledByUser : false);
     const previousControlModeRef = React.useRef(controlMode);
@@ -485,6 +504,7 @@ const ChatListInternal = React.memo((props: {
                     sessionId={props.sessionId}
                     expanded={!collapsedGroups.has(item.id)}
                     onToggle={() => handleToggleGroup(item.id)}
+                    onAnchorLayoutChange={preserveToolGroupAnchor}
                 />
             );
         }
@@ -496,6 +516,7 @@ const ChatListInternal = React.memo((props: {
                     sessionId={props.sessionId}
                     expanded={!collapsedGroups.has(item.id)}
                     onToggle={() => handleToggleGroup(item.id)}
+                    onAnchorLayoutChange={preserveToolGroupAnchor}
                 />
             );
         }
@@ -508,7 +529,7 @@ const ChatListInternal = React.memo((props: {
                 copyTextResolver={agentCopyResolversByMessageId.get(item.message.id)}
             />
         );
-    }, [agentCopyResolversByMessageId, props.metadata, props.sessionId, collapsedGroups, handleToggleGroup, highlightedMessageId]);
+    }, [agentCopyResolversByMessageId, props.metadata, props.sessionId, collapsedGroups, handleToggleGroup, highlightedMessageId, preserveToolGroupAnchor]);
 
     // In inverted FlatList, offset 0 = latest messages (visual bottom).
     // Offset increases as user scrolls up to see older messages.

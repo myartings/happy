@@ -37,6 +37,7 @@ import { useHappyAction } from '@/hooks/useHappyAction';
 import { HappyError } from '@/utils/errors';
 import { Session } from '@/sync/storageTypes';
 import { sync } from '@/sync/sync';
+import { supportsImageAttachmentsForFlavor } from '@/sync/attachmentSupport';
 import { t } from '@/text';
 import { tracking } from '@/track';
 import { getVoiceMessageCount, getVoiceOnboardingPromptLoadCount } from '@/sync/persistence';
@@ -71,6 +72,7 @@ import {
     getRigGitSummary,
     getRigReasoningSelection,
     isRigMetadata,
+    isRigMetadataV1,
     isRigModelSelectionEnabled,
     isRigPermissionSelectionEnabled,
     isRigReasoningSelectionEnabled,
@@ -909,8 +911,8 @@ export function SessionViewLoaded({
     const isRig = isRigMetadata(session.metadata);
     const agentDefaultOverrides = useSetting('agentDefaultOverrides');
     const effectiveAgentDefaults = React.useMemo(() => (
-        resolveAgentDefaultConfig(agentDefaultOverrides, flavor)
-    ), [agentDefaultOverrides, flavor]);
+        resolveAgentDefaultConfig(agentDefaultOverrides, flavor, cliVersion)
+    ), [agentDefaultOverrides, cliVersion, flavor]);
     const availableModels = React.useMemo(() => (
         getAvailableModels(
             flavor,
@@ -966,10 +968,11 @@ export function SessionViewLoaded({
     const isDisconnected = !sessionStatus.isConnected;
     const resumeCommandBlock = getResumeCommandBlock(session);
 
-    // Image attachment state (expImageUpload feature flag)
-    const expImageUpload = useSetting('expImageUpload');
+    // Attachment availability is capability-driven by the active session.
     const { selectedImages, pickImages, removeImage, clearImages, addImages } = useImagePicker();
-    const canUseAttachments = rigCanUseAttachments(session.metadata);
+    const canUseAttachments = isRigMetadataV1(session.metadata)
+        ? rigCanUseAttachments(session.metadata)
+        : supportsImageAttachmentsForFlavor(session.metadata?.flavor);
     React.useEffect(() => {
         if (!canUseAttachments && selectedImages.length > 0) {
             clearImages();
@@ -1028,11 +1031,11 @@ export function SessionViewLoaded({
     // need to re-create on every keystroke.
     const handleSend = React.useCallback(() => {
         const liveMessage = composerHandleRef.current?.getMessage() ?? '';
-        if (liveMessage.trim() || (expImageUpload && selectedImages.length > 0)) {
-            const attachments = expImageUpload ? selectedImages : undefined;
+        if (liveMessage.trim() || selectedImages.length > 0) {
+            const attachments = selectedImages.length > 0 ? selectedImages : undefined;
             const communicationsToDismiss = [...pendingCommunications];
             composerHandleRef.current?.clearMessage();
-            if (expImageUpload) clearImages();
+            clearImages();
 
             void (async () => {
                 try {
@@ -1058,7 +1061,7 @@ export function SessionViewLoaded({
                 }
             })();
         }
-    }, [sessionId, expImageUpload, selectedImages, clearImages, pendingCommunications]);
+    }, [sessionId, selectedImages, clearImages, pendingCommunications]);
 
     const handleAbort = React.useCallback(() => {
         // Stop cancels only the active turn. Permission, model, and effort are
@@ -1285,10 +1288,10 @@ export function SessionViewLoaded({
                     || (Platform.OS === 'web' && sessionStatus.state === 'waiting')
                 )}
                 onFileViewerPress={experiments && !isTablet && rigCanBrowseFiles(session.metadata) && rigCanReadFiles(session.metadata) ? handleFileViewerPress : undefined}
-                selectedImages={expImageUpload && canUseAttachments ? selectedImages : undefined}
-                onPickImages={expImageUpload && canUseAttachments ? pickImages : undefined}
-                onRemoveImage={expImageUpload && canUseAttachments ? removeImage : undefined}
-                onAddImages={expImageUpload && canUseAttachments ? addImages : undefined}
+                selectedImages={canUseAttachments ? selectedImages : undefined}
+                onPickImages={canUseAttachments ? pickImages : undefined}
+                onRemoveImage={canUseAttachments ? removeImage : undefined}
+                onAddImages={canUseAttachments ? addImages : undefined}
                 autocompletePrefixes={AGENT_INPUT_AUTOCOMPLETE_PREFIXES}
                 autocompleteSuggestions={handleAutocompleteSuggestions}
                 usageData={usageData}

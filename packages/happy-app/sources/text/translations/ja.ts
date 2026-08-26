@@ -238,8 +238,6 @@ export const ja: TranslationStructure = {
         commandPaletteDisabled: 'クイックコマンドアクセスは無効',
         markdownCopyV2: 'Markdownコピー v2',
         markdownCopyV2Subtitle: '長押しでコピーモーダルを開く',
-        hideInactiveSessions: '非アクティブセッションを非表示',
-        hideInactiveSessionsSubtitle: 'アクティブなチャットのみをリストに表示',
         groupToolCalls: 'ツール呼び出しをグループ化',
         groupToolCallsSubtitle: '連続するツール呼び出しを1つのコンテナにまとめる',
         showActiveSessionRuntime: 'アクティブセッションの実行環境を表示',

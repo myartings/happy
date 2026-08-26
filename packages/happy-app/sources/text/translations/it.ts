@@ -235,8 +235,6 @@ export const it: TranslationStructure = {
         commandPaletteDisabled: 'Accesso rapido ai comandi disabilitato',
         markdownCopyV2: 'Markdown Copy v2',
         markdownCopyV2Subtitle: 'Pressione lunga apre la finestra di copia',
-        hideInactiveSessions: 'Nascondi sessioni inattive',
-        hideInactiveSessionsSubtitle: 'Mostra solo le chat attive nella tua lista',
         groupToolCalls: 'Raggruppa chiamate agli strumenti',
         groupToolCallsSubtitle: 'Comprimi le chiamate consecutive agli strumenti in un unico contenitore',
         showActiveSessionRuntime: 'Mostra ambiente sessioni attive',

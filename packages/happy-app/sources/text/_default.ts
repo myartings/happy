@@ -220,7 +220,7 @@ export const en = {
 
     settingsFeatures: {
         // Features settings screen
-        experiments: 'Experiments',
+        experiments: 'Experimental',
         experimentsDescription: 'Enable experimental features that are still in development. These features may be unstable or change without notice.',
         experimentalFeatures: 'Experimental Features',
         experimentalFeaturesEnabled: 'Experimental features enabled',
@@ -235,8 +235,6 @@ export const en = {
         commandPaletteDisabled: 'Quick command access disabled',
         markdownCopyV2: 'Markdown Copy v2',
         markdownCopyV2Subtitle: 'Long press opens copy modal',
-        hideInactiveSessions: 'Hide inactive sessions',
-        hideInactiveSessionsSubtitle: 'Show only active chats in your list',
         groupToolCalls: 'Group Tool Calls',
         groupToolCallsSubtitle: 'Collapse consecutive tool calls into one container',
         showActiveSessionRuntime: 'Show Active Session Runtime',

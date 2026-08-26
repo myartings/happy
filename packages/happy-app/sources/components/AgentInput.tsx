@@ -125,7 +125,7 @@ interface AgentInputProps {
     isSending?: boolean;
     minHeight?: number;
     zenMode?: boolean;
-    /** Image attachments waiting to be sent (expImageUpload feature). */
+    /** Image attachments waiting to be sent. */
     selectedImages?: AttachmentPreview[];
     onPickImages?: () => void;
     onRemoveImage?: (id: string) => void;
