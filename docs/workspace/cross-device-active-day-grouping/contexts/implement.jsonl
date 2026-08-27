@@ -1,0 +1,4 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/cross-device-active-day-grouping.md","reason":"Accepted bug behavior and scope"}
+{"path":"packages/happy-app/sources/utils/visibleSessionListViewData.ts","reason":"Pure active-session ordering and day grouping projection"}
+{"path":"packages/happy-app/sources/hooks/useVisibleSessionListViewData.test.ts","reason":"Existing public behavior seam for active-list grouping"}
