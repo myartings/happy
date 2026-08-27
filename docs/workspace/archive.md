@@ -79,3 +79,4 @@
 | 2026-08-26 | codex-stalled-turn-recovery | pending | Recover stalled Codex turns and preserve consecutive follow-up delivery | None |
 | 2026-08-26 | codex-stalled-turn-recovery-hardening | pending | Closed all stalled-turn recovery review findings with tri-state delivery preservation, start-timeout reconciliation, owned recovery errors, and serialized reconnect completion | Rebuild and install the desktop test client, then repeat live consecutive-message acceptance |
 | 2026-08-26 | workspace-project-picker-discoverability | pending | Keep workspace-project search visible, preview five Recent paths with disclosure, and restore embedded desktop scrolling | Run an authorized Windows Desktop refresh and visual smoke |
+| 2026-08-28 | cross-device-active-day-grouping | pending | Use canonical lastActivityAt for cross-device active-session ordering and day grouping; focused regression and typecheck pass; unrelated baseline suite gaps explicitly accepted | None |
