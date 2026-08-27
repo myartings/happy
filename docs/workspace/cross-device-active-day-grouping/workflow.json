@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "cross-device-active-day-grouping",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/cross-device-active-day-grouping.md AC1-AC3; user authorized direct fix and verification",
+      "updated": "2026-08-27T16:31:08+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/cross-device-active-day-grouping/decisions.md D1-D3",
+      "updated": "2026-08-27T16:31:08+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/specs/cross-device-active-day-grouping.md; docs/tasks/cross-device-active-day-grouping-tasks.md; docs/workspace/cross-device-active-day-grouping/context.md; local-only tracker reason recorded",
+      "updated": "2026-08-27T16:31:09+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/workspace/cross-device-active-day-grouping/decisions.md cleared-with-controls; pure presentation projection, focused test, reversible one-line production change",
+      "updated": "2026-08-27T16:31:09+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD RED/GREEN recorded in docs/workspace/cross-device-active-day-grouping/validation.md; production scope is one activity-key expression plus focused regression",
+      "updated": "2026-08-27T16:33:48+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the named unrelated baseline gaps on 2026-08-28; docs/workspace/cross-device-active-day-grouping/validation.md records 26/26 targeted/neighboring tests, App typecheck pass, and 16 unrelated failures in five untouched families",
+      "updated": "2026-08-27T16:39:30+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent read-only whole-diff review recorded in docs/workspace/cross-device-active-day-grouping/validation.md; no actionable findings",
+      "updated": "2026-08-27T16:38:06+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/cross-device-active-day-grouping/finish.md; all tasks complete, accepted gaps recorded, independent review passed, rollback and local-only tracker reconciliation documented",
+      "updated": "2026-08-27T16:40:02+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-27T16:30:13+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-27T16:31:08+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/cross-device-active-day-grouping.md AC1-AC3; user authorized direct fix and verification"
+    },
+    {
+      "at": "2026-08-27T16:31:08+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/cross-device-active-day-grouping/decisions.md D1-D3"
+    },
+    {
+      "at": "2026-08-27T16:31:09+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/cross-device-active-day-grouping/decisions.md cleared-with-controls; pure presentation projection, focused test, reversible one-line production change"
+    },
+    {
+      "at": "2026-08-27T16:31:09+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/cross-device-active-day-grouping.md; docs/tasks/cross-device-active-day-grouping-tasks.md; docs/workspace/cross-device-active-day-grouping/context.md; local-only tracker reason recorded"
+    },
+    {
+      "at": "2026-08-27T16:31:28+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Run RED regression, apply canonical activity-key fix, and validate"
+    },
+    {
+      "at": "2026-08-27T16:33:48+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD RED/GREEN recorded in docs/workspace/cross-device-active-day-grouping/validation.md; production scope is one activity-key expression plus focused regression"
+    },
+    {
+      "at": "2026-08-27T16:33:49+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete applicable checks and whole-diff review"
+    },
+    {
+      "at": "2026-08-27T16:38:06+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent read-only whole-diff review recorded in docs/workspace/cross-device-active-day-grouping/validation.md; no actionable findings"
+    },
+    {
+      "at": "2026-08-27T16:39:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the named unrelated baseline gaps on 2026-08-28; docs/workspace/cross-device-active-day-grouping/validation.md records 26/26 targeted/neighboring tests, App typecheck pass, and 16 unrelated failures in five untouched families"
+    },
+    {
+      "at": "2026-08-27T16:39:30+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record accepted gaps, rollback, structured review summary, and archive with commit pending"
+    },
+    {
+      "at": "2026-08-27T16:40:02+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/cross-device-active-day-grouping/finish.md; all tasks complete, accepted gaps recorded, independent review passed, rollback and local-only tracker reconciliation documented"
+    },
+    {
+      "at": "2026-08-27T16:40:02+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Use canonical lastActivityAt for cross-device active-session ordering and day grouping; focused regression and typecheck pass; unrelated baseline suite gaps explicitly accepted; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-27T16:40:02+00:00",
+  "archivedAt": "2026-08-27T16:40:02+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Use canonical lastActivityAt for cross-device active-session ordering and day grouping; focused regression and typecheck pass; unrelated baseline suite gaps explicitly accepted",
+  "archiveFollowUp": "None"
+}
