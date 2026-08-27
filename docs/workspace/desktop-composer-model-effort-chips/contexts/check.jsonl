@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/desktop-composer-model-effort-chips/context.md","reason":"Accepted criteria to verify"}
+{"path":"docs/workspace/desktop-composer-model-effort-chips/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Review the host wiring and platform guards"}
+{"path":"packages/happy-app/sources/features/studio-composer","reason":"Review feature-owned presentation and focused tests"}

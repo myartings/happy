@@ -51,6 +51,7 @@ import {
     resolveDesktopComposerStyle,
     resolveStudioComposerStatePresentation,
 } from '@/features/studio-composer/studioComposerStyle';
+import { DesktopComposerModeChips } from '@/features/studio-composer/desktopComposerModeChips';
 
 interface AgentInputProps {
     // `initialValue` seeds the uncontrolled textarea once; keystrokes never
@@ -1529,6 +1530,18 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             )
                         )}
 
+                        <DesktopComposerModeChips
+                            isStudioComposer={isStudioComposer}
+                            zenMode={!!props.zenMode}
+                            modelLabel={props.modelMode?.name ?? null}
+                            effortLabel={props.effortLevel?.name ?? null}
+                            canSelectModel={canOpenModelPicker}
+                            canSelectEffort={canOpenEffortPicker}
+                            activePicker={openPicker === 'model' || openPicker === 'effort' ? openPicker : null}
+                            onModelPress={handleModelPress}
+                            onEffortPress={handleEffortPress}
+                        />
+
                         {props.agentType && props.onAgentClick && (
                             <Pressable
                                 onPress={() => {
@@ -1893,7 +1906,9 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
 
                 {/* Permission, model, and effort pickers open independently
                     from their matching controls in the compact composer action row. */}
-                {compactMobileComposer && !useNativeSettingsMenus && openPicker && (
+                {!useNativeSettingsMenus && openPicker && (
+                    compactMobileComposer || (isStudioComposer && openPicker !== 'permission')
+                ) && (
                     <>
                         <AnimatedClickAwayBackdrop
                             onPress={closePicker}
