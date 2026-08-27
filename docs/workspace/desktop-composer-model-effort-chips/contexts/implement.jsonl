@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative commands, protected paths, and risk triggers"}
+{"path":"docs/workspace/desktop-composer-model-effort-chips/context.md","reason":"Accepted low-risk behavior and ownership contract"}
+{"path":"docs/workspace/desktop-composer-model-effort-chips/validation.md","reason":"RED/GREEN and incremental validation ledger"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Narrow host seam for desktop composer controls and existing picker overlays"}
+{"path":"packages/happy-app/sources/features/studio-composer","reason":"Feature-owned desktop chip presentation and focused tests"}
