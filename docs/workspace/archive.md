@@ -79,3 +79,4 @@
 | 2026-08-26 | codex-stalled-turn-recovery | pending | Recover stalled Codex turns and preserve consecutive follow-up delivery | None |
 | 2026-08-26 | codex-stalled-turn-recovery-hardening | pending | Closed all stalled-turn recovery review findings with tri-state delivery preservation, start-timeout reconciliation, owned recovery errors, and serialized reconnect completion | Rebuild and install the desktop test client, then repeat live consecutive-message acceptance |
 | 2026-08-26 | workspace-project-picker-discoverability | pending | Keep workspace-project search visible, preview five Recent paths with disclosure, and restore embedded desktop scrolling | Run an authorized Windows Desktop refresh and visual smoke |
+| 2026-08-28 | hardware-keyboard-enter-send | pending | Implemented and physically validated iPad hardware-keyboard Return-to-send with Shift+Return and IME safeguards | None |
