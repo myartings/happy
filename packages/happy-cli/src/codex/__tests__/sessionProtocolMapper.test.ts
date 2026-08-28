@@ -104,6 +104,34 @@ describe('mapCodexMcpMessageToSessionEnvelopes', () => {
         expect(subagent).not.toBe('parent-call-1');
     });
 
+    it('does not end the primary protocol turn for subagent-scoped lifecycle events', () => {
+        const primary = mapCodexMcpMessageToSessionEnvelopes(
+            { type: 'task_started', turn_id: 'turn-primary' },
+            { currentTurnId: null },
+        );
+        const childStarted = mapCodexMcpMessageToSessionEnvelopes(
+            {
+                type: 'task_started',
+                turn_id: 'turn-child',
+                agent_thread_id: 'thread-child',
+            },
+            primary,
+        );
+        const childCompleted = mapCodexMcpMessageToSessionEnvelopes(
+            {
+                type: 'task_complete',
+                turn_id: 'turn-child',
+                agent_thread_id: 'thread-child',
+            },
+            childStarted,
+        );
+
+        expect(childStarted.currentTurnId).toBe(primary.currentTurnId);
+        expect(childStarted.envelopes.some((envelope) => envelope.ev.t === 'turn-start')).toBe(false);
+        expect(childCompleted.currentTurnId).toBe(primary.currentTurnId);
+        expect(childCompleted.envelopes.some((envelope) => envelope.ev.t === 'turn-end')).toBe(false);
+    });
+
     it('maps Codex collab-agent calls to a session subagent without leaking provider ids', () => {
         const collab = mapCodexMcpMessageToSessionEnvelopes(
             {

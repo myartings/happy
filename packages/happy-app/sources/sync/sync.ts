@@ -74,10 +74,12 @@ import {
     MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
     MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
+    advanceSessionMessageCursor,
     selectSessionMessageCacheEvictions,
     selectVisibleSessionIds,
     shouldEvictHiddenSessionMessageCache,
 } from './sessionMessageCachePolicy';
+import { SessionRealtimeRecovery } from './sessionRealtimeRecovery';
 import type { AttachmentPreview, UploadedAttachment } from './attachmentTypes';
 import { requestAttachmentUpload, uploadEncryptedBlob } from './apiAttachments';
 import { encryptBlob } from '@/encryption/blob';
@@ -139,7 +141,7 @@ function avatarDescriptorKey(descriptor: NonNullable<DecryptedProjectRecord['ava
     return `${descriptor.ref}:${descriptor.version}`;
 }
 
-class Sync {
+export class Sync {
     private static readonly BACKGROUND_SEND_TIMEOUT_MS = 30_000;
     private static readonly PROMPT_HISTORY_PAGE_SIZE = 100;
     encryption!: Encryption;
@@ -187,6 +189,7 @@ class Sync {
     private friendRequestsSync: InvalidateSync;
     private feedSync: InvalidateSync;
     private activityAccumulator: ActivityUpdateAccumulator;
+    private realtimeRecovery: SessionRealtimeRecovery;
     private pendingSettings: Partial<Settings> = loadPendingSettings();
     private appState: AppStateStatus = AppState.currentState;
     private backgroundSendTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -216,6 +219,13 @@ class Sync {
         }
         this.pushTokenSync = new InvalidateSync(registerPushToken);
         this.activityAccumulator = new ActivityUpdateAccumulator(this.flushActivityUpdates.bind(this), 2000);
+        this.realtimeRecovery = new SessionRealtimeRecovery({
+            isActive: () => getCurrentAppState() === 'active',
+            getVisibleSessionIds: () => selectVisibleSessionIds(this.visibleSessionRefCounts),
+            reconcile: (sessionId, reason) => this.refreshSessionMessageCache(sessionId, reason),
+            ensureSocketHealthy: () => apiSocket.ensureHealthy(),
+        });
+        this.realtimeRecovery.start();
 
         // Listen for app state changes to refresh purchases
         AppState.addEventListener('change', (nextAppState) => {
@@ -250,6 +260,7 @@ class Sync {
                 this.friendsSync.invalidate();
                 this.friendRequestsSync.invalidate();
                 this.feedSync.invalidate();
+                void this.realtimeRecovery.onForeground();
 
                 // Refresh the open chat's message log on resume. While the app is
                 // backgrounded the data socket is suspended/dropped, so any messages
@@ -261,8 +272,9 @@ class Sync {
                 // if the socket hasn't reconnected yet, InvalidateSync's backoff retries
                 // until it has.
                 const resumeViewingSessionId = storage.getState().currentViewingSessionId;
-                if (resumeViewingSessionId) {
-                    this.onSessionVisible(resumeViewingSessionId);
+                const resumeVisibleSessionIds = selectVisibleSessionIds(this.visibleSessionRefCounts);
+                if (resumeViewingSessionId && !resumeVisibleSessionIds.includes(resumeViewingSessionId)) {
+                    this.refreshSessionMessageCache(resumeViewingSessionId, 'app-resumed-fallback');
                 }
             } else {
                 log.log(`📱 App state changed to: ${nextAppState}`);
@@ -281,6 +293,9 @@ class Sync {
         if (Platform.OS === 'web' && typeof document !== 'undefined') {
             const broadcast = () => {
                 apiSocket.sendAppState(getCurrentAppState());
+                if (getCurrentAppState() === 'active') {
+                    void this.realtimeRecovery.onForeground();
+                }
                 if (document.visibilityState === 'hidden') {
                     this.pruneSessionMessageCaches(
                         MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
@@ -2488,7 +2503,7 @@ class Sync {
             for (const message of messages) {
                 if (message.seq > maxSeq) maxSeq = message.seq;
             }
-            this.sessionLastSeq.set(sessionId, maxSeq);
+            advanceSessionMessageCursor(this.sessionLastSeq, sessionId, maxSeq);
 
             if (!data.hasMore) break;
             if (maxSeq === afterSeq) {
@@ -2617,7 +2632,7 @@ class Sync {
         }
     }
 
-    private subscribeToUpdates = () => {
+    subscribeToUpdates = () => {
         // Subscribe to message updates
         apiSocket.onMessage('update', this.handleUpdate.bind(this));
         apiSocket.onMessage('ephemeral', this.handleEphemeralUpdate.bind(this));
@@ -2641,16 +2656,14 @@ class Sync {
             // Refresh only messages for sessions that are currently mounted. Git status and
             // voice focus are visibility concerns and must not be repeated on reconnect.
             const visibleSessionIds = selectVisibleSessionIds(this.visibleSessionRefCounts);
-            for (const sessionId of visibleSessionIds) {
-                this.refreshSessionMessageCache(sessionId, 'socket-reconnected');
-            }
+            this.realtimeRecovery.onSocketReconnected();
             // Session metadata + agentState (including permission requests) are already
             // refreshed by sessionsSync.invalidate() above.
             // The current viewer should normally be registered above. Keep the upstream
             // fallback for reconnects that happen before its visibility ref is restored.
             const reconnectViewingSessionId = storage.getState().currentViewingSessionId;
             if (reconnectViewingSessionId && !visibleSessionIds.includes(reconnectViewingSessionId)) {
-                this.onSessionVisible(reconnectViewingSessionId);
+                this.refreshSessionMessageCache(reconnectViewingSessionId, 'socket-reconnected-fallback');
             }
             for (const sync of this.sendSync.values()) {
                 sync.invalidate();
@@ -3237,16 +3250,23 @@ class Sync {
 
 
         const sessions: Session[] = [];
+        const thinkingTransitions: Array<{ sessionId: string; previous: boolean; next: boolean }> = [];
 
         for (const [sessionId, update] of updates) {
             const session = storage.getState().sessions[sessionId];
             if (session) {
+                const nextThinking = update.thinking ?? false;
                 sessions.push({
                     ...session,
                     active: update.active,
                     activeAt: update.activeAt,
-                    thinking: update.thinking ?? false,
+                    thinking: nextThinking,
                     thinkingAt: update.activeAt // Always use activeAt for consistency
+                });
+                thinkingTransitions.push({
+                    sessionId,
+                    previous: session.thinking,
+                    next: nextThinking,
                 });
             }
         }
@@ -3254,6 +3274,13 @@ class Sync {
         if (sessions.length > 0) {
             // console.log('flushing activity updates ' + sessions.length);
             this.applySessions(sessions);
+            for (const transition of thinkingTransitions) {
+                this.realtimeRecovery.onThinkingTransition(
+                    transition.sessionId,
+                    transition.previous,
+                    transition.next,
+                );
+            }
             // log.log(`🔄 Activity updates flushed - updated ${sessions.length} sessions`);
         }
     }
@@ -3293,6 +3320,9 @@ class Sync {
         // This is the same signal that triggers the mobile push — bump browser-tab
         // unread counter on these only, ignore the noisy per-message stream.
         if (updateData.type === 'session-event') {
+            if (updateData.kind === 'done') {
+                this.realtimeRecovery.onSessionDone(updateData.sessionId);
+            }
             notifyUnreadMessage();
             if (storage.getState().localSettings.desktopSessionNotificationsEnabled) {
                 void maybeShowDesktopSessionNotification(updateData);

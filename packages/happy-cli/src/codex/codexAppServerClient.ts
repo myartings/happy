@@ -318,6 +318,57 @@ export class CodexAppServerClient {
         return typeof status === 'string' && status.length > 0 ? status : null;
     }
 
+    private extractThreadId(params: any): string | null {
+        return stringOrNull(params?.threadId)
+            ?? stringOrNull(params?.thread_id)
+            ?? stringOrNull(params?.conversationId)
+            ?? stringOrNull(params?.conversation_id)
+            ?? stringOrNull(params?.agent_thread_id)
+            ?? stringOrNull(params?.agentThreadId);
+    }
+
+    private isPrimaryThread(threadId: string | null): boolean {
+        // Legacy lifecycle events may omit thread identity. Preserve their
+        // existing behavior, but raw app-server notifications with an explicit
+        // different thread must never mutate the primary turn.
+        return threadId === null || this._threadId === null || threadId === this._threadId;
+    }
+
+    private isPrimaryLifecycle(threadId: string | null, turnId: string | null): boolean {
+        if (threadId !== null) {
+            return this.isPrimaryThread(threadId);
+        }
+        // Older lifecycle payloads omit thread identity. They remain compatible
+        // unless their turn explicitly conflicts with the active primary turn;
+        // that conflict is child/stale evidence and must not close the UI turn.
+        return turnId === null || this._turnId === null || turnId === this._turnId;
+    }
+
+    private lifecycleScope(threadId: string | null): Record<string, string> {
+        return threadId && !this.isPrimaryThread(threadId)
+            ? { agent_thread_id: threadId, agentThreadId: threadId }
+            : {};
+    }
+
+    private completedTurnKey(threadId: string | null, turnId: string): string {
+        return threadId ? `${threadId}:${turnId}` : turnId;
+    }
+
+    private hasCompletedTurn(threadId: string | null, turnId: string): boolean {
+        return this.completedTurnIds.has(this.completedTurnKey(threadId, turnId))
+            || (this.isPrimaryThread(threadId) && this.completedTurnIds.has(turnId));
+    }
+
+    private markCompletedTurn(threadId: string | null, turnId: string): void {
+        this.completedTurnIds.add(this.completedTurnKey(threadId, turnId));
+        // Legacy completion events can omit the thread while the matching raw
+        // notification includes it. Keep a primary-only alias so the pair is
+        // deduplicated without conflating child turns that reuse a turn id.
+        if (this.isPrimaryThread(threadId)) {
+            this.completedTurnIds.add(turnId);
+        }
+    }
+
     private shouldHandleRawNotification(method: string): boolean {
         const isRawNotification = method === 'thread/started'
             || method === 'thread/goal/updated'
@@ -348,23 +399,35 @@ export class CodexAppServerClient {
         status: string | null,
         error: unknown,
         source: string,
+        threadId: string | null = null,
     ): void {
         const aborted = status === 'cancelled' || status === 'canceled' || status === 'aborted' || status === 'interrupted';
+        const isPrimary = this.isPrimaryLifecycle(threadId, turnId);
 
-        this.tryResolvePendingTurn(aborted, turnId, source);
-        this._turnId = null;
+        if (threadId === null && !isPrimary) {
+            logger.debug(`[CodexAppServer] Ignoring unscoped completion for non-primary turn ${turnId}`);
+            return;
+        }
 
-        if (turnId && this.completedTurnIds.has(turnId)) {
+        if (isPrimary) {
+            this.tryResolvePendingTurn(aborted, turnId, source);
+            if (!turnId || !this._turnId || this._turnId === turnId) {
+                this._turnId = null;
+            }
+        }
+
+        if (turnId && this.hasCompletedTurn(threadId, turnId)) {
             return;
         }
         if (turnId) {
-            this.completedTurnIds.add(turnId);
+            this.markCompletedTurn(threadId, turnId);
         }
 
         if (aborted) {
             this.eventHandler?.({
                 type: 'turn_aborted',
                 ...(turnId ? { turn_id: turnId } : {}),
+                ...this.lifecycleScope(threadId),
                 ...(status ? { status } : {}),
                 ...(error !== undefined && error !== null ? { error } : {}),
             });
@@ -374,6 +437,7 @@ export class CodexAppServerClient {
         this.eventHandler?.({
             type: 'task_complete',
             ...(turnId ? { turn_id: turnId } : {}),
+            ...this.lifecycleScope(threadId),
             ...(status ? { status } : {}),
             ...(error !== undefined && error !== null ? { error } : {}),
         });
@@ -386,31 +450,43 @@ export class CodexAppServerClient {
 
         if (method === 'turn/started') {
             const turnId = this.extractTurnId(params);
-            if (turnId) {
-                this._turnId = turnId;
+            const threadId = this.extractThreadId(params);
+            const isPrimary = this.isPrimaryLifecycle(threadId, turnId);
+            if (isPrimary) {
+                if (turnId) {
+                    this._turnId = turnId;
+                }
+                this.markPendingTurnStarted(turnId);
             }
-            this.markPendingTurnStarted(turnId);
+            if (threadId === null && !isPrimary) {
+                logger.debug(`[CodexAppServer] Ignoring unscoped start for non-primary turn ${turnId}`);
+                return true;
+            }
             this.eventHandler?.({
                 type: 'task_started',
                 ...(turnId ? { turn_id: turnId } : {}),
+                ...this.lifecycleScope(threadId),
             });
             return true;
         }
 
         if (method === 'turn/completed') {
+            const threadId = this.extractThreadId(params);
             this.emitRawTurnCompletion(
                 this.extractTurnId(params),
                 this.extractTurnStatus(params),
                 params?.turn?.error ?? params?.error,
                 method,
+                threadId,
             );
             return true;
         }
 
         if (method === 'thread/status/changed') {
             const statusType = params?.status?.type;
-            if (statusType === 'idle' && this.pendingTurnCompletion) {
-                this.emitRawTurnCompletion(this._turnId, 'completed', null, method);
+            const threadId = this.extractThreadId(params);
+            if (statusType === 'idle' && this.pendingTurnCompletion && this.isPrimaryThread(threadId)) {
+                this.emitRawTurnCompletion(this._turnId, 'completed', null, method, threadId);
             }
             return true;
         }
@@ -594,21 +670,24 @@ export class CodexAppServerClient {
 
         if (method === 'item/completed' && item.type === 'agentMessage') {
             const text = typeof item.text === 'string' ? item.text : '';
+            const threadId = this.extractThreadId(params);
             if (text.length > 0) {
                 this.eventHandler?.({
                     type: 'agent_message',
                     message: text,
                     item_id: item.id,
                     phase: item.phase,
+                    ...this.lifecycleScope(threadId),
                 });
             }
 
-            if (item.phase === 'final_answer' && this.pendingTurnCompletion) {
+            if (item.phase === 'final_answer' && this.pendingTurnCompletion && this.isPrimaryThread(threadId)) {
                 this.emitRawTurnCompletion(
                     this.extractTurnId(params),
                     'completed',
                     null,
                     `${method}:final_answer`,
+                    threadId,
                 );
             }
             return true;
@@ -1791,31 +1870,60 @@ export class CodexAppServerClient {
     private handleNotification(method: string, params: any): void {
         // codex/event notifications: either `codex/event` or `codex/event/<type>`
         if (method === 'codex/event' || method.startsWith('codex/event/')) {
-            this.notificationProtocol = 'legacy';
             const msg = params?.msg;
             if (msg) {
+                const threadId = this.extractThreadId(msg) ?? this.extractThreadId(params);
+                const isLifecycle = msg.type === 'task_started'
+                    || msg.type === 'task_complete'
+                    || msg.type === 'turn_aborted';
+                const lifecycleTurnId = isLifecycle ? (msg.turn_id ?? msg.turnId ?? null) : null;
+                const isPrimary = isLifecycle
+                    ? this.isPrimaryLifecycle(threadId, lifecycleTurnId)
+                    : this.isPrimaryThread(threadId);
+                if (isLifecycle && threadId === null && !isPrimary) {
+                    logger.debug(`[CodexAppServer] Ignoring unscoped ${msg.type} for non-primary turn ${lifecycleTurnId}`);
+                    return;
+                }
+                // Child/stale legacy events do not select the primary stream.
+                // Otherwise one ignored child completion could disable raw
+                // primary item notifications, including the final answer.
+                if (isPrimary) {
+                    this.notificationProtocol = 'legacy';
+                }
+                const scopedMsg = isPrimary ? msg : { ...msg, ...this.lifecycleScope(threadId) };
+                const isCompletion = msg.type === 'task_complete' || msg.type === 'turn_aborted';
+                const completionTurnId = isCompletion ? lifecycleTurnId : null;
+                const duplicateCompletion = Boolean(
+                    completionTurnId && this.hasCompletedTurn(threadId, completionTurnId),
+                );
                 // Extract turn_id from task_started events
-                if (msg.type === 'task_started' && msg.turn_id) {
+                if (isPrimary && msg.type === 'task_started' && msg.turn_id) {
                     this._turnId = msg.turn_id;
                 }
-                if (msg.type === 'task_started') {
+                if (isPrimary && msg.type === 'task_started') {
                     this.markPendingTurnStarted(msg.turn_id ?? msg.turnId ?? null);
                 }
                 // Fire event handler first (so consumer processes the event)
-                this.eventHandler?.(msg);
+                if (!duplicateCompletion) {
+                    this.eventHandler?.(scopedMsg);
+                }
                 // Then resolve turn completion promise
-                if (msg.type === 'task_complete' || msg.type === 'turn_aborted') {
-                    const turnId = msg.turn_id ?? msg.turnId ?? null;
+                if (isCompletion) {
+                    const turnId = completionTurnId;
                     // Mark as completed so v2 turn/completed doesn't duplicate
                     if (turnId) {
-                        this.completedTurnIds.add(turnId);
+                        this.markCompletedTurn(threadId, turnId);
                     }
-                    this.tryResolvePendingTurn(
-                        msg.type === 'turn_aborted',
-                        turnId,
-                        `codex/event/${msg.type}`,
-                    );
-                    this._turnId = null;
+                    if (isPrimary) {
+                        this.tryResolvePendingTurn(
+                            msg.type === 'turn_aborted',
+                            turnId,
+                            `codex/event/${msg.type}`,
+                        );
+                        if (!turnId || !this._turnId || this._turnId === turnId) {
+                            this._turnId = null;
+                        }
+                    }
                 }
             }
             return;
@@ -1833,10 +1941,13 @@ export class CodexAppServerClient {
             // Mark the turn as started so the completion guard lets it through.
             if (method === 'turn/started') {
                 const turnId = this.extractTurnId(params);
-                if (turnId) {
-                    this._turnId = turnId;
+                const threadId = this.extractThreadId(params);
+                if (this.isPrimaryLifecycle(threadId, turnId)) {
+                    if (turnId) {
+                        this._turnId = turnId;
+                    }
+                    this.markPendingTurnStarted(turnId);
                 }
-                this.markPendingTurnStarted(turnId);
             }
             // turn/completed is a fallback signal — for mid-inference interrupts,
             // Codex may only signal completion here (not via codex/event turn_aborted).
@@ -1847,6 +1958,7 @@ export class CodexAppServerClient {
                     this.extractTurnStatus(params),
                     params?.turn?.error ?? params?.error,
                     method,
+                    this.extractThreadId(params),
                 );
             }
             return;
