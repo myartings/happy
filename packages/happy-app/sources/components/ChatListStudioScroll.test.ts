@@ -8,6 +8,8 @@ const state = vi.hoisted(() => ({
     messages: [] as any[],
     scrollToIndex: vi.fn(),
     scrollToOffset: vi.fn(),
+    updateVisibleSessionTailState: vi.fn(),
+    removeVisibleSessionTailState: vi.fn(),
     visualStyle: 'studio',
 }));
 
@@ -55,7 +57,11 @@ vi.mock('@/sync/storage', () => ({
     useSessionMessages: () => ({ messages: state.messages, hasMoreOlder: false, isLoadingOlder: false }),
     useSetting: () => true,
 }));
-vi.mock('@/sync/sync', () => ({ sync: { loadOlderMessages: vi.fn() } }));
+vi.mock('@/sync/sync', () => ({ sync: {
+    loadOlderMessages: vi.fn(),
+    updateVisibleSessionTailState: state.updateVisibleSessionTailState,
+    removeVisibleSessionTailState: state.removeVisibleSessionTailState,
+} }));
 vi.mock('@/utils/responsive', () => ({ useHeaderHeight: () => 0 }));
 vi.mock('./MessageView', async () => {
     const ReactModule = await import('react');
@@ -105,7 +111,11 @@ beforeAll(() => {
     });
 });
 afterAll(() => vi.restoreAllMocks());
-beforeEach(() => { state.visualStyle = 'studio'; });
+beforeEach(() => {
+    state.visualStyle = 'studio';
+    state.updateVisibleSessionTailState.mockClear();
+    state.removeVisibleSessionTailState.mockClear();
+});
 
 function render(element: React.ReactElement): ReactTestRenderer {
     let renderer!: ReactTestRenderer;
@@ -114,6 +124,43 @@ function render(element: React.ReactElement): ReactTestRenderer {
 }
 
 describe('ChatList Studio disclosure scroll wiring', () => {
+    it('reports live-tail, older-reading, target, and mounted-source lifecycle state', () => {
+        state.messages = [{ kind: 'user-text', id: 'message', localId: null, createdAt: 1, text: 'hello' }];
+        state.displayItems = [{ type: 'message', id: 'message', message: state.messages[0] }];
+        const session = { id: 'session-signals', metadata: null } as any;
+        const renderer = render(React.createElement(ChatList, { session }));
+        const list = renderer.root.findByType('FlatList' as any);
+
+        expect(state.updateVisibleSessionTailState).toHaveBeenCalledWith(
+            'session-signals',
+            expect.objectContaining({ atLiveTail: true, readingOlderHistory: false, viewportBusy: false }),
+            expect.any(String),
+        );
+
+        act(() => list.props.onScroll({ nativeEvent: { contentOffset: { y: 400 } } }));
+        expect(state.updateVisibleSessionTailState).toHaveBeenCalledWith(
+            'session-signals',
+            { atLiveTail: false, readingOlderHistory: true, viewportBusy: true },
+            expect.any(String),
+        );
+
+        act(() => renderer.update(React.createElement(ChatList, {
+            session,
+            targetMessageId: 'missing-target',
+        })));
+        expect(state.updateVisibleSessionTailState).toHaveBeenCalledWith(
+            'session-signals',
+            { targetActive: true },
+            expect.any(String),
+        );
+
+        act(() => renderer.unmount());
+        expect(state.removeVisibleSessionTailState).toHaveBeenCalledWith(
+            'session-signals',
+            expect.any(String),
+        );
+    });
+
     it('anchors older reading while native bottom-follow remains limited to the bottom threshold', () => {
         state.scrollToIndex.mockClear();
         state.scrollToOffset.mockClear();

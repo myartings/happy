@@ -1,0 +1,8 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/client-long-session-performance/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/client-long-session-performance.md","reason":"AC1-AC16 and runtime budgets to verify"}
+{"path":"docs/tasks/client-long-session-performance-tasks.md","reason":"Expected focused, integration, review, and packaged validation boundaries"}
+{"path":"packages/happy-app/sources/features/client-performance","reason":"Deterministic counters, policy tests, and performance fixtures"}
+{"path":"packages/happy-app/sources/hooks/useDraft.ts","reason":"Draft lifecycle implementation to verify through planned public hook tests"}
+{"path":"packages/happy-app/sources/sync","reason":"Bounded queue, ordering, cache, pagination, reducer, and race verification surface"}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Mounted live-tail, target, older-reading, and scroll-anchor inspection surface"}
