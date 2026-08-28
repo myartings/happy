@@ -15,16 +15,38 @@ export function useDraft(
 ) {
     const { autoSaveInterval = 2000 } = options;
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const latestValueRef = useRef(value);
+    const latestValueSessionIdRef = useRef(sessionId);
+    if (latestValueSessionIdRef.current === sessionId) {
+        latestValueRef.current = value;
+    }
     // Seed with the initial value so a pre-hydrated draft (e.g. ChatComposer
     // reads storage synchronously on mount) doesn't trip the autosave into
     // re-writing what we just loaded.
     const lastSavedValue = useRef<string>(value);
     const isFocused = useIsFocused();
 
+    const cancelPendingSave = useCallback(() => {
+        if (saveTimeoutRef.current === null) return;
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+    }, []);
+
+    // Render-time updates keep lifecycle callbacks current, but a new Session's
+    // value must not replace the old Session's value before effect cleanup has
+    // had a chance to flush it.
+    useEffect(() => {
+        latestValueSessionIdRef.current = sessionId;
+        latestValueRef.current = value;
+        lastSavedValue.current = sessionId
+            ? storage.getState().sessions[sessionId]?.draft ?? ''
+            : value;
+    }, [sessionId]);
+
     // Save draft to storage
     const saveDraft = useCallback((draft: string) => {
         if (!sessionId) return;
-        
+
         storage.getState().updateSessionDraft(sessionId, draft);
         lastSavedValue.current = draft;
     }, [sessionId]);
@@ -36,6 +58,7 @@ export function useDraft(
         const session = storage.getState().sessions[sessionId];
         if (session?.draft && !value) {
             onChange(session.draft);
+            latestValueRef.current = session.draft;
             lastSavedValue.current = session.draft;
         } else if (!session?.draft) {
             // Ensure lastSavedValue is empty if there's no draft
@@ -47,9 +70,13 @@ export function useDraft(
     useEffect(() => {
         if (!sessionId) return;
 
-        // Clear any existing timeout
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
+        cancelPendingSave();
+
+        // Hydration updates the latest ref before the caller has rerendered
+        // with the persisted value. Ignore that stale render instead of
+        // treating its initial empty string as a user edit.
+        if (latestValueRef.current !== value) {
+            return;
         }
 
         // Only save if value has changed
@@ -65,18 +92,20 @@ export function useDraft(
                 // Text is being modified (non-empty to non-empty)
                 // Debounce to avoid excessive saves
                 saveTimeoutRef.current = setTimeout(() => {
-                    saveDraft(value);
+                    saveTimeoutRef.current = null;
+                    if (
+                        latestValueRef.current === value
+                        && value !== lastSavedValue.current
+                    ) {
+                        saveDraft(value);
+                    }
                 }, autoSaveInterval);
             }
             // If both are empty, no need to save
         }
 
-        return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-            }
-        };
-    }, [value, sessionId, autoSaveInterval, saveDraft]);
+        return cancelPendingSave;
+    }, [value, sessionId, autoSaveInterval, cancelPendingSave, saveDraft]);
 
     // Save on app state change (background/inactive)
     useEffect(() => {
@@ -84,8 +113,10 @@ export function useDraft(
 
         const handleAppStateChange = (nextAppState: AppStateStatus) => {
             if (nextAppState === 'background' || nextAppState === 'inactive') {
-                if (value !== lastSavedValue.current) {
-                    saveDraft(value);
+                cancelPendingSave();
+                const latestValue = latestValueRef.current;
+                if (latestValue !== lastSavedValue.current) {
+                    saveDraft(latestValue);
                 }
             }
         };
@@ -95,26 +126,30 @@ export function useDraft(
         return () => {
             subscription.remove();
         };
-    }, [sessionId, value, saveDraft]);
+    }, [sessionId, cancelPendingSave, saveDraft]);
 
     // Save on unmount
     useEffect(() => {
         return () => {
-            if (sessionId && value !== lastSavedValue.current) {
-                saveDraft(value);
+            cancelPendingSave();
+            const latestValue = latestValueRef.current;
+            if (sessionId && latestValue !== lastSavedValue.current) {
+                saveDraft(latestValue);
             }
         };
-    }, [sessionId, value, saveDraft]);
+    }, [sessionId, cancelPendingSave, saveDraft]);
 
     // Clear draft (used after message is sent)
     const clearDraft = useCallback(() => {
         if (!sessionId) return;
-        
+
+        cancelPendingSave();
         storage.getState().updateSessionDraft(sessionId, null);
+        latestValueRef.current = '';
         lastSavedValue.current = '';
-    }, [sessionId]);
+    }, [sessionId, cancelPendingSave]);
 
     return {
-        clearDraft
+        clearDraft,
     };
 }

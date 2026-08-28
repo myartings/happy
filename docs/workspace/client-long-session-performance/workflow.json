@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "client-long-session-performance",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Commit, install, signing/release, unrelated baseline-test repair, and optional manual AC15 packaged measurements remain separate explicit choices.",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/client-long-session-performance.md; docs/tasks/client-long-session-performance-tasks.md; user requested a complete implementation plan for the measured long-session performance problem",
+      "updated": "2026-08-28T05:05:49+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/client-long-session-performance/decisions.md resolves delivery base, draft persistence, message batching/order, visible-tail rebase, protocol boundary, and rollout",
+      "updated": "2026-08-28T05:05:49+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Feature scope, AC1-AC16, T1-T7 dependencies, exact contexts, local-only tracker reason, test seams, stop conditions, and rollback are recorded in docs/specs/client-long-session-performance.md, docs/tasks/client-long-session-performance-tasks.md, and docs/workspace/client-long-session-performance/",
+      "updated": "2026-08-28T05:05:49+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Client-only plan preserves the session-drafts format and excludes protocol, server, database, encryption, authentication, authorization, cross-device synchronization, deployment, destructive operations, and durable-history deletion; tail-rebase failure retains old state",
+      "updated": "2026-08-28T05:05:49+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "T1-T7 product implementation is complete; focused post-review tests, Happy App/server typechecks, no-sign workspace .app build, and exact validation evidence are recorded in docs/workspace/client-long-session-performance/validation.md",
+      "updated": "2026-08-28T12:03:25+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted both named gaps on 2026-08-28: four unrelated Happy App baseline test files with 15 failures, and unavailable packaged typing/scroll/streaming/three-rebase-cycle evidence caused by the approved desktop automation/capture boundary. Exact consequences and bounded startup evidence are recorded in validation.md.",
+      "updated": "2026-08-28T12:40:30+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review covered draft lifecycle/persistence, message batching/order, visible-tail concurrency and rollback, ChatList/composer signals, diagnostics, tests, workflow docs, and build/runtime boundaries; no unresolved blocking/high/medium finding. Post-review affected regression gate: 17 files, 83 tests passed.",
+      "updated": "2026-08-28T12:03:52+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records summary, exact verification including user-accepted gaps, whole-diff review, rollback/mitigation, learning-promotion decision, safety boundaries, and optional follow-up; validation.md marks every acceptance row verified or accepted gap; session-index.md links the durable final summary.",
+      "updated": "2026-08-28T12:42:49+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-28T04:56:41+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-28T05:05:49+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/client-long-session-performance.md; docs/tasks/client-long-session-performance-tasks.md; user requested a complete implementation plan for the measured long-session performance problem"
+    },
+    {
+      "at": "2026-08-28T05:05:49+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/client-long-session-performance/decisions.md resolves delivery base, draft persistence, message batching/order, visible-tail rebase, protocol boundary, and rollout"
+    },
+    {
+      "at": "2026-08-28T05:05:49+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Client-only plan preserves the session-drafts format and excludes protocol, server, database, encryption, authentication, authorization, cross-device synchronization, deployment, destructive operations, and durable-history deletion; tail-rebase failure retains old state"
+    },
+    {
+      "at": "2026-08-28T05:05:49+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Feature scope, AC1-AC16, T1-T7 dependencies, exact contexts, local-only tracker reason, test seams, stop conditions, and rollback are recorded in docs/specs/client-long-session-performance.md, docs/tasks/client-long-session-performance-tasks.md, and docs/workspace/client-long-session-performance/"
+    },
+    {
+      "at": "2026-08-28T05:09:29+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T1: establish deterministic residual baseline and one meaningful RED for the draft lifecycle"
+    },
+    {
+      "at": "2026-08-28T12:03:25+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T7 product implementation is complete; focused post-review tests, Happy App/server typechecks, no-sign workspace .app build, and exact validation evidence are recorded in docs/workspace/client-long-session-performance/validation.md"
+    },
+    {
+      "at": "2026-08-28T12:03:25+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Obtain explicit user acceptance of the unrelated full-suite baseline failures and unavailable packaged interaction/rebase-cycle evidence, then record the check gate"
+    },
+    {
+      "at": "2026-08-28T12:03:52+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review covered draft lifecycle/persistence, message batching/order, visible-tail concurrency and rollback, ChatList/composer signals, diagnostics, tests, workflow docs, and build/runtime boundaries; no unresolved blocking/high/medium finding. Post-review affected regression gate: 17 files, 83 tests passed."
+    },
+    {
+      "at": "2026-08-28T12:40:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted both named gaps on 2026-08-28: four unrelated Happy App baseline test files with 15 failures, and unavailable packaged typing/scroll/streaming/three-rebase-cycle evidence caused by the approved desktop automation/capture boundary. Exact consequences and bounded startup evidence are recorded in validation.md."
+    },
+    {
+      "at": "2026-08-28T12:40:30+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish review, session summary, final audit, archive with commit pending, and staged workflow CI without committing"
+    },
+    {
+      "at": "2026-08-28T12:42:49+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records summary, exact verification including user-accepted gaps, whole-diff review, rollback/mitigation, learning-promotion decision, safety boundaries, and optional follow-up; validation.md marks every acceptance row verified or accepted gap; session-index.md links the durable final summary."
+    },
+    {
+      "at": "2026-08-28T12:42:56+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Completed T1-T7 client long-Session performance implementation, deterministic verification, no-sign workspace bundle/startup evidence, whole-diff review, and user acceptance of two named verification gaps.; commit: pending; follow-up: Commit, install, signing/release, unrelated baseline-test repair, and optional manual AC15 packaged measurements remain separate explicit choices."
+    }
+  ],
+  "updated": "2026-08-28T12:42:56+00:00",
+  "archivedAt": "2026-08-28T12:42:56+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Completed T1-T7 client long-Session performance implementation, deterministic verification, no-sign workspace bundle/startup evidence, whole-diff review, and user acceptance of two named verification gaps.",
+  "archiveFollowUp": "Commit, install, signing/release, unrelated baseline-test repair, and optional manual AC15 packaged measurements remain separate explicit choices."
+}

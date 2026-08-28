@@ -27,6 +27,8 @@ import { useAgentTurnCopyResolvers } from '@/features/client-performance/agentTu
 const SCROLL_THRESHOLD = 300;
 const DOCK_DETAILS_SHOW_OFFSET = 16;
 const DOCK_DETAILS_HIDE_OFFSET = 48;
+const LIVE_TAIL_MAX_OFFSET = 50;
+const VIEWPORT_SETTLE_MS = 180;
 // Visual gap between the button's bottom edge and the composer card's top
 // edge. scrollButtonInset is measured to the card itself, so this is exact.
 const SCROLL_BUTTON_COMPOSER_GAP = 16;
@@ -135,6 +137,7 @@ const ChatListInternal = React.memo((props: {
     });
     const autoExpandRunningGroups = desktopVisualStyle === 'studio';
     const promptHistoryNavigatorEnabled = useLocalSetting('devPromptHistoryNavigatorEnabled');
+    const tailSignalSourceId = `chat-list:${React.useId()}`;
     const flatListRef = React.useRef<FlatList>(null);
     const handledTargetRequestRef = React.useRef<string | null>(null);
     const targetIndexRef = React.useRef<number | null>(null);
@@ -142,6 +145,7 @@ const ChatListInternal = React.memo((props: {
     const targetRequestKeyRef = React.useRef<string | null>(null);
     const targetScrollRetryAttemptsRef = React.useRef(0);
     const targetScrollRetryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const viewportSettleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const webRevealCleanupRef = React.useRef<(() => void) | null>(null);
     const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null);
     const [localMessageTarget, setLocalMessageTarget] = React.useState<MessageTargetRequest | null>(null);
@@ -160,6 +164,21 @@ const ChatListInternal = React.memo((props: {
         contentHeight: 0,
         viewportHeight: 0,
     });
+    React.useEffect(() => {
+        sync.updateVisibleSessionTailState(props.sessionId, {
+            atLiveTail: true,
+            readingOlderHistory: false,
+            targetActive: false,
+            viewportBusy: false,
+        }, tailSignalSourceId);
+        return () => {
+            if (viewportSettleTimerRef.current) {
+                clearTimeout(viewportSettleTimerRef.current);
+                viewportSettleTimerRef.current = null;
+            }
+            sync.removeVisibleSessionTailState(props.sessionId, tailSignalSourceId);
+        };
+    }, [props.sessionId, tailSignalSourceId]);
     const preserveToolGroupAnchor = React.useCallback((anchor: ToolGroupLayoutAnchor) => {
         // Inverted FlatList rows keep their visual bottom edge fixed when their
         // height changes. Measure the pressed header after layout and offset the
@@ -429,7 +448,11 @@ const ChatListInternal = React.memo((props: {
     }, [cancelTargetScrollRetry, props.sessionId, targetRequestKey]);
 
     React.useEffect(() => {
-        if (!targetMessageId || !targetRequestKey || handledTargetRequestRef.current === targetRequestKey) return;
+        if (!targetMessageId || !targetRequestKey || handledTargetRequestRef.current === targetRequestKey) {
+            sync.updateVisibleSessionTailState(props.sessionId, { targetActive: false }, tailSignalSourceId);
+            return;
+        }
+        sync.updateVisibleSessionTailState(props.sessionId, { targetActive: true }, tailSignalSourceId);
 
         if (targetAction.type === 'load-older') {
             void sync.loadOlderMessages(props.sessionId);
@@ -437,6 +460,7 @@ const ChatListInternal = React.memo((props: {
         }
         if (targetAction.type === 'not-found' && targetRequestKey.startsWith('prompt:')) {
             handledTargetRequestRef.current = targetRequestKey;
+            sync.updateVisibleSessionTailState(props.sessionId, { targetActive: false }, tailSignalSourceId);
             return;
         }
         if (targetAction.type !== 'scroll') {
@@ -461,6 +485,7 @@ const ChatListInternal = React.memo((props: {
                 cancelWebReveal = revealWebMessage(getMessageTargetNativeId(targetAction.messageId));
                 webRevealCleanupRef.current = cancelWebReveal;
             }
+            sync.updateVisibleSessionTailState(props.sessionId, { targetActive: false }, tailSignalSourceId);
         }, 50);
         const highlightTimer = setTimeout(() => {
             setHighlightedMessageId((current) => current === targetAction.messageId ? null : current);
@@ -473,7 +498,7 @@ const ChatListInternal = React.memo((props: {
                 webRevealCleanupRef.current = null;
             }
         };
-    }, [props.sessionId, setBottomDockVisibility, targetAction, targetMessageId, targetRequestKey]);
+    }, [props.sessionId, setBottomDockVisibility, tailSignalSourceId, targetAction, targetMessageId, targetRequestKey]);
 
     const updateBottomDockVisibility = useCallback((offsetY: number) => {
         // Hysteresis avoids toggling while the list is resting or bouncing
@@ -540,6 +565,18 @@ const ChatListInternal = React.memo((props: {
     const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
         const offsetY = e.nativeEvent.contentOffset.y;
         scrollMetricsRef.current.offsetY = offsetY;
+        sync.updateVisibleSessionTailState(props.sessionId, {
+            atLiveTail: offsetY <= LIVE_TAIL_MAX_OFFSET,
+            readingOlderHistory: offsetY > LIVE_TAIL_MAX_OFFSET,
+            viewportBusy: true,
+        }, tailSignalSourceId);
+        if (viewportSettleTimerRef.current) {
+            clearTimeout(viewportSettleTimerRef.current);
+        }
+        viewportSettleTimerRef.current = setTimeout(() => {
+            viewportSettleTimerRef.current = null;
+            sync.updateVisibleSessionTailState(props.sessionId, { viewportBusy: false }, tailSignalSourceId);
+        }, VIEWPORT_SETTLE_MS);
         updateHeaderBackdropVisibility();
         updateBottomDockVisibility(offsetY);
         const next = offsetY > SCROLL_THRESHOLD;
@@ -547,7 +584,7 @@ const ChatListInternal = React.memo((props: {
             showScrollButtonRef.current = next;
             setShowScrollButton(next);
         }
-    }, [updateBottomDockVisibility, updateHeaderBackdropVisibility]);
+    }, [props.sessionId, tailSignalSourceId, updateBottomDockVisibility, updateHeaderBackdropVisibility]);
 
     const scrollToBottom = useCallback(() => {
         flatListRef.current?.scrollToOffset({ offset: 0, animated: true });

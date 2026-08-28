@@ -37,6 +37,7 @@ import { useHappyAction } from '@/hooks/useHappyAction';
 import { HappyError } from '@/utils/errors';
 import { Session } from '@/sync/storageTypes';
 import { sync } from '@/sync/sync';
+import { VISIBLE_SESSION_TAIL_REBASE_IDLE_MS } from '@/features/client-performance/visibleSessionTailPolicy';
 import { supportsImageAttachmentsForFlavor } from '@/sync/attachmentSupport';
 import { t } from '@/text';
 import { tracking } from '@/track';
@@ -779,6 +780,8 @@ const ChatComposer = React.memo(function ChatComposer(props: ChatComposerProps) 
         return storage.getState().sessions[sessionId]?.draft ?? '';
     }, [sessionId]);
     const inputHandleRef = React.useRef<MultiTextInputHandle>(null);
+    const tailSignalSourceId = `composer:${React.useId()}`;
+    const composerSettleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const [message, setMessage] = React.useState(initialDraft);
 
     const applyDraft = React.useCallback((text: string) => {
@@ -788,11 +791,43 @@ const ChatComposer = React.memo(function ChatComposer(props: ChatComposerProps) 
 
     const { clearDraft } = useDraft(sessionId, message, applyDraft);
 
+    const markComposerBusy = React.useCallback(() => {
+        if (composerSettleTimerRef.current) {
+            clearTimeout(composerSettleTimerRef.current);
+        }
+        sync.updateVisibleSessionTailState(sessionId, { composerBusy: true }, tailSignalSourceId);
+        composerSettleTimerRef.current = setTimeout(() => {
+            composerSettleTimerRef.current = null;
+            sync.updateVisibleSessionTailState(sessionId, { composerBusy: false }, tailSignalSourceId);
+        }, VISIBLE_SESSION_TAIL_REBASE_IDLE_MS);
+    }, [sessionId, tailSignalSourceId]);
+
+    React.useEffect(() => {
+        if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+        const handleCompositionStart = () => markComposerBusy();
+        const handleCompositionEnd = () => markComposerBusy();
+        document.addEventListener('compositionstart', handleCompositionStart);
+        document.addEventListener('compositionend', handleCompositionEnd);
+        return () => {
+            document.removeEventListener('compositionstart', handleCompositionStart);
+            document.removeEventListener('compositionend', handleCompositionEnd);
+        };
+    }, [markComposerBusy]);
+
+    React.useEffect(() => () => {
+        if (composerSettleTimerRef.current) {
+            clearTimeout(composerSettleTimerRef.current);
+            composerSettleTimerRef.current = null;
+        }
+        sync.removeVisibleSessionTailState(sessionId, tailSignalSourceId);
+    }, [sessionId, tailSignalSourceId]);
+
     const handleChangeText = React.useCallback((text: string) => {
+        markComposerBusy();
         // Transition keeps the textarea responsive even when the draft
         // autosave / re-render takes longer than a frame.
         React.startTransition(() => setMessage(text));
-    }, []);
+    }, [markComposerBusy]);
 
     React.useImperativeHandle(composerHandleRef, () => ({
         getMessage: () => inputHandleRef.current?.getText() ?? '',
@@ -800,8 +835,13 @@ const ChatComposer = React.memo(function ChatComposer(props: ChatComposerProps) 
             inputHandleRef.current?.setTextAndSelection('', { start: 0, end: 0 });
             setMessage('');
             clearDraft();
+            if (composerSettleTimerRef.current) {
+                clearTimeout(composerSettleTimerRef.current);
+                composerSettleTimerRef.current = null;
+            }
+            sync.updateVisibleSessionTailState(sessionId, { composerBusy: false }, tailSignalSourceId);
         },
-    }), [clearDraft]);
+    }), [clearDraft, sessionId, tailSignalSourceId]);
 
     return (
         <AgentInput

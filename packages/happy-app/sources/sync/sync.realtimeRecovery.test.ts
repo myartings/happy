@@ -12,6 +12,10 @@ vi.hoisted(() => {
     (globalThis as any).__DEV__ = false;
 });
 
+// Keep the focused suite runnable from an isolated worktree before pnpm has
+// materialized workspace links; use the real shared-package source.
+vi.mock('@slopus/happy-wire', async () => import('../../../happy-wire/src/index'));
+
 vi.mock('react-native', () => ({
     AppState: {
         currentState: 'active',
@@ -174,6 +178,13 @@ vi.mock('react-native-mmkv', () => ({
 
 import { Sync } from './sync';
 import { storage } from './storage';
+import {
+    startClientLongSessionDiagnosticsCapture,
+    type ClientLongSessionDiagnosticsCapture,
+} from '@/features/client-performance/clientLongSessionDiagnostics';
+import type { NormalizedMessage } from './typesRaw';
+
+let diagnosticsCapture: ClientLongSessionDiagnosticsCapture | null = null;
 
 function response(body: unknown) {
     return {
@@ -198,7 +209,64 @@ async function waitForRequest(path: string, expectedCount = 1) {
     });
 }
 
+function normalizedUserMessage(seq: number): NormalizedMessage {
+    return {
+        id: `message-${seq}`,
+        localId: `local-${seq}`,
+        createdAt: seq,
+        role: 'user',
+        content: { type: 'text', text: `message ${seq}` },
+        isSidechain: false,
+    };
+}
+
+function apiUserMessage(seq: number) {
+    return {
+        id: `message-${seq}`,
+        seq,
+        localId: `local-${seq}`,
+        content: { t: 'encrypted', c: `ciphertext-${seq}` },
+        createdAt: seq,
+        updatedAt: seq,
+    };
+}
+
+function decryptedUserMessage(message: ReturnType<typeof apiUserMessage>) {
+    return {
+        id: message.id,
+        localId: message.localId,
+        createdAt: message.createdAt,
+        content: {
+            role: 'user' as const,
+            content: { type: 'text' as const, text: `message ${message.seq}` },
+        },
+    };
+}
+
+function applyTailTestSession(sessionId: string, count: number) {
+    storage.getState().applySessions([{
+        id: sessionId,
+        seq: count,
+        createdAt: 1,
+        updatedAt: count,
+        active: true,
+        activeAt: count,
+        metadata: null,
+        metadataVersion: 1,
+        agentState: null,
+        agentStateVersion: 1,
+        thinking: false,
+        thinkingAt: count,
+    }]);
+    storage.getState().applyMessages(
+        sessionId,
+        Array.from({ length: count }, (_, index) => normalizedUserMessage(count - index)),
+    );
+}
+
 afterEach(() => {
+    diagnosticsCapture?.stop();
+    diagnosticsCapture = null;
     vi.clearAllTimers();
     vi.useRealTimers();
     storage.setState({
@@ -209,6 +277,314 @@ afterEach(() => {
 });
 
 describe('Sync realtime recovery host', () => {
+    it('coalesces one same-window socket burst into one bounded Session-message publication', async () => {
+        vi.useFakeTimers();
+        harness.messageHandlers.clear();
+        harness.reconnectHandlers.length = 0;
+        harness.request.mockReset();
+        harness.request.mockResolvedValue(response({ messages: [], hasMore: false }));
+        storage.setState({
+            sessions: {},
+            sessionMessages: {},
+            currentViewingSessionId: null,
+        });
+
+        const instance = new Sync();
+        const sessionEncryption = {
+            decryptMessages: vi.fn(async () => []),
+            decryptMessage: vi.fn(async (message: { id: string; seq: number; createdAt: number }) => ({
+                id: message.id,
+                localId: null,
+                createdAt: message.createdAt,
+                content: {
+                    role: 'user',
+                    content: { type: 'text', text: `message ${message.seq}` },
+                },
+            })),
+        };
+        instance.encryption = {
+            getSessionEncryption: vi.fn(() => sessionEncryption),
+        } as never;
+        storage.getState().applySessions([{
+            id: 'session-burst',
+            seq: 0,
+            createdAt: 1,
+            updatedAt: 1,
+            active: true,
+            activeAt: 1,
+            metadata: null,
+            metadataVersion: 1,
+            agentState: null,
+            agentStateVersion: 1,
+            thinking: true,
+            thinkingAt: 1,
+        }]);
+
+        instance.subscribeToUpdates();
+        instance.onSessionVisible('session-burst');
+        await waitForRequest('/v3/sessions/session-burst/messages?before_seq=2147483647&limit=100');
+        await vi.waitFor(() => {
+            expect(storage.getState().sessionMessages['session-burst']?.isLoaded).toBe(true);
+        });
+        for (const key of [
+            'sessionsSync',
+            'machinesSync',
+            'artifactsSync',
+            'friendsSync',
+            'friendRequestsSync',
+            'feedSync',
+        ]) {
+            (instance as any)[key] = { invalidate: vi.fn() };
+        }
+        expect(harness.reconnectHandlers).toHaveLength(1);
+        harness.reconnectHandlers[0]();
+        await waitForRequest('/v3/sessions/session-burst/messages?after_seq=0&limit=100');
+
+        const update = harness.messageHandlers.get('update');
+        expect(update).toEqual(expect.any(Function));
+        diagnosticsCapture = startClientLongSessionDiagnosticsCapture();
+        let messagePublications = 0;
+        let previousMessages = storage.getState().sessionMessages['session-burst'];
+        const unsubscribe = storage.subscribe((state) => {
+            const nextMessages = state.sessionMessages['session-burst'];
+            if (nextMessages !== previousMessages) {
+                previousMessages = nextMessages;
+                messagePublications += 1;
+            }
+        });
+
+        for (let seq = 1; seq <= 100; seq += 1) {
+            await update?.({
+                id: `update-${seq}`,
+                seq,
+                createdAt: seq,
+                body: {
+                    t: 'new-message',
+                    sid: 'session-burst',
+                    message: {
+                        id: `message-${seq}`,
+                        seq,
+                        localId: null,
+                        content: { t: 'encrypted', c: `ciphertext-${seq}` },
+                        createdAt: seq,
+                        updatedAt: seq,
+                    },
+                },
+            });
+        }
+
+        expect(storage.getState().sessionMessages['session-burst']?.messages).toHaveLength(0);
+        expect(messagePublications).toBe(0);
+
+        await vi.advanceTimersByTimeAsync(23);
+        expect(storage.getState().sessionMessages['session-burst']?.messages).toHaveLength(0);
+
+        await vi.advanceTimersByTimeAsync(1);
+        await vi.waitFor(() => {
+            expect(storage.getState().sessionMessages['session-burst']?.messages).toHaveLength(100);
+        });
+        expect(messagePublications).toBe(1);
+        expect(diagnosticsCapture.snapshot().counters.messageQueueBatches).toBe(1);
+
+        unsubscribe();
+    });
+
+    it('does not apply a queued socket message after the Session is deleted', async () => {
+        vi.useFakeTimers();
+        harness.messageHandlers.clear();
+        harness.reconnectHandlers.length = 0;
+        harness.request.mockReset();
+        harness.request.mockResolvedValue(response({ messages: [], hasMore: false }));
+        storage.setState({
+            sessions: {},
+            sessionMessages: {},
+            currentViewingSessionId: null,
+        });
+
+        const instance = new Sync();
+        const sessionEncryption = {
+            decryptMessages: vi.fn(async () => []),
+            decryptMessage: vi.fn(async (message: { id: string; seq: number; createdAt: number }) => ({
+                id: message.id,
+                localId: null,
+                createdAt: message.createdAt,
+                content: {
+                    role: 'user',
+                    content: { type: 'text', text: 'must not reappear' },
+                },
+            })),
+        };
+        instance.encryption = {
+            getSessionEncryption: vi.fn(() => sessionEncryption),
+            removeSessionEncryption: vi.fn(),
+        } as never;
+        (instance as any).projectsSync = { invalidate: vi.fn() };
+        storage.getState().applySessions([{
+            id: 'session-deleted',
+            seq: 0,
+            createdAt: 1,
+            updatedAt: 1,
+            active: true,
+            activeAt: 1,
+            metadata: null,
+            metadataVersion: 1,
+            agentState: null,
+            agentStateVersion: 1,
+            thinking: true,
+            thinkingAt: 1,
+        }]);
+
+        instance.subscribeToUpdates();
+        instance.onSessionVisible('session-deleted');
+        await waitForRequest('/v3/sessions/session-deleted/messages?before_seq=2147483647&limit=100');
+        await vi.waitFor(() => {
+            expect(storage.getState().sessionMessages['session-deleted']?.isLoaded).toBe(true);
+        });
+        const update = harness.messageHandlers.get('update');
+        expect(update).toEqual(expect.any(Function));
+        diagnosticsCapture = startClientLongSessionDiagnosticsCapture();
+
+        await update?.({
+            id: 'update-message',
+            seq: 1,
+            createdAt: 2,
+            body: {
+                t: 'new-message',
+                sid: 'session-deleted',
+                message: {
+                    id: 'message-stale',
+                    seq: 1,
+                    localId: null,
+                    content: { t: 'encrypted', c: 'ciphertext' },
+                    createdAt: 2,
+                    updatedAt: 2,
+                },
+            },
+        });
+        await update?.({
+            id: 'update-delete',
+            seq: 2,
+            createdAt: 3,
+            body: {
+                t: 'delete-session',
+                sid: 'session-deleted',
+            },
+        });
+
+        expect(storage.getState().sessions['session-deleted']).toBeUndefined();
+        expect(storage.getState().sessionMessages['session-deleted']).toBeUndefined();
+
+        await vi.advanceTimersByTimeAsync(32);
+
+        expect(storage.getState().sessionMessages['session-deleted']).toBeUndefined();
+        expect(diagnosticsCapture.snapshot().counters.messageQueueBatches).toBe(0);
+    });
+
+    it('does not hold the Session lock while the socket coalescing timer waits', async () => {
+        vi.useFakeTimers();
+        harness.messageHandlers.clear();
+        harness.reconnectHandlers.length = 0;
+        harness.request.mockReset();
+        harness.request.mockImplementation(async (url: string) => {
+            if (url === '/v3/sessions/session-lock/messages?before_seq=2147483647&limit=100') {
+                return response({
+                    messages: [{
+                        id: 'message-10',
+                        seq: 10,
+                        localId: null,
+                        content: { t: 'encrypted', c: 'ciphertext-10' },
+                        createdAt: 10,
+                        updatedAt: 10,
+                    }],
+                    hasMore: true,
+                });
+            }
+            if (url === '/v3/sessions/session-lock/messages?before_seq=10&limit=100') {
+                return response({ messages: [], hasMore: false });
+            }
+            return response({ messages: [], hasMore: false });
+        });
+
+        const instance = new Sync();
+        const toDecryptedMessage = (message: { id: string; seq: number; createdAt: number }) => ({
+            id: message.id,
+            localId: null,
+            createdAt: message.createdAt,
+            content: {
+                role: 'user',
+                content: { type: 'text', text: `message ${message.seq}` },
+            },
+        });
+        const sessionEncryption = {
+            decryptMessages: vi.fn(async (messages: Array<{ id: string; seq: number; createdAt: number }>) => (
+                messages.map(toDecryptedMessage)
+            )),
+            decryptMessage: vi.fn(async (message: { id: string; seq: number; createdAt: number }) => (
+                toDecryptedMessage(message)
+            )),
+        };
+        instance.encryption = {
+            getSessionEncryption: vi.fn(() => sessionEncryption),
+        } as never;
+        storage.getState().applySessions([{
+            id: 'session-lock',
+            seq: 10,
+            createdAt: 1,
+            updatedAt: 1,
+            active: true,
+            activeAt: 1,
+            metadata: null,
+            metadataVersion: 1,
+            agentState: null,
+            agentStateVersion: 1,
+            thinking: true,
+            thinkingAt: 1,
+        }]);
+
+        instance.subscribeToUpdates();
+        instance.onSessionVisible('session-lock');
+        await waitForRequest('/v3/sessions/session-lock/messages?before_seq=2147483647&limit=100');
+        await vi.waitFor(() => {
+            expect(storage.getState().sessionMessages['session-lock']?.messages).toHaveLength(1);
+        });
+        const update = harness.messageHandlers.get('update');
+        await update?.({
+            id: 'update-11',
+            seq: 11,
+            createdAt: 11,
+            body: {
+                t: 'new-message',
+                sid: 'session-lock',
+                message: {
+                    id: 'message-11',
+                    seq: 11,
+                    localId: null,
+                    content: { t: 'encrypted', c: 'ciphertext-11' },
+                    createdAt: 11,
+                    updatedAt: 11,
+                },
+            },
+        });
+
+        const olderRequest = instance.loadOlderMessages('session-lock');
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(
+            harness.request.mock.calls.some(([url]) => (
+                url === '/v3/sessions/session-lock/messages?before_seq=10&limit=100'
+            )),
+        ).toBe(true);
+        await olderRequest;
+        expect(storage.getState().sessionMessages['session-lock']?.messages).toHaveLength(1);
+
+        await vi.advanceTimersByTimeAsync(24);
+        await vi.waitFor(() => {
+            expect(storage.getState().sessionMessages['session-lock']?.messages).toHaveLength(2);
+        });
+    });
+
     it('reconciles visible sessions through the real cursor and REST path without leaking visibility', async () => {
         vi.useFakeTimers();
         harness.messageHandlers.clear();
@@ -353,4 +729,208 @@ describe('Sync realtime recovery host', () => {
         expect(harness.voiceFocus).toHaveBeenCalledTimes(1);
 
     });
+
+    it('atomically replaces an eligible visible tail and reloads the discarded head', async () => {
+        vi.useFakeTimers();
+        harness.request.mockReset();
+        storage.setState({ sessions: {}, sessionMessages: {}, currentViewingSessionId: null });
+        const sessionId = 'session-tail-success';
+        const totalMessages = 760;
+        const latestPage = Array.from({ length: 500 }, (_, index) => (
+            apiUserMessage(totalMessages - index)
+        ));
+        const olderPage = Array.from({ length: 100 }, (_, index) => apiUserMessage(260 - index));
+        harness.request.mockImplementation(async (url: string) => {
+            if (url === `/v3/sessions/${sessionId}/messages?after_seq=${totalMessages}&limit=100`) {
+                return response({ messages: [], hasMore: false });
+            }
+            if (url === `/v3/sessions/${sessionId}/messages?before_seq=2147483647&limit=500`) {
+                return response({ messages: latestPage, hasMore: true });
+            }
+            if (url === `/v3/sessions/${sessionId}/messages?before_seq=261&limit=100`) {
+                return response({ messages: olderPage, hasMore: true });
+            }
+            return response({ messages: [], hasMore: false });
+        });
+
+        const instance = new Sync();
+        instance.encryption = {
+            getSessionEncryption: vi.fn(() => ({
+                decryptMessages: vi.fn(async (messages: ReturnType<typeof apiUserMessage>[]) => (
+                    messages.map(decryptedUserMessage)
+                )),
+            })),
+        } as never;
+        applyTailTestSession(sessionId, totalMessages);
+        (instance as any).sessionLastSeq.set(sessionId, totalMessages);
+        (instance as any).sessionOldestSeq.set(sessionId, 1);
+        const before = storage.getState().sessionMessages[sessionId];
+        const newestSnapshot = before.messages.slice(0, 10);
+
+        instance.onSessionVisible(sessionId);
+        instance.updateVisibleSessionTailState(sessionId, {
+            atLiveTail: true,
+            readingOlderHistory: false,
+            targetActive: false,
+            composerBusy: false,
+            viewportBusy: false,
+        }, 'test-view');
+        await waitForRequest(`/v3/sessions/${sessionId}/messages?after_seq=${totalMessages}&limit=100`);
+        diagnosticsCapture = startClientLongSessionDiagnosticsCapture();
+        const publications: Array<{ entry: unknown; oldestSeq: number | undefined }> = [];
+        const unsubscribe = storage.subscribe((state) => publications.push({
+            entry: state.sessionMessages[sessionId],
+            oldestSeq: (instance as any).sessionOldestSeq.get(sessionId),
+        }));
+
+        await vi.advanceTimersByTimeAsync(2_000);
+        await vi.waitFor(() => {
+            expect(storage.getState().sessionMessages[sessionId]?.messages).toHaveLength(500);
+        });
+        unsubscribe();
+
+        const rebased = storage.getState().sessionMessages[sessionId];
+        expect(publications).toHaveLength(1);
+        expect(publications[0].oldestSeq).toBe(261);
+        expect(rebased.messages.slice(0, 10)).toEqual(newestSnapshot);
+        expect(rebased.hasMoreOlder).toBe(true);
+        expect((instance as any).sessionOldestSeq.get(sessionId)).toBe(261);
+        expect(diagnosticsCapture.snapshot()).toMatchObject({
+            counters: { tailRebaseAttempts: 1, tailRebaseSwaps: 1, tailRebaseAborts: 0 },
+            retainedMessages: { currentCount: 500 },
+        });
+
+        await instance.loadOlderMessages(sessionId);
+        expect(harness.request).toHaveBeenCalledWith(
+            `/v3/sessions/${sessionId}/messages?before_seq=261&limit=100`,
+        );
+        expect(storage.getState().sessionMessages[sessionId].messages).toHaveLength(600);
+        expect((instance as any).sessionOldestSeq.get(sessionId)).toBe(161);
+        instance.onSessionHidden(sessionId);
+    });
+
+    it('discards a staged tail when the highest observed seq moves before commit', async () => {
+        vi.useFakeTimers();
+        harness.request.mockReset();
+        storage.setState({ sessions: {}, sessionMessages: {}, currentViewingSessionId: null });
+        const sessionId = 'session-tail-race';
+        const totalMessages = 751;
+        const latestPage = Array.from({ length: 500 }, (_, index) => (
+            apiUserMessage(totalMessages - index)
+        ));
+        const latestResponse = deferred<ReturnType<typeof response>>();
+        harness.request.mockImplementation(async (url: string) => {
+            if (url === `/v3/sessions/${sessionId}/messages?after_seq=${totalMessages}&limit=100`) {
+                return response({ messages: [], hasMore: false });
+            }
+            if (url === `/v3/sessions/${sessionId}/messages?before_seq=2147483647&limit=500`) {
+                return latestResponse.promise;
+            }
+            return response({ messages: [], hasMore: false });
+        });
+
+        const instance = new Sync();
+        instance.encryption = {
+            getSessionEncryption: vi.fn(() => ({
+                decryptMessages: vi.fn(async (messages: ReturnType<typeof apiUserMessage>[]) => (
+                    messages.map(decryptedUserMessage)
+                )),
+            })),
+        } as never;
+        applyTailTestSession(sessionId, totalMessages);
+        (instance as any).sessionLastSeq.set(sessionId, totalMessages);
+        instance.onSessionVisible(sessionId);
+        instance.updateVisibleSessionTailState(sessionId, {
+            atLiveTail: true,
+            readingOlderHistory: false,
+            targetActive: false,
+            composerBusy: false,
+            viewportBusy: false,
+        }, 'test-view');
+        await waitForRequest(`/v3/sessions/${sessionId}/messages?after_seq=${totalMessages}&limit=100`);
+        await vi.waitFor(() => {
+            expect(storage.getState().sessionMessages[sessionId]?.isLoaded).toBe(true);
+        });
+        const before = storage.getState().sessionMessages[sessionId];
+        diagnosticsCapture = startClientLongSessionDiagnosticsCapture();
+
+        await vi.advanceTimersByTimeAsync(2_000);
+        await waitForRequest(`/v3/sessions/${sessionId}/messages?before_seq=2147483647&limit=500`);
+        (instance as any).sessionLastSeq.set(sessionId, totalMessages + 1);
+        latestResponse.resolve(response({ messages: latestPage, hasMore: true }));
+        await vi.waitFor(() => {
+            expect(diagnosticsCapture?.snapshot().counters.tailRebaseAborts).toBe(1);
+        });
+
+        expect(storage.getState().sessionMessages[sessionId]).toBe(before);
+        expect(diagnosticsCapture.snapshot()).toMatchObject({
+            counters: { tailRebaseAttempts: 1, tailRebaseSwaps: 0, tailRebaseAborts: 1 },
+            tailRebaseAbortReasons: { 'cursor-changed': 1 },
+        });
+        instance.onSessionHidden(sessionId);
+    });
+
+    it.each(['fetch', 'decrypt'] as const)(
+        'retains the live cache when visible-tail %s staging fails',
+        async (failure) => {
+            vi.useFakeTimers();
+            harness.request.mockReset();
+            storage.setState({ sessions: {}, sessionMessages: {}, currentViewingSessionId: null });
+            const sessionId = `session-tail-${failure}-failure`;
+            const totalMessages = 751;
+            const latestPage = Array.from({ length: 500 }, (_, index) => (
+                apiUserMessage(totalMessages - index)
+            ));
+            harness.request.mockImplementation(async (url: string) => {
+                if (url === `/v3/sessions/${sessionId}/messages?after_seq=${totalMessages}&limit=100`) {
+                    return response({ messages: [], hasMore: false });
+                }
+                if (url === `/v3/sessions/${sessionId}/messages?before_seq=2147483647&limit=500`) {
+                    if (failure === 'fetch') {
+                        return { ...response({}), ok: false, status: 503 };
+                    }
+                    return response({ messages: latestPage, hasMore: true });
+                }
+                return response({ messages: [], hasMore: false });
+            });
+
+            const instance = new Sync();
+            instance.encryption = {
+                getSessionEncryption: vi.fn(() => ({
+                    decryptMessages: vi.fn(async (messages: ReturnType<typeof apiUserMessage>[]) => {
+                        if (failure === 'decrypt') throw new Error('decrypt failed');
+                        return messages.map(decryptedUserMessage);
+                    }),
+                })),
+            } as never;
+            applyTailTestSession(sessionId, totalMessages);
+            (instance as any).sessionLastSeq.set(sessionId, totalMessages);
+            instance.onSessionVisible(sessionId);
+            instance.updateVisibleSessionTailState(sessionId, {
+                atLiveTail: true,
+                readingOlderHistory: false,
+                targetActive: false,
+                composerBusy: false,
+                viewportBusy: false,
+            }, 'test-view');
+            await waitForRequest(`/v3/sessions/${sessionId}/messages?after_seq=${totalMessages}&limit=100`);
+            await vi.waitFor(() => {
+                expect(storage.getState().sessionMessages[sessionId]?.isLoaded).toBe(true);
+            });
+            const before = storage.getState().sessionMessages[sessionId];
+            diagnosticsCapture = startClientLongSessionDiagnosticsCapture();
+
+            await vi.advanceTimersByTimeAsync(2_000);
+            await vi.waitFor(() => {
+                expect(diagnosticsCapture?.snapshot().counters.tailRebaseAborts).toBe(1);
+            });
+
+            expect(storage.getState().sessionMessages[sessionId]).toBe(before);
+            expect(diagnosticsCapture.snapshot()).toMatchObject({
+                counters: { tailRebaseAttempts: 1, tailRebaseSwaps: 0, tailRebaseAborts: 1 },
+                tailRebaseAbortReasons: { 'fetch-or-decrypt-failed': 1 },
+            });
+            instance.onSessionHidden(sessionId);
+        },
+    );
 });
