@@ -40,6 +40,9 @@ import { isMachineOnline } from '@/utils/machineUtils';
 import {
     listWorkspaceProjects as requestWorkspaceProjects,
     machineSpawnNewSession,
+    machineStopSession,
+    sessionArchive,
+    sessionKill,
     sessionSetAgentModes,
     type SessionAgentModesPatch,
 } from '@/sync/ops';
@@ -1751,14 +1754,34 @@ function NewSessionScreen() {
                     const draftState = useNewSessionDraft.getState();
                     const trimmedPrompt = draftState.input.trim();
                     const attachments = draftState.attachments;
-                    draftState.setInput('');
-                    draftState.setAttachments([]);
 
                     // Send initial message if provided
                     if (trimmedPrompt || attachments.length > 0) {
-                        await sync.sendMessage(result.sessionId, trimmedPrompt, { source: 'new_session', attachments });
+                        const discardSession = async () => {
+                            const stopped = await machineStopSession(machine.id, result.sessionId);
+                            if (!stopped.success) {
+                                const killed = await sessionKill(result.sessionId);
+                                if (!killed.success) {
+                                    await sessionArchive(result.sessionId);
+                                }
+                            }
+                            await sync.refreshSessions().catch(() => { /* the list catches up on its own */ });
+                        };
+                        let queued: boolean;
+                        try {
+                            queued = await sync.sendMessage(result.sessionId, trimmedPrompt, { source: 'new_session', attachments });
+                        } catch (error) {
+                            await discardSession();
+                            throw error;
+                        }
+                        if (!queued) {
+                            await discardSession();
+                            return;
+                        }
                     }
 
+                    draftState.setInput('');
+                    draftState.setAttachments([]);
                     router.back();
                     navigateToSession(result.sessionId);
                     break;

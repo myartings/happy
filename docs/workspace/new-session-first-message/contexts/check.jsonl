@@ -1,0 +1,8 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/tasks/new-session-first-message-tasks.md","reason":"Acceptance criteria to verify"}
+{"path":"packages/happy-app/sources/hooks/useStartSessionFromDraft.test.ts","reason":"Focused regression evidence"}
+{"path":"packages/happy-app/sources/sync/sync.realtimeRecovery.test.ts","reason":"Focused message enqueue result evidence"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Whole-diff behavior review"}
+{"path":"packages/happy-app/sources/hooks/useStartSessionFromDraft.ts","reason":"Whole-diff behavior review"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Whole-diff behavior review"}
+{"path":"docs/workspace/new-session-first-message/validation.md","reason":"Evidence ledger for exact check outcomes"}

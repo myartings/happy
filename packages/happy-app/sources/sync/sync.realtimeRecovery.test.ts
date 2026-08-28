@@ -933,4 +933,21 @@ describe('Sync realtime recovery host', () => {
             instance.onSessionHidden(sessionId);
         },
     );
+
+    it('reports that a first message was not queued when the new session never becomes locally available', async () => {
+        storage.setState({ sessions: {}, sessionMessages: {}, currentViewingSessionId: null });
+        const instance = new Sync();
+        instance.encryption = {
+            getSessionEncryption: vi.fn(() => undefined),
+        } as never;
+        (instance as any).sessionsSync = {
+            invalidateAndAwait: vi.fn(async () => undefined),
+        };
+
+        const result = await instance.sendMessage('session-not-synced', 'first prompt', {
+            source: 'new_session',
+        });
+
+        expect(result).toBe(false);
+    });
 });

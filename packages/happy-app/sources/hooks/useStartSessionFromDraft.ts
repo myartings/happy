@@ -441,20 +441,34 @@ export function useStartSessionFromDraft() {
                 return false;
             }
 
+            if (prompt || attachments.length > 0) {
+                const enqueueing = sync.sendMessage(sessionId, prompt, { source: 'new_session', attachments });
+                let queued: boolean | typeof CANCELED;
+                try {
+                    queued = await untilCanceled(enqueueing);
+                } catch (error) {
+                    await stopAbandonedSession(sessionId);
+                    throw error;
+                }
+                if (queued === CANCELED) {
+                    // Enqueueing may include attachment upload. Stop must still
+                    // release the composer immediately; reclaim the session
+                    // after that in-flight work settles without touching the
+                    // shared draft a newer attempt may already be using.
+                    void enqueueing.then(
+                        () => stopAbandonedSession(sessionId),
+                        () => stopAbandonedSession(sessionId),
+                    );
+                    return false;
+                }
+                if (!queued) {
+                    await stopAbandonedSession(sessionId);
+                    return false;
+                }
+            }
             draft.setInput('');
             draft.setAttachments([]);
             navigateToSession(sessionId);
-            if (prompt || attachments.length > 0) {
-                // The session is ready at this point. Open it immediately and
-                // let the first message enqueue without keeping the user on Home
-                // during image upload or a slower network round-trip.
-                void sync.sendMessage(sessionId, prompt, { source: 'new_session', attachments }).catch((error) => {
-                    Modal.alert(
-                        t('common.error'),
-                        error instanceof Error ? error.message : 'Failed to send the first message',
-                    );
-                });
-            }
             return true;
         } catch (error) {
             // A failure the user already walked away from is not news.
