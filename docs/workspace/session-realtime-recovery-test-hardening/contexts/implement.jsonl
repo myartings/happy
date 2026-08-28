@@ -1,0 +1,13 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands and protected paths"}
+{"path":"docs/specs/session-realtime-recovery-test-hardening.md","reason":"Accepted behavior-neutral hardening contract"}
+{"path":"docs/tasks/session-realtime-recovery-test-hardening-tasks.md","reason":"Ordered TDD tracer bullets"}
+{"path":"docs/workspace/session-realtime-recovery-test-hardening/decisions.md","reason":"Resolved test-boundary and seam decisions"}
+{"path":"docs/workspace/session-realtime-recovery-test-hardening/risk.md","reason":"Required controls for protocol and cross-device behavior"}
+{"path":"docs/workspace/session-realtime-recovery-test-hardening/validation.md","reason":"Evidence ledger for exact RED and GREEN outcomes"}
+{"path":"packages/happy-app/sources/sync/apiSocket.ts","reason":"Socket health state machine under test"}
+{"path":"packages/happy-app/sources/sync/apiSocket.test.ts","reason":"Stateful reconnect coverage"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Real recovery host and incremental message path"}
+{"path":"packages/happy-app/sources/sync/sessionRealtimeRecovery.ts","reason":"Recovery coordinator used by the host"}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Production lifecycle consumer integration"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.ts","reason":"Upstream lifecycle dedupe contract"}

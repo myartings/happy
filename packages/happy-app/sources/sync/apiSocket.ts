@@ -62,6 +62,8 @@ export type SyncSocketListener = (state: SyncSocketState) => void;
 // Comfortably past the server's worst honest case: a 15s wait for a
 // reconnecting daemon to rejoin the room, then a 30s call.
 const RPC_ACK_TIMEOUT_MS = 50_000;
+const SOCKET_HEALTH_INTERVAL_MS = 15_000;
+const SOCKET_HEALTH_ACK_TIMEOUT_MS = 5_000;
 
 //
 // Main Class
@@ -77,6 +79,14 @@ class ApiSocket {
     private reconnectedListeners: Set<() => void> = new Set();
     private statusListeners: Set<(status: 'disconnected' | 'connecting' | 'connected' | 'error') => void> = new Set();
     private currentStatus: 'disconnected' | 'connecting' | 'connected' | 'error' = 'disconnected';
+    private healthTimer: ReturnType<typeof setInterval> | null = null;
+    private healthProbe: Promise<boolean> | null = null;
+    private healthGeneration = 0;
+    private lastInboundAt: number | null = null;
+    private lastHealthAckAt: number | null = null;
+    private consecutiveHealthFailures = 0;
+    private healthReconnectPending = false;
+    private lastHealthReconnectReason: string | null = null;
 
     //
     // Initialization
@@ -124,6 +134,9 @@ class ApiSocket {
     }
 
     disconnect() {
+        this.stopHealthMonitor();
+        this.consecutiveHealthFailures = 0;
+        this.healthReconnectPending = false;
         if (this.socket) {
             this.socket.disconnect();
             this.socket = null;
@@ -244,6 +257,64 @@ class ApiSocket {
         return await this.socket.emitWithAck(event, data);
     }
 
+    /**
+     * Verify that the server can still hear this socket. Socket.IO's connected
+     * flag can remain true for a half-open transport, so foreground recovery
+     * and the periodic monitor use an application-level acknowledged ping.
+     */
+    ensureHealthy = async (): Promise<boolean> => {
+        if (getCurrentAppState() !== 'active') {
+            return false;
+        }
+        const socket = this.socket;
+        if (!socket?.connected) {
+            return false;
+        }
+        if (this.healthProbe) {
+            return await this.healthProbe;
+        }
+
+        const healthGeneration = this.healthGeneration;
+        const probe = socket
+            .timeout(SOCKET_HEALTH_ACK_TIMEOUT_MS)
+            .emitWithAck('ping')
+            .then(() => {
+                if (this.socket !== socket || this.healthGeneration !== healthGeneration) {
+                    return false;
+                }
+                this.lastHealthAckAt = Date.now();
+                this.consecutiveHealthFailures = 0;
+                return true;
+            })
+            .catch(() => {
+                if (this.socket !== socket || this.healthGeneration !== healthGeneration) {
+                    return false;
+                }
+                this.consecutiveHealthFailures += 1;
+                if (this.consecutiveHealthFailures >= 2) {
+                    this.forceReconnect('health-ack-timeout', socket);
+                }
+                return false;
+            })
+            .finally(() => {
+                if (this.healthProbe === probe) {
+                    this.healthProbe = null;
+                }
+            });
+        this.healthProbe = probe;
+        return await probe;
+    };
+
+    getHealthDiagnostics() {
+        return {
+            status: this.currentStatus,
+            lastInboundAt: this.lastInboundAt,
+            lastHealthAckAt: this.lastHealthAckAt,
+            consecutiveFailures: this.consecutiveHealthFailures,
+            lastReconnectReason: this.lastHealthReconnectReason,
+        };
+    }
+
     //
     // HTTP Requests
     //
@@ -305,22 +376,61 @@ class ApiSocket {
         }
     }
 
+    private startHealthMonitor() {
+        this.stopHealthMonitor();
+        this.healthTimer = setInterval(() => {
+            void this.ensureHealthy();
+        }, SOCKET_HEALTH_INTERVAL_MS);
+    }
+
+    private stopHealthMonitor() {
+        this.healthGeneration += 1;
+        if (this.healthTimer) {
+            clearInterval(this.healthTimer);
+            this.healthTimer = null;
+        }
+        this.healthProbe = null;
+    }
+
+    private forceReconnect(reason: string, expectedSocket: Socket) {
+        const socket = this.socket;
+        if (!socket || socket !== expectedSocket || this.healthReconnectPending) {
+            return;
+        }
+
+        this.healthReconnectPending = true;
+        this.lastHealthReconnectReason = reason;
+        this.consecutiveHealthFailures = 0;
+        this.stopHealthMonitor();
+        socket.disconnect();
+        this.updateStatus('connecting');
+        socket.connect();
+    }
+
     private setupEventHandlers() {
-        if (!this.socket) return;
+        const registeredSocket = this.socket;
+        if (!registeredSocket) return;
+        const isCurrentSocket = () => this.socket === registeredSocket;
 
         // Connection events
-        this.socket.on('connect', () => {
+        registeredSocket.on('connect', () => {
+            if (!isCurrentSocket()) return;
+            this.healthReconnectPending = false;
+            this.consecutiveHealthFailures = 0;
             if (this.isVerboseLogging()) {
-                console.log('🔌 SyncSocket: Connected, recovered: ' + this.socket?.recovered);
-                console.log('🔌 SyncSocket: Socket ID:', this.socket?.id);
+                console.log('🔌 SyncSocket: Connected, recovered: ' + registeredSocket.recovered);
+                console.log('🔌 SyncSocket: Socket ID:', registeredSocket.id);
             }
             this.updateStatus('connected');
-            if (!this.socket?.recovered) {
+            this.startHealthMonitor();
+            if (!registeredSocket.recovered) {
                 this.reconnectedListeners.forEach(listener => listener());
             }
         });
 
-        this.socket.on('disconnect', (reason) => {
+        registeredSocket.on('disconnect', (reason) => {
+            if (!isCurrentSocket()) return;
+            this.stopHealthMonitor();
             if (this.isVerboseLogging()) {
                 console.log('🔌 SyncSocket: Disconnected', reason);
             }
@@ -328,14 +438,16 @@ class ApiSocket {
         });
 
         // Error events
-        this.socket.on('connect_error', (error) => {
+        registeredSocket.on('connect_error', (error) => {
+            if (!isCurrentSocket()) return;
             if (this.isVerboseLogging()) {
                 console.error('🔌 SyncSocket: Connection error', error);
             }
             this.updateStatus('error');
         });
 
-        this.socket.on('error', (error) => {
+        registeredSocket.on('error', (error) => {
+            if (!isCurrentSocket()) return;
             if (this.isVerboseLogging()) {
                 console.error('🔌 SyncSocket: Error', error);
             }
@@ -343,7 +455,9 @@ class ApiSocket {
         });
 
         // Message handling
-        this.socket.onAny((event, data) => {
+        registeredSocket.onAny((event, data) => {
+            if (!isCurrentSocket()) return;
+            this.lastInboundAt = Date.now();
             if (this.isVerboseLogging()) {
                 console.log(`📥 SyncSocket: Received event '${event}':`, JSON.stringify(data).substring(0, 200));
             }

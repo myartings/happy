@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "session-realtime-recovery-test-hardening",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User selected recommended medium-risk automated-test hardening on 2026-08-28; docs/specs/session-realtime-recovery-test-hardening.md; docs/tasks/session-realtime-recovery-test-hardening-tasks.md",
+      "updated": "2026-08-28T02:47:07+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/session-realtime-recovery-test-hardening/decisions.md resolves D1-D5 with source evidence and behavior-neutral seams",
+      "updated": "2026-08-28T02:47:07+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: three bounded TDD tracer bullets, stable public seams, local-only single owner, no tracker/delegation; docs/workspace/session-realtime-recovery-test-hardening/context.md",
+      "updated": "2026-08-28T02:47:07+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/session-realtime-recovery-test-hardening/risk.md; reversible test/seam changes, no wire/data/deploy change",
+      "updated": "2026-08-28T02:47:07+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "H1-H3 completed through recorded RED/GREEN tests; focused App and CLI checks pass.",
+      "updated": "2026-08-28T03:01:48+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Focused App 17/17, App typecheck, CLI build plus 871/871, workflow core/CI checks, and diff integrity pass; exact commands recorded in validation.md.",
+      "updated": "2026-08-28T03:03:50+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue; host test cleanup was hardened and reverified.",
+      "updated": "2026-08-28T03:03:54+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md, validation.md, completed H1-H4 tasks, rollback, limitations, and session summary are complete; no tracker or external mutation applies.",
+      "updated": "2026-08-28T03:04:39+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-28T02:40:16+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-28T02:47:07+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User selected recommended medium-risk automated-test hardening on 2026-08-28; docs/specs/session-realtime-recovery-test-hardening.md; docs/tasks/session-realtime-recovery-test-hardening-tasks.md"
+    },
+    {
+      "at": "2026-08-28T02:47:07+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/session-realtime-recovery-test-hardening/decisions.md resolves D1-D5 with source evidence and behavior-neutral seams"
+    },
+    {
+      "at": "2026-08-28T02:47:07+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/session-realtime-recovery-test-hardening/risk.md; reversible test/seam changes, no wire/data/deploy change"
+    },
+    {
+      "at": "2026-08-28T02:47:07+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: three bounded TDD tracer bullets, stable public seams, local-only single owner, no tracker/delegation; docs/workspace/session-realtime-recovery-test-hardening/context.md"
+    },
+    {
+      "at": "2026-08-28T02:47:07+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Run H1 stateful Socket.IO RED then GREEN"
+    },
+    {
+      "at": "2026-08-28T03:01:48+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "H1-H3 completed through recorded RED/GREEN tests; focused App and CLI checks pass."
+    },
+    {
+      "at": "2026-08-28T03:01:51+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run workflow checks, whole-diff review, then finish and archive."
+    },
+    {
+      "at": "2026-08-28T03:03:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Focused App 17/17, App typecheck, CLI build plus 871/871, workflow core/CI checks, and diff integrity pass; exact commands recorded in validation.md."
+    },
+    {
+      "at": "2026-08-28T03:03:54+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issue; host test cleanup was hardened and reverified."
+    },
+    {
+      "at": "2026-08-28T03:03:59+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Close validation evidence and archive without commit."
+    },
+    {
+      "at": "2026-08-28T03:04:39+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md, validation.md, completed H1-H4 tasks, rollback, limitations, and session summary are complete; no tracker or external mutation applies."
+    },
+    {
+      "at": "2026-08-28T03:04:43+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Added deterministic real-host App recovery, stateful socket reconnect, and runCodex lifecycle-consumer coverage; App focused/typecheck and CLI 871/871 pass.; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-28T03:04:43+00:00",
+  "archivedAt": "2026-08-28T03:04:43+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Added deterministic real-host App recovery, stateful socket reconnect, and runCodex lifecycle-consumer coverage; App focused/typecheck and CLI 871/871 pass.",
+  "archiveFollowUp": "None"
+}

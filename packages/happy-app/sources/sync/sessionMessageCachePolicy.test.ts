@@ -5,9 +5,20 @@ import {
     MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
     shouldEvictHiddenSessionMessageCache,
+    advanceSessionMessageCursor,
     selectVisibleSessionIds,
     selectSessionMessageCacheEvictions,
 } from './sessionMessageCachePolicy';
+
+describe('advanceSessionMessageCursor', () => {
+    it('does not let a slower REST reconciliation rewind a socket-advanced cursor', () => {
+        const cursors = new Map([['session-a', 12]]);
+
+        expect(advanceSessionMessageCursor(cursors, 'session-a', 10)).toBe(12);
+        expect(cursors.get('session-a')).toBe(12);
+        expect(advanceSessionMessageCursor(cursors, 'session-a', 14)).toBe(14);
+    });
+});
 
 describe('selectSessionMessageCacheEvictions', () => {
     it('keeps only the most recently used session message caches', () => {

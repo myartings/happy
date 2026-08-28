@@ -1,0 +1,10 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/specs/session-realtime-recovery-test-hardening.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/tasks/session-realtime-recovery-test-hardening-tasks.md","reason":"Completed task scope to verify"}
+{"path":"docs/workspace/session-realtime-recovery-test-hardening/decisions.md","reason":"Constraints that review must preserve"}
+{"path":"docs/workspace/session-realtime-recovery-test-hardening/risk.md","reason":"Controls and stop conditions to verify"}
+{"path":"docs/workspace/session-realtime-recovery-test-hardening/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/sync/apiSocket.test.ts","reason":"Reconnect state-machine evidence"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Host integration seam and REST path"}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Lifecycle consumer integration"}

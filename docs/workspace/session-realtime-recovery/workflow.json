@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "session-realtime-recovery",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Optionally repair unrelated App baseline tests, then runtime-reproduce, commit, and merge only on user direction",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User approved both fixes on 2026-08-28; docs/PRD.md; docs/specs/session-realtime-recovery.md; docs/tasks/session-realtime-recovery-tasks.md",
+      "updated": "2026-08-27T20:58:41+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/session-realtime-recovery/decisions.md resolves D1-D7 from official issue, local log, and source evidence",
+      "updated": "2026-08-27T20:58:41+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: feature branch from dev, local-only main-session owner, bounded CLI/App files, stable TDD seams, no wire/schema/server deployment change; docs/workspace/session-realtime-recovery/context.md",
+      "updated": "2026-08-27T20:58:41+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/workspace/session-realtime-recovery/risk.md records high-risk failure modes, controls, stop conditions, review, and rollback",
+      "updated": "2026-08-27T20:58:41+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Implemented T1-T3 with meaningful RED/GREEN evidence; 63 Codex tests, 26 App sync tests, App typecheck, diff integrity, workflow validation, and strict audit pass; docs/workspace/session-realtime-recovery/validation.md",
+      "updated": "2026-08-27T21:10:57+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "Scoped App/CLI behavior, CLI full suite (92 files/869 tests), App and server typechecks, server tests, workflow checks, and diff integrity pass; App full-suite failures are confined to four unmodified baseline test files and documented in validation.md",
+      "updated": "2026-08-27T21:25:21+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent whole-diff high-risk review completed after two remediation rounds; no remaining blocking findings; Codex 63/63, App focused 29/29, App typecheck, and git diff --check reverified",
+      "updated": "2026-08-27T21:25:21+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish record, acceptance coverage, independent review, rollback, operational limitations, completed tasks, and durable session summary are complete; no commit or external mutation authorized",
+      "updated": "2026-08-27T21:26:10+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-27T20:56:09+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-27T20:58:41+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User approved both fixes on 2026-08-28; docs/PRD.md; docs/specs/session-realtime-recovery.md; docs/tasks/session-realtime-recovery-tasks.md"
+    },
+    {
+      "at": "2026-08-27T20:58:41+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/session-realtime-recovery/decisions.md resolves D1-D7 from official issue, local log, and source evidence"
+    },
+    {
+      "at": "2026-08-27T20:58:41+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/session-realtime-recovery/risk.md records high-risk failure modes, controls, stop conditions, review, and rollback"
+    },
+    {
+      "at": "2026-08-27T20:58:41+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: feature branch from dev, local-only main-session owner, bounded CLI/App files, stable TDD seams, no wire/schema/server deployment change; docs/workspace/session-realtime-recovery/context.md"
+    },
+    {
+      "at": "2026-08-27T20:59:01+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write focused RED tests for primary-turn isolation, socket liveness, and visible-message reconciliation"
+    },
+    {
+      "at": "2026-08-27T21:10:57+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented T1-T3 with meaningful RED/GREEN evidence; 63 Codex tests, 26 App sync tests, App typecheck, diff integrity, workflow validation, and strict audit pass; docs/workspace/session-realtime-recovery/validation.md"
+    },
+    {
+      "at": "2026-08-27T21:10:57+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete applicable App/CLI checks, workflow-check, high-risk independent review, and acceptance mapping"
+    },
+    {
+      "at": "2026-08-27T21:11:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-27T21:25:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Scoped App/CLI behavior, CLI full suite (92 files/869 tests), App and server typechecks, server tests, workflow checks, and diff integrity pass; App full-suite failures are confined to four unmodified baseline test files and documented in validation.md"
+    },
+    {
+      "at": "2026-08-27T21:25:21+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent whole-diff high-risk review completed after two remediation rounds; no remaining blocking findings; Codex 63/63, App focused 29/29, App typecheck, and git diff --check reverified"
+    },
+    {
+      "at": "2026-08-27T21:25:21+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish record, final audit, archive with commit pending, and staged workflow CI"
+    },
+    {
+      "at": "2026-08-27T21:26:10+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish record, acceptance coverage, independent review, rollback, operational limitations, completed tasks, and durable session summary are complete; no commit or external mutation authorized"
+    },
+    {
+      "at": "2026-08-27T21:26:15+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented primary-turn isolation and visible-session realtime recovery; scoped checks and independent high-risk review passed; commit: pending; follow-up: Optionally repair unrelated App baseline tests, then runtime-reproduce, commit, and merge only on user direction"
+    }
+  ],
+  "updated": "2026-08-27T21:26:15+00:00",
+  "archivedAt": "2026-08-27T21:26:15+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented primary-turn isolation and visible-session realtime recovery; scoped checks and independent high-risk review passed",
+  "archiveFollowUp": "Optionally repair unrelated App baseline tests, then runtime-reproduce, commit, and merge only on user direction"
+}
