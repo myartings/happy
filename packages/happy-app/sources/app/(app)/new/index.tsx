@@ -73,6 +73,8 @@ import {
     type EffortLevel,
 } from '@/components/modelModeOptions';
 import { isRunningOnMac } from '@/utils/platform';
+import { HardwareKeyboardCommandBoundary } from '@/keyboard/HardwareKeyboardCommandBoundary';
+import { resolveHardwareReturnAction } from '@/keyboard/hardwareKeyboardSubmitPolicy';
 import { getNewSessionSidebarLayout } from '@/utils/newSessionSidebarLayout';
 import { getAgentPickerItems, getModePickerItems } from '@/utils/newSessionPickerItems';
 import {
@@ -831,6 +833,7 @@ function PathPickerContent({
 type PromptInputProps = {
     compact?: boolean;
     placeholder: string;
+    onHardwareReturn: () => void;
     onKeyPress?: (e: KeyPressEvent) => boolean;
 };
 const PromptInput = React.memo(React.forwardRef<MultiTextInputHandle, PromptInputProps>(
@@ -838,23 +841,25 @@ const PromptInput = React.memo(React.forwardRef<MultiTextInputHandle, PromptInpu
         const value = useNewSessionDraft((s) => s.input);
         const onChangeText = useNewSessionDraft((s) => s.setInput);
         return (
-            <MultiTextInput
-                ref={ref}
-                value={value}
-                onChangeText={onChangeText}
-                placeholder={props.placeholder}
-                lineHeight={MULTI_TEXT_INPUT_LINE_HEIGHT}
-                paddingTop={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
-                paddingBottom={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
-                maxHeight={props.compact ? COMPACT_COMPOSER_INPUT_MAX_HEIGHT : COMPOSER_INPUT_MAX_HEIGHT}
-                // No multiline/returnKeyType/submitBehavior overrides: MultiTextInput
-                // already defaults to a multiline field whose return key types a line
-                // break. The compact composer used to opt out of that, which turned the
-                // key into "Done" and left the first message of a session as the only
-                // one that could not contain a newline — the in-session composer
-                // (AgentInput) has always been multiline.
-                onKeyPress={props.onKeyPress}
-            />
+            <HardwareKeyboardCommandBoundary onHardwareReturn={props.onHardwareReturn}>
+                <MultiTextInput
+                    ref={ref}
+                    value={value}
+                    onChangeText={onChangeText}
+                    placeholder={props.placeholder}
+                    lineHeight={MULTI_TEXT_INPUT_LINE_HEIGHT}
+                    paddingTop={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
+                    paddingBottom={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
+                    maxHeight={props.compact ? COMPACT_COMPOSER_INPUT_MAX_HEIGHT : COMPOSER_INPUT_MAX_HEIGHT}
+                    // No multiline/returnKeyType/submitBehavior overrides: MultiTextInput
+                    // already defaults to a multiline field whose return key types a line
+                    // break. The compact composer used to opt out of that, which turned the
+                    // key into "Done" and left the first message of a session as the only
+                    // one that could not contain a newline — the in-session composer
+                    // (AgentInput) has always been multiline.
+                    onKeyPress={props.onKeyPress}
+                />
+            </HardwareKeyboardCommandBoundary>
         );
     },
 ));
@@ -1813,6 +1818,16 @@ function NewSessionScreen() {
         return false;
     }, [agentInputEnterToSend, canSend, handleSend]);
 
+    const handleHardwareReturn = React.useCallback(() => {
+        const action = resolveHardwareReturnAction({
+            platform: Platform.OS,
+            hasSuggestions: false,
+        });
+        if (action === 'send' && canSend) {
+            void handleSend();
+        }
+    }, [canSend, handleSend]);
+
     // Auto-focus the text input when the composer mounts
     React.useEffect(() => {
         if (isNativeMobile) {
@@ -2300,6 +2315,7 @@ function NewSessionScreen() {
                     ref={composerInputRef}
                     compact={isNativeMobile}
                     placeholder={isNativeMobile ? composerPlaceholder : 'What would you like to work on?'}
+                    onHardwareReturn={handleHardwareReturn}
                     onKeyPress={handleKeyPress}
                 />
             </View>

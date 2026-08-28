@@ -51,6 +51,8 @@ import {
     resolveDesktopComposerStyle,
     resolveStudioComposerStatePresentation,
 } from '@/features/studio-composer/studioComposerStyle';
+import { HardwareKeyboardCommandBoundary } from '@/keyboard/HardwareKeyboardCommandBoundary';
+import { resolveHardwareReturnAction } from '@/keyboard/hardwareKeyboardSubmitPolicy';
 import { DesktopComposerModeChips } from '@/features/studio-composer/desktopComposerModeChips';
 
 interface AgentInputProps {
@@ -1391,6 +1393,22 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
         <Ionicons name="shield-outline" size={18} color={theme.colors.text} />
     ));
 
+    const handleHardwareReturn = React.useCallback(() => {
+        const action = resolveHardwareReturnAction({
+            platform: Platform.OS,
+            hasSuggestions: suggestions.length > 0,
+        });
+
+        if (action === 'select-suggestion') {
+            handleSuggestionSelect(selected >= 0 ? selected : 0);
+            return;
+        }
+
+        if (action === 'send') {
+            handleSendPress();
+        }
+    }, [handleSendPress, handleSuggestionSelect, selected, suggestions.length]);
+
     // Handle keyboard navigation
     const handleKeyPress = React.useCallback((event: KeyPressEvent): boolean => {
         // Handle autocomplete navigation first
@@ -2239,22 +2257,24 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                         isStudioComposer && { minHeight: composerStyle.inputMinHeight! },
                         props.minHeight ? { minHeight: props.minHeight } : undefined,
                     ]}>
-                        <MultiTextInput
-                            ref={inputRef}
-                            defaultValue={props.initialValue}
-                            paddingTop={compactMobileComposer
-                                ? MOBILE_COMPOSER_METRICS.inputPaddingTop
-                                : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
-                            paddingBottom={compactMobileComposer
-                                ? MOBILE_COMPOSER_METRICS.inputPaddingBottom
-                                : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
-                            onChangeText={handleTextChange}
-                            placeholder={props.placeholder}
-                            onKeyPress={handleKeyPress}
-                            onStateChange={handleInputStateChange}
-                            maxHeight={Platform.OS === 'web' ? 480 : MOBILE_COMPOSER_METRICS.inputMaxHeight}
-                            lineHeight={compactMobileComposer ? MOBILE_COMPOSER_METRICS.inputLineHeight : undefined}
-                        />
+                        <HardwareKeyboardCommandBoundary onHardwareReturn={handleHardwareReturn}>
+                            <MultiTextInput
+                                ref={inputRef}
+                                defaultValue={props.initialValue}
+                                paddingTop={compactMobileComposer
+                                    ? MOBILE_COMPOSER_METRICS.inputPaddingTop
+                                    : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
+                                paddingBottom={compactMobileComposer
+                                    ? MOBILE_COMPOSER_METRICS.inputPaddingBottom
+                                    : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
+                                onChangeText={handleTextChange}
+                                placeholder={props.placeholder}
+                                onKeyPress={handleKeyPress}
+                                onStateChange={handleInputStateChange}
+                                maxHeight={Platform.OS === 'web' ? 480 : MOBILE_COMPOSER_METRICS.inputMaxHeight}
+                                lineHeight={compactMobileComposer ? MOBILE_COMPOSER_METRICS.inputLineHeight : undefined}
+                            />
+                        </HardwareKeyboardCommandBoundary>
                     </View>
 
                     {compactMobileComposer ? (

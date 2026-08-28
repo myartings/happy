@@ -1,0 +1,6 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/hardware-keyboard-enter-send.md","reason":"Accepted observable behavior and compatibility contract"}
+{"path":"docs/tasks/hardware-keyboard-enter-send-tasks.md","reason":"Dependency-aware implementation slices and allowed scope"}
+{"path":"packages/happy-app/sources/components/MultiTextInput.tsx","reason":"Existing native multiline input and imperative text seam"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Existing session autocomplete and guarded send path"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Existing new-session prompt and guarded start path"}
