@@ -1266,7 +1266,7 @@ export class Sync {
                 t('common.error'),
                 'The message was not sent: this session has not finished syncing. Please try again.',
             );
-            return;
+            return false;
         }
 
         let modeMeta: ReturnType<typeof resolveMessageModeMeta>;
@@ -1277,7 +1277,7 @@ export class Sync {
                 // Refuse loudly instead of substituting a mode: swapping in a
                 // default would silently change what the agent may do.
                 Modal.alert(t('common.error'), error.message);
-                return;
+                return false;
             }
             throw error;
         }
@@ -1310,7 +1310,7 @@ export class Sync {
                 [{ text: t('common.ok'), style: 'cancel' }],
             );
             if (!attachmentPlan.shouldSendText || (!text.trim() && (effectiveAttachments?.length ?? 0) === 0)) {
-                return;
+                return false;
             }
         }
 
@@ -1444,6 +1444,7 @@ export class Sync {
             this.getSendSync(sessionId).invalidate();
         }
         this.maybeStartBackgroundSendWatchdog();
+        return true;
     }
 
     /** Server sent us settings — merge any pending local changes on top, then apply as one update. */

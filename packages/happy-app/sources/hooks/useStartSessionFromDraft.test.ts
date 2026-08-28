@@ -204,7 +204,7 @@ describe('useStartSessionFromDraft', () => {
         mocks.draft = createDraft();
         mocks.machineSpawnNewSession.mockResolvedValue({ type: 'success', sessionId: 'session-1' });
         mocks.refreshSessions.mockResolvedValue(undefined);
-        mocks.sendMessage.mockResolvedValue(undefined);
+        mocks.sendMessage.mockResolvedValue(true);
         mocks.confirm.mockResolvedValue(false);
         mocks.machineStopSession.mockResolvedValue({ success: true });
         mocks.sessionKill.mockResolvedValue({ success: true });
@@ -239,8 +239,59 @@ describe('useStartSessionFromDraft', () => {
             'Start the implementation',
             { source: 'new_session', attachments: mocks.draft.attachments },
         );
-        expect(mocks.navigateToSession.mock.invocationCallOrder[0])
-            .toBeLessThan(mocks.sendMessage.mock.invocationCallOrder[0]);
+        expect(mocks.sendMessage.mock.invocationCallOrder[0])
+            .toBeLessThan(mocks.navigateToSession.mock.invocationCallOrder[0]);
+    });
+
+    it('keeps the draft and removes the empty session when its first message cannot be queued', async () => {
+        mocks.sendMessage.mockResolvedValue(false);
+
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
+        expect(mocks.draft.setAttachments).not.toHaveBeenCalled();
+        expect(mocks.navigateToSession).not.toHaveBeenCalled();
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+    });
+
+    it('cancels immediately while the first message is still enqueueing and cleans up when it settles', async () => {
+        let finishSend!: (queued: boolean) => void;
+        mocks.sendMessage.mockReturnValue(new Promise((resolve) => {
+            finishSend = resolve;
+        }));
+
+        const { startSession, cancelStart } = useStartSessionFromDraft();
+        const starting = startSession();
+        await vi.waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledOnce());
+
+        cancelStart();
+
+        await expect(Promise.race([
+            starting,
+            new Promise((resolve) => setTimeout(() => resolve('still waiting'), 0)),
+        ])).resolves.toBe(false);
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
+        expect(mocks.navigateToSession).not.toHaveBeenCalled();
+
+        finishSend(true);
+        await vi.waitFor(() => {
+            expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+        });
+    });
+
+    it('keeps the draft and removes the empty session when first-message enqueueing throws', async () => {
+        mocks.sendMessage.mockRejectedValue(new Error('encrypt failed'));
+
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
+        expect(mocks.navigateToSession).not.toHaveBeenCalled();
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+        expect(mocks.alert).toHaveBeenCalledWith('common.error', 'encrypt failed');
     });
 
     it('uses Default as the code default when the selected CLI is too old for Auto', async () => {
