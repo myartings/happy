@@ -1776,6 +1776,197 @@ describe('CodexAppServerClient sandbox integration', () => {
         await client.disconnect();
     });
 
+    it('keeps the primary turn active while a child thread starts and completes', async () => {
+        mockExecSync.mockReturnValue('codex-cli 0.148.0');
+        const requests: MockRpcMessage[] = [];
+        const events: Array<Record<string, unknown>> = [];
+        const proc = createMockProcess({
+            pid: 3009,
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, {
+                            id: msg.id,
+                            result: {
+                                thread: { id: 'thread-primary', path: '/tmp/thread-primary' },
+                                model: 'gpt-test',
+                                modelProvider: 'openai',
+                                cwd: '/tmp/project',
+                                approvalPolicy: 'never',
+                                sandbox: { type: 'dangerFullAccess' },
+                                reasoningEffort: null,
+                            },
+                        });
+                    }, 0);
+                }
+
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, {
+                            id: msg.id,
+                            result: {
+                                turn: { id: 'turn-primary', items: [], status: 'inProgress', error: null },
+                            },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'turn/started',
+                            params: {
+                                threadId: 'thread-primary',
+                                turn: { id: 'turn-primary', items: [], status: 'inProgress', error: null },
+                            },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'turn/started',
+                            params: {
+                                threadId: 'thread-child',
+                                turn: { id: 'turn-child', items: [], status: 'inProgress', error: null },
+                            },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'turn/completed',
+                            params: {
+                                threadId: 'thread-child',
+                                turn: { id: 'turn-child', items: [], status: 'completed', error: null },
+                            },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'turn/started',
+                            params: {
+                                turn: { id: 'turn-unscoped-child', items: [], status: 'inProgress', error: null },
+                            },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'turn/completed',
+                            params: {
+                                turn: { id: 'turn-unscoped-child', items: [], status: 'completed', error: null },
+                            },
+                        });
+                    }, 0);
+                }
+
+                if (msg.method === 'turn/steer' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, { id: msg.id, result: { turnId: 'turn-primary' } });
+                    }, 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        client.setEventHandler((event) => events.push(event as Record<string, unknown>));
+
+        await client.connect();
+        await client.startThread({
+            model: 'gpt-test',
+            cwd: '/tmp/project',
+            approvalPolicy: 'never',
+            sandbox: 'danger-full-access',
+        });
+
+        let primarySettled = false;
+        const primaryCompletion = client.sendTurnAndWait('coordinate child work')
+            .then((result) => {
+                primarySettled = true;
+                return result;
+            });
+
+        await waitFor(() => events.some((event) => (
+            event.type === 'task_complete' && event.turn_id === 'turn-child'
+        )));
+
+        expect(events).toContainEqual(expect.objectContaining({
+            type: 'task_complete',
+            turn_id: 'turn-child',
+            agent_thread_id: 'thread-child',
+        }));
+        expect(events.some((event) => event.turn_id === 'turn-unscoped-child')).toBe(false);
+        expect(primarySettled).toBe(false);
+        expect(client.turnId).toBe('turn-primary');
+
+        pushJsonLine((proc as any).stdout, {
+            method: 'codex/event',
+            params: {
+                msg: {
+                    type: 'task_complete',
+                    turn_id: 'turn-unscoped-legacy-child',
+                    status: 'completed',
+                },
+            },
+        });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(events.some((event) => event.turn_id === 'turn-unscoped-legacy-child')).toBe(false);
+        expect(primarySettled).toBe(false);
+        expect(client.turnId).toBe('turn-primary');
+
+        pushJsonLine((proc as any).stdout, {
+            method: 'item/completed',
+            params: {
+                threadId: 'thread-primary',
+                turnId: 'turn-primary',
+                item: {
+                    type: 'agentMessage',
+                    id: 'primary-message-after-child',
+                    text: 'primary work is still streaming',
+                    phase: 'commentary',
+                },
+            },
+        });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(events).toContainEqual(expect.objectContaining({
+            type: 'agent_message',
+            message: 'primary work is still streaming',
+        }));
+
+        await client.steerTurn('include this follow-up', {
+            expectedTurnId: client.turnId!,
+        });
+        expect(requests.find((request) => request.method === 'turn/steer')?.params).toEqual({
+            threadId: 'thread-primary',
+            expectedTurnId: 'turn-primary',
+            input: [{ type: 'text', text: 'include this follow-up' }],
+        });
+
+        pushJsonLine((proc as any).stdout, {
+            method: 'codex/event',
+            params: {
+                msg: {
+                    type: 'task_complete',
+                    turn_id: 'turn-primary',
+                    status: 'completed',
+                },
+            },
+        });
+        pushJsonLine((proc as any).stdout, {
+            method: 'turn/completed',
+            params: {
+                threadId: 'thread-primary',
+                turn: { id: 'turn-primary', items: [], status: 'completed', error: null },
+            },
+        });
+        pushJsonLine((proc as any).stdout, {
+            method: 'codex/event',
+            params: {
+                msg: {
+                    type: 'task_complete',
+                    turn_id: 'turn-primary',
+                    status: 'completed',
+                },
+            },
+        });
+
+        await expect(primaryCompletion).resolves.toEqual({ aborted: false });
+        expect(client.turnId).toBeNull();
+        expect(events.filter((event) => (
+            event.type === 'task_complete' && event.agent_thread_id === undefined
+        ))).toHaveLength(1);
+
+        await client.disconnect();
+    });
+
     it('sends goal set and clear requests through app-server', async () => {
         const requests: MockRpcMessage[] = [];
         const proc = createMockProcess({

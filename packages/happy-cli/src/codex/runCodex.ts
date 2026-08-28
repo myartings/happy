@@ -51,6 +51,10 @@ import {
 import { discoverCodexSkillCommands } from './codexSkills';
 import { CodexRemoteModeState } from './remoteModeState';
 import {
+    applyCodexPrimaryTurnLifecycleEvent,
+    hasCodexSubagentReference,
+} from './primaryTurnLifecycle';
+import {
     codexGoalActionCapabilities,
     mapCodexGoalEventToAgentGoalStatus,
     parseCodexGoalActionParams,
@@ -71,16 +75,6 @@ function describeCodexFailure(msg: any): string | null {
         return err.message;
     }
     return 'Unknown error';
-}
-
-function hasCodexSubagentReference(message: Record<string, unknown>): boolean {
-    for (const key of ['subagent', 'parent_call_id', 'parentCallId', 'agent_thread_id', 'agentThreadId']) {
-        const value = message[key];
-        if (typeof value === 'string' && value.length > 0) {
-            return true;
-        }
-    }
-    return false;
 }
 
 const DEFAULT_CODEX_MODEL = 'gpt-5.6-sol';
@@ -759,9 +753,9 @@ export async function runCodex(opts: {
                 `Result: ${truncatedOutput}${output.length > 200 ? '...' : ''}`,
                 'result'
             );
-        } else if (msg.type === 'task_started') {
+        } else if (msg.type === 'task_started' && !isSubagentScopedEvent) {
             messageBuffer.addMessage('Starting task...', 'status');
-        } else if (msg.type === 'task_complete') {
+        } else if (msg.type === 'task_complete' && !isSubagentScopedEvent) {
             // Ready is emitted from the main loop's idle check so pushes only fire once
             // after the queue is actually drained.
             const failure = describeCodexFailure(msg);
@@ -771,7 +765,7 @@ export async function runCodex(opts: {
             } else {
                 messageBuffer.addMessage('Task completed', 'status');
             }
-        } else if (msg.type === 'turn_aborted') {
+        } else if (msg.type === 'turn_aborted' && !isSubagentScopedEvent) {
             const failure = describeCodexFailure(msg);
             if (failure) {
                 messageBuffer.addMessage(`Turn aborted: ${failure}`, 'status');
@@ -795,22 +789,17 @@ export async function runCodex(opts: {
             }
         }
 
-        if (msg.type === 'task_started') {
-            if (!thinking) {
-                logger.debug('thinking started');
-                thinking = true;
-                session.keepAlive(thinking, 'remote');
-            }
-        }
-        if (msg.type === 'task_complete' || msg.type === 'turn_aborted') {
-            if (thinking) {
-                logger.debug('thinking completed');
-                thinking = false;
-                session.keepAlive(thinking, 'remote');
-            }
-            // Reset diff processor on task end or abort
-            diffProcessor.reset();
-        }
+        thinking = applyCodexPrimaryTurnLifecycleEvent(
+            msg as Record<string, unknown>,
+            thinking,
+            {
+                setKeepAlive: (nextThinking) => {
+                    logger.debug(nextThinking ? 'thinking started' : 'thinking completed');
+                    session.keepAlive(nextThinking, 'remote');
+                },
+                resetDiff: () => diffProcessor.reset(),
+            },
+        );
         if (msg.type === 'agent_reasoning_section_break' && !isSubagentScopedEvent) {
             reasoningProcessor.handleSectionBreak();
         }

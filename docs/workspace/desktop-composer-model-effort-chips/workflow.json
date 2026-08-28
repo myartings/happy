@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "desktop-composer-model-effort-chips",
+  "intensity": "low-risk",
+  "phase": "archived",
+  "nextAction": "Optional packaged-desktop visual inspection at narrow and wide window widths",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/workspace/desktop-composer-model-effort-chips/context.md contains the user-accepted low-risk behavior contract",
+      "updated": "2026-08-27T16:40:50+00:00"
+    },
+    "decisions": {
+      "status": "not_required",
+      "evidence": "docs/workspace/desktop-composer-model-effort-chips/decisions.md records resolved placement and picker reuse; no material open decision remains",
+      "updated": "2026-08-27T16:40:50+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Low-risk single-slice scope, local-only tracker rationale, owned files, targeted Vitest seam, and typecheck are recorded in workflow evidence",
+      "updated": "2026-08-27T16:40:51+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "Presentation-only AgentInput and studio-composer scope; no .ai/project.json risk trigger, protocol, persistence, or synchronization change",
+      "updated": "2026-08-27T16:40:51+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Focused RED/GREEN completed; product scope limited to AgentInput host seam and studio-composer feature module; exact commands recorded in validation.md",
+      "updated": "2026-08-27T16:46:12+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures",
+      "updated": "2026-08-27T16:46:45+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff semantic review found no blocking findings; presentation-only scope and acceptance mapping recorded in validation.md",
+      "updated": "2026-08-27T16:48:00+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records outcome, exact verification, whole-diff review, rollback, promotion decision, and follow-up",
+      "updated": "2026-08-27T16:48:31+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-27T16:39:07+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-27T16:40:50+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/workspace/desktop-composer-model-effort-chips/context.md contains the user-accepted low-risk behavior contract"
+    },
+    {
+      "at": "2026-08-27T16:40:50+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "not_required",
+      "evidence": "docs/workspace/desktop-composer-model-effort-chips/decisions.md records resolved placement and picker reuse; no material open decision remains"
+    },
+    {
+      "at": "2026-08-27T16:40:51+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "Presentation-only AgentInput and studio-composer scope; no .ai/project.json risk trigger, protocol, persistence, or synchronization change"
+    },
+    {
+      "at": "2026-08-27T16:40:51+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Low-risk single-slice scope, local-only tracker rationale, owned files, targeted Vitest seam, and typecheck are recorded in workflow evidence"
+    },
+    {
+      "at": "2026-08-27T16:40:52+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write focused RED tests for desktop Studio model/effort chips"
+    },
+    {
+      "at": "2026-08-27T16:46:12+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Focused RED/GREEN completed; product scope limited to AgentInput host seam and studio-composer feature module; exact commands recorded in validation.md"
+    },
+    {
+      "at": "2026-08-27T16:46:12+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run independent verification and whole-diff review"
+    },
+    {
+      "at": "2026-08-27T16:46:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-27T16:48:00+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff semantic review found no blocking findings; presentation-only scope and acceptance mapping recorded in validation.md"
+    },
+    {
+      "at": "2026-08-27T16:48:00+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish review and archive workflow evidence"
+    },
+    {
+      "at": "2026-08-27T16:48:31+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records outcome, exact verification, whole-diff review, rollback, promotion decision, and follow-up"
+    },
+    {
+      "at": "2026-08-27T16:48:31+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Added packaged-desktop Studio model and effort chips backed by existing picker paths; focused tests and configured typechecks pass; commit: pending; follow-up: Optional packaged-desktop visual inspection at narrow and wide window widths"
+    }
+  ],
+  "updated": "2026-08-27T16:48:31+00:00",
+  "archivedAt": "2026-08-27T16:48:31+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Added packaged-desktop Studio model and effort chips backed by existing picker paths; focused tests and configured typechecks pass",
+  "archiveFollowUp": "Optional packaged-desktop visual inspection at narrow and wide window widths"
+}

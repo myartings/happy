@@ -39,6 +39,7 @@ function row(
         active?: boolean;
         archived?: boolean;
         createdAt?: number;
+        lastActivityAt?: number;
         lastMessageSentAt?: number;
         state?: SessionRowData['state'];
         hasUnread?: boolean;
@@ -50,6 +51,10 @@ function row(
         active: options.active ?? false,
         archived: options.archived ?? false,
         createdAt: options.createdAt ?? 0,
+        lastActivityAt: options.lastActivityAt
+            ?? options.lastMessageSentAt
+            ?? options.createdAt
+            ?? 0,
         lastMessageSentAt: options.lastMessageSentAt,
         state: options.state ?? 'waiting',
         hasUnread: options.hasUnread ?? false,
@@ -118,6 +123,40 @@ describe('buildVisibleSessionListViewData', () => {
         expect(result).toMatchObject([
             { type: 'active-sessions', period: 'today', sessions: [{ id: 'today' }] },
             { type: 'active-sessions', period: 'earlier', sessions: [{ id: 'earlier' }] },
+        ]);
+    });
+
+    it('groups active sessions by canonical activity when device-local activity differs', () => {
+        const now = new Date(2026, 7, 6, 12, 0, 0).getTime();
+        const today = new Date(2026, 7, 6, 9, 0, 0).getTime();
+        const yesterday = new Date(2026, 7, 5, 18, 0, 0).getTime();
+        const data: SessionListViewItem[] = [{
+            type: 'active-sessions',
+            sessions: [
+                row('stale-local', {
+                    active: true,
+                    createdAt: yesterday,
+                    lastActivityAt: yesterday,
+                    lastMessageSentAt: today,
+                }),
+                row('synced-today', {
+                    active: true,
+                    createdAt: yesterday,
+                    lastActivityAt: today,
+                }),
+            ],
+        }];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: true,
+            groupActiveSessionsByDate: true,
+            now,
+        });
+
+        expect(result).toMatchObject([
+            { type: 'active-sessions', period: 'today', sessions: [{ id: 'synced-today' }] },
+            { type: 'active-sessions', period: 'earlier', sessions: [{ id: 'stale-local' }] },
         ]);
     });
 
