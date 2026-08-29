@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "slug": "codex-fast-mode-toggle",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Optional: repair unrelated Studio suite failures and perform device visual QA",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User requested native Fast toggle; docs/specs/codex-fast-mode-toggle.md AC1-AC6",
+      "updated": "2026-08-29T17:39:27+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-fast-mode-toggle/decisions.md D1-D4",
+      "updated": "2026-08-29T17:39:28+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: feature is one serial slice; docs/specs/codex-fast-mode-toggle.md; docs/tasks/codex-fast-mode-toggle-tasks.md; local-only tracker reason recorded",
+      "updated": "2026-08-29T17:39:28+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/specs/codex-fast-mode-toggle.md Operational controls; capability/model gating, validated values, Standard default, additive rollback",
+      "updated": "2026-08-29T17:39:28+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Fast toggle implemented end to end with 140 focused tests and happy-app/happy-cli typechecks passing",
+      "updated": "2026-08-29T17:51:17+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the named pre-existing 15-test Studio suite gap and missing device/simulator visual pass on 2026-08-30",
+      "updated": "2026-08-29T17:58:01+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking findings; capability/model gating, sync reconciliation, invalid-value handling, per-turn transport, accessibility, rollback, and tests traced end to end",
+      "updated": "2026-08-29T17:55:28+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review complete; AC1-AC6 verified, whole-diff review passed, rollback documented, and user accepted named validation gaps",
+      "updated": "2026-08-29T17:58:54+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T17:35:23+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T17:39:27+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User requested native Fast toggle; docs/specs/codex-fast-mode-toggle.md AC1-AC6"
+    },
+    {
+      "at": "2026-08-29T17:39:28+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-fast-mode-toggle/decisions.md D1-D4"
+    },
+    {
+      "at": "2026-08-29T17:39:28+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/specs/codex-fast-mode-toggle.md Operational controls; capability/model gating, validated values, Standard default, additive rollback"
+    },
+    {
+      "at": "2026-08-29T17:39:28+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: feature is one serial slice; docs/specs/codex-fast-mode-toggle.md; docs/tasks/codex-fast-mode-toggle-tasks.md; local-only tracker reason recorded"
+    },
+    {
+      "at": "2026-08-29T17:39:41+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement shared contract with focused TDD, then UI and Codex transport"
+    },
+    {
+      "at": "2026-08-29T17:51:17+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fast toggle implemented end to end with 140 focused tests and happy-app/happy-cli typechecks passing"
+    },
+    {
+      "at": "2026-08-29T17:51:17+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Verify AC1-AC6 with repository checks and whole-diff semantics"
+    },
+    {
+      "at": "2026-08-29T17:52:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-29T17:55:28+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking findings; capability/model gating, sync reconciliation, invalid-value handling, per-turn transport, accessibility, rollback, and tests traced end to end"
+    },
+    {
+      "at": "2026-08-29T17:58:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the named pre-existing 15-test Studio suite gap and missing device/simulator visual pass on 2026-08-30"
+    },
+    {
+      "at": "2026-08-29T17:58:01+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record accepted gaps, finish evidence, archive with commit pending, and run staged CI"
+    },
+    {
+      "at": "2026-08-29T17:58:54+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review complete; AC1-AC6 verified, whole-diff review passed, rollback documented, and user accepted named validation gaps"
+    },
+    {
+      "at": "2026-08-29T17:58:54+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Added a synced, capability-gated native Codex Fast toggle with validated per-turn app-server transport; commit: pending; follow-up: Optional: repair unrelated Studio suite failures and perform device visual QA"
+    }
+  ],
+  "updated": "2026-08-29T17:58:54+00:00",
+  "archivedAt": "2026-08-29T17:58:54+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Added a synced, capability-gated native Codex Fast toggle with validated per-turn app-server transport",
+  "archiveFollowUp": "Optional: repair unrelated Studio suite failures and perform device visual QA"
+}

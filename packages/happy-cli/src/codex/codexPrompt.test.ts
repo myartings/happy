@@ -135,6 +135,7 @@ describe('hashCodexEnhancedMode', () => {
             permissionMode: 'default',
             model: 'gpt-5.6-sol',
             effort: 'medium',
+            serviceTier: 'default',
         };
 
         expect(hashCodexEnhancedMode({
@@ -143,6 +144,20 @@ describe('hashCodexEnhancedMode', () => {
         })).not.toBe(hashCodexEnhancedMode({
             ...baseMode,
             appendSystemPrompt: 'options B',
+        }));
+    });
+
+    it('separates queued Codex messages with different service tiers', () => {
+        const baseMode: CodexEnhancedMode = {
+            permissionMode: 'default',
+            model: 'gpt-5.6-sol',
+            effort: 'medium',
+            serviceTier: 'default',
+        };
+
+        expect(hashCodexEnhancedMode(baseMode)).not.toBe(hashCodexEnhancedMode({
+            ...baseMode,
+            serviceTier: 'fast',
         }));
     });
 });

@@ -11,7 +11,9 @@ import {
     getAvailablePermissionModes,
     getEffortLevelsForModel,
     getRigCurrentModelOptionKey,
+    resolveCodexServiceTierForModel,
     resolveCurrentOption,
+    supportsCodexFastMode,
     EffortLevel,
 } from '@/components/modelModeOptions';
 import { getSuggestions } from '@/components/autocomplete/suggestions';
@@ -986,6 +988,10 @@ export function SessionViewLoaded({
             isRig ? undefined : session.metadata?.currentModelCode,
         ])
     ), [availableModels, session.modelMode, effectiveAgentDefaults.modelMode, session.metadata, isRig]);
+    const supportsFastMode = !isRig
+        && flavor === 'codex'
+        && supportsCodexFastMode(session.metadata, modelMode);
+    const fastMode = supportsFastMode && session.serviceTier === 'fast';
 
     // Effort level state
     const modelKey = modelMode?.key ?? 'default';
@@ -1050,11 +1056,16 @@ export function SessionViewLoaded({
         sessionSetAgentModes(sessionId, {
             modelMode: mode.key,
             ...(!currentEffortSupported ? { effortLevel: mode.defaultThinkingLevel ?? null } : {}),
+            serviceTier: resolveCodexServiceTierForModel(session.serviceTier, mode),
         });
-    }, [sessionId, flavor, session.metadata, session.effortLevel]);
+    }, [sessionId, flavor, session.metadata, session.effortLevel, session.serviceTier]);
 
     const updateEffortLevel = React.useCallback((level: EffortLevel) => {
         sessionSetAgentModes(sessionId, { effortLevel: level.key });
+    }, [sessionId]);
+
+    const updateFastMode = React.useCallback((enabled: boolean) => {
+        sessionSetAgentModes(sessionId, { serviceTier: enabled ? 'fast' : 'default' });
     }, [sessionId]);
 
     // Memoize header-dependent styles to prevent re-renders
@@ -1311,6 +1322,9 @@ export function SessionViewLoaded({
                 effortLevel={effortLevel}
                 availableEffortLevels={availableEffortLevels}
                 onEffortLevelChange={isRigReasoningSelectionEnabled(session.metadata) ? updateEffortLevel : undefined}
+                fastMode={fastMode}
+                showFastModeToggle={supportsFastMode}
+                onFastModeChange={supportsFastMode ? updateFastMode : undefined}
                 metadata={session.metadata}
                 connectionStatus={connectionStatus}
                 blockSend={isRig && session.thinking && session.metadata?.capabilities?.steering !== true}

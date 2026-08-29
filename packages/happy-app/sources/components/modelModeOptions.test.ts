@@ -20,6 +20,8 @@ import {
     getOpenClawPermissionModes,
     mapMetadataOptions,
     resolveCurrentOption,
+    resolveCodexServiceTierForModel,
+    supportsCodexFastMode,
 } from './modelModeOptions';
 import { sortPermissionModes } from '@/utils/permissionModeLabels';
 import { rigMetadataFixture } from '@/sync/__testdata__/rigMetadata';
@@ -109,6 +111,23 @@ describe('modelModeOptions', () => {
             'gpt-5.6-luna',
         ]);
         expect(models[0].name).toBe('GPT-5.6 Sol');
+        expect(models.every((model) => model.serviceTiers?.includes('fast'))).toBe(true);
+    });
+
+    it('offers Fast only when both the CLI and selected model advertise it', () => {
+        const fastModel = getCodexModelModes()[0];
+
+        expect(supportsCodexFastMode({ serviceTiers: ['default', 'fast'] }, fastModel)).toBe(true);
+        expect(supportsCodexFastMode({}, fastModel)).toBe(false);
+        expect(supportsCodexFastMode({ serviceTiers: ['default', 'fast'] }, { ...fastModel, serviceTiers: [] })).toBe(false);
+    });
+
+    it('turns Fast off when switching to a model that does not support it', () => {
+        const fastModel = getCodexModelModes()[0];
+
+        expect(resolveCodexServiceTierForModel('fast', fastModel)).toBe('fast');
+        expect(resolveCodexServiceTierForModel('fast', { ...fastModel, serviceTiers: [] })).toBe('default');
+        expect(resolveCodexServiceTierForModel('turbo', fastModel)).toBe('default');
     });
 
     it('adds a configured custom codex model without expanding the shared catalog', () => {

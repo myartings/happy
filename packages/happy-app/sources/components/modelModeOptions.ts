@@ -147,10 +147,27 @@ export function getClaudeModelModes(): ModelMode[] {
 
 export function getCodexModelModes(): ModelMode[] {
     return [
-        { key: 'gpt-5.6-sol', name: 'GPT-5.6 Sol', description: null },
-        { key: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', description: null },
-        { key: 'gpt-5.6-luna', name: 'GPT-5.6 Luna', description: null },
+        { key: 'gpt-5.6-sol', name: 'GPT-5.6 Sol', description: null, serviceTiers: ['fast'] },
+        { key: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', description: null, serviceTiers: ['fast'] },
+        { key: 'gpt-5.6-luna', name: 'GPT-5.6 Luna', description: null, serviceTiers: ['fast'] },
     ];
+}
+
+export function supportsCodexFastMode(
+    metadata: Pick<Metadata, 'serviceTiers'> | null | undefined,
+    model: Pick<ModelMode, 'serviceTiers'> | null | undefined,
+): boolean {
+    return metadata?.serviceTiers?.includes('fast') === true
+        && model?.serviceTiers?.includes('fast') === true;
+}
+
+export function resolveCodexServiceTierForModel(
+    currentServiceTier: string | null | undefined,
+    model: Pick<ModelMode, 'serviceTiers'> | null | undefined,
+): 'default' | 'fast' {
+    return currentServiceTier === 'fast' && model?.serviceTiers?.includes('fast') === true
+        ? 'fast'
+        : 'default';
 }
 
 export function includeConfiguredModel(

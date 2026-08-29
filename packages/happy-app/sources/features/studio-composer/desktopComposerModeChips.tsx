@@ -14,6 +14,7 @@ type DesktopComposerModeChipsProps = ResolveDesktopComposerModeChipsInput & {
     activePicker: 'model' | 'effort' | null;
     onModelPress: () => void;
     onEffortPress: () => void;
+    onFastPress: () => void;
 };
 
 export const DesktopComposerModeChips = React.memo(function DesktopComposerModeChips(
@@ -26,14 +27,22 @@ export const DesktopComposerModeChips = React.memo(function DesktopComposerModeC
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             {chips.map((chip) => {
-                const active = props.activePicker === chip.key;
-                const onPress = chip.key === 'model' ? props.onModelPress : props.onEffortPress;
+                const active = chip.key === 'fast' ? chip.selected === true : props.activePicker === chip.key;
+                const onPress = chip.key === 'model'
+                    ? props.onModelPress
+                    : chip.key === 'effort'
+                        ? props.onEffortPress
+                        : props.onFastPress;
                 return (
                     <Pressable
                         key={chip.key}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${chip.key === 'model' ? t('agentInput.model.title') : t('agentInput.effort.title')}: ${chip.label}`}
-                        accessibilityState={{ disabled: !chip.enabled, selected: active }}
+                        accessibilityRole={chip.key === 'fast' ? 'switch' : 'button'}
+                        accessibilityLabel={chip.key === 'fast'
+                            ? 'Fast mode'
+                            : `${chip.key === 'model' ? t('agentInput.model.title') : t('agentInput.effort.title')}: ${chip.label}`}
+                        accessibilityState={chip.key === 'fast'
+                            ? { disabled: !chip.enabled, checked: active }
+                            : { disabled: !chip.enabled, selected: active }}
                         disabled={!chip.enabled}
                         onPress={onPress}
                         hitSlop={{ top: 5, bottom: 10, left: 2, right: 2 }}
@@ -54,7 +63,7 @@ export const DesktopComposerModeChips = React.memo(function DesktopComposerModeC
                         })}
                     >
                         <Ionicons
-                            name={chip.key === 'model' ? 'cube-outline' : 'flash-outline'}
+                            name={chip.key === 'model' ? 'cube-outline' : chip.key === 'fast' && active ? 'flash' : 'flash-outline'}
                             size={13}
                             color={theme.colors.button.secondary.tint}
                         />
