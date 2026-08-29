@@ -169,6 +169,7 @@ export async function runCodex(opts: {
         ...(isSideChat ? { isSideChat: true } : {}),
     });
     const metadata = withCodexRuntimeModelMetadata(baseMetadata, initialModel);
+    metadata.serviceTiers = ['default', 'fast'];
 
     const skillCommands = await discoverCodexSkillCommands();
     if (skillCommands.length > 0) {
@@ -274,6 +275,7 @@ export async function runCodex(opts: {
         permissionMode: initialPermissionMode,
         model: initialModel,
         effort: opts.effort ?? DEFAULT_CODEX_EFFORT,
+        serviceTier: 'default',
     });
     let currentAppendSystemPrompt: string | undefined = undefined;
 
@@ -319,6 +321,13 @@ export async function runCodex(opts: {
         } else {
             logger.debug(`[Codex] User message received with no effort override, using current: ${modeResolution.effort ?? 'default'}`);
         }
+        if (modeResolution.serviceTierResolution.kind === 'updated') {
+            logger.debug(`[Codex] Service tier updated from user message: ${modeResolution.serviceTier}`);
+        } else if (modeResolution.serviceTierResolution.kind === 'ignored') {
+            logger.debug(`[Codex] Ignoring invalid service tier from user message: ${String(modeResolution.serviceTierResolution.incoming)}`);
+        } else {
+            logger.debug(`[Codex] User message received with no service tier override, using current: ${modeResolution.serviceTier}`);
+        }
 
         let messageAppendSystemPrompt = currentAppendSystemPrompt;
         if (message.meta?.hasOwnProperty('appendSystemPrompt')) {
@@ -334,6 +343,7 @@ export async function runCodex(opts: {
             model: modeResolution.model,
             appendSystemPrompt: messageAppendSystemPrompt,
             effort: modeResolution.effort,
+            serviceTier: modeResolution.serviceTier,
         };
         const clientUserMessageId = message.localKey ?? randomUUID();
         const routeResult = await routeCodexUserText({
@@ -1095,6 +1105,7 @@ export async function runCodex(opts: {
                     approvalPolicy: executionPolicy.approvalPolicy,
                     sandbox: executionPolicy.sandbox,
                     effort: message.mode.effort,
+                    serviceTier: message.mode.serviceTier,
                     extraInputItems: imageInputs.inputItems,
                 });
                 first = false;

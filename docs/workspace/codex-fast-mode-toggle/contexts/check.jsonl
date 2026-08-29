@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/codex-fast-mode-toggle/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/codex-fast-mode-toggle.md","reason":"Acceptance criteria to verify"}
+{"path":"packages/happy-app/sources","reason":"App state, UI, and focused tests"}
+{"path":"packages/happy-cli/src/codex","reason":"Codex protocol transport and focused tests"}
+{"path":"packages/happy-cli/src/api/types.ts","reason":"Wire schema compatibility"}

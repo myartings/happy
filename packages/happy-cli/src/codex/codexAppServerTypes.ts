@@ -286,6 +286,7 @@ export type SandboxMode = "read-only" | "workspace-write" | "danger-full-access"
 // every effort above it.
 export type ReasoningEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
 export type ReasoningSummary = "auto" | "concise" | "detailed" | "none";
+export type CodexServiceTier = "default" | "fast";
 export type TurnAbortReason = "interrupted" | "replaced" | "review_ended";
 
 export type ImageDetail = "auto" | "low" | "high";

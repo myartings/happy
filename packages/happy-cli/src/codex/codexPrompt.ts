@@ -2,7 +2,7 @@ import type { PermissionMode } from '@/api/types';
 import { CHANGE_TITLE_INSTRUCTION } from '@/gemini/constants';
 import { hashObject } from '@/utils/deterministicJson';
 
-import type { ReasoningEffort } from './codexAppServerTypes';
+import type { CodexServiceTier, ReasoningEffort } from './codexAppServerTypes';
 
 export interface CodexEnhancedMode {
     permissionMode: PermissionMode;
@@ -11,6 +11,8 @@ export interface CodexEnhancedMode {
     appendSystemPrompt?: string;
     /** Reasoning effort passed through to Codex's sendTurnAndWait. */
     effort?: ReasoningEffort;
+    /** Codex processing tier passed through to app-server turns. */
+    serviceTier: CodexServiceTier;
 }
 
 export function hashCodexEnhancedMode(mode: CodexEnhancedMode): string {
@@ -19,6 +21,7 @@ export function hashCodexEnhancedMode(mode: CodexEnhancedMode): string {
         model: mode.model,
         appendSystemPrompt: mode.appendSystemPrompt,
         effort: mode.effort,
+        serviceTier: mode.serviceTier,
     });
 }
 
