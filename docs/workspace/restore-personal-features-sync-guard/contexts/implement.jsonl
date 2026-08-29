@@ -1,0 +1,11 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/restore-personal-features-sync-guard.md","reason":"Accepted observable behavior and guard contract"}
+{"path":"docs/tasks/restore-personal-features-sync-guard-tasks.md","reason":"Bounded implementation and validation slices"}
+{"path":"packages/happy-app/sources/app/(app)/dev/index.tsx","reason":"Replace duplicate personal controls with a navigation seam"}
+{"path":"packages/happy-app/sources/app/(app)/settings/personal-features.tsx","reason":"Expo route seam for the personal feature screen"}
+{"path":"packages/happy-app/sources/components/SettingsView.tsx","reason":"Always-visible Settings navigation seam"}
+{"path":"packages/happy-app/sources/features/personal-settings/PersonalFeaturesSettingsScreen.tsx","reason":"Dedicated owner of personal feature controls"}
+{"path":"packages/happy-app/sources/utils/flatSessionListPreferenceWiring.test.ts","reason":"Existing personal layout regression seam"}
+{"path":"packages/happy-app/sources/utils/personalFeaturesSettingsWiring.test.ts","reason":"Settings route and protected-key regression coverage"}
+{"path":"devtools/happyctl","reason":"Final dev integration pre-push guard"}
+{"path":"devtools/tests/happyctl-refresh-guards-smoke.sh","reason":"Deterministic guard pass/fail smoke coverage"}
