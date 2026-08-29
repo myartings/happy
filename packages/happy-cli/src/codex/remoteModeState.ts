@@ -1,6 +1,6 @@
 import type { MessageMeta, PermissionMode } from '@/api/types';
 
-import type { ReasoningEffort } from './codexAppServerTypes';
+import type { CodexServiceTier, ReasoningEffort } from './codexAppServerTypes';
 import { isRemoteCodexPermissionMode } from './executionPolicy';
 
 const VALID_REMOTE_EFFORTS: readonly ReasoningEffort[] = [
@@ -16,9 +16,11 @@ export type CodexRemoteModeResolution = {
     permissionMode: PermissionMode;
     model: string | undefined;
     effort: ReasoningEffort | undefined;
+    serviceTier: CodexServiceTier;
     permission: Resolution<PermissionMode>;
     modelResolution: Resolution<string | undefined>;
     effortResolution: Resolution<ReasoningEffort | undefined>;
+    serviceTierResolution: Resolution<CodexServiceTier>;
 };
 
 /**
@@ -26,7 +28,7 @@ export type CodexRemoteModeResolution = {
  *
  * The launch policy is restored immediately after abort for the approval
  * handler's safety window. Model and effort stay sticky for compatibility
- * with older apps, while current apps reassert all three selected values on
+ * with older apps, while current apps reassert every selected value on
  * every message.
  */
 export class CodexRemoteModeState {
@@ -35,16 +37,19 @@ export class CodexRemoteModeState {
     currentPermissionModeExplicitlySet = false;
     currentModel: string | undefined;
     currentEffort: ReasoningEffort | undefined;
+    currentServiceTier: CodexServiceTier;
 
     constructor(options: {
         permissionMode: PermissionMode;
         model?: string;
         effort?: ReasoningEffort;
+        serviceTier?: CodexServiceTier;
     }) {
         this.initialPermissionMode = options.permissionMode;
         this.currentPermissionMode = options.permissionMode;
         this.currentModel = options.model;
         this.currentEffort = options.effort;
+        this.currentServiceTier = options.serviceTier ?? 'default';
     }
 
     resolve(meta: MessageMeta | undefined): CodexRemoteModeResolution {
@@ -93,13 +98,32 @@ export class CodexRemoteModeState {
             effortResolution = { kind: 'retained', value: this.currentEffort };
         }
 
+        let serviceTierResolution: Resolution<CodexServiceTier>;
+        if (meta !== undefined && Object.prototype.hasOwnProperty.call(meta, 'serviceTier')) {
+            const incoming = meta?.serviceTier;
+            if (incoming === 'default' || incoming === 'fast') {
+                this.currentServiceTier = incoming;
+                serviceTierResolution = { kind: 'updated', value: this.currentServiceTier };
+            } else {
+                serviceTierResolution = {
+                    kind: 'ignored',
+                    incoming,
+                    value: this.currentServiceTier,
+                };
+            }
+        } else {
+            serviceTierResolution = { kind: 'retained', value: this.currentServiceTier };
+        }
+
         return {
             permissionMode: this.currentPermissionMode,
             model: this.currentModel,
             effort: this.currentEffort,
+            serviceTier: this.currentServiceTier,
             permission,
             modelResolution,
             effortResolution,
+            serviceTierResolution,
         };
     }
 

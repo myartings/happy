@@ -46,6 +46,7 @@ import type {
     ApprovalPolicy,
     SandboxMode,
     InputItem,
+    CodexServiceTier,
     ReasoningEffort,
     McpServerElicitationRequestResponse,
 } from './codexAppServerTypes';
@@ -1292,6 +1293,7 @@ export class CodexAppServerClient {
         approvalPolicy?: ApprovalPolicy;
         sandbox?: SandboxMode;
         effort?: ReasoningEffort;
+        serviceTier?: CodexServiceTier;
         extraInputItems?: InputItem[];
     }): Promise<void> {
         if (!this._threadId) {
@@ -1317,6 +1319,7 @@ export class CodexAppServerClient {
         if (opts?.approvalPolicy) params.approvalPolicy = opts.approvalPolicy;
         if (opts?.model) params.model = opts.model;
         if (opts?.effort) params.effort = opts.effort;
+        if (opts?.serviceTier) params.serviceTier = opts.serviceTier;
 
         // Map sandbox mode to the camelCase policy format the server expects
         if (opts?.sandbox) {
@@ -1361,6 +1364,7 @@ export class CodexAppServerClient {
         approvalPolicy?: ApprovalPolicy;
         sandbox?: SandboxMode;
         effort?: ReasoningEffort;
+        serviceTier?: CodexServiceTier;
         extraInputItems?: InputItem[];
         turnTimeoutMs?: number;
     }): Promise<{ aborted: boolean }> {

@@ -1233,12 +1233,16 @@ describe('CodexAppServerClient sandbox integration', () => {
             approvalPolicy: 'never',
             sandbox: 'danger-full-access',
         });
-        await client.sendTurnAndWait('hello', { clientUserMessageId: 'happy-start-message' });
+        await client.sendTurnAndWait('hello', {
+            clientUserMessageId: 'happy-start-message',
+            serviceTier: 'fast',
+        });
 
         expect(requests.find((msg) => msg.method === 'turn/start')?.params).toMatchObject({
             threadId: 'thread-text',
             clientUserMessageId: 'happy-start-message',
             input: [{ type: 'text', text: 'hello' }],
+            serviceTier: 'fast',
         });
 
         await client.disconnect();
