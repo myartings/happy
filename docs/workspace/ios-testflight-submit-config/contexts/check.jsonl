@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/ios-testflight-submit-config/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/eas.json","reason":"Verify resolved personal submit identity"}
+{"path":"devtools/happyctl","reason":"Verify release guard and expected submit profile"}
+{"path":"devtools/tests/ios-release-smoke.sh","reason":"Targeted iOS release command regression coverage"}
+{"path":"docs/specs/happy-ios-release.md","reason":"Acceptance contract for personal TestFlight submission"}

@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "slug": "ios-testflight-submit-config",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/happy-ios-release.md and explicit user request to configure and first-publish TestFlight",
+      "updated": "2026-08-29T13:59:34+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/ios-testflight-submit-config/decisions.md D1-D4",
+      "updated": "2026-08-29T13:59:34+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Two-file correction: personal submit profile and its validator; existing spec/task reused",
+      "updated": "2026-08-29T13:59:34+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Dedicated APP_MANAGER key, no tracked secret, personal identifiers only, exact build ID, clean-dev and dry-run gates",
+      "updated": "2026-08-29T13:59:34+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "EAS resolver assertion and devtools/tests/ios-release-smoke.sh passed",
+      "updated": "2026-08-29T13:59:57+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-29T14:00:12+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole diff reviewed: two runtime identity corrections plus scoped workflow evidence; no secret patterns or official profile identifiers",
+      "updated": "2026-08-29T14:00:36+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/ios-testflight-submit-config/finish.md",
+      "updated": "2026-08-29T14:00:56+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T13:57:09+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T13:59:34+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/happy-ios-release.md and explicit user request to configure and first-publish TestFlight"
+    },
+    {
+      "at": "2026-08-29T13:59:34+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/ios-testflight-submit-config/decisions.md D1-D4"
+    },
+    {
+      "at": "2026-08-29T13:59:34+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Two-file correction: personal submit profile and its validator; existing spec/task reused"
+    },
+    {
+      "at": "2026-08-29T13:59:34+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Dedicated APP_MANAGER key, no tracked secret, personal identifiers only, exact build ID, clean-dev and dry-run gates"
+    },
+    {
+      "at": "2026-08-29T13:59:57+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "EAS resolver assertion and devtools/tests/ios-release-smoke.sh passed"
+    },
+    {
+      "at": "2026-08-29T14:00:12+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-29T14:00:18+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Use accepted release spec and decisions D1-D4"
+    },
+    {
+      "at": "2026-08-29T14:00:18+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Verified two-file EAS submit-profile correction"
+    },
+    {
+      "at": "2026-08-29T14:00:19+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Complete check and whole-diff review"
+    },
+    {
+      "at": "2026-08-29T14:00:36+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole diff reviewed: two runtime identity corrections plus scoped workflow evidence; no secret patterns or official profile identifiers"
+    },
+    {
+      "at": "2026-08-29T14:00:36+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Archive validated correction with commit pending"
+    },
+    {
+      "at": "2026-08-29T14:00:56+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/ios-testflight-submit-config/finish.md"
+    },
+    {
+      "at": "2026-08-29T14:00:56+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Fix personal TestFlight App Store identity resolution for EAS submission; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-29T14:00:56+00:00",
+  "archivedAt": "2026-08-29T14:00:56+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Fix personal TestFlight App Store identity resolution for EAS submission",
+  "archiveFollowUp": "None"
+}

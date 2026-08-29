@@ -288,8 +288,8 @@ const expectedSubmit = {
   ascApiKeyPath: '$APP_STORE_CONNECT_API_KEY_PATH',
   ascApiKeyId: '$APP_STORE_CONNECT_API_KEY_ID',
   ascApiKeyIssuerId: '$APP_STORE_CONNECT_API_ISSUER_ID',
-  ascAppId: '$APP_STORE_CONNECT_APP_ID',
-  appleTeamId: '$APPLE_DEVELOPMENT_TEAM',
+  ascAppId: '6806555472',
+  appleTeamId: 'MJS6V7A44A',
 };
 if (!submit || !submit.ios) failures.push(`submit.${storeName}`);
 for (const [key, expected] of Object.entries(expectedSubmit)) {
