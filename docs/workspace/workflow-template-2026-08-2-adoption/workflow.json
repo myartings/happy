@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 3,
+  "slug": "workflow-template-2026-08-2-adoption",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Create the authorized delivery commit, push feature/workflow-template-2026-08-2-adoption normally, and open one PR targeting dev; do not merge or delete branches without separate authorization.",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User accepted the recommended migration and explicitly authorized isolated origin/dev rebuild, delivery commit, normal push, and one PR; accepted spec and tasks linked",
+      "updated": "2026-08-29T19:47:28+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-template-2026-08-2-adoption/decisions.md D1-D10 resolved, including stale-base delivery rebuild",
+      "updated": "2026-08-29T19:47:28+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: serial current-session Root on feature/workflow-template-2026-08-2-adoption at origin/dev f23b9d75; accepted workflow-only paths; local-only tracker; authorized dev PR after gates",
+      "updated": "2026-08-29T19:47:29+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: immutable source/base, selective allowlist, fingerprinted retirements, protected-path checks, no rewrite/force push, independent review",
+      "updated": "2026-08-29T19:47:28+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Pinned transactional apply complete; 82 nonterminal migration paths exactly match reviewed 5ee0818e bytes; clean synthetic dry-run reports zero drift; 2 upgrade and 9 validator tests pass; protected paths unchanged",
+      "updated": "2026-08-29T19:52:33+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-29T19:53:07+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Same checked origin/dev-based candidate 6a3a95a19590 independently accepted by Spec and Standards with zero findings and no accepted gaps",
+      "updated": "2026-08-29T19:57:23+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "f23b9d756d3e3c20b9c41392102c4728b4ab8e15",
+        "candidateFingerprint": "6a3a95a19590453789917a42589782dbb31512886888c1e52f197356e2dd6876"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Accepted delivery and rollback coverage complete; AC1-AC11 verified; 4/4 candidate checks and independent Spec/Standards review passed; exact detached pre-archive staged workflow CI passed.",
+      "updated": "2026-08-29T20:02:16+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T19:45:53+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T19:47:28+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted the recommended migration and explicitly authorized isolated origin/dev rebuild, delivery commit, normal push, and one PR; accepted spec and tasks linked"
+    },
+    {
+      "at": "2026-08-29T19:47:28+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-template-2026-08-2-adoption/decisions.md D1-D10 resolved, including stale-base delivery rebuild"
+    },
+    {
+      "at": "2026-08-29T19:47:28+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: immutable source/base, selective allowlist, fingerprinted retirements, protected-path checks, no rewrite/force push, independent review"
+    },
+    {
+      "at": "2026-08-29T19:47:29+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: serial current-session Root on feature/workflow-template-2026-08-2-adoption at origin/dev f23b9d75; accepted workflow-only paths; local-only tracker; authorized dev PR after gates"
+    },
+    {
+      "at": "2026-08-29T19:47:29+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Port selective manifest and validator, run pinned pre-apply dry-run, then apply canonical and Happy-owned migration surfaces"
+    },
+    {
+      "at": "2026-08-29T19:48:54+00:00",
+      "type": "downstream_active_schema_upgrade",
+      "phase": "implementation",
+      "evidence": "Preserved schema-1 gates/history; removed legacyImport; added schema-3 standard layout and approved local-only delivery source"
+    },
+    {
+      "at": "2026-08-29T19:52:33+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Pinned transactional apply complete; 82 nonterminal migration paths exactly match reviewed 5ee0818e bytes; clean synthetic dry-run reports zero drift; 2 upgrade and 9 validator tests pass; protected paths unchanged"
+    },
+    {
+      "at": "2026-08-29T19:52:34+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete origin/dev-based candidate, run fresh applicable checks, then independent Spec and Standards review"
+    },
+    {
+      "at": "2026-08-29T19:53:07+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures; structured run: 290a9763-4a63-422d-8e1d-7b4d1817810c"
+    },
+    {
+      "at": "2026-08-29T19:57:23+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Same checked origin/dev-based candidate 6a3a95a19590 independently accepted by Spec and Standards with zero findings and no accepted gaps"
+    },
+    {
+      "at": "2026-08-29T19:57:55+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete acceptance coverage, prove pre-archive staged CI, archive on exact origin/dev base, and prepare the authorized dev PR"
+    },
+    {
+      "at": "2026-08-29T20:02:16+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Accepted delivery and rollback coverage complete; AC1-AC11 verified; 4/4 candidate checks and independent Spec/Standards review passed; exact detached pre-archive staged workflow CI passed."
+    },
+    {
+      "at": "2026-08-29T20:02:50+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Selectively adopted ai-coding-template workflow-2026.08.2 on exact origin/dev base with Happy authority preserved and all checks/reviews passing.; result identity: archive-introducing-commit; follow-up: Create the authorized delivery commit, push feature/workflow-template-2026-08-2-adoption normally, and open one PR targeting dev; do not merge or delete branches without separate authorization."
+    }
+  ],
+  "updated": "2026-08-29T20:02:50+00:00",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Current-session isolated origin/dev PR rebuild",
+    "approval": "User explicitly authorized rebuilding the isolated branch and creating the dev PR"
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "290a9763-4a63-422d-8e1d-7b4d1817810c",
+  "checkRunFingerprint": "ff4018b212ce7c39c227880bd4bb2a2d2b326fb6fd6d5965d08caf0cadb7afdf",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "f23b9d756d3e3c20b9c41392102c4728b4ab8e15",
+    "candidateFingerprint": "6a3a95a19590453789917a42589782dbb31512886888c1e52f197356e2dd6876"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "f23b9d756d3e3c20b9c41392102c4728b4ab8e15",
+      "candidateFingerprint": "6a3a95a19590453789917a42589782dbb31512886888c1e52f197356e2dd6876"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Independent capable Spec review accepted candidate 6a3a95a19590 at base f23b9d75 with zero findings and no follow-ups"
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Independent capable Standards review accepted candidate 6a3a95a19590 at base f23b9d75 with zero findings and no follow-ups"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete acceptance coverage, prove pre-archive staged CI, archive on exact origin/dev base, and prepare the authorized dev PR",
+    "prearchiveUpdated": "2026-08-29T20:02:16+00:00",
+    "prearchiveActive": {
+      "feature": "workflow-template-2026-08-2-adoption",
+      "phase": "finish",
+      "updated": "2026-08-30",
+      "next": "Complete acceptance coverage, prove pre-archive staged CI, archive on exact origin/dev base, and prepare the authorized dev PR",
+      "branch / worktree": "feature/workflow-template-2026-08-2-adoption"
+    },
+    "prearchiveArchiveObject": "e753644586e0fb80d9c4f31c2fa0b1535700cd39",
+    "fingerprint": "022230a4130039dadb8e6c8d10a31afb6d3678c84a735a37a986f55e26acfd64"
+  },
+  "archivedAt": "2026-08-29T20:02:50+00:00",
+  "archiveDate": "2026-08-30",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Selectively adopted ai-coding-template workflow-2026.08.2 on exact origin/dev base with Happy authority preserved and all checks/reviews passing.",
+  "archiveFollowUp": "Create the authorized delivery commit, push feature/workflow-template-2026-08-2-adoption normally, and open one PR targeting dev; do not merge or delete branches without separate authorization."
+}
