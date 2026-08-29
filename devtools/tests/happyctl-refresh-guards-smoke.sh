@@ -61,4 +61,62 @@ if build_desktop >/dev/null 2>&1; then
 fi
 test ! -e "$install_marker"
 
+personal_fixture="$TEMP_ROOT/personal-feature-surface"
+personal_screen="$personal_fixture/packages/happy-app/sources/features/personal-settings/PersonalFeaturesSettingsScreen.tsx"
+personal_route="$personal_fixture/packages/happy-app/sources/app/(app)/settings/personal-features.tsx"
+settings_view="$personal_fixture/packages/happy-app/sources/components/SettingsView.tsx"
+mkdir -p "$(dirname "$personal_screen")" "$(dirname "$personal_route")" "$(dirname "$settings_view")"
+
+write_complete_personal_surface() {
+  printf '%s\n' \
+    "useLocalSettingMutable('flatSessionList')" \
+    "useLocalSettingMutable('devSideChatQuickPanelEnabled')" \
+    "useLocalSettingMutable('devProjectTodosEnabled')" \
+    "useLocalSettingMutable('devGithubIssuesEnabled')" \
+    "useSettingMutable('needsAttentionSessionsEnabled')" \
+    "useLocalSettingMutable('devPromptHistoryNavigatorEnabled')" \
+    "useLocalSettingMutable('devSessionEnvironmentLabelsEnabled')" \
+    "useLocalSettingMutable('devEnhancedStatusDotsEnabled')" \
+    "useSettingMutable('sortActiveSessionsGlobally')" \
+    "useSettingMutable('groupActiveSessionsByDate')" \
+    "useLocalSettingMutable('devShowActiveSessionRuntimeEnabled')" \
+    "useLocalSettingMutable('devShowSessionModelEnabled')" \
+    "useLocalSettingMutable('desktopSessionNotificationsEnabled')" >"$personal_screen"
+  printf '%s\n' "@/features/personal-settings/PersonalFeaturesSettingsScreen" >"$personal_route"
+  printf '%s\n' "router.push('/settings/personal-features')" "{/* Developer */}" >"$settings_view"
+}
+
+HAPPY_REPO="$personal_fixture"
+write_complete_personal_surface
+validate_personal_feature_surface
+
+rm "$personal_route"
+if validate_personal_feature_surface >/dev/null 2>&1; then
+  echo "personal feature guard accepted a missing route" >&2
+  exit 1
+fi
+
+write_complete_personal_surface
+printf '%s\n' "missing navigation" >"$settings_view"
+if validate_personal_feature_surface >/dev/null 2>&1; then
+  echo "personal feature guard accepted a missing Settings entry" >&2
+  exit 1
+fi
+
+write_complete_personal_surface
+printf '%s\n' "useLocalSettingMutable('flatSessionList')" >"$personal_screen"
+if validate_personal_feature_surface >/dev/null 2>&1; then
+  echo "personal feature guard accepted missing protected switches" >&2
+  exit 1
+fi
+
+write_complete_personal_surface
+printf '%s\n' "{/* Developer */}" "router.push('/settings/personal-features')" >"$settings_view"
+if validate_personal_feature_surface >/dev/null 2>&1; then
+  echo "personal feature guard accepted a Developer-only Settings entry" >&2
+  exit 1
+fi
+
+declare -f sync_patch_stack_locally | grep -q 'validate_personal_feature_surface'
+
 echo "Happyctl refresh guard smoke tests passed"

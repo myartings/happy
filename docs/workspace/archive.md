@@ -88,3 +88,4 @@
 | 2026-08-28 | new-session-first-message | pending | Preserve and reliably enqueue the first message when creating a session | None |
 | 2026-08-29 | ios-testflight-submit-config | pending | Fix personal TestFlight App Store identity resolution for EAS submission | None |
 | 2026-08-30 | codex-fast-mode-toggle | pending | Added a synced, capability-gated native Codex Fast toggle with validated per-turn app-server transport | Optional: repair unrelated Studio suite failures and perform device visual QA |
+| 2026-08-30 | restore-personal-features-sync-guard | pending | Restore the always-visible personal feature settings surface and block sync when it is lost. | Build/install Happy (dev) only when separately authorized. |
