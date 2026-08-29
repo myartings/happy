@@ -1,8 +1,10 @@
 # Task: `<feature>`
 
-Use this compact acceptance contract inside the required formal workflow. Link it
-from `docs/workspace/<slug>/`; it does not replace machine state, role contexts,
-validation, finish review, or terminal archive.
+Use this optional execution checklist when a delivery slice has multiple steps,
+acceptance criteria, internal dependencies, or a high-risk audit need. Link it
+from `docs/workspace/<slug>/`; the stable ticket, spec, or local source owns the
+acceptance boundary, while the Workspace owns machine state, role contexts,
+validation, finish review, and terminal archive.
 
 ## Plan
 
@@ -17,6 +19,16 @@ validation, finish review, or terminal archive.
 ### Out of scope
 
 - `<explicit exclusion>`
+
+### Execution candidates
+
+| Task | Dependencies | Likely ownership | Parallel candidate | Verification |
+| --- | --- | --- | --- | --- |
+| `<coherent task>` | `<task IDs or none>` | `<files/module/shared contract>` | `<yes/no and reason>` | `<closest signal>` |
+
+Candidate annotations support early discovery only. `scoping` owns the initial
+`serial` or `batch-plan` decision. Record a later `parallel-reassess` only when
+readiness, dependencies, or ownership materially changes.
 
 ## Verify
 

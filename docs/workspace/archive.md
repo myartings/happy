@@ -87,3 +87,4 @@
 | 2026-08-28 | client-long-session-performance | pending | Completed T1-T7 client long-Session performance implementation, deterministic verification, no-sign workspace bundle/startup evidence, whole-diff review, and user acceptance of two named verification gaps. | Commit, install, signing/release, unrelated baseline-test repair, and optional manual AC15 packaged measurements remain separate explicit choices. |
 | 2026-08-28 | new-session-first-message | pending | Preserve and reliably enqueue the first message when creating a session | None |
 | 2026-08-29 | ios-testflight-submit-config | pending | Fix personal TestFlight App Store identity resolution for EAS submission | None |
+| 2026-08-30 | workflow-template-2026-08-2-adoption | archive-introducing-commit | Selectively adopted ai-coding-template workflow-2026.08.2 with Happy-owned authority preserved | Commit and push only with separate user authorization |

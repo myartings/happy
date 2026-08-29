@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 3,
+  "slug": "workflow-template-2026-08-2-adoption",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Commit and push only with separate user authorization",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User accepted the recommended migration; docs/specs/workflow-template-2026-08-2-adoption.md; docs/tasks/workflow-template-2026-08-2-adoption-tasks.md",
+      "updated": "2026-08-29T18:16:35+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-template-2026-08-2-adoption/decisions.md D1-D9 resolved",
+      "updated": "2026-08-29T18:16:35+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: serial current-session Root; local-only; allowed/blocked paths and verification seams in decisions.md",
+      "updated": "2026-08-29T18:16:35+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/specs/workflow-template-2026-08-2-adoption.md; docs/workspace/workflow-template-2026-08-2-adoption/decisions.md risk controls",
+      "updated": "2026-08-29T18:16:35+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Exact preserved-authority validation retained; seven isolated negative mutations now cover tracker provider/target/categories/states, protected/generated paths, and risk triggers; 9/9 tests pass",
+      "updated": "2026-08-29T19:00:09+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-29T19:00:16+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Same checked candidate 3dd4727cedd7 independently accepted by Spec and Standards with zero findings and no accepted gaps",
+      "updated": "2026-08-29T19:03:18+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "df1362e3e7bab34e3ff56ad1613eba22584137d4",
+        "candidateFingerprint": "3dd4727cedd7393676124db0adbeb625f05f10d437e25ba0193e484c2765e52a"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "All AC1-AC11 verified; exact candidate 3dd4727cedd7 passed 4/4 checks, independent Spec/Standards review, diff checks, zero-drift sync, and clean detached pre-archive staged CI",
+      "updated": "2026-08-29T19:10:41+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T18:11:16+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T18:16:35+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted the recommended migration; docs/specs/workflow-template-2026-08-2-adoption.md; docs/tasks/workflow-template-2026-08-2-adoption-tasks.md"
+    },
+    {
+      "at": "2026-08-29T18:16:35+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-template-2026-08-2-adoption/decisions.md D1-D9 resolved"
+    },
+    {
+      "at": "2026-08-29T18:16:35+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/specs/workflow-template-2026-08-2-adoption.md; docs/workspace/workflow-template-2026-08-2-adoption/decisions.md risk controls"
+    },
+    {
+      "at": "2026-08-29T18:16:35+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: serial current-session Root; local-only; allowed/blocked paths and verification seams in decisions.md"
+    },
+    {
+      "at": "2026-08-29T18:16:55+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Upgrade selective manifest and validator, then run pinned dry-run"
+    },
+    {
+      "at": "2026-08-29T18:31:13+00:00",
+      "type": "downstream_active_schema_upgrade",
+      "phase": "implementation",
+      "evidence": "Preserved schema-1 gates/history; removed legacyImport; added schema-3 standard layout and approved local-only delivery source"
+    },
+    {
+      "at": "2026-08-29T18:39:13+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Pinned schema-2 selective apply complete; clean-candidate dry-run reports zero changes; 7 validator tests and 2 active-state upgrade tests pass; preserved and blocked paths unchanged"
+    },
+    {
+      "at": "2026-08-29T18:39:13+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run candidate-bound applicable checks and independent Spec/Standards review"
+    },
+    {
+      "at": "2026-08-29T18:42:24+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures; structured run: 03b7adae-e2f5-4de3-9f3b-56c9414f9e47"
+    },
+    {
+      "at": "2026-08-29T18:48:58+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Same checked staged engineering candidate accepted independently by Spec and Standards; no actionable findings or accepted gaps"
+    },
+    {
+      "at": "2026-08-29T18:49:39+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add required multi-agent/worktree session summary before final candidate binding"
+    },
+    {
+      "at": "2026-08-29T18:50:27+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Required structured multi-agent/worktree session summary added; prior accepted review retained as historical evidence; delivery configuration and canonical source surfaces unchanged"
+    },
+    {
+      "at": "2026-08-29T18:50:27+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run fresh final candidate-bound checks and independent Spec/Standards review"
+    },
+    {
+      "at": "2026-08-29T18:50:40+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures; structured run: 07e8cbf6-f4a0-4d57-b838-b1008e11aa31"
+    },
+    {
+      "at": "2026-08-29T18:54:13+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Standards found one accepted-contract gap in fail-closed preserved project-authority validation; Spec accepted unchanged candidate"
+    },
+    {
+      "at": "2026-08-29T18:54:15+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add exact preserved-authority validation and focused negative tests, then rerun final check/review"
+    },
+    {
+      "at": "2026-08-29T18:56:09+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Standards AC7 gap remediated with exact tracker/protected/generated/risk authority checks; focused RED then 9/9 GREEN; pinned clean-candidate sync remains zero-drift"
+    },
+    {
+      "at": "2026-08-29T18:56:09+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final remediated candidate-bound checks and independent Spec/Standards review"
+    },
+    {
+      "at": "2026-08-29T18:56:16+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures; structured run: b84bb610-da6c-4199-9279-c31e4252beae"
+    },
+    {
+      "at": "2026-08-29T18:58:57+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Standards requested isolated negative coverage for every preserved tracker component; production exact comparison accepted"
+    },
+    {
+      "at": "2026-08-29T18:58:59+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Split preserved-authority fixture into isolated component mutations including tracker.target, then rerun final check/review"
+    },
+    {
+      "at": "2026-08-29T19:00:09+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Exact preserved-authority validation retained; seven isolated negative mutations now cover tracker provider/target/categories/states, protected/generated paths, and risk triggers; 9/9 tests pass"
+    },
+    {
+      "at": "2026-08-29T19:00:09+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final isolated-coverage candidate check and independent Spec/Standards review"
+    },
+    {
+      "at": "2026-08-29T19:00:16+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures; structured run: 1b2e65fb-1741-44c8-a6de-854860a8aebe"
+    },
+    {
+      "at": "2026-08-29T19:03:18+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Same checked candidate 3dd4727cedd7 independently accepted by Spec and Standards with zero findings and no accepted gaps"
+    },
+    {
+      "at": "2026-08-29T19:03:21+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete acceptance coverage, finish evidence, pre-archive CI, and deterministic terminal archive projection"
+    },
+    {
+      "at": "2026-08-29T19:10:41+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "All AC1-AC11 verified; exact candidate 3dd4727cedd7 passed 4/4 checks, independent Spec/Standards review, diff checks, zero-drift sync, and clean detached pre-archive staged CI"
+    },
+    {
+      "at": "2026-08-29T19:11:06+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Selectively adopted ai-coding-template workflow-2026.08.2 with Happy-owned authority preserved; result identity: archive-introducing-commit; follow-up: Commit and push only with separate user authorization"
+    }
+  ],
+  "updated": "2026-08-29T19:11:06+00:00",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Current-session selective Happy workflow migration",
+    "approval": "User accepted the recommended migration in this session"
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "1b2e65fb-1741-44c8-a6de-854860a8aebe",
+  "checkRunFingerprint": "e5f6400ed51538ea79dd8032a5435019c4b39da06cbde1d453438c81f94db9ef",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "df1362e3e7bab34e3ff56ad1613eba22584137d4",
+    "candidateFingerprint": "3dd4727cedd7393676124db0adbeb625f05f10d437e25ba0193e484c2765e52a"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "df1362e3e7bab34e3ff56ad1613eba22584137d4",
+      "candidateFingerprint": "3dd4727cedd7393676124db0adbeb625f05f10d437e25ba0193e484c2765e52a"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "validation.md: final clean Spec review accepted candidate 3dd4727cedd7 with zero findings"
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "validation.md: final clean Standards review accepted candidate 3dd4727cedd7; AC7 exact comparisons and isolated mutations verified"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete acceptance coverage, finish evidence, pre-archive CI, and deterministic terminal archive projection",
+    "prearchiveUpdated": "2026-08-29T19:10:41+00:00",
+    "prearchiveActive": {
+      "feature": "workflow-template-2026-08-2-adoption",
+      "phase": "finish",
+      "updated": "2026-08-30",
+      "next": "Complete acceptance coverage, finish evidence, pre-archive CI, and deterministic terminal archive projection",
+      "branch / worktree": "sharp-harbor"
+    },
+    "prearchiveArchiveObject": "dbe04ae698276497d5bb6748f2c37503d9071b8a",
+    "fingerprint": "f8b5437622f568b89188e8c9fb39525ed435a495f3cb4870c25d087545d94a2c"
+  },
+  "archivedAt": "2026-08-29T19:11:06+00:00",
+  "archiveDate": "2026-08-30",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Selectively adopted ai-coding-template workflow-2026.08.2 with Happy-owned authority preserved",
+  "archiveFollowUp": "Commit and push only with separate user authorization"
+}

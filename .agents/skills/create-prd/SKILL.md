@@ -8,8 +8,9 @@ description: Turn clarified project intent into durable, testable requirements. 
 ## Workflow
 
 1. Inspect existing project context, code, feedback, and related specs.
-2. Route material unresolved choices through `grilling`: inspect discoverable
-   facts first, then ask one decision at a time with a recommended default.
+2. Route material unresolved choices through Matt-owned `grilling`: inspect
+   discoverable facts first, then ask the whole currently unblocked design-tree
+   frontier in a numbered round with recommendations and trade-offs.
 3. Define the problem, users, desired outcomes, observable success, scope,
    non-goals, constraints, and unresolved decisions.
 4. Separate project commitments from implementation details.

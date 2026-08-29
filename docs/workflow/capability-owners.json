@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "capabilities": [
+    {
+      "id": "requirements-clarification",
+      "semanticOwner": "matt",
+      "protocol": "grilling",
+      "excludedProtocols": ["trellis-brainstorm"],
+      "guardedSurfaces": [
+        ".agents/skills/grilling/SKILL.md",
+        ".agents/skills/grilling/agents/openai.yaml",
+        ".agents/skills/create-prd/SKILL.md"
+      ]
+    },
+    {
+      "id": "external-request-intake-quality",
+      "semanticOwner": "matt",
+      "protocol": "triage",
+      "excludedProtocols": [],
+      "guardedSurfaces": [
+        ".agents/skills/tracker-workflow/SKILL.md",
+        "docs/workflow/upstream-semantic-traceability.md"
+      ]
+    },
+    {
+      "id": "external-tracker-mutation-safety",
+      "semanticOwner": "repository-integration",
+      "protocol": "tracker-workflow",
+      "excludedProtocols": [],
+      "guardedSurfaces": [
+        ".agents/skills/tracker-workflow/SKILL.md",
+        "docs/workflow/tracker-workflow.md"
+      ]
+    },
+    {
+      "id": "delivery-slice-right-sizing",
+      "semanticOwner": "repository-integration",
+      "protocol": "right-sizing",
+      "excludedProtocols": [],
+      "guardedSurfaces": [
+        ".agents/skills/tracker-workflow/SKILL.md",
+        ".agents/skills/scoping/SKILL.md",
+        ".agents/skills/continue/SKILL.md",
+        "docs/workflow/ticket-task-contract.md",
+        "scripts/workflow-state.py"
+      ]
+    },
+    {
+      "id": "tdd",
+      "semanticOwner": "matt",
+      "protocol": "tdd",
+      "excludedProtocols": [],
+      "guardedSurfaces": []
+    },
+    {
+      "id": "implementation-discipline",
+      "semanticOwner": "matt",
+      "protocol": "implement",
+      "excludedProtocols": ["trellis-implement"],
+      "guardedSurfaces": [".agents/skills/implement/SKILL.md"]
+    },
+    {
+      "id": "diagnosis",
+      "semanticOwner": "matt",
+      "protocol": "diagnose",
+      "excludedProtocols": [],
+      "guardedSurfaces": []
+    },
+    {
+      "id": "semantic-review",
+      "semanticOwner": "matt",
+      "protocol": "review",
+      "excludedProtocols": ["trellis-check"],
+      "guardedSurfaces": [".agents/skills/review/SKILL.md"]
+    },
+    {
+      "id": "accepted-task-lifecycle",
+      "semanticOwner": "trellis",
+      "protocol": "plan-execute-finish",
+      "excludedProtocols": [],
+      "guardedSurfaces": [
+        ".agents/skills/start/SKILL.md",
+        ".agents/skills/finish-work/SKILL.md"
+      ]
+    },
+    {
+      "id": "durable-work-memory",
+      "semanticOwner": "trellis",
+      "protocol": "accepted-task-workspace",
+      "excludedProtocols": [],
+      "guardedSurfaces": []
+    },
+    {
+      "id": "deterministic-acceptance-verification",
+      "semanticOwner": "repository-integration",
+      "protocol": "check",
+      "excludedProtocols": ["trellis-check", "matt-code-review"],
+      "guardedSurfaces": [".agents/skills/check/SKILL.md"]
+    },
+    {
+      "id": "submission-safety",
+      "semanticOwner": "repository-integration",
+      "protocol": "workflow-ci",
+      "excludedProtocols": [],
+      "guardedSurfaces": []
+    }
+  ]
+}
