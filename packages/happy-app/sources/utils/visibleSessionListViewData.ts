@@ -46,8 +46,8 @@ function applyPinnedSessionOrder(
                 sessions: item.sessions
                     .map((session, originalIndex) => ({ session, originalIndex }))
                     .sort((left, right) => {
-                        const permissionPriority = Number(right.session.state === 'permission_required')
-                            - Number(left.session.state === 'permission_required');
+                        const permissionPriority = Number(requiresUserAction(right.session))
+                            - Number(requiresUserAction(left.session));
                         const pinPriority = Number(pinned.has(right.session.id)) - Number(pinned.has(left.session.id));
                         return permissionPriority || pinPriority || left.originalIndex - right.originalIndex;
                     })
@@ -184,8 +184,12 @@ function removeEmptyFlatHeaders(data: readonly SessionListViewItem[]): SessionLi
     return result;
 }
 
+function requiresUserAction(session: SessionRowData): boolean {
+    return session.state === 'permission_required' || session.state === 'input_required';
+}
+
 function needsAttention(session: SessionRowData): boolean {
-    return !session.archived && (session.state === 'permission_required' || session.hasUnread);
+    return !session.archived && (requiresUserAction(session) || session.hasUnread);
 }
 
 function prioritizeAttentionSessions(data: readonly SessionListViewItem[]): SessionListViewItem[] {
@@ -222,8 +226,8 @@ function prioritizeAttentionSessions(data: readonly SessionListViewItem[]): Sess
     if (attentionSessions.length === 0) return [...data];
 
     attentionSessions.sort((left, right) => {
-        const permissionPriority = Number(right.state === 'permission_required')
-            - Number(left.state === 'permission_required');
+        const permissionPriority = Number(requiresUserAction(right))
+            - Number(requiresUserAction(left));
         return permissionPriority || activityTime(right) - activityTime(left);
     });
 

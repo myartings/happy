@@ -19,10 +19,9 @@ import { createMessageTargetRequest, getMessageTargetNativeId, getNextMessageTar
 import { SessionPromptHistoryNavigator } from './SessionPromptHistoryNavigator';
 import { resolveVisiblePromptId } from '@/utils/sessionPromptHistory';
 import { revealWebMessage } from '@/utils/webMessageReveal';
-import { isTauri } from '@/utils/isTauri';
-import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { resolveStudioConversationLayout } from '@/features/studio-conversation-layout/studioConversationLayout';
 import { useAgentTurnCopyResolvers } from '@/features/client-performance/agentTurnCopyResolver';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
 
 const SCROLL_THRESHOLD = 300;
 const DOCK_DETAILS_SHOW_OFFSET = 16;
@@ -126,16 +125,16 @@ const ChatListInternal = React.memo((props: {
 }) => {
     const { theme } = useUnistyles();
     const requestedVisualStyle = useLocalSetting('visualStyle');
-    const desktopVisualStyle = resolveDesktopVisualStyle({
-        isTauriRuntime: isTauri(),
-        requestedStyle: requestedVisualStyle,
-        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-    });
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
     const conversationLayout = resolveStudioConversationLayout({
-        isTauriRuntime: isTauri(),
-        visualStyle: desktopVisualStyle,
+        codexFirstEnabled: codexFirstContract.enabled,
+        isTauriRuntime: codexFirstContract.presentation.usesStudioPrimitives,
+        visualStyle: codexFirstContract.presentation.visualStyle,
     });
-    const autoExpandRunningGroups = desktopVisualStyle === 'studio';
+    const autoExpandRunningGroups = codexFirstContract.presentation.visualStyle === 'studio';
     const promptHistoryNavigatorEnabled = useLocalSetting('devPromptHistoryNavigatorEnabled');
     const tailSignalSourceId = `chat-list:${React.useId()}`;
     const flatListRef = React.useRef<FlatList>(null);
@@ -547,6 +546,7 @@ const ChatListInternal = React.memo((props: {
         }
         return (
             <MessageView
+                codexFirstEnabled={codexFirstContract.enabled}
                 message={item.message}
                 metadata={props.metadata}
                 sessionId={props.sessionId}
@@ -554,7 +554,7 @@ const ChatListInternal = React.memo((props: {
                 copyTextResolver={agentCopyResolversByMessageId.get(item.message.id)}
             />
         );
-    }, [agentCopyResolversByMessageId, props.metadata, props.sessionId, collapsedGroups, handleToggleGroup, highlightedMessageId, preserveToolGroupAnchor]);
+    }, [agentCopyResolversByMessageId, codexFirstContract.enabled, props.metadata, props.sessionId, collapsedGroups, handleToggleGroup, highlightedMessageId, preserveToolGroupAnchor]);
 
     // In inverted FlatList, offset 0 = latest messages (visual bottom).
     // Offset increases as user scrolls up to see older messages.

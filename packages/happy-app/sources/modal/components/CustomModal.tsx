@@ -27,17 +27,23 @@ export function CustomModal({ config, onClose }: CustomModalProps) {
 // Helper component to manage CommandPalette animation state
 function CommandPaletteWithAnimation({ config, onClose }: CustomModalProps) {
     const [isClosing, setIsClosing] = React.useState(false);
+    const restoreFocusTarget = config.props?.restoreFocusTarget as ({ focus?: () => void } | null | undefined);
     
     const handleClose = React.useCallback(() => {
         setIsClosing(true);
-        // Wait for animation to complete before unmounting
-        setTimeout(onClose, 200);
-    }, [onClose]);
+    }, []);
+
+    const handleClosed = React.useCallback(() => {
+        onClose();
+        if (restoreFocusTarget?.focus && typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(() => restoreFocusTarget.focus?.());
+        }
+    }, [onClose, restoreFocusTarget]);
     
     return (
         <CommandPaletteModal
             visible={!isClosing}
-            onClose={onClose}
+            onClose={handleClosed}
             studioIsDark={config.props?.studioIsDark}
             studioPresentation={config.props?.studioPresentation}
         >

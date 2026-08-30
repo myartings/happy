@@ -5,6 +5,8 @@ export interface Command {
     icon?: string;
     shortcut?: string;
     category?: string;
+    /** Indexed by search but omitted from the bounded no-query surface. */
+    searchOnly?: boolean;
     action: () => void | Promise<void>;
 }
 

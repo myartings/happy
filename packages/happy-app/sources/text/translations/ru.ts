@@ -1153,6 +1153,8 @@ export const ru: TranslationStructure = {
         notSupportedMessage: 'Этот агент не поддерживает вложения изображений. Изображения не были отправлены.',
     },
 
+    codexFirst: en.codexFirst,
+
     githubIssues: en.githubIssues,
 
     projectTodos: {

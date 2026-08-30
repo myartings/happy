@@ -31,7 +31,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import Constants from 'expo-constants';
-import { useHeaderHeight } from '@/utils/responsive';
+import { useHeaderHeight, useIsTablet } from '@/utils/responsive';
 import { t } from '@/text';
 import { useAllMachines, useLocalSetting, useSessions, useSetting, storage } from '@/sync/storage';
 import type { NewSessionAgentType } from '@/sync/persistence';
@@ -116,6 +116,9 @@ import {
     buildWorkspaceProjectSections,
     type ListWorkspaceProjectsResult,
 } from '@/utils/workspaceProjectDiscovery';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
+import { projectPanelWidth } from '@/features/studio-panel-resize/studioPanelResizePolicy';
+import { resolveCodexFirstHeaderOwnership } from '@/features/codex-first-shell/codexFirstHeaderOwnership';
 
 // Agent icon assets
 const agentIcons = {
@@ -872,6 +875,7 @@ function NewSessionScreen() {
     const { theme } = useUnistyles();
     const safeArea = useSafeAreaInsets();
     const headerHeight = useHeaderHeight();
+    const isTablet = useIsTablet();
     const router = useRouter();
     const { autoSubmit } = useLocalSearchParams<{ autoSubmit?: string }>();
     const navigation = useNavigation();
@@ -884,7 +888,27 @@ function NewSessionScreen() {
     const agentDefaultOverrides = useSetting('agentDefaultOverrides');
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
     const zenMode = useLocalSetting('zenMode');
+    const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
+    const headerOwnership = React.useMemo(() => resolveCodexFirstHeaderOwnership({
+        codexFirstEnabled: codexFirstContract.enabled,
+        legacyTabletLayout: isTablet,
+    }), [codexFirstContract.enabled, isTablet]);
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    const codexFirstLeftSidebarWidth = React.useMemo(() => {
+        if (!codexFirstContract.enabled || zenMode) return 0;
+        return projectPanelWidth({
+            side: 'left',
+            requestedWidth: persistedLeftPanelWidth,
+            windowWidth,
+            oppositeWidth: 0,
+            oppositeVisible: false,
+        });
+    }, [codexFirstContract.enabled, persistedLeftPanelWidth, windowWidth, zenMode]);
 
     // Persisted draft state (survives navigation).
     //
@@ -1840,17 +1864,23 @@ function NewSessionScreen() {
     }, [autoSubmit, canSend, handleSend]);
 
     const sidebarLayout = getNewSessionSidebarLayout({
+        codexFirstEnabled: codexFirstContract.enabled,
         platform: Platform.OS,
         isMac: isRunningOnMac(),
         fileDiffsSidebarEnabled,
         zenMode,
         windowWidth,
+        leftSidebarWidth: codexFirstLeftSidebarWidth,
     });
     const isNativeMobile = !isDesktop;
     React.useLayoutEffect(() => {
-        navigation.setOptions({ headerShown: !sidebarLayout.showSidebar && !isNativeMobile });
+        navigation.setOptions({
+            headerShown: headerOwnership.routeHeadersAllowed
+                && !sidebarLayout.showSidebar
+                && !isNativeMobile,
+        });
         return () => navigation.setOptions({ headerShown: true });
-    }, [isNativeMobile, navigation, sidebarLayout.showSidebar]);
+    }, [headerOwnership.routeHeadersAllowed, isNativeMobile, navigation, sidebarLayout.showSidebar]);
 
     // Handle Enter/Cmd+Enter to send on web
     const handleKeyPress = React.useCallback((event: KeyPressEvent): boolean => {
@@ -2295,6 +2325,7 @@ function NewSessionScreen() {
     );
 
     const composerPlaceholder = selectedAgent === 'codex' ? 'Ask Codex' : `Ask ${agent.label}`;
+    const desktopComposerPlaceholder = codexFirstContract.enabled ? t('codexFirst.newSessionComposerPlaceholder') : 'What would you like to work on?';
     const sendButtonIconColor = isNativeMobile
         ? theme.colors.text
         : theme.colors.button.primary.tint;
@@ -2359,7 +2390,7 @@ function NewSessionScreen() {
                 <PromptInput
                     ref={composerInputRef}
                     compact={isNativeMobile}
-                    placeholder={isNativeMobile ? composerPlaceholder : 'What would you like to work on?'}
+                    placeholder={isNativeMobile ? composerPlaceholder : desktopComposerPlaceholder}
                     onHardwareReturn={handleHardwareReturn}
                     onKeyPress={handleKeyPress}
                 />

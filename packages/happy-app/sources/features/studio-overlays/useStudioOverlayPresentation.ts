@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocalSetting } from '@/sync/storage';
-import { isTauri } from '@/utils/isTauri';
 import { useUnistyles } from 'react-native-unistyles';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
 
 import {
     resolveStudioOverlayDarkMode,
@@ -19,11 +19,15 @@ export function StudioOverlayPresentationProvider({
     isDark: boolean;
 }) {
     const requestedStyle = useLocalSetting('visualStyle');
+    const runtime = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedStyle),
+        [requestedStyle],
+    );
     const value = resolveStudioOverlayPresentation({
         isDark,
-        isTauriRuntime: isTauri(),
+        isTauriRuntime: runtime.presentation.usesStudioPrimitives,
         previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-        requestedStyle,
+        requestedStyle: runtime.presentation.visualStyle,
     });
 
     return React.createElement(
@@ -52,15 +56,19 @@ export function useStudioOverlayPresentation(isDarkOverride?: boolean) {
     const requestedStyle = useLocalSetting('visualStyle');
     const themePreference = useLocalSetting('themePreference');
     const { theme } = useUnistyles();
+    const runtime = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedStyle),
+        [requestedStyle],
+    );
 
     const resolvedPresentation = resolveStudioOverlayPresentation({
         isDark: isDarkOverride ?? resolveStudioOverlayDarkMode({
             runtimeThemeName: theme.dark ? 'dark' : 'light',
             themePreference,
         }),
-        isTauriRuntime: isTauri(),
+        isTauriRuntime: runtime.presentation.usesStudioPrimitives,
         previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-        requestedStyle,
+        requestedStyle: runtime.presentation.visualStyle,
     });
 
     return inheritedPresentation ?? resolvedPresentation;

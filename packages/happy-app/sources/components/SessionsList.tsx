@@ -50,6 +50,7 @@ import {
 } from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 import { buildSessionProjectDisplayGroups } from '@/utils/sessionDisplayOrder';
+import { resolveCodexFirstSessionNavigation } from '@/features/codex-first-shell/codexFirstSessionNavigation';
 
 type SessionListDisplayItem = SessionListViewItem | {
     type: 'machine-header';
@@ -338,6 +339,7 @@ export function SessionsList({
     bottomContentInset = 128,
     onScroll,
     searchQuery = '',
+    codexFirstEnabled = false,
     sidebarVisualStyle,
 }: {
     topContentInset?: number;
@@ -345,6 +347,7 @@ export function SessionsList({
     bottomContentInset?: number;
     onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     searchQuery?: string;
+    codexFirstEnabled?: boolean;
     sidebarVisualStyle?: VisualStyle;
 } = {}) {
     const styles = stylesheet;
@@ -378,10 +381,23 @@ export function SessionsList({
     // the previously- and newly-selected rows re-render, instead of the
     // whole visible window.
     const selectedSessionId = React.useMemo<string | undefined>(() => {
-        if (!isTablet) return undefined;
+        if (!isTablet && !codexFirstEnabled) return undefined;
         if (!pathname.startsWith('/session/')) return undefined;
         return pathname.split('/')[2];
-    }, [isTablet, pathname]);
+    }, [codexFirstEnabled, isTablet, pathname]);
+    const machineGroupCount = React.useMemo(() => {
+        if (!sourceData) return 0;
+        return buildSessionProjectDisplayGroups(
+            sourceData.filter((item) => item.type === 'project'),
+            machines,
+            t('status.unknown'),
+        ).length;
+    }, [machines, sourceData]);
+    const navigationPresentation = React.useMemo(() => resolveCodexFirstSessionNavigation({
+        codexFirstEnabled,
+        flatSessionList,
+        machineGroupCount,
+    }), [codexFirstEnabled, flatSessionList, machineGroupCount]);
 
     // Request review
     React.useEffect(() => {
@@ -462,7 +478,7 @@ export function SessionsList({
             ? [{ type: 'archive-toggle', hidden: hideArchivedSessions }]
             : [];
 
-        if (flatSessionList) {
+        if (navigationPresentation.mode === 'flat') {
             // A chat list should always float the thing the user just replied
             // to, so the canonical layout is ordered by recent activity.
             const flatRows = buildFlatSessionRows(groupedRows, { sortByActivity: true });
@@ -501,19 +517,23 @@ export function SessionsList({
             return [...groupedRows, ...archiveToggle, ...archivedRows];
         }
 
-        const hierarchy = machineGroups.flatMap<SessionListDisplayItem>((group) => [
-            {
-                type: 'machine-header',
-                machineId: group.machineId,
-                machineName: group.machineName,
-            },
-            ...group.projects,
-        ]);
+        const hierarchy = machineGroups.flatMap<SessionListDisplayItem>((group) => {
+            const items: SessionListDisplayItem[] = [];
+            if (navigationPresentation.showMachineHeaders) {
+                items.push({
+                    type: 'machine-header',
+                    machineId: group.machineId,
+                    machineName: group.machineName,
+                });
+            }
+            items.push(...group.projects);
+            return items;
+        });
         const legacyItems = groupedRows.filter((item) => (
             item.type !== 'project' && item.type !== 'projects-header'
         ));
         return [...hierarchy, ...legacyItems, ...archiveToggle, ...archivedRows];
-    }, [flatSessionList, hasArchivedSessions, hideArchivedSessions, machines, searchQuery, sourceData]);
+    }, [hasArchivedSessions, hideArchivedSessions, machines, navigationPresentation, searchQuery, sourceData]);
 
     // Early return if no data yet
     if (!data) {
@@ -698,6 +718,7 @@ export function SessionsList({
                         project={item.project}
                         selectedSessionId={selectedSessionId}
                         sessionRowStyle={sessionRowStyle}
+                        showMachineName={navigationPresentation.showProjectMachineName}
                     />
                 );
 
@@ -740,7 +761,7 @@ export function SessionsList({
                     />
                 );
         }
-    }, [selectedSessionId, data, flatSessionList, sessionRowStyle, sectionHeaderStyle, isStudioSectionHeader]);
+    }, [selectedSessionId, data, flatSessionList, sessionRowStyle, sectionHeaderStyle, isStudioSectionHeader, navigationPresentation.showProjectMachineName]);
 
 
     // Remove this section as we'll use FlatList for all items now

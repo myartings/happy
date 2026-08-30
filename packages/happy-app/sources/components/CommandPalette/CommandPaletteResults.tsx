@@ -5,6 +5,8 @@ import { CommandPaletteItem } from './CommandPaletteItem';
 import { Typography } from '@/constants/Typography';
 import { useStudioOverlayPresentation } from '@/features/studio-overlays/useStudioOverlayPresentation';
 import type { StudioOverlayPresentation } from '@/features/studio-overlays/studioOverlayPresentation';
+import { useReducedMotion } from '@/features/codex-first-shell/useReducedMotion';
+import { t } from '@/text';
 
 interface CommandPaletteResultsProps {
     categories: CommandCategory[];
@@ -23,6 +25,7 @@ export function CommandPaletteResults({
 }: CommandPaletteResultsProps) {
     const resolvedPresentation = useStudioOverlayPresentation();
     const overlayPresentation = presentation ?? resolvedPresentation;
+    const reduceMotion = useReducedMotion();
     const scrollViewRef = useRef<ScrollView>(null);
     const itemRefs = useRef<{ [key: number]: View | null }>({});
     
@@ -38,12 +41,12 @@ export function CommandPaletteResults({
             // For web, we need to use the DOM API
             if (typeof (selectedItem as any).scrollIntoView === 'function') {
                 (selectedItem as any).scrollIntoView({
-                    behavior: 'smooth',
+                    behavior: overlayPresentation.isStudio && reduceMotion ? 'auto' : 'smooth',
                     block: 'nearest',
                 });
             }
         }
-    }, [selectedIndex]);
+    }, [overlayPresentation.isStudio, reduceMotion, selectedIndex]);
 
     if (categories.length === 0 || allCommands.length === 0) {
         return (
@@ -64,7 +67,7 @@ export function CommandPaletteResults({
                         },
                     ]}
                 >
-                    No commands found
+                    {t('codexFirst.commandNoResults')}
                 </Text>
             </View>
         );
@@ -74,6 +77,7 @@ export function CommandPaletteResults({
 
     return (
         <ScrollView 
+            accessibilityRole="list"
             ref={scrollViewRef}
             style={[
                 styles.container,

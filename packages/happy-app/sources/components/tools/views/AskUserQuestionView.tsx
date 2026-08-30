@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { sessionAllow } from '@/sync/ops';
+import { useSession } from '@/sync/storage';
 import { ToolViewProps } from './_all';
 import {
     InlineQuestionForm,
@@ -19,6 +20,7 @@ interface AskUserQuestionInput {
 
 export const AskUserQuestionView = React.memo<ToolViewProps>(({ tool, sessionId }) => {
     const input = tool.input as AskUserQuestionInput | undefined;
+    const session = useSession(sessionId ?? '');
     const questions = React.useMemo<InlineQuestion[]>(() => (
         (input?.questions ?? []).map((question, index) => ({
             ...question,
@@ -56,7 +58,14 @@ export const AskUserQuestionView = React.memo<ToolViewProps>(({ tool, sessionId 
     return (
         <InlineQuestionForm
             questions={questions}
-            canInteract={tool.state === 'running'}
+            canInteract={tool.state === 'running' && tool.permission?.status === 'pending'}
+            connected={session?.presence === 'online'}
+            requestId={tool.permission?.id ?? tool.callId ?? tool.name}
+            requestStatus={tool.permission?.status === 'pending' && tool.state === 'running'
+                ? 'pending'
+                : tool.permission?.status === 'approved' || tool.state === 'completed'
+                    ? 'resolved'
+                    : 'expired'}
             submittedAnswers={tool.state === 'completed' ? {} : undefined}
             onSubmit={handleSubmit}
         />

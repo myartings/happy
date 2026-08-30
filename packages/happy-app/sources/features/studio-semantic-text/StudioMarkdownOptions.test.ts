@@ -136,11 +136,11 @@ describe('Studio Markdown options', () => {
         });
     });
 
-    it('keeps the existing non-Studio metrics, role, selection, and press callback path', () => {
+    it('keeps non-Studio metrics and selection while retaining the truthful button role and press path', () => {
         studioEnabled = false;
         const { options, onOptionPress } = renderOptions();
         const option = options[0];
-        expect(option.props.accessibilityRole).toBeUndefined();
+        expect(option.props.accessibilityRole).toBe('button');
         const styles = option.props.style({ pressed: false });
         expect(styles).not.toEqual(expect.arrayContaining([expect.objectContaining({ minHeight: 40 })]));
         expect(option.findByType('Text' as any).props.selectable).toBe(true);

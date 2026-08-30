@@ -168,7 +168,7 @@ describe('canRenderAgentFormInline', () => {
             id: 'choice',
             createdAt: 0,
             kind: 'form',
-            questions: [question()],
+            questions: [question({ allowCustom: false })],
         })).toBe(true);
 
         expect(canRenderAgentFormInline({
@@ -179,12 +179,25 @@ describe('canRenderAgentFormInline', () => {
         })).toBe(false);
     });
 
+    it('keeps choice forms with explicit or default custom answers on the modal fallback', () => {
+        for (const choiceQuestion of [question({ allowCustom: true }), question()]) {
+            const communication = {
+                id: 'custom-choice',
+                createdAt: 0,
+                kind: 'form' as const,
+                questions: [choiceQuestion],
+            };
+            expect(canRenderAgentFormInline(communication)).toBe(false);
+            expect(shouldUseAgentQuestionFallback(communication)).toBe(true);
+        }
+    });
+
     it('assigns choice forms to the transcript before their tool message arrives', () => {
         expect(shouldUseAgentQuestionFallback({
             id: 'choice',
             createdAt: 0,
             kind: 'form',
-            questions: [question()],
+            questions: [question({ allowCustom: false })],
         })).toBe(false);
 
         expect(shouldUseAgentQuestionFallback({

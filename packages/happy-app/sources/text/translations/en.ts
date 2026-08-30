@@ -1138,6 +1138,8 @@ export const en: TranslationStructure = {
         notSupportedMessage: 'This agent does not support image attachments. Images were not sent.',
     },
 
+    codexFirst: defaultEn.codexFirst,
+
     githubIssues: defaultEn.githubIssues,
 
     projectTodos: {

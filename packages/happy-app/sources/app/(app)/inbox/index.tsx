@@ -8,6 +8,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/constants/Typography';
 import { t } from '@/text';
 import { Header } from '@/components/navigation/Header';
+import { useLocalSetting } from '@/sync/storage';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
+import { resolveCodexFirstHeaderOwnership } from '@/features/codex-first-shell/codexFirstHeaderOwnership';
 
 const styles = StyleSheet.create((theme) => ({
     container: {
@@ -62,9 +65,18 @@ export default function InboxPage() {
     const { theme } = useUnistyles();
     const isTablet = useIsTablet();
     const router = useRouter();
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
+    const headerOwnership = React.useMemo(() => resolveCodexFirstHeaderOwnership({
+        codexFirstEnabled: codexFirstContract.enabled,
+        legacyTabletLayout: isTablet,
+    }), [codexFirstContract.enabled, isTablet]);
 
     // In phone mode, show header; in tablet mode, show gradient
-    if (!isTablet) {
+    if (headerOwnership.showPhoneInboxHeader) {
         // Phone mode: render with header
         return (
             <View style={styles.container}>

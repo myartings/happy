@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "happy-dev-main-light-2026-08-30",
+  "scope": {
+    "level": "screen",
+    "name": "Happy Desktop development client main window — light",
+    "screenId": "happy-dev-main-window",
+    "renderEnvironment": {
+      "platform": "macos",
+      "osVersion": "26.5.2",
+      "device": "MacBook Air",
+      "width": 1470,
+      "height": 873,
+      "scale": 2,
+      "appearance": "light"
+    }
+  },
+  "claims": [
+    {
+      "id": "persistent-left-region",
+      "category": "component",
+      "subject": "desktop application shell",
+      "observation": "The captured Happy shell has a persistent left navigation region and a separate main canvas under native macOS window chrome.",
+      "value": [
+        "sidebar",
+        "main-canvas"
+      ],
+      "unit": "zone-order",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": [
+        "happy-main-screenshot",
+        "happy-main-capture-metadata"
+      ]
+    },
+    {
+      "id": "sidebar-runtime-width",
+      "category": "spacing",
+      "subject": "left navigation region",
+      "observation": "The visible divider is approximately 295 pt from the left edge in this persisted runtime state.",
+      "value": 295,
+      "unit": "pt-estimate",
+      "status": "observed",
+      "confidence": "medium",
+      "evidenceRefs": [
+        "happy-main-screenshot",
+        "happy-main-capture-metadata"
+      ],
+      "limitations": [
+        "Happy persists a resizable panel width, so this runtime value is not necessarily the product default."
+      ]
+    },
+    {
+      "id": "sidebar-top-information-architecture",
+      "category": "component",
+      "subject": "sidebar leading controls",
+      "observation": "The visible sidebar begins with New Session and archive controls followed by Todo; it has no visible product header, global search, notification control, or Codex-like global destination family.",
+      "value": {
+        "visible": [
+          "new-session",
+          "archive",
+          "todo"
+        ],
+        "absent": [
+          "product-header",
+          "global-search",
+          "notifications",
+          "global-destinations"
+        ]
+      },
+      "unit": "visible-affordance-set",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": [
+        "happy-main-screenshot",
+        "sidebar-source"
+      ]
+    },
+    {
+      "id": "session-row-density",
+      "category": "density",
+      "subject": "sidebar session rows",
+      "observation": "Visible session rows commonly expose title, runtime state, branch or worktree, machine, and project metadata across multiple lines; the captured list is grouped primarily by activity period rather than the Codex project-first hierarchy.",
+      "value": {
+        "metadataLines": "2-3",
+        "visibleGrouping": "activity-period"
+      },
+      "unit": "observed-pattern",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": [
+        "happy-main-screenshot",
+        "sessions-list-source"
+      ]
+    },
+    {
+      "id": "main-canvas-state",
+      "category": "component",
+      "subject": "main content region",
+      "observation": "The main content region is visually blank in the captured state even though active sessions are visible in the sidebar.",
+      "value": "blank",
+      "unit": "captured-state",
+      "status": "observed",
+      "confidence": "high",
+      "evidenceRefs": [
+        "happy-main-screenshot"
+      ],
+      "limitations": [
+        "The capture does not establish whether no session route was selected, the route was still loading, or a runtime defect prevented content from rendering. It is not evidence about the normal conversation layout."
+      ]
+    },
+    {
+      "id": "conversation-runtime-parity",
+      "category": "component",
+      "subject": "conversation, tool, and composer runtime appearance",
+      "observation": "The captured state does not expose conversation, tool, approval, diff, or composer surfaces, so current runtime parity for those regions cannot be judged from this screenshot.",
+      "value": false,
+      "unit": "evidence-availability",
+      "status": "blocked",
+      "confidence": "high",
+      "evidenceRefs": [
+        "happy-main-screenshot",
+        "capture-attempt-log"
+      ],
+      "limitations": [
+        "After the app was restarted, macOS continued to report Screen Recording authorization but window-specific capture returned `could not create image from window`; Computer Use also returned `cgWindowNotFound` for this Tauri app."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "happy-main-screenshot",
+      "type": "screenshot",
+      "truthClass": "runtime",
+      "quality": "baseline",
+      "path": "/Users/myartings/Sync/tmp/codex-first-happy-client/baselines/happy-dev-main-2026-08-30.png",
+      "renderEnvironment": {
+        "platform": "macos",
+        "osVersion": "26.5.2",
+        "device": "MacBook Air",
+        "width": 1470,
+        "height": 873,
+        "scale": 2,
+        "appearance": "light"
+      },
+      "sha256": "0c27fa2be9e27656c31a32c13caf8913c6f0068ce2120240630e64cd3a55f7be",
+      "notes": "Lossless named-window capture. Private session labels remain outside Git."
+    },
+    {
+      "id": "happy-main-capture-metadata",
+      "type": "measurement",
+      "truthClass": "runtime",
+      "quality": "analysis",
+      "path": "/Users/myartings/Sync/tmp/codex-first-happy-client/baselines/happy-dev-main-2026-08-30.capture.json",
+      "notes": "CGWindow geometry, image dimensions, scale estimate, and checksum."
+    },
+    {
+      "id": "sidebar-source",
+      "type": "static-bundle",
+      "truthClass": "static",
+      "quality": "analysis",
+      "path": "/Users/myartings/workspace/happy/.dev/worktree/smooth-valley/packages/happy-app/sources/components/SidebarView.tsx",
+      "notes": "Current Happy source for leading controls, Session list host, and Settings footer."
+    },
+    {
+      "id": "sessions-list-source",
+      "type": "static-bundle",
+      "truthClass": "static",
+      "quality": "analysis",
+      "path": "/Users/myartings/workspace/happy/.dev/worktree/smooth-valley/packages/happy-app/sources/components/SessionsList.tsx",
+      "notes": "Current Happy source for flat and machine/project/session list shapes."
+    },
+    {
+      "id": "capture-attempt-log",
+      "type": "measurement",
+      "truthClass": "runtime",
+      "quality": "context-only",
+      "path": "/Users/myartings/Sync/tmp/codex-first-happy-client/baselines/happy-worktree-main-2026-08-30.capture.json",
+      "notes": "The first worktree-bundle frame was captured before the web content became usable; later named-window capture attempts failed and are treated as blocked evidence, not as a product baseline."
+    }
+  ],
+  "quality": {
+    "overall": "medium",
+    "limitations": [
+      "Only one light main-window shell state is usable as a baseline.",
+      "The main conversation region is absent from the captured state.",
+      "Persisted panel width means the measured sidebar is a runtime state, not a default-token claim.",
+      "Current post-restart window capture is temporarily unavailable despite authorized Screen Recording."
+    ],
+    "conflicts": [],
+    "missingEvidence": [
+      "populated Happy conversation",
+      "new-session state",
+      "tool and approval states",
+      "diff and side-panel states",
+      "dark appearance",
+      "hover, focus, and keyboard states",
+      "narrow and wide window states",
+      "motion and transition evidence"
+    ]
+  },
+  "notes": "Consumer baseline for the Codex-first Happy workflow. Product adoption decisions live in the workflow specification and deviation ledger."
+}

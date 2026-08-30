@@ -1,5 +1,177 @@
 # Happy Product Requirements
 
+## Codex-first Happy Desktop
+
+### Problem
+
+Happy Desktop already contains a substantial optional Studio presentation that
+borrows visual ideas from Codex and OTTY while preserving Happy's existing
+layout and interaction model. That product boundary no longer matches the
+desired outcome. The desktop client should feel like a customized Codex client,
+not like the existing Happy client wearing a Codex-inspired theme.
+
+The challenge is to make current Codex Desktop the default UI and interaction
+baseline without removing, hiding, or weakening the remote-agent, multi-backend,
+cross-device, session-management, and operational capabilities that distinguish
+Happy.
+
+### Users
+
+- People who want the familiar Windows Codex Desktop mental model and interaction
+  quality while retaining Happy's additional capabilities.
+- Existing Happy users who rely on its complete Session, Machine, Agent,
+  permission, tool, diff, side-panel, and remote-control workflows.
+- Users of non-Codex Agent backends who should receive the same coherent
+  Codex-first desktop shell rather than a provider-specific product surface.
+
+### Desired outcome
+
+Happy Desktop becomes a globally Codex-first, customized Codex client. Across
+all supported Agent backends, the currently installed native Windows Codex
+Desktop application is the owning reference for information architecture,
+layout, visual hierarchy, component behavior, interaction state, keyboard flow,
+and feedback. Happy's functionality remains complete and is integrated as a
+native-looking extension of that baseline.
+
+When exact Codex parity would remove, obscure, or degrade a Happy capability,
+the implementation uses the smallest necessary deviation and records the
+functional reason, the reference behavior, the chosen adaptation, and its
+verification evidence.
+
+### Product requirements
+
+1. The packaged desktop application uses one global Codex-first shell for all
+   Agent backends and Session types; the experience is not restricted to Codex
+   Sessions and is not presented as an optional visual theme.
+2. The currently installed Windows Codex Desktop application is the primary
+   runtime reference. Dated screenshots, recordings, measurements, and state
+   traces must identify the exact observed build and environment when possible.
+3. The Windows acceptance candidate covers the complete daily-use loop: project and
+   Session navigation, starting and resuming work, conversation history,
+   composer behavior, attachments and mentions, model/mode/permission controls,
+   streaming activity, tool execution and output, approvals, diffs, command
+   palette, contextual overlays, side panels, settings needed by that loop, and
+   representative empty, loading, active, success, failure, and disabled states.
+4. Codex is the default baseline for macro layout and information architecture,
+   not merely for colors or component styling.
+5. Codex is the default baseline for interaction ordering, state transitions,
+   keyboard behavior, focus handling, disclosure, dismissal, selection, resize,
+   and feedback timing wherever the platform permits faithful observation and
+   implementation.
+6. Happy's existing functionality remains discoverable, understandable, and
+   operable. A visual or interaction match is not acceptable if it removes,
+   hides, misrepresents, or materially degrades a Happy capability.
+7. Happy-only capabilities use the closest applicable Codex interaction and
+   component grammar before introducing a new pattern.
+8. Every intentional difference from observed Codex behavior is maintained in
+   a deviation ledger with its affected Happy capability, evidence, rationale,
+   minimal adaptation, and verification method.
+9. Visual acceptance uses matched Codex and Happy evidence across representative
+   window widths and all required daily-loop states. A single fixed-size
+   screenshot is not sufficient evidence for responsive behavior.
+10. The client preserves usable keyboard navigation, focus visibility, text
+    selection, reduced-motion behavior, readable contrast, and platform input
+    conventions while converging on the Codex reference.
+11. Development retains a bounded rollback path to the pre-convergence desktop
+    presentation until the complete Windows result passes final acceptance.
+    Recovery inputs and instructions must be proven; destructive rollback
+    execution still requires separate authorization.
+12. Intermediate milestones are verified automatically and recorded durably,
+    but do not require user visual approval. The user performs one visual and
+    product acceptance review after the complete Windows scope is delivered.
+13. A material conflict between Codex parity and Happy functionality must stop
+    autonomous implementation only when repository evidence cannot establish a
+    safe minimal adaptation.
+14. Packaged Windows is the owning acceptance platform for this delivery.
+    Packaged Linux and standalone Web, iOS, and Android retain the legacy Happy
+    presentation path. macOS native adaptation and acceptance follow later and
+    must not reuse Windows evidence as proof of native macOS behavior.
+15. Final comparison evidence captures current Windows Codex and packaged Happy
+    at the same logical window size, theme, and representative state. It covers
+    navigation, home, New Session, conversation, Composer, tools,
+    permissions/questions, search, command palette, panels, Settings,
+    responsive states, light/dark appearance, and keyboard/accessibility.
+16. A bounded real daily-use loop may use ordinary reversible in-client actions
+    through existing product behavior, preferably with isolated or disposable
+    local context. It must not change authentication, authorization or permission
+    payloads, synchronization/Server/Machine RPC/Session protocols, or data
+    migration behavior.
+
+### Observable success
+
+- A user completing the daily coding loop perceives the product as a customized
+  Codex client through its structure and behavior, without needing a Studio
+  toggle or provider-specific Session.
+- Matched evidence shows high-fidelity structure, hierarchy, components, and
+  interaction states for every required Windows daily-loop surface.
+- A feature inventory demonstrates that existing Happy capabilities remain
+  reachable and functional, and each necessary difference from Codex has an
+  accepted evidence-backed entry in the deviation ledger.
+- The same Codex-first shell works for Codex and non-Codex Agent backends while
+  preserving truthful provider-specific controls and runtime state.
+- Representative narrow, standard, and wide desktop widths remain usable and
+  preserve the observed responsive intent.
+- Focused tests, the Happy App typecheck and applicable test suite, packaged
+  Windows build, repository workflow checks, and a final installed-client smoke
+  test pass.
+- The final delivery includes an installable Windows client, reference/target
+  comparison evidence, the deviation ledger, verification receipts, known
+  limitations, and a rollback description for one user acceptance review.
+- A reproducible bounded daily-use loop proves that preserved Happy Machine,
+  multi-Agent, cross-device, Session, Tasks, Issues, Artifacts, Side Chat,
+  files, changes, permissions, settings, and remote-control entry points remain
+  reachable or are truthfully gated by their existing availability.
+
+### Scope
+
+- Packaged Happy Desktop on Windows as the complete current acceptance target.
+- Global desktop shell and complete daily-use coding loop across Agent backends.
+- Fresh Codex runtime evidence, Happy baseline evidence, a state-and-interaction
+  matrix, and traceable visual-system measurements.
+- Reuse or replacement of existing Studio modules according to the new
+  Codex-first contract rather than their former optional-theme boundary.
+- Feature-preserving adaptations for Happy-only capabilities.
+- Native Windows Codex/Happy matched evidence and safe installed-client
+  acceptance. macOS adaptation is a later, separate platform follow-up.
+
+### Non-goals
+
+- Removing Happy functionality to achieve superficial visual similarity.
+- Making packaged Linux, iOS, Android, or standalone Web Codex-first in this
+  Windows delivery.
+- Reproducing account, billing, cloud-administration, or other low-frequency
+  peripheral Codex surfaces outside the defined daily-use loop.
+- Copying private Session content, Codex/OpenAI proprietary assets, or reference
+  screenshots into tracked product source.
+- Changing Session, encryption, authentication, authorization, sync, or server
+  protocols solely to imitate a client-side reference.
+- Public distribution, signing, store submission, notarization, official-
+  baseline replacement, or macOS acceptance as part of this Windows delivery.
+
+### Constraints
+
+- Private reference evidence remains outside tracked source; committed records
+  contain only non-sensitive observations, hashes, measurements, and paths.
+- Product changes should remain in explicit feature modules with narrow host
+  seams so upstream integration remains reviewable.
+- Existing protocol, security, persistence, and cross-device behavior remain
+  authoritative unless a separate risk-gated contract explicitly changes them.
+- Autonomous execution may pause for missing authority, destructive external
+  actions, or an evidence-backed product conflict; ordinary intermediate visual
+  choices are resolved from the reference and verified without user review.
+
+### Accepted product decisions
+
+- Codex UI, information architecture, and interaction behavior are the default
+  product baseline; Happy functionality is the hard preservation constraint.
+- Codex-first applies globally across Happy Desktop Agent backends.
+- Windows is the complete current acceptance target; macOS adaptation follows
+  later and requires its own native evidence.
+- The Windows acceptance candidate covers the complete daily-use loop rather than every
+  peripheral Codex surface.
+- The Goal advances through intermediate milestones autonomously and requests
+  one user acceptance review only after the complete Windows result is ready.
+
 ## Workspace Project Discovery
 
 ### Problem

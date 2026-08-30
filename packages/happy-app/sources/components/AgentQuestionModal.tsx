@@ -23,12 +23,19 @@ import {
     type PendingAgentForm,
 } from '@/sync/agentCommunications';
 import { sessionAnswerQuestion, sessionCancelCommunication } from '@/sync/ops';
+import {
+    createCodexFirstDecisionSubmissionGate,
+    resolveCodexFirstDecisionPresentation,
+    submitCodexFirstDecisionOnce,
+} from '@/features/codex-first-shell/codexFirstDecisionLifecycle';
+import { useReducedMotion } from '@/features/codex-first-shell/useReducedMotion';
 
 interface AgentQuestionModalProps {
     pending: PendingAgentForm;
     sessionId: string;
     visible: boolean;
     onClose: () => void;
+    connected?: boolean;
 }
 
 /**
@@ -36,21 +43,25 @@ interface AgentQuestionModalProps {
  * offers its options as checkboxes and, when the agent allows it, a field for
  * an answer it did not think of.
  */
-export function AgentQuestionModal({ pending, sessionId, visible, onClose }: AgentQuestionModalProps) {
+export function AgentQuestionModal({ pending, sessionId, visible, onClose, connected = true }: AgentQuestionModalProps) {
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const safeArea = useSafeAreaInsets();
     const [drafts, setDrafts] = React.useState<Record<string, AgentQuestionDraft>>({});
     const [submitting, setSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+    const submissionGate = React.useRef(createCodexFirstDecisionSubmissionGate());
+    const reduceMotion = useReducedMotion();
 
-    // Start from a clean form every time the modal opens for a new request.
+    // A request owns one draft and one exact-once gate for its full lifetime.
+    // Closing and reopening the same request must not make a completed answer
+    // or cancellation actionable again while authoritative state catches up.
     React.useEffect(() => {
-        if (visible) {
-            setDrafts({});
-            setError(null);
-        }
-    }, [pending.id, visible]);
+        setDrafts({});
+        setError(null);
+        setSubmitting(false);
+        submissionGate.current = createCodexFirstDecisionSubmissionGate();
+    }, [pending.id]);
 
     const draftFor = React.useCallback(
         (questionId: string) => drafts[questionId] ?? { options: [], custom: '' },
@@ -72,47 +83,76 @@ export function AgentQuestionModal({ pending, sessionId, visible, onClose }: Age
     }, []);
 
     const ready = canSubmit(pending.questions, drafts);
+    const decisionPresentation = resolveCodexFirstDecisionPresentation({
+        connected,
+        requestStatus: 'pending',
+        submitted: submissionGate.current.completedAction !== null,
+        submitting,
+    });
 
     const handleSubmit = React.useCallback(async () => {
-        if (!ready || submitting) return;
+        if (!ready || !decisionPresentation.canInteract || submissionGate.current.inFlight || submissionGate.current.completedAction !== null) return;
         setSubmitting(true);
         setError(null);
         try {
-            await sessionAnswerQuestion(
-                sessionId,
-                pending.id,
-                buildAnswers(pending.questions, drafts),
-                pending.kind,
-            );
-            onClose();
+            const result = await submitCodexFirstDecisionOnce(submissionGate.current, {
+                action: 'answer',
+                requestId: pending.id,
+                submit: () => sessionAnswerQuestion(
+                    sessionId,
+                    pending.id,
+                    buildAnswers(pending.questions, drafts),
+                    pending.kind,
+                ),
+            });
+            if (result === 'submitted') onClose();
         } catch (submitError) {
             // Keep the form open with the answers intact so the user can retry.
             setError(submitError instanceof Error ? submitError.message : t('agentQuestion.submitFailed'));
         } finally {
             setSubmitting(false);
         }
-    }, [drafts, onClose, pending, ready, sessionId, submitting]);
+    }, [decisionPresentation.canInteract, drafts, onClose, pending, ready, sessionId]);
 
     const handleDismiss = React.useCallback(async () => {
         if (submitting) return;
+        if (!connected) {
+            onClose();
+            return;
+        }
+        if (submissionGate.current.inFlight || submissionGate.current.completedAction !== null) return;
+        setSubmitting(true);
         onClose();
         try {
-            await sessionCancelCommunication(sessionId, pending.id, pending.kind);
+            await submitCodexFirstDecisionOnce(submissionGate.current, {
+                action: 'cancel',
+                requestId: pending.id,
+                submit: () => sessionCancelCommunication(sessionId, pending.id, pending.kind),
+            });
         } catch {
             // The agent re-asks if the dismissal never lands; nothing to show here.
+        } finally {
+            setSubmitting(false);
         }
-    }, [onClose, pending.id, pending.kind, sessionId, submitting]);
+    }, [connected, onClose, pending.id, pending.kind, sessionId, submitting]);
 
     return (
         <Modal
             visible={visible}
-            animationType="slide"
+            animationType={reduceMotion ? 'none' : 'slide'}
             presentationStyle="fullScreen"
             onRequestClose={handleDismiss}
         >
             <View style={[styles.container, { paddingTop: safeArea.top }]}>
                 <View style={styles.header}>
-                    <Pressable onPress={handleDismiss} hitSlop={12} disabled={submitting}>
+                    <Pressable
+                        onPress={handleDismiss}
+                        hitSlop={12}
+                        disabled={submitting}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.cancel')}
+                        accessibilityState={{ busy: submitting, disabled: submitting }}
+                    >
                         <Text style={styles.headerAction}>{t('common.cancel')}</Text>
                     </Pressable>
                     <Text style={styles.headerTitle}>{t('agentQuestion.title')}</Text>
@@ -124,6 +164,9 @@ export function AgentQuestionModal({ pending, sessionId, visible, onClose }: Age
                     contentContainerStyle={[styles.scrollContent, { paddingBottom: safeArea.bottom + 96 }]}
                     keyboardShouldPersistTaps="handled"
                 >
+                    {decisionPresentation.state === 'disconnected' ? (
+                        <Text style={styles.lifecycleText}>{t('codexFirst.decisionDisconnected')}</Text>
+                    ) : null}
                     {pending.questions.map((question, index) => {
                         const draft = draftFor(question.id);
                         const multiSelect = question.multiSelect === true;
@@ -149,7 +192,11 @@ export function AgentQuestionModal({ pending, sessionId, visible, onClose }: Age
                                             key={option.label}
                                             style={[styles.option, selected && styles.optionSelected]}
                                             onPress={() => handleToggle(question.id, option.label, multiSelect)}
-                                            disabled={submitting}
+                                            disabled={!decisionPresentation.canInteract}
+                                            accessibilityRole={multiSelect ? 'checkbox' : 'radio'}
+                                            accessibilityLabel={option.label}
+                                            accessibilityHint={option.description || undefined}
+                                            accessibilityState={{ checked: selected, disabled: !decisionPresentation.canInteract }}
                                         >
                                             <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
                                                 {selected && (
@@ -178,7 +225,8 @@ export function AgentQuestionModal({ pending, sessionId, visible, onClose }: Age
                                             placeholder={t('agentQuestion.ownAnswerPlaceholder')}
                                             placeholderTextColor={theme.colors.textSecondary}
                                             multiline
-                                            editable={!submitting}
+                                            editable={decisionPresentation.canInteract}
+                                            accessibilityLabel={t('agentQuestion.ownAnswer')}
                                             // Focus the first question's field so the keyboard is
                                             // ready for a written answer without another tap.
                                             autoFocus={index === 0 && question.options.length === 0}
@@ -196,7 +244,13 @@ export function AgentQuestionModal({ pending, sessionId, visible, onClose }: Age
                     <Pressable
                         style={[styles.submit, (!ready || submitting) && styles.submitDisabled]}
                         onPress={handleSubmit}
-                        disabled={!ready || submitting}
+                        disabled={!ready || !decisionPresentation.canInteract}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('agentQuestion.submit')}
+                        accessibilityState={{
+                            busy: submitting,
+                            disabled: !ready || !decisionPresentation.canInteract,
+                        }}
                     >
                         {submitting ? (
                             <ActivityIndicator color="#fff" />
@@ -348,6 +402,11 @@ const stylesheet = StyleSheet.create((theme) => ({
         fontSize: 14,
         color: '#FF3B30',
         ...Typography.default(),
+    },
+    lifecycleText: {
+        fontSize: 13,
+        color: theme.colors.textSecondary,
+        textAlign: 'center',
     },
     footer: {
         paddingHorizontal: 16,

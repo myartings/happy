@@ -6,12 +6,13 @@ export function useCommandPalette(commands: Command[], onClose: () => void) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<TextInput>(null);
+    const activationCommitted = useRef(false);
 
     // Filter commands based on search query
     const filteredCategories = useMemo((): CommandCategory[] => {
         if (!searchQuery.trim()) {
             // Group commands by category
-            const grouped = commands.reduce((acc, command) => {
+            const grouped = commands.filter(command => !command.searchOnly).reduce((acc, command) => {
                 const category = command.category || 'General';
                 if (!acc[category]) {
                     acc[category] = [];
@@ -28,10 +29,10 @@ export function useCommandPalette(commands: Command[], onClose: () => void) {
         }
 
         // Fuzzy search
-        const query = searchQuery.toLowerCase();
+        const query = searchQuery.trim().toLocaleLowerCase();
         const filtered = commands.filter(command => {
-            const titleMatch = command.title.toLowerCase().includes(query);
-            const subtitleMatch = command.subtitle?.toLowerCase().includes(query);
+            const titleMatch = command.title.toLocaleLowerCase().includes(query);
+            const subtitleMatch = command.subtitle?.toLocaleLowerCase().includes(query);
             return titleMatch || subtitleMatch;
         });
 
@@ -62,6 +63,8 @@ export function useCommandPalette(commands: Command[], onClose: () => void) {
     }, [searchQuery]);
 
     const handleSelectCommand = useCallback((command: Command) => {
+        if (activationCommitted.current) return;
+        activationCommitted.current = true;
         command.action();
         onClose();
     }, [onClose]);

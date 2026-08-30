@@ -36,10 +36,12 @@ export const SideChatPanel = React.memo(function SideChatPanel({
     onCreateSideChat,
     canCreateSideChat,
     creatingSideChat,
+    codexFirstEnabled,
     quickPanelEnabled,
     quickPanelExpanded,
     quickPanelChangedFilesCount,
     quickPanelShowFileActions,
+    quickPanelShowSideChatAction,
     onCollapseQuickPanel,
     onOpenAllFiles,
     onOpenChanges,
@@ -52,10 +54,12 @@ export const SideChatPanel = React.memo(function SideChatPanel({
     onCreateSideChat: () => void;
     canCreateSideChat: boolean;
     creatingSideChat: boolean;
+    codexFirstEnabled?: boolean;
     quickPanelEnabled: boolean;
     quickPanelExpanded: boolean;
     quickPanelChangedFilesCount: number;
     quickPanelShowFileActions: boolean;
+    quickPanelShowSideChatAction: boolean;
     onCollapseQuickPanel: () => void;
     onOpenAllFiles: () => void;
     onOpenChanges: () => void;
@@ -106,17 +110,20 @@ export const SideChatPanel = React.memo(function SideChatPanel({
                 canCreate={canCreateSideChat}
                 creating={creatingSideChat}
                 quickPanelEnabled={quickPanelEnabled}
+                codexFirstEnabled={codexFirstEnabled}
                 onExpand={openFullScreen}
                 quickPanelControls={quickPanelEnabled ? (
                     <SideChatQuickPanelControls
                         activePanel="sideChat"
                         changedFilesCount={quickPanelChangedFilesCount}
+                        codexFirstEnabled={codexFirstEnabled}
                         creating={creatingSideChat}
                         expanded={quickPanelExpanded}
                         onOpenAllFiles={onOpenAllFiles}
                         onOpenChanges={onOpenChanges}
                         onToggle={onCollapseQuickPanel}
                         showFileActions={quickPanelShowFileActions}
+                        showSideChatAction={quickPanelShowSideChatAction}
                     />
                 ) : null}
             />
@@ -145,6 +152,7 @@ const SideChatTabs = React.memo(function SideChatTabs({
     canCreate,
     creating,
     quickPanelEnabled,
+    codexFirstEnabled,
     onExpand,
     quickPanelControls,
 }: {
@@ -156,12 +164,17 @@ const SideChatTabs = React.memo(function SideChatTabs({
     canCreate: boolean;
     creating: boolean;
     quickPanelEnabled: boolean;
+    codexFirstEnabled?: boolean;
     onExpand: () => void;
     quickPanelControls: React.ReactNode;
 }) {
     const { theme } = useUnistyles();
     return (
-        <View style={[styles.tabsRow, quickPanelEnabled && styles.quickTabsRow]}>
+        <View style={[
+            styles.tabsRow,
+            quickPanelEnabled && styles.quickTabsRow,
+            codexFirstEnabled && styles.codexFirstTabsRow,
+        ]}>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -401,6 +414,11 @@ const styles = StyleSheet.create((theme) => ({
         paddingBottom: 0,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: theme.colors.divider,
+    },
+    codexFirstTabsRow: {
+        minHeight: 46,
+        paddingLeft: 12,
+        paddingRight: 8,
     },
     tabsScrollView: {
         minWidth: 0,

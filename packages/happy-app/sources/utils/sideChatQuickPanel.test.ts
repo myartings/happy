@@ -11,6 +11,7 @@ const baseLayoutInput = {
     canUseFiles: true,
     canUseGithubIssues: true,
     canUseSideChat: true,
+    codexFirstEnabled: true,
     featureEnabled: true,
     fileDiffsSidebarEnabled: false,
     pickerOpen: false,
@@ -41,6 +42,24 @@ describe('getSideChatQuickPanelLayout', () => {
             ...baseLayoutInput,
             pickerOpen: true,
         }).showSidebar).toBe(true);
+    });
+
+    it('keeps Changes and Files reachable when Side Chat is unavailable', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            canUseSideChat: false,
+        })).toMatchObject({
+            showFileActions: true,
+            showQuickControls: true,
+        });
+    });
+
+    it('preserves the legacy requirement for Side Chat before showing quick controls', () => {
+        expect(getSideChatQuickPanelLayout({
+            ...baseLayoutInput,
+            canUseSideChat: false,
+            codexFirstEnabled: false,
+        }).showQuickControls).toBe(false);
     });
 
     it('opens the Issues workspace even when files and Side Session are unavailable', () => {

@@ -15,9 +15,15 @@ import {
 } from 'react-native';
 import { sessionAllow, sessionDeny, sessionSetAgentModes } from '@/sync/ops';
 import { useUnistyles } from 'react-native-unistyles';
-import { storage } from '@/sync/storage';
+import { useSession } from '@/sync/storage';
 import { t } from '@/text';
 import { useIsTablet } from '@/utils/responsive';
+import {
+    createCodexFirstDecisionSubmissionGate,
+    resolveCodexFirstDecisionPresentation,
+    submitCodexFirstDecisionOnce,
+} from '@/features/codex-first-shell/codexFirstDecisionLifecycle';
+import { useReducedMotion } from '@/features/codex-first-shell/useReducedMotion';
 
 interface PermissionActionButtonProps {
     label: string;
@@ -31,6 +37,7 @@ interface PermissionActionButtonProps {
     ringStyle: StyleProp<ViewStyle>;
     ringColor: string;
     numberOfLines?: number;
+    selected?: boolean;
 }
 
 const PermissionActionButton = React.memo(function PermissionActionButton({
@@ -45,13 +52,21 @@ const PermissionActionButton = React.memo(function PermissionActionButton({
     ringStyle,
     ringColor,
     numberOfLines = 1,
+    selected = false,
 }: PermissionActionButtonProps) {
     const pulse = useRef(new Animated.Value(0)).current;
+    const reduceMotion = useReducedMotion();
 
     useEffect(() => {
         if (!loading) {
             pulse.stopAnimation();
             pulse.setValue(0);
+            return;
+        }
+
+        if (reduceMotion) {
+            pulse.stopAnimation();
+            pulse.setValue(1);
             return;
         }
 
@@ -77,7 +92,7 @@ const PermissionActionButton = React.memo(function PermissionActionButton({
         return () => {
             animation.stop();
         };
-    }, [loading, pulse]);
+    }, [loading, pulse, reduceMotion]);
 
     const ringOpacity = pulse.interpolate({
         inputRange: [0, 1],
@@ -90,6 +105,9 @@ const PermissionActionButton = React.memo(function PermissionActionButton({
             onPress={onPress}
             disabled={disabled}
             activeOpacity={activeOpacity}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ busy: loading, disabled, selected }}
         >
             <View style={contentStyle}>
                 <Text style={textStyle} numberOfLines={numberOfLines} ellipsizeMode="tail">
@@ -131,27 +149,65 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     const { theme } = useUnistyles();
     const isTablet = useIsTablet();
     const { height: windowHeight } = useWindowDimensions();
+    const session = useSession(sessionId);
     const [loadingButton, setLoadingButton] = useState<'allow' | 'deny' | 'abort' | null>(null);
     const [loadingAllEdits, setLoadingAllEdits] = useState(false);
     const [loadingBypass, setLoadingBypass] = useState(false);
     const [loadingForSession, setLoadingForSession] = useState(false);
+    const [submittedAction, setSubmittedAction] = useState<string | null>(null);
+    const submissionGate = useRef(createCodexFirstDecisionSubmissionGate());
+
+    useEffect(() => {
+        submissionGate.current = createCodexFirstDecisionSubmissionGate();
+        setSubmittedAction(null);
+    }, [permission.id]);
+
+    const isConnected = session?.presence === 'online';
+    const requestStatus = permission.status === 'pending'
+        ? 'pending'
+        : permission.status === 'canceled'
+            ? 'expired'
+            : 'resolved';
+    const anyLoading = loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession;
+    const decisionPresentation = resolveCodexFirstDecisionPresentation({
+        connected: isConnected,
+        requestStatus,
+        submitted: submittedAction !== null,
+        submitting: anyLoading,
+    });
+
+    const canStartSubmission = () => decisionPresentation.canInteract
+        && !submissionGate.current.inFlight
+        && submissionGate.current.completedAction === null;
+
+    const submitOnce = async (action: string, submit: () => Promise<void>) => {
+        const result = await submitCodexFirstDecisionOnce(submissionGate.current, {
+            action,
+            requestId: permission.id,
+            submit,
+        });
+        if (result === 'submitted') setSubmittedAction(action);
+        return result;
+    };
     
     // Check if this is a Codex session - check both metadata.flavor and tool name prefix
     const isCodex = metadata?.flavor === 'codex' || toolName.startsWith('Codex');
 
     const handleApprove = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession) return;
+        if (!canStartSubmission()) return;
 
         setLoadingButton('allow');
         try {
-            await sessionAllow(sessionId, permission.id);
-            // Plain plan approval switches the CLI's live SDK query to
-            // 'default' — mirror that here, otherwise the next message's meta
-            // still carries the stale 'plan' and pushes the SDK back into
-            // plan mode, undoing the approval.
-            if (toolName === 'exit_plan_mode' || toolName === 'ExitPlanMode') {
-                sessionSetAgentModes(sessionId, { permissionMode: 'default' });
-            }
+            await submitOnce('allow', async () => {
+                await sessionAllow(sessionId, permission.id);
+                // Plain plan approval switches the CLI's live SDK query to
+                // 'default' — mirror that here, otherwise the next message's meta
+                // still carries the stale 'plan' and pushes the SDK back into
+                // plan mode, undoing the approval.
+                if (toolName === 'exit_plan_mode' || toolName === 'ExitPlanMode') {
+                    sessionSetAgentModes(sessionId, { permissionMode: 'default' });
+                }
+            });
         } catch (error) {
             console.error('Failed to approve permission:', error);
         } finally {
@@ -160,13 +216,15 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     };
 
     const handleApproveAllEdits = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession) return;
+        if (!canStartSubmission()) return;
 
         setLoadingAllEdits(true);
         try {
-            await sessionAllow(sessionId, permission.id, 'acceptEdits');
-            // Update the session permission mode to 'acceptEdits' for future permissions
-            sessionSetAgentModes(sessionId, { permissionMode: 'acceptEdits' });
+            await submitOnce('allow-all-edits', async () => {
+                await sessionAllow(sessionId, permission.id, 'acceptEdits');
+                // Update the session permission mode to 'acceptEdits' for future permissions
+                sessionSetAgentModes(sessionId, { permissionMode: 'acceptEdits' });
+            });
         } catch (error) {
             console.error('Failed to approve all edits:', error);
         } finally {
@@ -175,12 +233,14 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     };
 
     const handleBypassPermissions = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession) return;
+        if (!canStartSubmission()) return;
 
         setLoadingBypass(true);
         try {
-            await sessionAllow(sessionId, permission.id, 'bypassPermissions');
-            sessionSetAgentModes(sessionId, { permissionMode: 'bypassPermissions' });
+            await submitOnce('bypass-permissions', async () => {
+                await sessionAllow(sessionId, permission.id, 'bypassPermissions');
+                sessionSetAgentModes(sessionId, { permissionMode: 'bypassPermissions' });
+            });
         } catch (error) {
             console.error('Failed to bypass permissions:', error);
         } finally {
@@ -189,7 +249,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     };
 
     const handleApproveForSession = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession || !toolName) return;
+        if (!canStartSubmission() || !toolName) return;
 
         setLoadingForSession(true);
         try {
@@ -200,7 +260,9 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                 toolIdentifier = `Bash(${command})`;
             }
             
-            await sessionAllow(sessionId, permission.id, undefined, [toolIdentifier]);
+            await submitOnce('allow-for-session', () => (
+                sessionAllow(sessionId, permission.id, undefined, [toolIdentifier])
+            ));
         } catch (error) {
             console.error('Failed to approve for session:', error);
         } finally {
@@ -209,11 +271,11 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     };
 
     const handleDeny = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession) return;
+        if (!canStartSubmission()) return;
 
         setLoadingButton('deny');
         try {
-            await sessionDeny(sessionId, permission.id);
+            await submitOnce('deny', () => sessionDeny(sessionId, permission.id));
         } catch (error) {
             console.error('Failed to deny permission:', error);
         } finally {
@@ -223,11 +285,13 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     
     // Codex-specific handlers
     const handleCodexApprove = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingForSession) return;
+        if (!canStartSubmission()) return;
         
         setLoadingButton('allow');
         try {
-            await sessionAllow(sessionId, permission.id, undefined, undefined, 'approved');
+            await submitOnce('codex-approve', () => (
+                sessionAllow(sessionId, permission.id, undefined, undefined, 'approved')
+            ));
         } catch (error) {
             console.error('Failed to approve permission:', error);
         } finally {
@@ -236,11 +300,13 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     };
     
     const handleCodexApproveForSession = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingForSession) return;
+        if (!canStartSubmission()) return;
         
         setLoadingForSession(true);
         try {
-            await sessionAllow(sessionId, permission.id, undefined, undefined, 'approved_for_session');
+            await submitOnce('codex-approve-for-session', () => (
+                sessionAllow(sessionId, permission.id, undefined, undefined, 'approved_for_session')
+            ));
         } catch (error) {
             console.error('Failed to approve for session:', error);
         } finally {
@@ -249,11 +315,13 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     };
     
     const handleCodexAbort = async () => {
-        if (permission.status !== 'pending' || loadingButton !== null || loadingForSession) return;
+        if (!canStartSubmission()) return;
         
         setLoadingButton('abort');
         try {
-            await sessionDeny(sessionId, permission.id, undefined, undefined, 'abort');
+            await submitOnce('codex-abort', () => (
+                sessionDeny(sessionId, permission.id, undefined, undefined, 'abort')
+            ));
         } catch (error) {
             console.error('Failed to abort permission:', error);
         } finally {
@@ -282,15 +350,15 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     };
 
     // Detect which button was used based on mode (for Claude) or decision (for Codex)
-    const isApprovedViaAllow = isApproved && permission.mode !== 'acceptEdits' && permission.mode !== 'bypassPermissions' && !isToolAllowed(toolName, toolInput, permission.allowedTools);
-    const isApprovedViaAllEdits = isApproved && permission.mode === 'acceptEdits';
-    const isApprovedViaBypass = isApproved && permission.mode === 'bypassPermissions';
-    const isApprovedForSession = isApproved && isToolAllowed(toolName, toolInput, permission.allowedTools);
+    const isApprovedViaAllow = submittedAction === 'allow' || (isApproved && permission.mode !== 'acceptEdits' && permission.mode !== 'bypassPermissions' && !isToolAllowed(toolName, toolInput, permission.allowedTools));
+    const isApprovedViaAllEdits = submittedAction === 'allow-all-edits' || (isApproved && permission.mode === 'acceptEdits');
+    const isApprovedViaBypass = submittedAction === 'bypass-permissions' || (isApproved && permission.mode === 'bypassPermissions');
+    const isApprovedForSession = submittedAction === 'allow-for-session' || (isApproved && isToolAllowed(toolName, toolInput, permission.allowedTools));
     
     // Codex-specific status detection with fallback
-    const isCodexApproved = isCodex && isApproved && (permission.decision === 'approved' || !permission.decision);
-    const isCodexApprovedForSession = isCodex && isApproved && permission.decision === 'approved_for_session';
-    const isCodexAborted = isCodex && isDenied && permission.decision === 'abort';
+    const isCodexApproved = submittedAction === 'codex-approve' || (isCodex && isApproved && (permission.decision === 'approved' || !permission.decision));
+    const isCodexApprovedForSession = submittedAction === 'codex-approve-for-session' || (isCodex && isApproved && permission.decision === 'approved_for_session');
+    const isCodexAborted = submittedAction === 'codex-abort' || (isCodex && isDenied && permission.decision === 'abort');
 
     const styles = StyleSheet.create({
         container: {
@@ -388,6 +456,14 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
             color: theme.colors.text,
             fontWeight: '500',
         },
+        lifecycleText: {
+            color: theme.colors.textSecondary,
+            fontSize: 12,
+            lineHeight: 17,
+            paddingHorizontal: 4,
+            paddingBottom: 6,
+            textAlign: isTablet ? 'right' : 'left',
+        },
     });
 
     const renderPermissionButton = ({
@@ -398,6 +474,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
         buttonStyle,
         textStyle,
         numberOfLines = 1,
+        selected = false,
     }: {
         label: string;
         loading: boolean;
@@ -406,6 +483,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
         buttonStyle: StyleProp<ViewStyle>;
         textStyle: StyleProp<TextStyle>;
         numberOfLines?: number;
+        selected?: boolean;
     }) => (
         <PermissionActionButton
             label={label}
@@ -422,13 +500,23 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
             ringStyle={styles.buttonRing}
             ringColor={theme.colors.text}
             numberOfLines={numberOfLines}
+            selected={selected}
         />
     );
+
+    const lifecycleMessage = decisionPresentation.state === 'disconnected'
+        ? t('codexFirst.decisionDisconnected')
+        : decisionPresentation.state === 'expired'
+            ? t('codexFirst.decisionExpired')
+            : decisionPresentation.state === 'submitting'
+                ? t('codexFirst.decisionSubmitting')
+                : null;
 
     // Render Codex buttons if this is a Codex session
     if (isCodex) {
         return (
             <View style={styles.container}>
+                {lifecycleMessage ? <Text style={styles.lifecycleText}>{lifecycleMessage}</Text> : null}
                 <ScrollView
                     style={styles.optionsScroll}
                     contentContainerStyle={styles.buttonContainer}
@@ -439,7 +527,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                         label: t('common.yes'),
                         loading: loadingButton === 'allow',
                         onPress: handleCodexApprove,
-                        disabled: !isPending || loadingButton !== null || loadingForSession,
+                        disabled: !decisionPresentation.canInteract || anyLoading,
                         buttonStyle: [
                             styles.button,
                             isPending && styles.buttonAllow,
@@ -451,13 +539,14 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                             isPending && styles.buttonTextAllow,
                             isCodexApproved && styles.buttonTextSelected
                         ],
+                        selected: isCodexApproved,
                     })}
 
                     {renderPermissionButton({
                         label: t('codex.permissions.yesForSession'),
                         loading: loadingForSession,
                         onPress: handleCodexApproveForSession,
-                        disabled: !isPending || loadingButton !== null || loadingForSession,
+                        disabled: !decisionPresentation.canInteract || anyLoading,
                         buttonStyle: [
                             styles.button,
                             isPending && styles.buttonForSession,
@@ -470,13 +559,14 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                             isCodexApprovedForSession && styles.buttonTextSelected
                         ],
                         numberOfLines: 2,
+                        selected: isCodexApprovedForSession,
                     })}
 
                     {renderPermissionButton({
                         label: t('codex.permissions.stopAndExplain'),
                         loading: loadingButton === 'abort',
                         onPress: handleCodexAbort,
-                        disabled: !isPending || loadingButton !== null || loadingForSession,
+                        disabled: !decisionPresentation.canInteract || anyLoading,
                         buttonStyle: [
                             styles.button,
                             isPending && styles.buttonDeny,
@@ -489,6 +579,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                             isCodexAborted && styles.buttonTextSelected
                         ],
                         numberOfLines: 2,
+                        selected: isCodexAborted,
                     })}
                 </ScrollView>
             </View>
@@ -498,6 +589,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
     // Render Claude buttons (existing behavior)
     return (
         <View style={styles.container}>
+            {lifecycleMessage ? <Text style={styles.lifecycleText}>{lifecycleMessage}</Text> : null}
             <ScrollView
                 style={styles.optionsScroll}
                 contentContainerStyle={styles.buttonContainer}
@@ -508,7 +600,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                     label: t('common.yes'),
                     loading: loadingButton === 'allow',
                     onPress: handleApprove,
-                    disabled: !isPending || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession,
+                    disabled: !decisionPresentation.canInteract || anyLoading,
                     buttonStyle: [
                         styles.button,
                         isPending && styles.buttonAllow,
@@ -520,6 +612,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                         isPending && styles.buttonTextAllow,
                         isApprovedViaAllow && styles.buttonTextSelected
                     ],
+                    selected: isApprovedViaAllow,
                 })}
 
                 {/* Allow All Edits button - only show for Edit and MultiEdit tools */}
@@ -528,7 +621,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                         label: t('claude.permissions.yesAllowAllEdits'),
                         loading: loadingAllEdits,
                         onPress: handleApproveAllEdits,
-                        disabled: !isPending || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession,
+                        disabled: !decisionPresentation.canInteract || anyLoading,
                         buttonStyle: [
                             styles.button,
                             isPending && styles.buttonAllowAll,
@@ -541,6 +634,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                             isApprovedViaAllEdits && styles.buttonTextSelected
                         ],
                         numberOfLines: 2,
+                        selected: isApprovedViaAllEdits,
                     })
                 )}
 
@@ -550,7 +644,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                         label: t('claude.permissions.yesAllowEverything'),
                         loading: loadingBypass,
                         onPress: handleBypassPermissions,
-                        disabled: !isPending || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession,
+                        disabled: !decisionPresentation.canInteract || anyLoading,
                         buttonStyle: [
                             styles.button,
                             isPending && styles.buttonForSession,
@@ -563,6 +657,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                             isApprovedViaBypass && styles.buttonTextSelected
                         ],
                         numberOfLines: 2,
+                        selected: isApprovedViaBypass,
                     })
                 )}
 
@@ -572,7 +667,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                         label: t('claude.permissions.yesForTool'),
                         loading: loadingForSession,
                         onPress: handleApproveForSession,
-                        disabled: !isPending || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession,
+                        disabled: !decisionPresentation.canInteract || anyLoading,
                         buttonStyle: [
                             styles.button,
                             isPending && styles.buttonForSession,
@@ -585,6 +680,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                             isApprovedForSession && styles.buttonTextSelected
                         ],
                         numberOfLines: 2,
+                        selected: isApprovedForSession,
                     })
                 )}
 
@@ -592,7 +688,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                     label: t('claude.permissions.noTellClaude'),
                     loading: loadingButton === 'deny',
                     onPress: handleDeny,
-                    disabled: !isPending || loadingButton !== null || loadingAllEdits || loadingBypass || loadingForSession,
+                    disabled: !decisionPresentation.canInteract || anyLoading,
                     buttonStyle: [
                         styles.button,
                         isPending && styles.buttonDeny,
@@ -605,6 +701,7 @@ export const PermissionFooter: React.FC<PermissionFooterProps> = ({ permission, 
                         isDenied && styles.buttonTextSelected
                     ],
                     numberOfLines: 2,
+                    selected: isDenied || submittedAction === 'deny',
                 })}
             </ScrollView>
         </View>

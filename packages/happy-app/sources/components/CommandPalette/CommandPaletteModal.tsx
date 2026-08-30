@@ -16,6 +16,8 @@ import {
     useStudioOverlayPresentation,
 } from '@/features/studio-overlays/useStudioOverlayPresentation';
 import type { StudioOverlayPresentation } from '@/features/studio-overlays/studioOverlayPresentation';
+import { useReducedMotion } from '@/features/codex-first-shell/useReducedMotion';
+import { resolveCodexFirstMotionDuration } from '@/features/codex-first-shell/codexFirstDesktopHardening';
 
 interface CommandPaletteModalProps {
     visible: boolean;
@@ -35,17 +37,66 @@ export function CommandPaletteModal({
     const resolvedPresentation = useStudioOverlayPresentation(studioIsDark);
     const overlayPresentation = studioPresentation ?? resolvedPresentation;
     const { width: viewportWidth } = useWindowDimensions();
+    const reduceMotion = useReducedMotion();
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
     const [isModalVisible, setIsModalVisible] = React.useState(true);
+    const closingRef = useRef(false);
+    const openingDuration = resolveCodexFirstMotionDuration({
+        codexFirstEnabled: overlayPresentation.isStudio,
+        duration: 200,
+        reduceMotion: !!reduceMotion,
+    });
+    const closingDuration = resolveCodexFirstMotionDuration({
+        codexFirstEnabled: overlayPresentation.isStudio,
+        duration: 150,
+        reduceMotion: !!reduceMotion,
+    });
+
+    const finishClose = React.useCallback(() => {
+        setIsModalVisible(false);
+        onClose?.();
+    }, [onClose]);
+
+    const runCloseAnimation = React.useCallback(() => {
+        if (closingRef.current) return;
+        closingRef.current = true;
+
+        if (closingDuration === 0) {
+            fadeAnim.setValue(0);
+            scaleAnim.setValue(0.95);
+            finishClose();
+            return;
+        }
+
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: closingDuration,
+                useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+                toValue: 0.95,
+                duration: closingDuration,
+                useNativeDriver: true,
+            }),
+        ]).start(finishClose);
+    }, [closingDuration, fadeAnim, finishClose, scaleAnim]);
 
     useEffect(() => {
         if (visible) {
+            closingRef.current = false;
+            setIsModalVisible(true);
+            if (openingDuration === 0) {
+                fadeAnim.setValue(1);
+                scaleAnim.setValue(1);
+                return;
+            }
             // Opening animation
             Animated.parallel([
                 Animated.timing(fadeAnim, {
                     toValue: 1,
-                    duration: 200,
+                    duration: openingDuration,
                     useNativeDriver: true
                 }),
                 Animated.spring(scaleAnim, {
@@ -55,32 +106,14 @@ export function CommandPaletteModal({
                     useNativeDriver: true
                 })
             ]).start();
+            return;
         }
-    }, [visible, fadeAnim, scaleAnim]);
+        runCloseAnimation();
+    }, [fadeAnim, openingDuration, runCloseAnimation, scaleAnim, visible]);
 
     const handleClose = React.useCallback(() => {
-        // Closing animation
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 150,
-                useNativeDriver: true
-            }),
-            Animated.timing(scaleAnim, {
-                toValue: 0.95,
-                duration: 150,
-                useNativeDriver: true
-            })
-        ]).start(() => {
-            setIsModalVisible(false);
-            // Small delay to ensure modal is hidden before calling onClose
-            setTimeout(() => {
-                if (onClose) {
-                    onClose();
-                }
-            }, 50);
-        });
-    }, [fadeAnim, scaleAnim, onClose]);
+        runCloseAnimation();
+    }, [runCloseAnimation]);
 
     const handleBackdropPress = () => {
         handleClose();
@@ -120,6 +153,8 @@ export function CommandPaletteModal({
             </TouchableWithoutFeedback>
 
             <Animated.View
+                accessibilityViewIsModal
+                role="dialog"
                 style={[
                     styles.content,
                     {

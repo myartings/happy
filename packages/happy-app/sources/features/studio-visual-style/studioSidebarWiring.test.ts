@@ -12,7 +12,7 @@ describe('Studio sidebar visual-style wiring', () => {
         const sessionsList = readSource('../../components/SessionsList.tsx');
 
         expect(sidebarView).toContain('sidebarVisualStyle={sidebarFrame?.visualStyle}');
-        expect(mainView).toContain('<SessionsList sidebarVisualStyle={sidebarVisualStyle} />');
+        expect(mainView).toContain('sidebarVisualStyle={sidebarVisualStyle}');
         expect(sessionsList).toContain('resolveSidebarSessionRowStyle({');
         expect(sessionsList).toContain('sidebarVisualStyle,');
     });

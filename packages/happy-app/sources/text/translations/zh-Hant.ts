@@ -1123,6 +1123,8 @@ export const zhHant: TranslationStructure = {
         notSupportedMessage: '此代理不支援圖片附件。圖片未傳送。',
     },
 
+    codexFirst: en.codexFirst,
+
     githubIssues: en.githubIssues,
 
     projectTodos: {

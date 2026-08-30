@@ -10,11 +10,13 @@ export type StudioConversationLayout = {
 };
 
 type ResolveStudioConversationLayoutInput = {
+    codexFirstEnabled?: boolean;
     isTauriRuntime: boolean;
     visualStyle: VisualStyle;
 };
 
 export function resolveStudioConversationLayout({
+    codexFirstEnabled = false,
     isTauriRuntime,
     visualStyle,
 }: ResolveStudioConversationLayoutInput): StudioConversationLayout {
@@ -26,6 +28,20 @@ export function resolveStudioConversationLayout({
             messageViewportMaxWidth: null,
             messageTopGap: null,
             messageBottomGap: null,
+        };
+    }
+
+    if (codexFirstEnabled) {
+        // The reference's visible content aligns at roughly 750pt. Message
+        // rows keep their existing 16pt safety inset, hence the 782pt list
+        // viewport while the Composer itself resolves to 750pt.
+        return {
+            visualStyle: 'studio',
+            headerHeight: 46,
+            headerHorizontalPadding: 16,
+            messageViewportMaxWidth: 782,
+            messageTopGap: 24,
+            messageBottomGap: 14,
         };
     }
 

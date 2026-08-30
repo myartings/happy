@@ -311,6 +311,26 @@ describe('buildVisibleSessionListViewData', () => {
         expect(flatSessionIds(result)).toEqual(['ordinary-flat']);
     });
 
+    it('promotes Agent input requests alongside permission requests', () => {
+        const result = buildVisibleSessionListViewData([
+            {
+                type: 'active-sessions',
+                sessions: [
+                    row('input', { active: true, state: 'input_required' }),
+                    row('ordinary', { active: true }),
+                ],
+            },
+        ], {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+        })!;
+
+        expect(result[0]).toMatchObject({
+            type: 'attention-sessions',
+            sessions: [{ id: 'input' }],
+        });
+    });
+
     it('does not promote archived sessions with unread results', () => {
         const archived = row('archived-unread', { archived: true, hasUnread: true });
         const result = buildVisibleSessionListViewData([
