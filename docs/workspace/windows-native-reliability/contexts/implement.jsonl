@@ -1,0 +1,18 @@
+{"path":"AGENTS.md","reason":"Repository lifecycle, branch, and protected operation rules"}
+{"path":"devtools/AGENTS.md","reason":"Windows devtools scope and non-destructive command boundary"}
+{"path":".ai/project.json","reason":"Protected/generated paths and deterministic project commands"}
+{"path":"docs/PRD.md","reason":"Accepted Windows native reliability outcome and exclusions"}
+{"path":"docs/specs/windows-native-reliability.md","reason":"Observable feature and safety contract"}
+{"path":"docs/tasks/windows-native-reliability-tasks.md","reason":"Dependency-aware implementation slices and allowed files"}
+{"path":"devtools/happyctl.ps1","reason":"Windows command behavior under contract"}
+{"path":"devtools/tests/","reason":"Existing smoke conventions and new Windows-native suite"}
+{"path":"packages/happy-wire/package.json","reason":"Reproduced Windows package-script failure"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"Recorded Windows-only sandbox assertion failure seam"}
+{"path":"packages/happy-cli/src/claude/claudeLocal.test.ts","reason":"Reproduced Claude sandbox host-platform assertion"}
+{"path":"packages/happy-cli/src/claude/utils/path.test.ts","reason":"Reproduced host-native project-path expectations"}
+{"path":"packages/happy-cli/src/codex/utils/imageInput.test.ts","reason":"Reproduced host-native image-cache path expectations"}
+{"path":"packages/happy-cli/scripts/ripgrep_launcher.cjs","reason":"Reproduced Windows packaged-ripgrep discovery/runtime failure"}
+{"path":"packages/happy-cli/scripts/__tests__/ripgrep_launcher.test.ts","reason":"Windows packaged rg.exe regression coverage"}
+{"path":"packages/happy-cli/src/modules/ripgrep/index.test.ts","reason":"Original native ripgrep fixture RED and complete-suite coverage"}
+{"path":"packages/happy-cli/scripts/claude_version_utils.cjs","reason":"Reproduced cross-platform Claude path-classification failure"}
+{"path":"packages/happy-cli/scripts/claude_version_utils.test.ts","reason":"Native and explicit foreign-platform path regression coverage"}

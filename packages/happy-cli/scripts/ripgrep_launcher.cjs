@@ -31,7 +31,7 @@ function findSystemRipgrep() {
     // Platform-specific commands to find ripgrep
     const commands = [
         // Windows: Use where command
-        process.platform === 'win32' && { cmd: 'where', args: ['rg'] },
+        process.platform === 'win32' && { cmd: 'where.exe', args: ['rg'] },
         // Unix-like: Use which command
         process.platform !== 'win32' && { cmd: 'which', args: ['rg'] }
     ].filter(Boolean);
@@ -40,11 +40,12 @@ function findSystemRipgrep() {
         try {
             const result = execFileSync(cmd, args, {
                 encoding: 'utf8',
-                stdio: 'ignore'
+                stdio: ['ignore', 'pipe', 'ignore'],
+                windowsHide: true,
             });
 
             if (result) {
-                const paths = result.trim().split('\n').filter(Boolean);
+                const paths = result.trim().split(/\r?\n/).filter(Boolean);
                 if (paths.length > 0) {
                     return paths[0].trim();
                 }
@@ -119,7 +120,7 @@ function loadRipgrepNative() {
     const runtime = detectRuntime();
     const toolsDir = path.join(__dirname, '..', 'tools', 'unpacked');
     const nativePath = path.join(toolsDir, 'ripgrep.node');
-    const binaryPath = path.join(toolsDir, 'rg');
+    const binaryPath = path.join(toolsDir, process.platform === 'win32' ? 'rg.exe' : 'rg');
 
     // Try Node.js native addon first (preserves existing behavior)
     if (runtime === 'node') {
@@ -135,13 +136,13 @@ function loadRipgrepNative() {
     // Bun or Node.js fallback: Try system ripgrep
     const systemRipgrep = findSystemRipgrep();
     if (systemRipgrep) {
-        console.info(`Using system ripgrep: ${systemRipgrep}`);
+        console.error(`Using system ripgrep: ${systemRipgrep}`);
         return createRipgrepWrapper(systemRipgrep);
     }
 
     // Local binary fallback
     if (fs.existsSync(binaryPath)) {
-        console.info('Using packaged ripgrep binary');
+        console.error('Using packaged ripgrep binary');
         return createRipgrepWrapper(binaryPath);
     }
 
