@@ -1,0 +1,10 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/session-transport-reliability/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/session-transport-reliability.md","reason":"Acceptance criteria A1-A9."}
+{"path":"docs/workspace/session-transport-reliability/validation.md","reason":"Exact command, rounds, duration, findings, limitations, and rollback evidence."}
+{"path":"packages/happy-cli/src/api/apiSession.test.ts","reason":"Receive/send/reconnect fault evidence."}
+{"path":"packages/happy-cli/src/codex/resumeExistingThread.test.ts","reason":"Codex thread resume evidence."}
+{"path":"packages/happy-cli/src/daemon","reason":"Daemon restart evidence."}
+{"path":"packages/happy-server/sources/app/api/socket","reason":"Dead RPC and reconnect-grace evidence."}
+{"path":"packages/happy-server/sources/app/api/routes/v3SessionRoutes.test.ts","reason":"Server message idempotency evidence."}
+{"path":"packages/happy-wire/src","reason":"Shared contract validation."}

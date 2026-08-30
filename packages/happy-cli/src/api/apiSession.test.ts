@@ -128,6 +128,20 @@ function createNewMessageUpdate(seq: number, encryptedContent: string): Update {
     };
 }
 
+function acknowledgePostedMessages(body: { messages: Array<{ localId: string }> }, firstSeq = 1) {
+    return {
+        data: {
+            messages: body.messages.map((message, index) => ({
+                id: `msg-${firstSeq + index}`,
+                seq: firstSeq + index,
+                localId: message.localId,
+                createdAt: firstSeq + index,
+                updatedAt: firstSeq + index,
+            })),
+        },
+    };
+}
+
 async function waitForCheck(check: () => void, timeoutMs = 2000) {
     const startedAt = Date.now();
     let lastError: unknown;
@@ -214,19 +228,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
     it('queues codex message to v3 outbox, sends once, and drains outbox', async () => {
         const client = new ApiSessionClient('fake-token', session);
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [
-                    {
-                        id: 'msg-1',
-                        seq: 1,
-                        localId: 'local-1',
-                        createdAt: 1,
-                        updatedAt: 1
-                    }
-                ]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         client.sendCodexMessage({ type: 'delta', text: 'hello' });
 
@@ -271,14 +273,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
             .mockImplementationOnce(() => new Promise<PostResponse>((resolve) => {
                 resolveFirstPost = resolve;
             }))
-            .mockResolvedValueOnce({
-                data: {
-                    messages: [
-                        { id: 'msg-2', seq: 2, localId: 'local-2', createdAt: 2, updatedAt: 2 },
-                        { id: 'msg-3', seq: 3, localId: 'local-3', createdAt: 3, updatedAt: 3 }
-                    ]
-                }
-            });
+            .mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body, 2));
 
         client.sendCodexMessage({ type: 'first' });
         await waitForCheck(() => {
@@ -291,7 +286,13 @@ describe('ApiSessionClient v3 messages API migration', () => {
         resolveFirstPost({
             data: {
                 messages: [
-                    { id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }
+                    {
+                        id: 'msg-1',
+                        seq: 1,
+                        localId: mockAxiosPost.mock.calls[0][1].messages[0].localId,
+                        createdAt: 1,
+                        updatedAt: 1,
+                    }
                 ]
             }
         });
@@ -306,18 +307,75 @@ describe('ApiSessionClient v3 messages API migration', () => {
         expect((client as any).lastReceivedSeq).toBe(0);
     });
 
+    it.each(Array.from({ length: 10 }, (_, index) => index + 1))(
+        'preserves enqueue order when an offline backlog spans multiple batches (stress round %i)',
+        async () => {
+            const client = new ApiSessionClient('fake-token', session);
+
+            type PostResponse = {
+                data: {
+                    messages: Array<{ id: string; seq: number; localId: string; createdAt: number; updatedAt: number }>;
+                };
+            };
+            let resolveFirstPost!: (value: PostResponse) => void;
+            mockAxiosPost.mockImplementationOnce(() => new Promise<PostResponse>((resolve) => {
+                resolveFirstPost = resolve;
+            }));
+            mockAxiosPost.mockImplementation(async (_url, body: { messages: Array<{ localId: string }> }) => ({
+                data: {
+                    messages: body.messages.map((message, index) => ({
+                        id: `persisted-${message.localId}`,
+                        seq: index + 1,
+                        localId: message.localId,
+                        createdAt: index + 1,
+                        updatedAt: index + 1,
+                    })),
+                },
+            }));
+
+            client.sendCodexMessage({ index: 0 });
+            await waitForCheck(() => expect(mockAxiosPost).toHaveBeenCalledTimes(1));
+
+            for (let index = 1; index <= 101; index += 1) {
+                client.sendCodexMessage({ index });
+            }
+
+            resolveFirstPost({
+                data: {
+                    messages: [{
+                        id: 'persisted-0',
+                        seq: 1,
+                        localId: mockAxiosPost.mock.calls[0][1].messages[0].localId,
+                        createdAt: 1,
+                        updatedAt: 1,
+                    }],
+                },
+            });
+
+            await waitForCheck(() => expect(mockAxiosPost).toHaveBeenCalledTimes(4));
+
+            const sentIndexes = mockAxiosPost.mock.calls.flatMap((call) => (
+                call[1].messages.map((message: { content: string }) => {
+                    const decrypted = decrypt(
+                        session.encryptionKey,
+                        session.encryptionVariant,
+                        decodeBase64(message.content),
+                    ) as { content: { data: { index: number } } };
+                    return decrypted.content.data.index;
+                })
+            ));
+
+            expect(sentIndexes).toEqual(Array.from({ length: 102 }, (_, index) => index));
+            expect((client as any).pendingOutbox).toHaveLength(0);
+        },
+    );
+
     it('retries failed POST and succeeds without dropping queued messages', async () => {
         const client = new ApiSessionClient('fake-token', session);
 
         mockAxiosPost
             .mockRejectedValueOnce(new Error('network down'))
-            .mockResolvedValueOnce({
-                data: {
-                    messages: [
-                        { id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }
-                    ]
-                }
-            });
+            .mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         client.sendCodexMessage({ type: 'retry-me' });
 
@@ -334,11 +392,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
     it('sends claude user text as modern session envelope', async () => {
         const client = new ApiSessionClient('fake-token', session);
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         client.sendClaudeSessionMessage({
             type: 'user',
@@ -396,10 +450,10 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
             return {
                 data: {
-                    messages: payload.messages.map((_message: unknown, index: number) => ({
+                    messages: payload.messages.map((message: { localId: string }, index: number) => ({
                         id: `msg-${index + 1}`,
                         seq: index + 1,
-                        localId: `local-${index + 1}`,
+                        localId: message.localId,
                         createdAt: 1,
                         updatedAt: 1,
                     })),
@@ -506,10 +560,10 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
             return {
                 data: {
-                    messages: payload.messages.map((_message: unknown, index: number) => ({
+                    messages: payload.messages.map((message: { localId: string }, index: number) => ({
                         id: `msg-${index + 1}`,
                         seq: index + 1,
-                        localId: `local-${index + 1}`,
+                        localId: message.localId,
                         createdAt: 1,
                         updatedAt: 1,
                     })),
@@ -545,11 +599,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
     it('sends session protocol messages through enqueueMessage with session envelope', async () => {
         const client = new ApiSessionClient('fake-token', session);
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         const envelope = {
             id: 'env-1',
@@ -582,11 +632,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
     it('sends only modern payload for user session envelopes', async () => {
         const client = new ApiSessionClient('fake-token', session);
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         client.sendSessionProtocolMessage({
             id: 'env-user-1',
@@ -620,11 +666,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
     it('sends modern session envelope for user text', async () => {
         const client = new ApiSessionClient('fake-token', session);
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         client.sendSessionProtocolMessage({
             id: 'env-user-flag-on-1',
@@ -661,11 +703,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
     it('sends ACP agent messages through enqueueMessage', async () => {
         const client = new ApiSessionClient('fake-token', session);
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         client.sendAgentMessage('codex', {
             type: 'message',
@@ -701,11 +739,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
 
     it('sends session events through enqueueMessage', async () => {
         const client = new ApiSessionClient('fake-token', session);
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-1', seq: 1, localId: 'local-1', createdAt: 1, updatedAt: 1 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body));
 
         client.sendSessionEvent({ type: 'ready' }, 'event-1');
 
@@ -1036,6 +1070,51 @@ describe('ApiSessionClient v3 messages API migration', () => {
         expect(mockAxiosGet.mock.calls[0][1].params.after_seq).toBe(1);
     });
 
+    it('recovers out-of-order live delivery from the persisted log in sequence order', async () => {
+        const client = new ApiSessionClient('fake-token', session);
+        const delivered: string[] = [];
+        client.onUserMessage((message) => delivered.push(message.content.text));
+
+        const first = { role: 'user', content: { type: 'text', text: 'first' } };
+        const second = { role: 'user', content: { type: 'text', text: 'second' } };
+        mockAxiosGet.mockResolvedValueOnce({
+            data: {
+                messages: [
+                    { id: 'msg-1', seq: 1, content: { t: 'encrypted', c: encryptContent(session, first) }, localId: null, createdAt: 1, updatedAt: 1 },
+                    { id: 'msg-2', seq: 2, content: { t: 'encrypted', c: encryptContent(session, second) }, localId: null, createdAt: 2, updatedAt: 2 },
+                ],
+                hasMore: false,
+            },
+        });
+
+        emitSocketEvent('update', createNewMessageUpdate(2, encryptContent(session, second)));
+
+        await waitForCheck(() => expect(delivered).toEqual(['first', 'second']));
+        expect((client as any).lastReceivedSeq).toBe(2);
+    });
+
+    it('does not advance past an undecryptable fetched sequence', async () => {
+        const client = new ApiSessionClient('fake-token', session);
+        const onUserMessage = vi.fn();
+        client.onUserMessage(onUserMessage);
+        const second = { role: 'user', content: { type: 'text', text: 'must wait' } };
+
+        mockAxiosGet.mockResolvedValueOnce({
+            data: {
+                messages: [
+                    { id: 'msg-1', seq: 1, content: { t: 'encrypted', c: 'not-valid-ciphertext' }, localId: null, createdAt: 1, updatedAt: 1 },
+                    { id: 'msg-2', seq: 2, content: { t: 'encrypted', c: encryptContent(session, second) }, localId: null, createdAt: 2, updatedAt: 2 },
+                ],
+                hasMore: false,
+            },
+        });
+
+        await (client as any).fetchMessages();
+
+        expect(onUserMessage).not.toHaveBeenCalled();
+        expect((client as any).lastReceivedSeq).toBe(0);
+    });
+
     it('applies first live new-message update directly when lastReceivedSeq is 0', async () => {
         const client = new ApiSessionClient('fake-token', session);
         const onUserMessage = vi.fn();
@@ -1098,11 +1177,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
         const client = new ApiSessionClient('fake-token', session);
         (client as any).lastReceivedSeq = 10;
 
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-11', seq: 11, localId: 'l11', createdAt: 11, updatedAt: 11 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body, 11));
 
         client.sendCodexMessage({ type: 'newer' });
         await waitForCheck(() => {
@@ -1119,11 +1194,7 @@ describe('ApiSessionClient v3 messages API migration', () => {
         const onUserMessage = vi.fn();
         client.onUserMessage(onUserMessage);
 
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {
-                messages: [{ id: 'msg-2', seq: 2, localId: 'l2', createdAt: 2, updatedAt: 2 }]
-            }
-        });
+        mockAxiosPost.mockImplementationOnce(async (_url, body) => acknowledgePostedMessages(body, 2));
 
         client.sendSessionEvent({ type: 'ready' }, 'event-1');
         await waitForCheck(() => {
@@ -1155,19 +1226,30 @@ describe('ApiSessionClient v3 messages API migration', () => {
         expect(onUserMessage).toHaveBeenCalledWith(prompt);
     });
 
-    it('flushOutbox tolerates missing response.data.messages and keeps the cursor unchanged', async () => {
+    it('retains and retries an outbox batch when a successful response omits its acknowledgement', async () => {
         const client = new ApiSessionClient('fake-token', session);
         (client as any).lastReceivedSeq = 7;
 
-        mockAxiosPost.mockResolvedValueOnce({
-            data: {}
-        });
+        mockAxiosPost
+            .mockResolvedValueOnce({ data: {} })
+            .mockImplementationOnce(async (_url, body: { messages: Array<{ localId: string }> }) => ({
+                data: {
+                    messages: body.messages.map((message) => ({
+                        id: 'persisted',
+                        seq: 8,
+                        localId: message.localId,
+                        createdAt: 8,
+                        updatedAt: 8,
+                    })),
+                },
+            }));
 
         client.sendCodexMessage({ type: 'no-messages-field' });
         await waitForCheck(() => {
-            expect(mockAxiosPost).toHaveBeenCalledTimes(1);
+            expect(mockAxiosPost).toHaveBeenCalledTimes(2);
         });
 
+        expect(mockAxiosPost.mock.calls[1][1]).toEqual(mockAxiosPost.mock.calls[0][1]);
         expect((client as any).lastReceivedSeq).toBe(7);
         expect((client as any).pendingOutbox).toHaveLength(0);
     });
@@ -1188,6 +1270,114 @@ describe('ApiSessionClient v3 messages API migration', () => {
             expect(mockAxiosGet).toHaveBeenCalledTimes(1);
         });
         expect(mockAxiosGet.mock.calls[0][1].params.after_seq).toBe(0);
+    });
+
+    it('delivers messages persisted while the socket was disconnected after reconnect', async () => {
+        const client = new ApiSessionClient('fake-token', session);
+        const onUserMessage = vi.fn();
+        client.onUserMessage(onUserMessage);
+        const missed = {
+            role: 'user',
+            content: { type: 'text', text: 'persisted while offline' },
+        };
+
+        emitSocketEvent('disconnect', 'transport close');
+        mockAxiosGet.mockResolvedValueOnce({
+            data: {
+                messages: [{
+                    id: 'msg-offline-1',
+                    seq: 1,
+                    content: { t: 'encrypted', c: encryptContent(session, missed) },
+                    localId: null,
+                    createdAt: 1,
+                    updatedAt: 1,
+                }],
+                hasMore: false,
+            },
+        });
+
+        emitSocketEvent('connect');
+
+        await waitForCheck(() => expect(onUserMessage).toHaveBeenCalledWith(missed));
+        expect(onUserMessage).toHaveBeenCalledTimes(1);
+        expect((client as any).lastReceivedSeq).toBe(1);
+        await client.close();
+    });
+
+    it.each(Array.from({ length: 10 }, (_, index) => index + 1))(
+        'delivers a sequence once when a live update wins a concurrent catch-up fetch (stress round %i)',
+        async () => {
+            const client = new ApiSessionClient('fake-token', session);
+            const onUserMessage = vi.fn();
+            client.onUserMessage(onUserMessage);
+
+            const message = {
+                role: 'user',
+                content: { type: 'text', text: 'race winner' },
+            };
+            let resolveFetch!: (value: unknown) => void;
+            mockAxiosGet.mockImplementationOnce(() => new Promise((resolve) => {
+                resolveFetch = resolve;
+            }));
+
+            emitSocketEvent('connect');
+            await waitForCheck(() => expect(mockAxiosGet).toHaveBeenCalledTimes(1));
+
+            emitSocketEvent('update', createNewMessageUpdate(1, encryptContent(session, message)));
+            expect(onUserMessage).toHaveBeenCalledTimes(1);
+
+            resolveFetch({
+                data: {
+                    messages: [{
+                        id: 'msg-1',
+                        seq: 1,
+                        content: { t: 'encrypted', c: encryptContent(session, message) },
+                        localId: null,
+                        createdAt: 1,
+                        updatedAt: 1,
+                    }],
+                    hasMore: false,
+                },
+            });
+
+            await waitForCheck(() => expect((client as any).lastReceivedSeq).toBe(1));
+            expect(onUserMessage).toHaveBeenCalledTimes(1);
+        },
+    );
+
+    it('continues catch-up after live delivery overtakes an entirely stale page', async () => {
+        const client = new ApiSessionClient('fake-token', session);
+        const delivered: string[] = [];
+        client.onUserMessage((message) => delivered.push(message.content.text));
+
+        const first = { role: 'user', content: { type: 'text', text: 'one' } };
+        const second = { role: 'user', content: { type: 'text', text: 'two' } };
+        const third = { role: 'user', content: { type: 'text', text: 'three' } };
+        let resolveFirstPage!: (value: unknown) => void;
+        mockAxiosGet
+            .mockImplementationOnce(() => new Promise((resolve) => { resolveFirstPage = resolve; }))
+            .mockResolvedValueOnce({
+                data: {
+                    messages: [{ id: 'msg-3', seq: 3, content: { t: 'encrypted', c: encryptContent(session, third) }, localId: null, createdAt: 3, updatedAt: 3 }],
+                    hasMore: false,
+                },
+            });
+
+        emitSocketEvent('connect');
+        await waitForCheck(() => expect(mockAxiosGet).toHaveBeenCalledTimes(1));
+        emitSocketEvent('update', createNewMessageUpdate(1, encryptContent(session, first)));
+        emitSocketEvent('update', createNewMessageUpdate(2, encryptContent(session, second)));
+
+        resolveFirstPage({
+            data: {
+                messages: [{ id: 'msg-1', seq: 1, content: { t: 'encrypted', c: encryptContent(session, first) }, localId: null, createdAt: 1, updatedAt: 1 }],
+                hasMore: true,
+            },
+        });
+
+        await waitForCheck(() => expect(mockAxiosGet).toHaveBeenCalledTimes(2));
+        expect(mockAxiosGet.mock.calls[1][1].params.after_seq).toBe(2);
+        await waitForCheck(() => expect(delivered).toEqual(['one', 'two', 'three']));
     });
 
     it('stops send and receive sync loops on close', async () => {
