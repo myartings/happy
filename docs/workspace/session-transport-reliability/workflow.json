@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "slug": "session-transport-reliability",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Track Codex 0.150.1 integration baseline that emits no first-turn response before resume",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/PRD.md and docs/specs/session-transport-reliability.md define observable A1-A9",
+      "updated": "2026-08-29T19:06:15+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/session-transport-reliability/decisions.md records D1-D4",
+      "updated": "2026-08-29T19:06:15+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: high-risk matrix; accepted PRD/spec/tasks; D1-D4 resolved; risk controls recorded; local-only isolated worktree; TDD seams in CLI/server/wire tests; forbidden UI boundary",
+      "updated": "2026-08-29T19:06:52+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/specs/session-transport-reliability.md risk assessment: cleared-with-controls",
+      "updated": "2026-08-29T19:06:15+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Review-found missing-ack loss fixed RED/GREEN; post-review CLI unit 92/873 and typecheck pass",
+      "updated": "2026-08-29T19:40:00+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-29T19:40:16+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review fixed stale-page and missing-ack findings; post-review CLI 873 tests/typecheck/check pass; no blocking findings remain",
+      "updated": "2026-08-29T19:40:36+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "A1-A9 verified; review/check passed; rollback/limitations/session summary complete",
+      "updated": "2026-08-29T19:41:46+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T19:04:23+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T19:06:15+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md and docs/specs/session-transport-reliability.md define observable A1-A9"
+    },
+    {
+      "at": "2026-08-29T19:06:15+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/session-transport-reliability/decisions.md records D1-D4"
+    },
+    {
+      "at": "2026-08-29T19:06:15+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/specs/session-transport-reliability.md risk assessment: cleared-with-controls"
+    },
+    {
+      "at": "2026-08-29T19:06:52+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: high-risk matrix; accepted PRD/spec/tasks; D1-D4 resolved; risk controls recorded; local-only isolated worktree; TDD seams in CLI/server/wire tests; forbidden UI boundary"
+    },
+    {
+      "at": "2026-08-29T19:06:52+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Run T1 focused baseline and build deterministic failure matrix"
+    },
+    {
+      "at": "2026-08-29T19:29:41+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Two evidenced fixes plus deterministic coverage: CLI 51 focused/853 full unit; server 112; wire 27; daemon 12 pass; builds/typechecks pass; validation.md"
+    },
+    {
+      "at": "2026-08-29T19:29:41+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run requirement-by-requirement check against A1-A9 and exact validation evidence"
+    },
+    {
+      "at": "2026-08-29T19:30:06+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Fix verification-found stale-page/live-cursor pagination gap with RED/GREEN"
+    },
+    {
+      "at": "2026-08-29T19:33:54+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Verification-found stale-page gap fixed RED/GREEN; final CLI unit 92 files/873 tests; validation.md complete"
+    },
+    {
+      "at": "2026-08-29T19:33:54+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Record formal A1-A9 check and route to independent review"
+    },
+    {
+      "at": "2026-08-29T19:34:09+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-29T19:40:00+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review-found missing-ack loss fixed RED/GREEN; post-review CLI unit 92/873 and typecheck pass"
+    },
+    {
+      "at": "2026-08-29T19:40:16+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-29T19:40:36+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review fixed stale-page and missing-ack findings; post-review CLI 873 tests/typecheck/check pass; no blocking findings remain"
+    },
+    {
+      "at": "2026-08-29T19:40:36+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Run finish-work audit and archive without commit"
+    },
+    {
+      "at": "2026-08-29T19:41:46+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "A1-A9 verified; review/check passed; rollback/limitations/session summary complete"
+    },
+    {
+      "at": "2026-08-29T19:41:46+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Hardened non-UI session transport with FIFO acknowledged outbox, race-safe catch-up, deterministic fault tests, daemon restart and bounded RPC evidence; commit: pending; follow-up: Track Codex 0.150.1 integration baseline that emits no first-turn response before resume"
+    }
+  ],
+  "updated": "2026-08-29T19:41:46+00:00",
+  "archivedAt": "2026-08-29T19:41:46+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Hardened non-UI session transport with FIFO acknowledged outbox, race-safe catch-up, deterministic fault tests, daemon restart and bounded RPC evidence",
+  "archiveFollowUp": "Track Codex 0.150.1 integration baseline that emits no first-turn response before resume"
+}

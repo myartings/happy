@@ -38,6 +38,7 @@ import type { NewSessionAgentType } from '@/sync/persistence';
 import { sync } from '@/sync/sync';
 import { isMachineOnline } from '@/utils/machineUtils';
 import {
+    MAX_WORKSPACE_PROJECT_QUERY_LENGTH,
     listWorkspaceProjects as requestWorkspaceProjects,
     machineSpawnNewSession,
     machineStopSession,
@@ -184,6 +185,7 @@ const COMPOSER_INPUT_MAX_HEIGHT = Platform.OS === 'web' ? 480 : 240;
 const COMPACT_COMPOSER_INPUT_MAX_HEIGHT = 120;
 const COMPOSER_SEND_BUTTON_SIZE = 32;
 const WORKTREE_PATH_DEBOUNCE_MS = 300;
+const WORKSPACE_PROJECT_SEARCH_DEBOUNCE_MS = 250;
 
 function trimPathInput(path: string | null | undefined): string {
     return path?.trim() ?? '';
@@ -545,6 +547,7 @@ function PathPickerContent({
     const currentValue = value ?? '';
     const [selection, setSelection] = React.useState<{ start: number; end: number } | undefined>(undefined);
     const [showAllRecent, setShowAllRecent] = React.useState(false);
+    const hasSearchQuery = searchQuery.trim().length > 0;
     const recentPreview = React.useMemo(
         () => buildRecentProjectPreview(recentItems, showAllRecent),
         [recentItems, showAllRecent],
@@ -674,20 +677,23 @@ function PathPickerContent({
             )}
 
             <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Workspace Projects
+                Projects
             </Text>
 
             <View style={[pickerStyles.pathInputRow, { borderColor: theme.colors.divider }]}>
                 <Ionicons name="search-outline" size={16} color={theme.colors.textSecondary} />
-                <TextInput
-                    value={searchQuery}
-                    onChangeText={onChangeSearchQuery}
-                    placeholder="Search workspace projects"
-                    placeholderTextColor={theme.colors.textSecondary}
-                    style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
+                <View style={pickerStyles.pathInputField}>
+                    <TextInput
+                        value={searchQuery}
+                        onChangeText={onChangeSearchQuery}
+                        placeholder="Search projects"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        maxLength={MAX_WORKSPACE_PROJECT_QUERY_LENGTH}
+                    />
+                </View>
             </View>
 
             {discoveryStatus === 'loading' && (
@@ -750,7 +756,7 @@ function PathPickerContent({
                     );
                 })}
 
-                {recentItems.length === 0 && (
+                {!hasSearchQuery && recentItems.length === 0 && (
                     <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
                         no recent projects yet
                     </Text>
@@ -814,15 +820,17 @@ function PathPickerContent({
                     );
                 })}
 
-                {discoveryStatus === 'ready' && workspaceItems.length === 0 && (
+                {discoveryStatus === 'ready'
+                    && workspaceItems.length === 0
+                    && (!hasSearchQuery || recentItems.length === 0) && (
                     <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
-                        {searchQuery.trim() ? 'no matching workspace projects' : 'no workspace projects found'}
+                        {hasSearchQuery ? 'no matching projects' : 'no workspace projects found'}
                     </Text>
                 )}
 
                 {discoveryStatus === 'ready' && discoveryTruncated && (
                     <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
-                        showing the first discovered projects; refine your search if needed
+                        showing the first matching projects; refine your search if needed
                     </Text>
                 )}
             </ScrollView>
@@ -1050,8 +1058,11 @@ function NewSessionScreen() {
     // Workspace discovery is a Happy CLI RPC. A computer choice can name the sibling Happy Agent
     // machine, so always address the actual CLI daemon when one is present.
     const discoveryMachine = selectedChoice?.happyMachine ?? selectedMachine;
-    const recentPaths = React.useMemo(
-        () => places.map((place) => place.path),
+    const recentProjects = React.useMemo(
+        () => places.map((place) => ({
+            path: place.path,
+            ...(place.projectId ? { name: place.name } : {}),
+        })),
         [places],
     );
 
@@ -1061,10 +1072,21 @@ function NewSessionScreen() {
     const [discoveryStatus, setDiscoveryStatus] = React.useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
     const [discoveryResult, setDiscoveryResult] = React.useState<ListWorkspaceProjectsResult | null>(null);
     const [workspaceSearchQuery, setWorkspaceSearchQuery] = React.useState('');
+    const [debouncedWorkspaceSearchQuery, setDebouncedWorkspaceSearchQuery] = React.useState('');
 
     React.useEffect(() => {
         setWorkspaceSearchQuery('');
+        setDebouncedWorkspaceSearchQuery('');
     }, [selectedMachineId]);
+
+    React.useEffect(() => {
+        const normalizedQuery = workspaceSearchQuery.trim().slice(0, MAX_WORKSPACE_PROJECT_QUERY_LENGTH);
+        const timeout = setTimeout(() => {
+            setDebouncedWorkspaceSearchQuery(normalizedQuery);
+        }, WORKSPACE_PROJECT_SEARCH_DEBOUNCE_MS);
+
+        return () => clearTimeout(timeout);
+    }, [workspaceSearchQuery]);
 
     React.useEffect(() => {
         if (activePicker !== 'path' || !discoveryMachine || !isMachineOnline(discoveryMachine)) {
@@ -1077,7 +1099,7 @@ function NewSessionScreen() {
         let disposed = false;
         setDiscoveryStatus('loading');
         setDiscoveryResult(null);
-        void discoveryLoader.load(discoveryMachine.id).then((outcome) => {
+        void discoveryLoader.load(discoveryMachine.id, debouncedWorkspaceSearchQuery).then((outcome) => {
             if (disposed || !outcome) return;
             if (outcome.status === 'ready') {
                 setDiscoveryResult(outcome.result);
@@ -1091,26 +1113,33 @@ function NewSessionScreen() {
             disposed = true;
             discoveryLoader.reset();
         };
-    }, [activePicker, discoveryLoader, discoveryMachine]);
+    }, [activePicker, debouncedWorkspaceSearchQuery, discoveryLoader, discoveryMachine]);
 
     const projectSections = React.useMemo(() => buildWorkspaceProjectSections({
-        recentPaths,
+        recentProjects,
         discoveredProjects: discoveryResult?.projects ?? [],
         homeDir: selectedHomeDir,
         platform: discoveryMachine?.metadata?.platform === 'win32' ? 'win32' : 'unix',
         query: workspaceSearchQuery,
-    }), [discoveryMachine?.metadata?.platform, discoveryResult?.projects, recentPaths, selectedHomeDir, workspaceSearchQuery]);
+    }), [discoveryMachine?.metadata?.platform, discoveryResult?.projects, recentProjects, selectedHomeDir, workspaceSearchQuery]);
 
-    const recentPathItems = React.useMemo<PickerItem[]>(() => places.map((place) => ({
-        key: place.key,
-        label: place.projectId
-            ? place.name
-            : formatPathRelativeToHome(place.path, selectedHomeDir),
-        subtitle: place.projectId
-            ? formatPathRelativeToHome(place.path, selectedHomeDir)
-            : undefined,
-        selectionValue: place.path,
-    })), [places, selectedHomeDir]);
+    const recentPathItems = React.useMemo<PickerItem[]>(() => {
+        const placesByPath = new Map(places.map((place) => [place.path, place]));
+
+        return projectSections.recent.map((item) => {
+            const place = placesByPath.get(item.path);
+            return {
+                key: place?.key ?? item.path,
+                label: place?.projectId
+                    ? place.name
+                    : formatPathRelativeToHome(item.path, selectedHomeDir),
+                subtitle: place?.projectId
+                    ? formatPathRelativeToHome(item.path, selectedHomeDir)
+                    : undefined,
+                selectionValue: item.path,
+            };
+        });
+    }, [places, projectSections.recent, selectedHomeDir]);
 
     const workspacePathItems = React.useMemo<PickerItem[]>(() => projectSections.workspaceProjects.map((item) => ({
         key: item.path,
@@ -1125,8 +1154,8 @@ function NewSessionScreen() {
             return;
         }
 
-        setSelectedPath(recentPathItems[0]?.selectionValue ?? recentPathItems[0]?.key ?? '~');
-    }, [recentPathItems, selectedChoice, selectedPath, setSelectedPath]);
+        setSelectedPath(places[0]?.path ?? '~');
+    }, [places, selectedChoice, selectedPath, setSelectedPath]);
 
     const resolvedSelectedPath = React.useMemo(() => {
         return normalizePathForComparison(selectedPath, selectedHomeDir);

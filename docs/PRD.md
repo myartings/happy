@@ -1,5 +1,75 @@
 # Happy Product Requirements
 
+## Non-UI Session Transport Reliability
+
+### Problem
+
+Happy's coding-session transport spans CLI/daemon processes, Socket.IO, HTTP
+message persistence, server-side RPC routing, and provider-owned Codex threads.
+Network interruption, process restart, retries, or lost acknowledgements can
+therefore expose users to a missing or repeated prompt, reordered transcript,
+or an RPC that waits after its target has died.
+
+### Desired outcome
+
+For persisted session messages, an interrupted client converges to the server's
+ordered log without loss or duplicate delivery. Retried writes are idempotent.
+CLI/daemon and Codex thread restarts resume the intended identity and history.
+RPC calls either complete or return a bounded failure when their target dies.
+
+### Product requirements
+
+1. Disconnect and reconnect catch up every persisted message after the last
+   message actually consumed by the client.
+2. Duplicate or out-of-order socket notifications trigger ordered catch-up and
+   do not produce duplicate application-level delivery.
+3. A write retried after a lost acknowledgement creates one persisted message,
+   identified by a stable client-generated idempotency key.
+4. Pending writes survive transient transport failure for the life of the
+   running CLI process and drain after recovery without reordering that queue.
+5. CLI/daemon restart and Codex thread resume use durable identifiers and do
+   not silently attach to a different Happy session or provider thread.
+6. An RPC whose target is absent, disconnects, or never acknowledges returns a
+   deterministic error within a documented bound; no call waits forever.
+7. Each named failure mode has a deterministic automated test or repeatable,
+   bounded stress script, and critical scenarios pass multiple consecutive
+   rounds with zero lost, duplicate, or misordered messages.
+
+### Observable success
+
+- Automated fault injection covers offline recovery, Socket reconnect,
+  CLI/daemon restart, Codex thread resume, duplicate delivery, reordering,
+  acknowledgement loss, and dead RPC targets.
+- Relevant happy-cli, happy-server, and happy-wire tests pass together.
+- Relevant typecheck/build commands, strict workflow audit, and whole-feature
+  verification pass.
+- The workflow validation record states commands, round counts, elapsed time,
+  findings, remaining limitations, and rollback instructions.
+
+### Scope
+
+- `packages/happy-cli`, `packages/happy-server`, and `packages/happy-wire`.
+- Deterministic fault-injection tests and repeatable bounded stress tooling.
+- Protocol and workflow documentation required to explain and verify the
+  reliability contract.
+
+### Non-goals
+
+- Any change to `happy-app`, Studio, themes, visual assets, or UI behavior.
+- Deployment, release, publication, database migration, or a new messaging
+  product surface.
+- Exactly-once execution of arbitrary RPC side effects; RPC guarantees are
+  bounded completion and explicit retry semantics.
+
+### Constraints
+
+- Preserve wire compatibility with existing clients and server data.
+- Prefer server-persisted sequence numbers for receive ordering and stable
+  client local IDs for write idempotency.
+- Tests must be deterministic; stress scripts must have explicit rounds and
+  timeouts and must not require production infrastructure.
+- Changes must be locally reversible and require no data rollback.
+
 ## Workspace Project Discovery
 
 ### Problem
@@ -28,13 +98,15 @@ Checkout management system.
 ### Product requirements
 
 1. The picker presents existing Session-history paths as `Recent`, preserving
-   their current content and priority.
+   their current content and priority when no search is active.
 2. The picker can present projects discovered on the selected online Machine
    under a separate `Workspace Projects` section.
 3. Discovery is requested only when the picker is open and the selected
    Machine is online.
-4. Users can search discovered projects by project name, absolute path, and
-   path relative to the workspace root.
+4. One project search covers both Recent and discovered projects by project
+   name, absolute path, and path relative to the workspace root. Search results
+   prioritize exact name matches, then name-prefix/name-substring matches, then
+   relative-path and absolute-path matches.
 5. Recent and discovered paths are normalized according to the target
    platform and deduplicated. A matching Recent path wins.
 6. Selecting a discovered project only updates the existing selected working
@@ -51,6 +123,10 @@ Checkout management system.
 11. Discovery results are short-lived in-memory UI data. They are not uploaded
     or persisted in Server, Machine, Session, or sync metadata.
 12. The behavior works for native macOS, Linux, and Windows paths.
+13. Discovery presents project roots rather than every nested package or IDE
+    bundle inside an already recognized project.
+14. When an unfiltered result is truncated, a search can ask a supporting
+    daemon for matching projects beyond the original result window.
 
 ### Observable success
 
