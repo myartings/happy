@@ -1,0 +1,11 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/new-session-project-picker-correctness/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/new-session-project-picker-correctness.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/workspace/new-session-project-picker-correctness/decisions.md","reason":"Compatibility and risk decisions to inspect"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.ts","reason":"Review unified search/ranking and stale/cache behavior"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.test.ts","reason":"Review App regression coverage"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Review picker layout, state, empty states, and spawn seam"}
+{"path":"packages/happy-app/sources/sync/ops.ts","reason":"Review optional request compatibility"}
+{"path":"packages/happy-cli/src/workspace/workspaceProjectScanner.ts","reason":"Review containment, bounds, filtering, and nested suppression"}
+{"path":"packages/happy-cli/src/api/apiMachine.ts","reason":"Review query validation and RPC boundary"}

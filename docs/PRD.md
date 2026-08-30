@@ -28,13 +28,15 @@ Checkout management system.
 ### Product requirements
 
 1. The picker presents existing Session-history paths as `Recent`, preserving
-   their current content and priority.
+   their current content and priority when no search is active.
 2. The picker can present projects discovered on the selected online Machine
    under a separate `Workspace Projects` section.
 3. Discovery is requested only when the picker is open and the selected
    Machine is online.
-4. Users can search discovered projects by project name, absolute path, and
-   path relative to the workspace root.
+4. One project search covers both Recent and discovered projects by project
+   name, absolute path, and path relative to the workspace root. Search results
+   prioritize exact name matches, then name-prefix/name-substring matches, then
+   relative-path and absolute-path matches.
 5. Recent and discovered paths are normalized according to the target
    platform and deduplicated. A matching Recent path wins.
 6. Selecting a discovered project only updates the existing selected working
@@ -51,6 +53,10 @@ Checkout management system.
 11. Discovery results are short-lived in-memory UI data. They are not uploaded
     or persisted in Server, Machine, Session, or sync metadata.
 12. The behavior works for native macOS, Linux, and Windows paths.
+13. Discovery presents project roots rather than every nested package or IDE
+    bundle inside an already recognized project.
+14. When an unfiltered result is truncated, a search can ask a supporting
+    daemon for matching projects beyond the original result window.
 
 ### Observable success
 

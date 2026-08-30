@@ -1,0 +1,9 @@
+# Decisions: `new-session-project-picker-correctness`
+
+| ID | Question | Status | Decision/evidence |
+| --- | --- | --- | --- |
+| D1 | What does the Project search cover? | resolved | One search covers Recent and Workspace results. Empty-query Recent order remains unchanged; active search reveals all matching Recent entries and ranks exact name, prefix, substring, relative path, then absolute path. Runtime evidence showed a sixth Recent match remained hidden and `happy` ranked below a descendant whose absolute path merely contained `happy`. |
+| D2 | Which marked directories are projects? | resolved | Emit the outermost recognized project root and stop descending once any recognized marker is found. Local evidence found 36 of 95 results nested under another recognized project, including monorepo packages and IDE bundles. This rule is reversible and matches the picker-level meaning of Project. |
+| D3 | How can search recover projects omitted by the result cap? | resolved | Add an optional bounded query to `list-workspace-projects`; matching occurs during daemon traversal before the result cap. The App debounces query requests and still filters/ranks defensively. Old handlers ignore the optional parameter and retain existing fallback behavior. |
+| D4 | Should roots/depth become configurable? | resolved | No. Preserve the daemon-owned conventional workspace root, depth 3, result cap 200, caller timeout, and manual-path escape hatch. Configurable roots and deeper worktree discovery remain out of scope; Recent search makes known worktrees findable. |
+| R1 | External RPC/path privacy risk | cleared-with-controls | Read-only encrypted Machine RPC only; optional query is trimmed and length-bounded; no result logging; fixed root/depth/result bounds; old-daemon compatibility; independent whole-diff review required. Stop on Server/Sync/Session protocol or arbitrary-root expansion. |

@@ -271,11 +271,14 @@ export type CreatedWorktreeSnapshot = WorktreeSnapshotInspection & {
     cleanupToken: string;
 };
 
-export async function listWorkspaceProjects(machineId: string): Promise<ListWorkspaceProjectsResult> {
-    return apiSocket.machineRPC<ListWorkspaceProjectsResult, Record<string, never>>(
+export const MAX_WORKSPACE_PROJECT_QUERY_LENGTH = 256;
+
+export async function listWorkspaceProjects(machineId: string, query = ''): Promise<ListWorkspaceProjectsResult> {
+    const normalizedQuery = query.trim().slice(0, MAX_WORKSPACE_PROJECT_QUERY_LENGTH);
+    return apiSocket.machineRPC<ListWorkspaceProjectsResult, { query?: string }>(
         machineId,
         'list-workspace-projects',
-        {},
+        normalizedQuery ? { query: normalizedQuery } : {},
     );
 }
 
