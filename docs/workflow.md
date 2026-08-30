@@ -180,11 +180,13 @@ git fetch origin main
 python3 scripts/workflow-ci.py --base origin/main
 ```
 
-For a local merge made while the feature branch is checked out, committed CI
-defaults to parent 1 as the submitted source. Hosted pull-request and main-push
-merge commits set `WORKFLOW_SOURCE_PARENT=auto`: the exact event base parent is
-the target and the other parent is the submitted source. Do not guess parent
-orientation from ancestry alone.
+Committed merge CI defaults to `WORKFLOW_SOURCE_PARENT=auto`: when the exact
+comparison base equals one parent, that parent is the target and the other is
+the submitted source. This matches hosted pull-request and main-push merge
+commits. For a local merge made while the feature branch is checked out, set
+`WORKFLOW_SOURCE_PARENT=1` explicitly because parent 1 is the submitted source;
+use `2` for the inverse explicit orientation. Do not guess parent orientation
+from ancestry alone.
 
 One hosted push range remains one delivery unit. When local history contains
 multiple independently completed deliveries, push their
