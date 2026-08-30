@@ -931,7 +931,7 @@ def main() -> int:
                     git("merge-base", base, parent) == git("rev-parse", base)
                     for parent in parents
                 ):
-                    source_parent = os.environ.get("WORKFLOW_SOURCE_PARENT", "1")
+                    source_parent = os.environ.get("WORKFLOW_SOURCE_PARENT", "auto")
                     if source_parent not in {"1", "2", "auto"}:
                         raise RuntimeError(
                             "WORKFLOW_SOURCE_PARENT must be 1, 2, or auto"

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -325,6 +326,43 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         self.run_script("workflow-ci.py", "--staged")
         self.git("commit", "-m", "archived fixture")
         self.run_script("workflow-ci.py", "--base", self.base)
+
+    def test_committed_merge_auto_detects_second_parent_as_source(self) -> None:
+        slug = "merge-source-selection"
+        self.prepare_reviewed_finish(slug)
+        self.state("archive", slug, "--summary", "completed merge fixture")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.git("commit", "-m", "archived source delivery")
+        source = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "-c", "merge-target", self.base)
+        self.git("merge", "--no-ff", source, "-m", "merge source delivery")
+
+        self.run_script("workflow-ci.py")
+
+    def test_committed_merge_preserves_explicit_first_parent_source(self) -> None:
+        slug = "merge-source-override"
+        self.prepare_reviewed_finish(slug)
+        self.state("archive", slug, "--summary", "completed local merge fixture")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.git("commit", "-m", "archived source delivery")
+        source = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "-c", "advanced-target", self.base)
+        (self.project / "target.txt").write_text("advanced\n", encoding="utf-8")
+        self.git("add", "target.txt")
+        self.git("commit", "-m", "advance target")
+        target = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "--detach", source)
+        self.git("merge", "--no-ff", target, "-m", "merge target into source")
+
+        self.run_script(
+            "workflow-ci.py",
+            environment={**os.environ, "WORKFLOW_SOURCE_PARENT": "1"},
+        )
 
 
 if __name__ == "__main__":
