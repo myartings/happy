@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 3,
+  "slug": "workflow-template-2026-08-2-adoption",
+  "intensity": "high-risk",
+  "phase": "archived",
+  "nextAction": "Deliver the authorized replacement PR, close superseded PR #63 after replacement verification, and normally merge; preserve branches",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly authorized latest-origin/dev rebuild, replacement PR, closure of superseded PR #63 after verification, and normal merge; accepted spec and tasks restored",
+      "updated": "2026-08-30T06:39:29+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-template-2026-08-2-adoption/decisions.md D1-D10 resolved; D10 binds rebuild to origin/dev a269068a without rewrite",
+      "updated": "2026-08-30T06:39:29+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: serial current-session Root on feature/workflow-template-2026-08-2-adoption-v2 at origin/dev a269068a; workflow-only accepted diff; local-only tracker; replacement PR close-and-merge authorized after gates",
+      "updated": "2026-08-30T06:39:29+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: immutable source/base, selective allowlist, fingerprinted retirements, protected-path checks, no rewrite/force push, independent review before replacement PR merge",
+      "updated": "2026-08-30T06:39:29+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Standards remediation complete: formal staged checks reject every non-evidence worktree/index divergence before and after each command; 6/6 bounded public-CLI runtime tests, 9/9 validator tests, 2/2 upgrader tests, selective validation, zero-drift proof c61763c7, strict audits, and protected-path inspection pass",
+      "updated": "2026-08-30T07:03:39+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures",
+      "updated": "2026-08-30T07:04:18+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent parallel Spec and Standards reviews both accepted checked candidate 13ac86b1; no blockers or follow-up gaps",
+      "updated": "2026-08-30T07:08:14+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "a269068ab42316a6e5749882cd81499aeb31fabb",
+        "candidateFingerprint": "13ac86b152ca558809b438f30da44e32b17efd8b1f4548bdb12f5199eb552a5c"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review complete: 5/5 candidate-bound checks, both independent review axes accepted, rollback is one ordinary revert, no product changes or follow-up engineering gaps; guarded terminal staged CI remains mandatory before delivery",
+      "updated": "2026-08-30T07:11:50+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-30T06:37:31+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-30T06:39:29+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly authorized latest-origin/dev rebuild, replacement PR, closure of superseded PR #63 after verification, and normal merge; accepted spec and tasks restored"
+    },
+    {
+      "at": "2026-08-30T06:39:29+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-template-2026-08-2-adoption/decisions.md D1-D10 resolved; D10 binds rebuild to origin/dev a269068a without rewrite"
+    },
+    {
+      "at": "2026-08-30T06:39:29+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: immutable source/base, selective allowlist, fingerprinted retirements, protected-path checks, no rewrite/force push, independent review before replacement PR merge"
+    },
+    {
+      "at": "2026-08-30T06:39:29+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: serial current-session Root on feature/workflow-template-2026-08-2-adoption-v2 at origin/dev a269068a; workflow-only accepted diff; local-only tracker; replacement PR close-and-merge authorized after gates"
+    },
+    {
+      "at": "2026-08-30T06:39:29+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Replay the accepted selective migration on origin/dev a269068a, upgrade active state, and prove source/target preservation and zero drift"
+    },
+    {
+      "at": "2026-08-30T06:40:47+00:00",
+      "type": "downstream_active_schema_upgrade",
+      "phase": "implementation",
+      "evidence": "Preserved schema-1 gates/history; removed legacyImport; added schema-3 standard layout and approved local-only delivery source"
+    },
+    {
+      "at": "2026-08-30T06:42:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Pinned transactional apply complete; 82 accepted nonterminal paths exactly match reviewed 8395d421 bytes; clean synthetic e0fda596 dry-run reports zero drift; 2 upgrade and 9 validator tests pass; protected paths unchanged"
+    },
+    {
+      "at": "2026-08-30T06:42:53+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete a269068a-based candidate, run fresh applicable checks, then independent Spec and Standards review"
+    },
+    {
+      "at": "2026-08-30T06:43:17+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures; structured run: c4908a3c-a4fe-4739-878c-6a42dbcafe02"
+    },
+    {
+      "at": "2026-08-30T06:47:34+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Standards blockers require candidate-bound isolated check execution and behavior-focused workflow runtime regression tests; Spec axis accepted"
+    },
+    {
+      "at": "2026-08-30T06:47:37+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate Standards blockers by isolating staged checks and restoring bounded public-CLI runtime regression coverage"
+    },
+    {
+      "at": "2026-08-30T07:03:39+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Standards remediation complete: formal staged checks reject every non-evidence worktree/index divergence before and after each command; 6/6 bounded public-CLI runtime tests, 9/9 validator tests, 2/2 upgrader tests, selective validation, zero-drift proof c61763c7, strict audits, and protected-path inspection pass"
+    },
+    {
+      "at": "2026-08-30T07:03:39+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run fresh candidate-bound configured checks and independent Spec/Standards review"
+    },
+    {
+      "at": "2026-08-30T07:04:18+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 76abe5b1-3648-412a-8015-f596caba735d"
+    },
+    {
+      "at": "2026-08-30T07:08:14+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent parallel Spec and Standards reviews both accepted checked candidate 13ac86b1; no blockers or follow-up gaps"
+    },
+    {
+      "at": "2026-08-30T07:08:16+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish review, staged CI, archive projection, commit, and replacement PR delivery"
+    },
+    {
+      "at": "2026-08-30T07:11:50+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review complete: 5/5 candidate-bound checks, both independent review axes accepted, rollback is one ordinary revert, no product changes or follow-up engineering gaps; guarded terminal staged CI remains mandatory before delivery"
+    },
+    {
+      "at": "2026-08-30T07:12:11+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Rebuilt and validated selective workflow-2026.08.2 adoption on latest dev with Standards remediation and accepted independent review; result identity: archive-introducing-commit; follow-up: Deliver the authorized replacement PR, close superseded PR #63 after replacement verification, and normally merge; preserve branches"
+    }
+  ],
+  "updated": "2026-08-30T07:12:11+00:00",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Current-session latest-origin/dev replacement PR rebuild",
+    "approval": "User explicitly authorized rebuilding, replacing, and merging the PR"
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "76abe5b1-3648-412a-8015-f596caba735d",
+  "checkRunFingerprint": "6ad1de7855eabcb06cba00cf58c95ad8c2f55f06c80459382e0b7f35e178ffcf",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "a269068ab42316a6e5749882cd81499aeb31fabb",
+    "candidateFingerprint": "13ac86b152ca558809b438f30da44e32b17efd8b1f4548bdb12f5199eb552a5c"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "a269068ab42316a6e5749882cd81499aeb31fabb",
+      "candidateFingerprint": "13ac86b152ca558809b438f30da44e32b17efd8b1f4548bdb12f5199eb552a5c"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Independent frozen-candidate Spec review accepted fingerprint 13ac86b1 on base a269068a; all AC coverage coherent and no out-of-contract product surfaces found"
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Independent frozen-candidate Standards review accepted; prior all-path staged-isolation and behavior-focused public-CLI regression blockers are remediated with no remaining findings"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish review, staged CI, archive projection, commit, and replacement PR delivery",
+    "prearchiveUpdated": "2026-08-30T07:11:50+00:00",
+    "prearchiveActive": {
+      "feature": "workflow-template-2026-08-2-adoption",
+      "phase": "finish",
+      "updated": "2026-08-30",
+      "next": "Complete finish review, staged CI, archive projection, commit, and replacement PR delivery",
+      "branch / worktree": "feature/workflow-template-2026-08-2-adoption-v2"
+    },
+    "prearchiveArchiveObject": "d8bc380454dc28e1e0ae7d4a8b7d0d22d67de63d",
+    "fingerprint": "1c1f933345b5502f7d2fa6ad5264e549f19247320aa1c7e3b0c00f7a83629ba8"
+  },
+  "archivedAt": "2026-08-30T07:12:11+00:00",
+  "archiveDate": "2026-08-30",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Rebuilt and validated selective workflow-2026.08.2 adoption on latest dev with Standards remediation and accepted independent review",
+  "archiveFollowUp": "Deliver the authorized replacement PR, close superseded PR #63 after replacement verification, and normally merge; preserve branches"
+}

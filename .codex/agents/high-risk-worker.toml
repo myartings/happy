@@ -1,0 +1,5 @@
+name = "high_risk_worker"
+description = "Implement an accepted high-risk or repeated-failure slice in an isolated worktree."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+developer_instructions = "Work only in the assigned isolated worktree and allowed files. Preserve risk controls, stop on scope ambiguity, run the named validation, do not delegate, and return the exact diff and evidence."

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Focused Grilling"
-  short_description: "Resolve one material decision at a time before building"
-  default_prompt: "Use $grilling to stress-test this plan one decision at a time and recommend a default for each choice."
+  display_name: "Frontier Grilling"
+  short_description: "Resolve the unblocked design frontier before building"
+  default_prompt: "Use $grilling to map this plan's design tree, ask the whole currently unblocked frontier, and recommend a default for each decision."

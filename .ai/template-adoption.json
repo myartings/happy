@@ -1,39 +1,122 @@
 {
-  "schemaVersion": 1,
-  "source": "../ai-coding-template",
+  "schemaVersion": 2,
   "policy": "selective-workflow-core",
+  "sourceRepository": "https://github.com/myartings/ai-coding-template.git",
+  "sourceRelease": "workflow-2026.08.2",
+  "sourceCommit": "8d07a74931f8dcf6a668c2a6a4dcaf9c490a2842",
   "include": [
-    ".agents/skills",
-    ".claude/skills",
+    ".gitattributes",
+    ".agents/skills/batch-plan",
+    ".agents/skills/check",
+    ".agents/skills/continue",
+    ".agents/skills/create-prd",
+    ".agents/skills/decision-map",
+    ".agents/skills/diagnose",
+    ".agents/skills/finish-work",
+    ".agents/skills/generate-spec",
+    ".agents/skills/generate-tasks",
+    ".agents/skills/grilling",
+    ".agents/skills/handoff",
+    ".agents/skills/implement",
+    ".agents/skills/review",
+    ".agents/skills/risk-gate",
+    ".agents/skills/scoping",
+    ".agents/skills/start",
+    ".agents/skills/tdd",
+    ".agents/skills/tracker-workflow",
+    ".agents/skills/update-spec",
+    ".agents/skills/workflow-audit",
+    ".codex/README.md",
+    ".codex/REASONING.md",
+    ".codex/agents",
+    ".codex/hooks.json",
+    ".codex/hooks",
+    ".github/ISSUE_TEMPLATE/agent-work-item.md",
     "docs/adr/0003-mandatory-formal-project-lifecycle.md",
     "docs/adr/0004-commit-bound-workflow-enforcement.md",
-    "docs/tasks/template.md",
-    "docs/workflow",
+    "docs/adr/0005-solo-developer-evidence-scaling.md",
+    "docs/adr/0006-explicit-trellis-task-boundary.md",
     "docs/workflow.md",
+    "docs/workflow/capability-owners.json",
+    "docs/workflow/discovered-work-scope-containment.md",
+    "docs/workflow/execution-isolation.md",
+    "docs/workflow/host-environment.md",
+    "docs/workflow/intensity-matrix.md",
+    "docs/workflow/source-mapping.md",
+    "docs/workflow/ticket-task-contract.md",
+    "docs/workflow/tracker-workflow.md",
+    "docs/specs/template.md",
+    "docs/tasks/template.md",
     "docs/workspace/template",
-    "scripts/test-workflow.py",
-    "scripts/test-workflow-ci.py",
     "scripts/workflow-audit.py",
-    "scripts/workflow-check.py",
+    "scripts/workflow-candidate.py",
+    "scripts/workflow-issue-route.py",
+    "scripts/workflow-state.py",
     "scripts/workflow-ci.py",
-    "scripts/workflow-state.py"
+    "scripts/workflow-parallel-report.py",
+    "scripts/workflow-review.py",
+    "scripts/workflow-run.py"
   ],
   "preserve": [
     "AGENTS.md",
+    "CONTEXT.md",
     ".ai/project.json",
-    "scripts/workflow-ci.py",
+    ".ai/template-adoption.json",
     ".agents/agents",
     ".agents/skills/agent-browser",
     ".agents/skills/control-flow",
     ".agents/skills/dev",
+    ".agents/skills/happy-desktop-official-release",
+    ".agents/skills/happy-desktop-update",
+    ".agents/skills/happy-ios-release",
     ".agents/skills/maintain",
     ".agents/skills/metrics-graphana",
     ".agents/skills/office-hours",
     ".agents/skills/release",
     ".agents/skills/sessions",
     ".agents/skills/terminal-emulator",
-    ".claude/settings.json",
-    ".claude/launch.json"
+    ".claude",
+    ".codex/config.toml",
+    ".github/workflows",
+    "devtools",
+    "docs/PRD.md",
+    "docs/workspace/ACTIVE.md",
+    "docs/workspace/archive.md",
+    "scripts/happy-workflow-state-upgrade.py",
+    "scripts/workflow-check.py",
+    "scripts/test-happy-workflow-state-upgrade.py",
+    "scripts/test-happy-workflow-runtime.py",
+    "scripts/validate-happy-workflow.py",
+    "scripts/test-validate-happy-workflow.py"
   ],
-  "requiredProjectChecks": []
+  "retiredPaths": [
+    {
+      "path": "scripts/test-workflow.py",
+      "reason": "The released downstream contract no longer distributes source-maintainer workflow tests; Happy uses a bounded selective-adoption validator seam",
+      "ownedFingerprints": [
+        "sha256:b425a4aaee25dae46161792f037d8cec9c10b0d0e576c3ec726202fa06ff4e3d"
+      ]
+    },
+    {
+      "path": "scripts/test-workflow-ci.py",
+      "reason": "The released downstream contract validates commit-bound runtime through the pinned release and project integration seam instead of copied source tests",
+      "ownedFingerprints": [
+        "sha256:b57e01a0516a65725cd3b95f8b0ec195e91d41070d165b54bc1881415b69e177"
+      ]
+    },
+    {
+      "path": "scripts/test-workflow-core.py",
+      "reason": "The legacy Happy adapter targets the retired source test suite and is replaced by test-validate-happy-workflow.py",
+      "ownedFingerprints": [
+        "sha256:4500b5d074a6fd5fd49cebb94c9541e13e1c2068d4f3ecb9b8be5e67116e8c3b"
+      ]
+    }
+  ],
+  "requiredProjectChecks": [
+    "{python} scripts/test-happy-workflow-state-upgrade.py",
+    "{python} scripts/test-happy-workflow-runtime.py",
+    "{python} scripts/validate-happy-workflow.py",
+    "{python} scripts/test-validate-happy-workflow.py",
+    "{python} scripts/workflow-audit.py --all --strict"
+  ]
 }

@@ -18,12 +18,125 @@
       "pnpm --filter happy-server test"
     ],
     "build": [],
-    "check": [
-      "python3 scripts/validate-happy-workflow.py",
-      "python3 scripts/test-workflow-core.py",
-      "python3 scripts/test-workflow-ci.py",
-      "python3 scripts/workflow-audit.py --strict"
+    "docs-check": [
+      "{python} scripts/validate-happy-workflow.py",
+      "{python} scripts/workflow-audit.py --all --strict"
+    ],
+  "workflow-targeted": [
+    "{python} scripts/test-happy-workflow-state-upgrade.py",
+    "{python} scripts/test-happy-workflow-runtime.py",
+    "{python} scripts/validate-happy-workflow.py",
+      "{python} scripts/test-validate-happy-workflow.py",
+      "{python} scripts/workflow-audit.py --all --strict"
+    ],
+  "check": [
+    "{python} scripts/test-happy-workflow-state-upgrade.py",
+    "{python} scripts/test-happy-workflow-runtime.py",
+    "{python} scripts/validate-happy-workflow.py",
+      "{python} scripts/test-validate-happy-workflow.py",
+      "{python} scripts/workflow-audit.py --all --strict"
     ]
+  },
+  "checkProfiles": {
+    "docs": [
+      "docs-check"
+    ],
+    "workflow": [
+      "workflow-targeted"
+    ],
+    "full": [
+      "format",
+      "lint",
+      "typecheck",
+      "test",
+      "build",
+      "check"
+    ]
+  },
+  "checkSelection": {
+    "fallbackProfile": "full",
+    "rules": [
+      {
+        "name": "ordinary-documentation",
+        "profile": "docs",
+        "include": [
+          "README.md",
+          "docs/*.md",
+          "docs/**/*.md"
+        ],
+        "exclude": [
+          ".codex/**",
+          "docs/PRD.md",
+          "docs/adr/**",
+          "docs/specs/**",
+          "docs/tasks/**",
+          "docs/workflow.md",
+          "docs/workflow/**",
+          "docs/workspace/**"
+        ]
+      },
+      {
+        "name": "workflow-infrastructure",
+        "profile": "workflow",
+        "include": [
+          ".agents/skills/**",
+          ".ai/**",
+          ".codex/**",
+          ".gitattributes",
+          ".github/ISSUE_TEMPLATE/**",
+          "AGENTS.md",
+          "CONTEXT.md",
+          "docs/adr/**",
+          "docs/specs/**",
+          "docs/tasks/**",
+          "docs/workflow.md",
+          "docs/workflow/**",
+          "docs/workspace/**",
+          "scripts/workflow-*.py",
+        "scripts/happy-workflow-state-upgrade.py",
+        "scripts/test-happy-workflow-state-upgrade.py",
+        "scripts/test-happy-workflow-runtime.py",
+        "scripts/validate-happy-workflow.py",
+          "scripts/test-validate-happy-workflow.py",
+          "scripts/test-workflow.py",
+          "scripts/test-workflow-ci.py",
+          "scripts/test-workflow-core.py"
+        ],
+        "exclude": [],
+        "trigger": [
+          ".agents/skills/**",
+          ".ai/**",
+          ".codex/**",
+          "AGENTS.md",
+          "docs/adr/**",
+          "docs/specs/**",
+          "docs/tasks/**",
+          "docs/workflow.md",
+          "docs/workflow/**",
+          "docs/workspace/**",
+          "scripts/workflow-*.py",
+        "scripts/happy-workflow-state-upgrade.py",
+        "scripts/test-happy-workflow-state-upgrade.py",
+        "scripts/test-happy-workflow-runtime.py",
+        "scripts/validate-happy-workflow.py",
+          "scripts/test-validate-happy-workflow.py"
+        ]
+      }
+    ]
+  },
+  "reviewProfiles": {
+    "low-risk": {
+      "modelTier": "standard",
+      "maxWords": 250
+    },
+    "feature": {
+      "modelTier": "capable",
+      "maxWords": 400
+    },
+    "high-risk": {
+      "modelTier": "capable",
+      "maxWords": 400
+    }
   },
   "tracker": {
     "provider": "github",
