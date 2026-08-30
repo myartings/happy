@@ -530,6 +530,9 @@ def prearchive_candidate_errors(
         errors.extend(state_module.finish_sections_complete(
             evidence_root / workflow_root / "finish.md"
         ))
+        accepted_failure_indexes = (
+            state_module.accepted_check_failure_indexes(state)
+        )
 
         reviewed = state.get("checkedCandidate")
         if not isinstance(reviewed, dict):
@@ -571,6 +574,7 @@ def prearchive_candidate_errors(
                     check_module.formal_run_errors(
                         slug, run_id, current_scope=False, current_config=True,
                         applicable_paths=check_paths,
+                        accepted_failure_indexes=accepted_failure_indexes,
                     )
                 )
                 if (
@@ -657,6 +661,9 @@ def archived_delivery_errors(
         errors.extend(state_module.finish_sections_complete(
             evidence_root / workflow_root / "finish.md"
         ))
+        accepted_failure_indexes = (
+            state_module.accepted_check_failure_indexes(state)
+        )
         if state.get("schemaVersion") != state_module.SCHEMA_VERSION:
             errors.append("archived delivery must use the current workflow schema")
         if state.get("phase") != "archived":
@@ -740,6 +747,7 @@ def archived_delivery_errors(
                     errors.extend(check_module.formal_run_errors(
                         slug, run_id, current_scope=False, current_config=True,
                         applicable_paths=check_paths,
+                        accepted_failure_indexes=accepted_failure_indexes,
                     ))
                     if state.get("checkRunFingerprint") != (
                         check_module.formal_run_fingerprint(slug, run_id)
