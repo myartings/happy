@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -206,49 +207,95 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         )
         self.git("add", ".")
 
-    def prepare_accepted_gap_candidate(self, slug: str) -> str:
+    def prepare_failed_check_candidate(
+        self, slug: str, *, staged: bool = True,
+    ) -> str:
         self.prepare_verification_candidate(slug)
         config_path = self.project / ".ai" / "project.json"
         config = json.loads(config_path.read_text(encoding="utf-8"))
         config["commands"]["check"] = [
-            "{python} -c \"raise SystemExit(7)\""
+            "{python} -c \"print('fixture check passed')\"",
+            (
+                "{python} -c \"import sys; print('fixture check failed'); "
+                "sys.exit(7)\""
+            ),
+            (
+                "{python} -c \"import sys; print('second fixture check failed'); "
+                "sys.exit(9)\""
+            ),
         ]
         config_path.write_text(json.dumps(config) + "\n", encoding="utf-8")
         self.git("add", ".")
-        failed = self.run_script(
-            "workflow-check.py", "--applicable", "--record", slug,
-            "--staged", "--base", self.base, ok=False,
+        arguments = ["--applicable", "--record", slug]
+        if staged:
+            arguments.extend(("--staged", "--base", self.base))
+        failed = self.run_script("workflow-check.py", *arguments, ok=False)
+        self.assertIn("commands: 3, failures: 2", failed.stdout)
+        evidence = (
+            self.project / "docs" / "workspace" / slug
+            / "evidence" / "checks.jsonl"
         )
-        self.assertIn("commands: 1, failures: 1", failed.stdout)
         records = [
             json.loads(line)
-            for line in (
-                self.project / "docs" / "workspace" / slug
-                / "evidence" / "checks.jsonl"
-            ).read_text(encoding="utf-8").splitlines()
+            for line in evidence.read_text(encoding="utf-8").splitlines()
             if line.strip()
         ]
-        run_id = str(records[-1]["runId"])
+        self.assertEqual([item["exitCode"] for item in records[-3:]], [0, 7, 9])
+        self.assertEqual(
+            {item["runId"] for item in records[-3:]}, {records[-1]["runId"]}
+        )
+        return records[-1]["runId"]
+
+    def accept_failed_check_candidate(self, slug: str, run_id: str) -> None:
         self.state(
-            "check-receipt", slug, "accepted_gaps",
-            "--run-id", run_id,
-            "--evidence", "operator accepted the named fixture failure",
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--accepted-command-index", "1",
+            "--accepted-command-index", "2",
+            "--approval", "Fixture owner accepts command indexes 1 and 2",
+            "--evidence", "Exact fixture failures are accepted",
         )
         self.git("add", ".")
+
+    def tamper_accepted_gap_approval(self, slug: str) -> bytes:
+        workflow = (
+            self.project / "docs" / "workspace" / slug / "workflow.json"
+        )
+        original = workflow.read_bytes()
+        state = json.loads(original)
+        state["checkAcceptedFailures"]["approval"] = "Tampered approval"
+        workflow.write_text(
+            json.dumps(state, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        return original
+
+    def prepare_accepted_gap_candidate(self, slug: str) -> str:
+        run_id = self.prepare_failed_check_candidate(slug)
+        self.accept_failed_check_candidate(slug, run_id)
         return run_id
 
     def write_completion_docs(self, slug: str) -> None:
         workspace = self.project / "docs" / "workspace" / slug
+        state = json.loads(
+            (workspace / "workflow.json").read_text(encoding="utf-8")
+        )
+        accepted_gap = state["gates"]["check"]["status"] == "accepted_gaps"
+        remaining_gap = (
+            "- Named fixture gap accepted.\n" if accepted_gap else "- None.\n"
+        )
+        verification = (
+            "Pass with accepted fixture gap." if accepted_gap else "Pass."
+        )
         (workspace / "validation.md").write_text(
             "# Validation\n\n## Acceptance coverage\n\n"
             "| Criterion | Status | Evidence |\n| --- | --- | --- |\n"
             "| Result | verified | fixture |\n\n"
-            "## Remaining gaps\n\n- Named fixture gap accepted.\n",
+            f"## Remaining gaps\n\n{remaining_gap}",
             encoding="utf-8",
         )
         (workspace / "finish.md").write_text(
             "# Finish Review\n\n## Summary\n\nDone.\n\n"
-            "## Verification\n\nPass with accepted fixture gap.\n\n"
+            f"## Verification\n\n{verification}\n\n"
             "## Whole-diff review\n\nPass.\n\n"
             "## Rollback or mitigation\n\nRevert.\n\n"
             "## Lessons promoted\n\nNone.\n\n"
@@ -324,6 +371,317 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
             "--staged", "--base", self.base,
         )
         self.assertIn("commands: 1, failures: 0", allowed.stdout)
+
+    def test_generic_check_gate_cannot_forge_candidate_bound_outcome(self) -> None:
+        slug = "accepted-gap-generic-gate"
+        self.prepare_verification_candidate(slug)
+        rejected = self.state(
+            "gate", slug, "check", "accepted_gaps",
+            "--evidence", "must not bypass a structured receipt", ok=False,
+        )
+        self.assertIn(
+            "check=accepted_gaps requires a bound structured workflow-check run",
+            rejected.stderr,
+        )
+
+    def test_accepted_gap_receipt_requires_exact_failed_indexes(self) -> None:
+        slug = "accepted-gap-receipt"
+        run_id = self.prepare_failed_check_candidate(slug)
+        workspace = self.project / "docs" / "workspace" / slug
+        before = (workspace / "workflow.json").read_bytes()
+
+        missing_index = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--approval", "Fixture approval",
+            "--evidence", "missing index must fail", ok=False,
+        )
+        self.assertIn(
+            "accepted check failures require at least one "
+            "--accepted-command-index",
+            missing_index.stderr,
+        )
+        missing_approval = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--accepted-command-index", "1",
+            "--evidence", "missing approval must fail", ok=False,
+        )
+        self.assertIn("--approval", missing_approval.stderr)
+        duplicate = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--accepted-command-index", "1",
+            "--accepted-command-index", "1",
+            "--approval", "Fixture approval",
+            "--evidence", "duplicate indexes must fail", ok=False,
+        )
+        self.assertIn("accepted command indexes must be unique", duplicate.stderr)
+        successful_index = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--accepted-command-index", "0",
+            "--accepted-command-index", "1",
+            "--accepted-command-index", "2",
+            "--approval", "Fixture approval",
+            "--evidence", "successful index must fail", ok=False,
+        )
+        self.assertIn(
+            "accepted command indexes do not exactly match failed command indexes",
+            successful_index.stderr,
+        )
+        missing_failure = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--accepted-command-index", "1",
+            "--approval", "Fixture approval",
+            "--evidence", "missing failure must fail", ok=False,
+        )
+        self.assertIn(
+            "accepted command indexes do not exactly match failed command indexes",
+            missing_failure.stderr,
+        )
+        self.assertEqual(before, (workspace / "workflow.json").read_bytes())
+
+        self.accept_failed_check_candidate(slug, run_id)
+        state = json.loads((workspace / "workflow.json").read_text(encoding="utf-8"))
+        self.assertEqual(state["gates"]["check"]["status"], "accepted_gaps")
+        self.assertEqual(state["checkRunId"], run_id)
+        self.assertEqual(state["checkedCandidate"]["identityKind"], "staged-candidate-v1")
+        self.assertEqual(
+            state["checkAcceptedFailures"],
+            {
+                "policyVersion": 1,
+                "commandIndexes": [1, 2],
+                "approval": "Fixture owner accepts command indexes 1 and 2",
+            },
+        )
+        self.assertEqual(len(state["checkAcceptedFailuresFingerprint"]), 64)
+        accepted_state = (workspace / "workflow.json").read_bytes()
+        self.tamper_accepted_gap_approval(slug)
+        rejected_approval = self.run_script(
+            "workflow-audit.py", slug, "--strict", ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed",
+            rejected_approval.stdout,
+        )
+        (workspace / "workflow.json").write_bytes(accepted_state)
+
+        tampered = dict(state)
+        tampered["checkAcceptedFailures"] = dict(state["checkAcceptedFailures"])
+        tampered["checkAcceptedFailures"]["commandIndexes"] = [0]
+        (workspace / "workflow.json").write_text(
+            json.dumps(tampered, indent=2) + "\n", encoding="utf-8"
+        )
+        rejected_tamper = self.run_script(
+            "workflow-audit.py", slug, "--strict", ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed",
+            rejected_tamper.stdout,
+        )
+        (workspace / "workflow.json").write_bytes(accepted_state)
+
+        self.state(
+            "check-receipt", slug, "blocked", "--run-id", run_id,
+            "--evidence", "fixture gap acceptance withdrawn",
+        )
+        blocked = json.loads(
+            (workspace / "workflow.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(blocked["gates"]["check"]["status"], "blocked")
+        for field in (
+            "checkEvidencePolicy", "checkRunId", "checkRunFingerprint",
+            "checkedCandidate", "checkAcceptedFailures",
+            "checkAcceptedFailuresFingerprint", "finalReview",
+        ):
+            self.assertNotIn(field, blocked)
+
+    def test_accepted_gap_receipt_rejects_worktree_run(self) -> None:
+        slug = "accepted-gap-worktree"
+        run_id = self.prepare_failed_check_candidate(slug, staged=False)
+        rejected = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--accepted-command-index", "1",
+            "--accepted-command-index", "2",
+            "--approval", "Fixture approval",
+            "--evidence", "worktree run must fail", ok=False,
+        )
+        self.assertIn(
+            "check=accepted_gaps requires a staged-candidate-v1 run",
+            rejected.stderr,
+        )
+
+    def test_accepted_gap_receipt_rejects_non_final_run_without_mutation(self) -> None:
+        slug = "accepted-gap-non-final-run"
+        old_run_id = self.prepare_failed_check_candidate(slug)
+        rerun = self.run_script(
+            "workflow-check.py", "--applicable", "--record", slug,
+            "--staged", "--base", self.base, ok=False,
+        )
+        self.assertIn("commands: 3, failures: 2", rerun.stdout)
+        workspace = self.project / "docs" / "workspace" / slug
+        records = [
+            json.loads(line)
+            for line in (workspace / "evidence" / "checks.jsonl")
+            .read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertNotEqual(old_run_id, records[-1]["runId"])
+        before = (workspace / "workflow.json").read_bytes()
+        rejected = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", old_run_id,
+            "--accepted-command-index", "1",
+            "--accepted-command-index", "2",
+            "--approval", "Fixture approval",
+            "--evidence", "non-final run must fail", ok=False,
+        )
+        self.assertIn("final evidence run", rejected.stderr)
+        self.assertEqual(before, (workspace / "workflow.json").read_bytes())
+
+    def test_successful_receipt_rejects_completed_review_without_mutation(self) -> None:
+        slug = "receipt-after-review"
+        self.prepare_checked_candidate(slug)
+        workspace = self.project / "docs" / "workspace" / slug
+        workflow = workspace / "workflow.json"
+        state = json.loads(workflow.read_text(encoding="utf-8"))
+        run_id = state["checkRunId"]
+        self.run_script(
+            "workflow-review.py", "package", slug,
+            "--base", self.base, "--staged",
+        )
+        for axis in ("spec-review", "standards-review"):
+            self.state(
+                "review-conclusion", slug, "--axis", axis,
+                "--status", "accepted", "--evidence", f"{axis} fixture accepted",
+            )
+        self.gate(slug, "review")
+        before = workflow.read_bytes()
+        rejected = self.state(
+            "check-receipt", slug, "passed", "--run-id", run_id,
+            "--evidence", "repeated receipt must fail", ok=False,
+        )
+        self.assertIn("requires review=pending", rejected.stderr)
+        self.assertEqual(before, workflow.read_bytes())
+        self.run_script("workflow-audit.py", slug, "--strict")
+
+    def test_candidate_bound_accepted_gaps_pass_terminal_ci(self) -> None:
+        slug = "accepted-gap-terminal"
+        run_id = self.prepare_failed_check_candidate(slug)
+        self.accept_failed_check_candidate(slug, run_id)
+        workspace = self.project / "docs" / "workspace" / slug
+        workflow = workspace / "workflow.json"
+        accepted_state = self.tamper_accepted_gap_approval(slug)
+        rejected_audit = self.run_script(
+            "workflow-audit.py", slug, "--strict", ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed", rejected_audit.stdout,
+        )
+        workflow.write_bytes(accepted_state)
+        self.git("add", ".")
+        self.run_script(
+            "workflow-review.py", "package", slug,
+            "--base", self.base, "--staged",
+        )
+        review_state = self.tamper_accepted_gap_approval(slug)
+        rejected_review = self.state(
+            "review-conclusion", slug, "--axis", "spec-review",
+            "--status", "accepted", "--evidence", "must reject drift",
+            ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed", rejected_review.stderr,
+        )
+        workflow.write_bytes(review_state)
+        for axis in ("spec-review", "standards-review"):
+            self.state(
+                "review-conclusion", slug, "--axis", axis,
+                "--status", "accepted", "--evidence", f"{axis} fixture accepted",
+            )
+        review_gate_state = self.tamper_accepted_gap_approval(slug)
+        rejected_review_gate = self.state(
+            "gate", slug, "review", "passed",
+            "--evidence", "must reject drift after both conclusions", ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed",
+            rejected_review_gate.stderr,
+        )
+        workflow.write_bytes(review_gate_state)
+        self.gate(slug, "review")
+        reviewed_state = workflow.read_bytes()
+        repeated_receipt = self.state(
+            "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
+            "--accepted-command-index", "1",
+            "--accepted-command-index", "2",
+            "--approval", "Fixture owner accepts command indexes 1 and 2",
+            "--evidence", "repeated receipt must fail", ok=False,
+        )
+        self.assertIn("requires review=pending", repeated_receipt.stderr)
+        self.assertEqual(reviewed_state, workflow.read_bytes())
+        workspace = self.project / "docs" / "workspace" / slug
+        (workspace / "validation.md").write_text(
+            "# Validation\n\n## Acceptance coverage\n\n"
+            "| Criterion | Status | Evidence |\n| --- | --- | --- |\n"
+            "| Result | verified | accepted fixture gap |\n\n"
+            "## Remaining gaps\n\n- Accepted command indexes 1 and 2.\n",
+            encoding="utf-8",
+        )
+        (workspace / "finish.md").write_text(
+            "# Finish Review\n\n## Summary\n\nDone.\n\n"
+            "## Verification\n\nExact gap accepted.\n\n"
+            "## Whole-diff review\n\nPass.\n\n"
+            "## Rollback or mitigation\n\nRevert.\n\n"
+            "## Lessons promoted\n\nNone.\n\n"
+            "## Follow-up\n\nNone.\n",
+            encoding="utf-8",
+        )
+        self.state("transition", slug, "finish", "Finish accepted-gap fixture")
+        finish_state = self.tamper_accepted_gap_approval(slug)
+        rejected_finish = self.state(
+            "gate", slug, "finish", "passed",
+            "--evidence", "must reject approval drift", ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed", rejected_finish.stderr,
+        )
+        workflow.write_bytes(finish_state)
+        self.gate(slug, "finish")
+        self.git("add", ".")
+        prearchive_state = self.tamper_accepted_gap_approval(slug)
+        self.git("add", str(workflow.relative_to(self.project)))
+        rejected_prearchive = self.run_script(
+            "workflow-ci.py", "--staged", ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed",
+            rejected_prearchive.stdout,
+        )
+        workflow.write_bytes(prearchive_state)
+        self.git("add", str(workflow.relative_to(self.project)))
+        self.run_script("workflow-ci.py", "--staged")
+        self.state("archive", slug, "--summary", "completed accepted-gap fixture")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        archived_state = self.tamper_accepted_gap_approval(slug)
+        self.git("add", str(workflow.relative_to(self.project)))
+        rejected_archived = self.run_script(
+            "workflow-ci.py", "--staged", ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed", rejected_archived.stdout,
+        )
+        workflow.write_bytes(archived_state)
+        self.git("add", str(workflow.relative_to(self.project)))
+        self.git("commit", "-m", "archived accepted-gap fixture")
+        self.run_script("workflow-ci.py", "--base", self.base)
+        self.tamper_accepted_gap_approval(slug)
+        self.git("add", str(workflow.relative_to(self.project)))
+        self.git("commit", "-m", "tampered accepted-gap approval")
+        rejected_committed = self.run_script(
+            "workflow-ci.py", "--base", self.base, ok=False,
+        )
+        self.assertIn(
+            "checkAcceptedFailures fingerprint changed",
+            rejected_committed.stdout,
+        )
 
     def test_review_package_rejects_staged_candidate_drift(self) -> None:
         slug = "candidate-binding"
@@ -402,10 +760,13 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
 
         passing_run = self.state(
             "check-receipt", slug, "accepted_gaps",
-            "--run-id", run_id, "--evidence", "must fail", ok=False,
+            "--run-id", run_id,
+            "--accepted-command-index", "0",
+            "--approval", "Fixture approval",
+            "--evidence", "must fail", ok=False,
         )
         self.assertIn(
-            "check=accepted_gaps requires at least one failed command",
+            "accepted command indexes do not exactly match failed command indexes",
             passing_run.stderr,
         )
         evidence_path = (
@@ -424,7 +785,10 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         )
         relabeled = self.state(
             "check-receipt", slug, "accepted_gaps",
-            "--run-id", run_id, "--evidence", "must fail", ok=False,
+            "--run-id", run_id,
+            "--accepted-command-index", "0",
+            "--approval", "Fixture approval",
+            "--evidence", "must fail", ok=False,
         )
         self.assertIn(
             "result is inconsistent with exitCode/reuse provenance",
@@ -528,6 +892,45 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         self.run_script("workflow-ci.py", "--staged")
         self.git("commit", "-m", "archived fixture")
         self.run_script("workflow-ci.py", "--base", self.base)
+
+    def test_committed_merge_auto_detects_second_parent_as_source(self) -> None:
+        slug = "merge-source-selection"
+        self.git("config", "core.autocrlf", "true")
+        self.prepare_reviewed_finish(slug)
+        self.state("archive", slug, "--summary", "completed merge fixture")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.git("commit", "-m", "archived source delivery")
+        source = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "-c", "merge-target", self.base)
+        self.git("merge", "--no-ff", source, "-m", "merge source delivery")
+
+        self.run_script("workflow-ci.py")
+
+    def test_committed_merge_preserves_explicit_first_parent_source(self) -> None:
+        slug = "merge-source-override"
+        self.git("config", "core.autocrlf", "true")
+        self.prepare_reviewed_finish(slug)
+        self.state("archive", slug, "--summary", "completed local merge fixture")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.git("commit", "-m", "archived source delivery")
+        source = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "-c", "advanced-target", self.base)
+        (self.project / "target.txt").write_text("advanced\n", encoding="utf-8")
+        self.git("add", "target.txt")
+        self.git("commit", "-m", "advance target")
+        target = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "--detach", source)
+        self.git("merge", "--no-ff", target, "-m", "merge target into source")
+
+        self.run_script(
+            "workflow-ci.py",
+            environment={**os.environ, "WORKFLOW_SOURCE_PARENT": "1"},
+        )
 
 
 if __name__ == "__main__":

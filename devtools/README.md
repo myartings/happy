@@ -151,6 +151,9 @@ bash devtools/tests/devtools-layout-smoke.sh
 
 ```powershell
 & ([scriptblock]::Create((Get-Content .\devtools\happyctl.ps1 -Raw))) help
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\devtools\tests\happyctl-windows-smoke.ps1
+# Optional additive check when PowerShell 7 is installed:
+pwsh -NoLogo -NoProfile -NonInteractive -File .\devtools\tests\happyctl-windows-smoke.ps1
 .\devtools\happyctl.ps1 doctor
 ```
 

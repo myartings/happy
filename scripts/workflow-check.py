@@ -601,7 +601,7 @@ def formal_run_errors(
     current_scope: bool = True,
     current_config: bool = True,
     applicable_paths: list[str] | None = None,
-    allow_command_failures: bool = False,
+    accepted_failure_indexes: tuple[int, ...] = (),
 ) -> list[str]:
     errors: list[str] = []
     evidence = ROOT / "docs" / "workspace" / slug / "evidence" / "checks.jsonl"
@@ -621,6 +621,13 @@ def formal_run_errors(
         return errors
     if [item.get("commandIndex") for item in run] != list(range(count)):
         errors.append("bound structured check run command indexes are incomplete")
+    if (
+        any(type(index) is not int or index < 0 for index in accepted_failure_indexes)
+        or len(set(accepted_failure_indexes)) != len(accepted_failure_indexes)
+        or tuple(sorted(accepted_failure_indexes)) != accepted_failure_indexes
+        or any(index >= count for index in accepted_failure_indexes)
+    ):
+        errors.append("accepted command indexes are invalid")
     identity_fields = (
         "profile", "scopeFingerprint", "configFingerprint",
         "commandSetFingerprint", "commandCount",
@@ -632,10 +639,35 @@ def formal_run_errors(
     for field in identity_fields:
         if any(item.get(field) != run[0].get(field) for item in run):
             errors.append(f"bound structured check run has inconsistent {field}")
-    if not allow_command_failures and any(
-        item.get("exitCode") != 0 or item.get("result") not in ("passed", "reused")
-        for item in run
-    ):
+    failed_indexes: list[int] = []
+    invalid_outcome_indexes: list[int] = []
+    for item in run:
+        index = item.get("commandIndex")
+        exit_code = item.get("exitCode")
+        result = item.get("result")
+        if exit_code == 0 and result in ("passed", "reused"):
+            continue
+        if (
+            type(index) is int
+            and type(exit_code) is int
+            and exit_code > 0
+            and result == f"failed ({exit_code})"
+        ):
+            failed_indexes.append(index)
+            continue
+        if type(index) is int:
+            invalid_outcome_indexes.append(index)
+    if accepted_failure_indexes:
+        if invalid_outcome_indexes:
+            errors.append(
+                "bound structured check run has invalid command outcomes at indexes: "
+                + ", ".join(str(index) for index in invalid_outcome_indexes)
+            )
+        if tuple(failed_indexes) != accepted_failure_indexes:
+            errors.append(
+                "accepted command indexes do not exactly match failed command indexes"
+            )
+    elif failed_indexes or invalid_outcome_indexes:
         errors.append("bound structured check run is not completely successful")
     profile = run[0].get("profile")
     if not isinstance(profile, str):

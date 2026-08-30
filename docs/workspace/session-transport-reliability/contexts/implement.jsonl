@@ -1,0 +1,13 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/protocol.md","reason":"Existing HTTP and Socket.IO session transport contract."}
+{"path":"docs/specs/session-transport-reliability.md","reason":"Accepted reliability contract and risk controls."}
+{"path":"docs/tasks/session-transport-reliability-tasks.md","reason":"Dependency-aware implementation slices."}
+{"path":"packages/happy-cli/src/api/apiSession.ts","reason":"Session message outbox, persisted receive cursor, and reconnect behavior."}
+{"path":"packages/happy-cli/src/api/apiSession.test.ts","reason":"Deterministic CLI transport coverage."}
+{"path":"packages/happy-cli/src/api/rpc/RpcHandlerManager.ts","reason":"CLI RPC registration and disconnect lifecycle."}
+{"path":"packages/happy-cli/src/daemon","reason":"Daemon restart and machine connection lifecycle."}
+{"path":"packages/happy-cli/src/codex/resumeExistingThread.ts","reason":"Codex provider thread resume identity."}
+{"path":"packages/happy-cli/src/resume","reason":"Durable Happy session resume identity."}
+{"path":"packages/happy-server/sources/app/api/socket/rpcHandler.ts","reason":"Server RPC lookup, acknowledgement, and death deadlines."}
+{"path":"packages/happy-server/sources/app/api/routes/v3SessionRoutes.ts","reason":"Persisted sequence and localId idempotency boundary."}
+{"path":"packages/happy-wire/src","reason":"Shared non-UI wire contracts when evidence requires changes."}

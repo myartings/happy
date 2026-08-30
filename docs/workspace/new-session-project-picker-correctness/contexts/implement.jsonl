@@ -1,0 +1,14 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/new-session-project-picker-correctness/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/new-session-project-picker-correctness.md","reason":"Accepted observable behavior and compatibility contract"}
+{"path":"docs/tasks/new-session-project-picker-correctness-tasks.md","reason":"Dependency-aware implementation slices"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.ts","reason":"Pure unified search, ranking, deduplication, and loader behavior"}
+{"path":"packages/happy-app/sources/utils/workspaceProjectDiscovery.test.ts","reason":"App search and loader regression seam"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Full New Session Project picker integration and layout"}
+{"path":"packages/happy-app/sources/sync/ops.ts","reason":"Backward-compatible optional Machine RPC request"}
+{"path":"packages/happy-app/sources/sync/ops.workspaceProjects.test.ts","reason":"App RPC wrapper regression seam"}
+{"path":"packages/happy-cli/src/workspace/workspaceProjectScanner.ts","reason":"Bounded outermost-root and query-aware discovery"}
+{"path":"packages/happy-cli/src/workspace/workspaceProjectScanner.test.ts","reason":"Scanner regression seam"}
+{"path":"packages/happy-cli/src/api/apiMachine.ts","reason":"Daemon optional RPC query validation and forwarding"}
+{"path":"packages/happy-cli/src/api/apiMachine.workspaceProjects.test.ts","reason":"Daemon RPC compatibility regression seam"}

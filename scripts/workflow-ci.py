@@ -301,29 +301,37 @@ def archive_data_rows(value: bytes | None) -> list[str]:
 
 
 def lifecycle_merge_errors(
-    evidence_root: Path, ours: str, theirs: str,
+    staged: bool, evidence_root: Path, ours: str, theirs: str, revision: str,
 ) -> list[str]:
     errors: list[str] = []
     paths = revision_lifecycle_paths(ours) | revision_lifecycle_paths(theirs)
-    workspace_root = evidence_root / "docs" / "workspace"
-    candidate_paths = {
-        path.relative_to(evidence_root).as_posix()
-        for path in workspace_root.rglob("*")
-        if path.is_file() or path.is_symlink()
-    } if workspace_root.exists() else set()
+    if staged:
+        workspace_root = evidence_root / "docs" / "workspace"
+        candidate_paths = {
+            path.relative_to(evidence_root).as_posix()
+            for path in workspace_root.rglob("*")
+            if path.is_file() or path.is_symlink()
+        } if workspace_root.exists() else set()
+    else:
+        candidate_paths = lifecycle_paths(revision_paths(revision))
+
+    def merged_entry(path: str) -> tuple[str, bytes] | None:
+        if staged:
+            return candidate_entry(evidence_root / path)
+        return revision_entry(revision, path)
+
     for path in sorted(candidate_paths - paths):
         errors.append(f"merge integration added new lifecycle evidence: {path}")
     archive_path = ARCHIVE_ID
     for path in sorted(paths - {archive_path}):
-        candidate = evidence_root / path
-        candidate_value = candidate_entry(candidate)
+        candidate_value = merged_entry(path)
         ours_value = revision_entry(ours, path)
         theirs_value = revision_entry(theirs, path)
         expected = {value for value in (ours_value, theirs_value) if value is not None}
         if candidate_value not in expected:
             errors.append(f"merge integration rewrote inherited lifecycle evidence: {path}")
 
-    candidate_archive_entry = candidate_entry(evidence_root / ARCHIVE)
+    candidate_archive_entry = merged_entry(archive_path)
     ours_archive_entry = revision_entry(ours, archive_path)
     theirs_archive_entry = revision_entry(theirs, archive_path)
     parent_archive_modes = {
@@ -451,7 +459,9 @@ def merge_integration_errors(
             f"active Trellis task must be finished and archived before "
             f"merge submission: {active}"
         )
-    errors.extend(lifecycle_merge_errors(evidence_root, ours, theirs))
+    errors.extend(
+        lifecycle_merge_errors(staged, evidence_root, ours, theirs, revision)
+    )
     errors.extend(source_delivery_errors(ours, theirs))
     return errors
 
@@ -530,6 +540,9 @@ def prearchive_candidate_errors(
         errors.extend(state_module.finish_sections_complete(
             evidence_root / workflow_root / "finish.md"
         ))
+        accepted_failure_indexes = (
+            state_module.accepted_check_failure_indexes(state)
+        )
 
         reviewed = state.get("checkedCandidate")
         if not isinstance(reviewed, dict):
@@ -571,10 +584,7 @@ def prearchive_candidate_errors(
                     check_module.formal_run_errors(
                         slug, run_id, current_scope=False, current_config=True,
                         applicable_paths=check_paths,
-                        allow_command_failures=(
-                            state.get("gates", {}).get("check", {}).get("status")
-                            == "accepted_gaps"
-                        ),
+                        accepted_failure_indexes=accepted_failure_indexes,
                     )
                 )
                 if (
@@ -661,6 +671,9 @@ def archived_delivery_errors(
         errors.extend(state_module.finish_sections_complete(
             evidence_root / workflow_root / "finish.md"
         ))
+        accepted_failure_indexes = (
+            state_module.accepted_check_failure_indexes(state)
+        )
         if state.get("schemaVersion") != state_module.SCHEMA_VERSION:
             errors.append("archived delivery must use the current workflow schema")
         if state.get("phase") != "archived":
@@ -744,10 +757,7 @@ def archived_delivery_errors(
                     errors.extend(check_module.formal_run_errors(
                         slug, run_id, current_scope=False, current_config=True,
                         applicable_paths=check_paths,
-                        allow_command_failures=(
-                            state.get("gates", {}).get("check", {}).get("status")
-                            == "accepted_gaps"
-                        ),
+                        accepted_failure_indexes=accepted_failure_indexes,
                     ))
                     if state.get("checkRunFingerprint") != (
                         check_module.formal_run_fingerprint(slug, run_id)
@@ -939,7 +949,7 @@ def main() -> int:
                     git("merge-base", base, parent) == git("rev-parse", base)
                     for parent in parents
                 ):
-                    source_parent = os.environ.get("WORKFLOW_SOURCE_PARENT", "1")
+                    source_parent = os.environ.get("WORKFLOW_SOURCE_PARENT", "auto")
                     if source_parent not in {"1", "2", "auto"}:
                         raise RuntimeError(
                             "WORKFLOW_SOURCE_PARENT must be 1, 2, or auto"

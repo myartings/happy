@@ -612,41 +612,68 @@ export class ApiSessionClient extends EventEmitter {
             );
 
             const messages = Array.isArray(response.data.messages) ? response.data.messages : [];
-            let maxSeq = afterSeq;
-
             for (const message of messages) {
-                if (message.seq > maxSeq) {
-                    maxSeq = message.seq;
+                // A live socket update may have won the race while this HTTP
+                // page was in flight. Never route that persisted sequence a
+                // second time.
+                if (message.seq <= this.lastReceivedSeq) {
+                    continue;
                 }
 
-                if (skipRouting) continue;
+                // Do not jump over a missing or unconsumable record. A later
+                // reconnect/invalidation must retry from the last sequence we
+                // actually consumed.
+                if (message.seq !== this.lastReceivedSeq + 1) {
+                    logger.debug('[API] Fetched message sequence gap, stopping catch-up', {
+                        sessionId: this.sessionId,
+                        expectedSeq: this.lastReceivedSeq + 1,
+                        receivedSeq: message.seq,
+                    });
+                    break;
+                }
+
+                if (skipRouting) {
+                    this.lastReceivedSeq = message.seq;
+                    continue;
+                }
 
                 if (message.content?.t !== 'encrypted') {
-                    continue;
+                    logger.debug('[API] Fetched message has unsupported content, stopping catch-up', {
+                        sessionId: this.sessionId,
+                        seq: message.seq,
+                    });
+                    break;
                 }
 
                 try {
                     const body = decrypt(this.encryptionKey, this.encryptionVariant, decodeBase64(message.content.c));
                     this.routeIncomingMessage(body);
+                    this.lastReceivedSeq = message.seq;
                 } catch (error) {
                     logger.debug('[API] Failed to decrypt fetched message', {
                         sessionId: this.sessionId,
                         seq: message.seq,
                         error
                     });
+                    break;
                 }
             }
 
-            this.lastReceivedSeq = Math.max(this.lastReceivedSeq, maxSeq);
             const hasMore = !!response.data.hasMore;
-            if (hasMore && maxSeq === afterSeq) {
+            // If live delivery advanced the cursor while this request was in
+            // flight, an entirely stale page can make no page-local progress
+            // even though `hasMore` still promises records after the newer
+            // live cursor. Continue from that cursor. Only stop when neither
+            // the page nor concurrent live delivery moved beyond the cursor
+            // used for this request.
+            if (hasMore && this.lastReceivedSeq === afterSeq) {
                 logger.debug('[API] fetchMessages pagination stalled, stopping to avoid infinite loop', {
                     sessionId: this.sessionId,
                     afterSeq
                 });
                 break;
             }
-            afterSeq = maxSeq;
+            afterSeq = this.lastReceivedSeq;
             if (!hasMore) {
                 break;
             }
@@ -656,12 +683,12 @@ export class ApiSessionClient extends EventEmitter {
     private static readonly MAX_OUTBOX_BATCH_SIZE = 50;
 
     private async flushOutbox() {
-        // Send latest messages first so the user sees recent activity immediately,
-        // then backfill older messages in subsequent batches.
+        // Persist in enqueue order. Server seq is the transcript order, so
+        // taking a batch from the tail would assign newer messages lower seqs
+        // than an older offline backlog and permanently reorder the session.
         while (this.pendingOutbox.length > 0) {
             const batchSize = Math.min(this.pendingOutbox.length, ApiSessionClient.MAX_OUTBOX_BATCH_SIZE);
-            const batchStart = this.pendingOutbox.length - batchSize;
-            const batch = this.pendingOutbox.slice(batchStart);
+            const batch = this.pendingOutbox.slice(0, batchSize);
 
             const response = await axios.post<V3PostSessionMessagesResponse>(
                 `${configuration.serverUrl}/v3/sessions/${encodeURIComponent(this.sessionId)}/messages`,
@@ -674,13 +701,29 @@ export class ApiSessionClient extends EventEmitter {
                 }
             );
 
+            const acknowledgements = Array.isArray(response.data?.messages)
+                ? response.data.messages
+                : [];
+            const acknowledgedLocalIds = new Set(
+                acknowledgements
+                    .map((message) => message?.localId)
+                    .filter((localId): localId is string => typeof localId === 'string'),
+            );
+            if (!batch.every((message) => acknowledgedLocalIds.has(message.localId))) {
+                // A 2xx transport response is not proof that every logical
+                // write committed. Keep the exact batch/localIds in the
+                // outbox so the idempotent server endpoint can confirm them on
+                // retry instead of silently dropping an unacknowledged item.
+                throw new Error('Session message response omitted an acknowledgement');
+            }
+
             // Deliberately does not touch the receive cursor. The seqs this
             // response reports are ours, and moving the cursor onto them steps
             // over anything the other side wrote in between — which is exactly
             // how a new session lost the first prompt. Our own messages come
             // back over the socket like everyone else's and move the cursor
             // then, once they have actually been seen.
-            this.pendingOutbox.splice(batchStart, batch.length);
+            this.pendingOutbox.splice(0, batch.length);
         }
     }
 

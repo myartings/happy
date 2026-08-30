@@ -249,70 +249,117 @@ describe('claudeLocal --continue handling', () => {
     });
 
     it('should initialize sandbox, wrap command, and cleanup on exit', async () => {
-        await claudeLocal({
-            abort: new AbortController().signal,
-            sessionId: null,
-            path: '/tmp/workspace',
-            onSessionFound,
-            claudeArgs: [],
-            sandboxConfig: {
-                enabled: true,
-                workspaceRoot: '~/projects',
-                sessionIsolation: 'workspace',
-                customWritePaths: [],
-                denyReadPaths: ['~/.ssh'],
-                extraWritePaths: ['/tmp'],
-                denyWritePaths: ['.env'],
-                networkMode: 'allowed',
-                allowedDomains: [],
-                deniedDomains: [],
-                allowLocalBinding: true,
-            },
-        });
+        const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin');
+        try {
+            await claudeLocal({
+                abort: new AbortController().signal,
+                sessionId: null,
+                path: '/tmp/workspace',
+                onSessionFound,
+                claudeArgs: [],
+                sandboxConfig: {
+                    enabled: true,
+                    workspaceRoot: '~/projects',
+                    sessionIsolation: 'workspace',
+                    customWritePaths: [],
+                    denyReadPaths: ['~/.ssh'],
+                    extraWritePaths: ['/tmp'],
+                    denyWritePaths: ['.env'],
+                    networkMode: 'allowed',
+                    allowedDomains: [],
+                    deniedDomains: [],
+                    allowLocalBinding: true,
+                },
+            });
 
-        expect(mockInitializeSandbox).toHaveBeenCalledWith(
-            expect.objectContaining({ enabled: true }),
-            '/tmp/workspace',
-        );
-        expect(mockWrapCommand).toHaveBeenCalledWith(expect.stringContaining('--dangerously-skip-permissions'));
-        expect(mockSpawn).toHaveBeenCalledWith(
-            'wrapped claude command',
-            [],
-            expect.objectContaining({ shell: true, cwd: '/tmp/workspace' }),
-        );
-        expect(mockSandboxCleanup).toHaveBeenCalledTimes(1);
+            expect(mockInitializeSandbox).toHaveBeenCalledWith(
+                expect.objectContaining({ enabled: true }),
+                '/tmp/workspace',
+            );
+            expect(mockWrapCommand).toHaveBeenCalledWith(expect.stringContaining('--dangerously-skip-permissions'));
+            expect(mockSpawn).toHaveBeenCalledWith(
+                'wrapped claude command',
+                [],
+                expect.objectContaining({ shell: true, cwd: '/tmp/workspace' }),
+            );
+            expect(mockSandboxCleanup).toHaveBeenCalledTimes(1);
+        } finally {
+            platform.mockRestore();
+        }
     });
 
     it('should continue without sandbox when initialization fails', async () => {
-        mockInitializeSandbox.mockRejectedValue(new Error('sandbox failed'));
+        const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin');
+        try {
+            mockInitializeSandbox.mockRejectedValue(new Error('sandbox failed'));
 
-        await claudeLocal({
-            abort: new AbortController().signal,
-            sessionId: null,
-            path: '/tmp',
-            onSessionFound,
-            claudeArgs: [],
-            sandboxConfig: {
-                enabled: true,
-                sessionIsolation: 'workspace',
-                customWritePaths: [],
-                denyReadPaths: ['~/.ssh'],
-                extraWritePaths: ['/tmp'],
-                denyWritePaths: ['.env'],
-                networkMode: 'allowed',
-                allowedDomains: [],
-                deniedDomains: [],
-                allowLocalBinding: true,
-            },
-        });
+            await claudeLocal({
+                abort: new AbortController().signal,
+                sessionId: null,
+                path: '/tmp',
+                onSessionFound,
+                claudeArgs: [],
+                sandboxConfig: {
+                    enabled: true,
+                    sessionIsolation: 'workspace',
+                    customWritePaths: [],
+                    denyReadPaths: ['~/.ssh'],
+                    extraWritePaths: ['/tmp'],
+                    denyWritePaths: ['.env'],
+                    networkMode: 'allowed',
+                    allowedDomains: [],
+                    deniedDomains: [],
+                    allowLocalBinding: true,
+                },
+            });
 
-        expect(mockWrapCommand).not.toHaveBeenCalled();
-        expect(mockSpawn).toHaveBeenCalledWith(
-            'node',
-            expect.any(Array),
-            expect.objectContaining({ shell: false }),
-        );
-        const spawnedArgs = mockSpawn.mock.calls[0][1];
-        expect(spawnedArgs).not.toContain('--dangerously-skip-permissions');
+            expect(mockInitializeSandbox).toHaveBeenCalled();
+            expect(mockWrapCommand).not.toHaveBeenCalled();
+            expect(mockSpawn).toHaveBeenCalledWith(
+                'node',
+                expect.any(Array),
+                expect.objectContaining({ shell: false }),
+            );
+            const spawnedArgs = mockSpawn.mock.calls[0][1];
+            expect(spawnedArgs).not.toContain('--dangerously-skip-permissions');
+        } finally {
+            platform.mockRestore();
+        }
+    });
+
+    it('should skip managed sandbox initialization on Windows', async () => {
+        const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+        try {
+            await claudeLocal({
+                abort: new AbortController().signal,
+                sessionId: null,
+                path: 'C:\\tmp\\workspace',
+                onSessionFound,
+                claudeArgs: [],
+                sandboxConfig: {
+                    enabled: true,
+                    sessionIsolation: 'workspace',
+                    customWritePaths: [],
+                    denyReadPaths: ['~/.ssh'],
+                    extraWritePaths: [],
+                    denyWritePaths: ['.env'],
+                    networkMode: 'allowed',
+                    allowedDomains: [],
+                    deniedDomains: [],
+                    allowLocalBinding: true,
+                },
+            });
+
+            expect(mockInitializeSandbox).not.toHaveBeenCalled();
+            expect(mockWrapCommand).not.toHaveBeenCalled();
+            expect(mockSpawn).toHaveBeenCalledWith(
+                'node',
+                expect.any(Array),
+                expect.objectContaining({ shell: false, cwd: 'C:\\tmp\\workspace' }),
+            );
+            expect(mockSandboxCleanup).not.toHaveBeenCalled();
+        } finally {
+            platform.mockRestore();
+        }
     });
 });

@@ -325,9 +325,31 @@ function Test-GitPushGuard {
         -not (Test-Path -LiteralPath $installedHook -PathType Leaf)) {
         return $false
     }
-    $sourceHash = (Get-FileHash -LiteralPath $sourceHook -Algorithm SHA256).Hash
-    $installedHash = (Get-FileHash -LiteralPath $installedHook -Algorithm SHA256).Hash
+    $sourceHash = Get-GitPushGuardContentHash -Path $sourceHook
+    $installedHash = Get-GitPushGuardContentHash -Path $installedHook
     return $sourceHash -eq $installedHash
+}
+
+function Get-GitPushGuardContentHash {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    $normalized = New-Object 'System.Collections.Generic.List[byte]'
+    for ($index = 0; $index -lt $bytes.Length; $index += 1) {
+        if ($bytes[$index] -eq 13 -and
+            $index + 1 -lt $bytes.Length -and
+            $bytes[$index + 1] -eq 10) {
+            continue
+        }
+        $normalized.Add($bytes[$index])
+    }
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($sha256.ComputeHash($normalized.ToArray()))).Replace("-", "")
+    } finally {
+        $sha256.Dispose()
+    }
 }
 
 function Get-GitPushGuardInstallDir {
@@ -903,8 +925,12 @@ function Get-LatestNsisInstaller {
     return $installers[0]
 }
 
+function Get-UninstallRegistryEntry {
+    return Get-ItemProperty -LiteralPath $WindowsUninstallKey -ErrorAction SilentlyContinue
+}
+
 function Get-InstalledDesktopInfo {
-    $uninstall = Get-ItemProperty -LiteralPath $WindowsUninstallKey -ErrorAction SilentlyContinue
+    $uninstall = Get-UninstallRegistryEntry
     return [pscustomobject]@{
         InstallDir = $WindowsInstallDir
         Exe = $WindowsInstalledExe
@@ -919,7 +945,7 @@ function Get-InstalledDesktopInfo {
 }
 
 function Get-UninstallRegistrySnapshot {
-    $uninstall = Get-ItemProperty -LiteralPath $WindowsUninstallKey -ErrorAction SilentlyContinue
+    $uninstall = Get-UninstallRegistryEntry
     if (-not $uninstall) {
         return $null
     }
@@ -1121,7 +1147,9 @@ function Show-UpdateDesktopDryRun {
     param([Parameter(Mandatory = $true)][System.IO.FileInfo]$Installer)
 
     Write-Section "Windows desktop update dry run"
+    Write-Host "Source:        $($Installer.FullName)"
     Write-Host "Installer:     $($Installer.FullName)"
+    Write-Host "Target:        $WindowsInstallDir"
     Write-Host "Install dir:   $WindowsInstallDir"
     Write-Host "Installed exe: $WindowsInstalledExe"
     Write-Host "Backup dir:    $BackupDir"
@@ -1419,6 +1447,39 @@ function Invoke-Doctor {
     Write-Host "Doctor passed."
 }
 
+function Invoke-TauriBuildWithPrebuiltFrontend {
+    param([Parameter(Mandatory = $true)][string]$ConfigPath)
+
+    $resolvedStateRoot = [System.IO.Path]::GetFullPath($DevtoolsStateRoot)
+    New-Item -ItemType Directory -Force -Path $resolvedStateRoot | Out-Null
+    $prebuiltFrontendConfigPath = Join-Path $resolvedStateRoot (
+        "tauri-prebuilt-frontend-{0}.json" -f [Guid]::NewGuid().ToString("N")
+    )
+    $prebuiltFrontendConfig = '{"build":{"beforeBuildCommand":""}}'
+
+    try {
+        [System.IO.File]::WriteAllText(
+            $prebuiltFrontendConfigPath,
+            $prebuiltFrontendConfig,
+            (New-Object System.Text.UTF8Encoding($false))
+        )
+        $configArg = ([System.IO.Path]::GetFullPath($ConfigPath) -replace "\\", "/")
+        $prebuiltFrontendConfigArg = ($prebuiltFrontendConfigPath -replace "\\", "/")
+        Write-Log "+ pnpm --filter happy-app exec tauri build --config $configArg --config <prebuilt-frontend-file>"
+        & pnpm --filter happy-app exec tauri build `
+            --config $configArg `
+            --config $prebuiltFrontendConfigArg
+        $tauriExitCode = $LASTEXITCODE
+        if ($tauriExitCode -ne 0) {
+            throw "tauri build failed with exit code $tauriExitCode"
+        }
+    } finally {
+        if (Test-Path -LiteralPath $prebuiltFrontendConfigPath -PathType Leaf) {
+            Remove-Item -LiteralPath $prebuiltFrontendConfigPath -Force
+        }
+    }
+}
+
 function Invoke-BuildDesktop {
     foreach ($tool in @("git", "node", "npm", "pnpm", "cargo")) {
         if (-not (Test-CommandExists $tool)) {
@@ -1514,14 +1575,7 @@ function Invoke-BuildDesktop {
             }
         }
 
-        $configArg = ($TauriConfigPath -replace "\\", "/")
-        $prebuiltFrontendConfig = '{"build":{"beforeBuildCommand":""}}'
-        Write-Log "+ pnpm --filter happy-app exec tauri build --config $configArg --config <prebuilt-frontend>"
-        & pnpm --filter happy-app exec tauri build --config $configArg --config $prebuiltFrontendConfig
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "tauri build failed with exit code $LASTEXITCODE"
-        }
+        Invoke-TauriBuildWithPrebuiltFrontend -ConfigPath $TauriConfigPath
 
         $appDependencyFile = Get-ChildItem -LiteralPath (Join-Path $TauriRoot "target\release\deps") `
             -Filter "app_lib.d" -File -ErrorAction SilentlyContinue |
@@ -1667,6 +1721,9 @@ function Invoke-CheckUpstream {
 function Invoke-RefreshDesktop {
     if ($DryRun) {
         Write-Section "Windows desktop refresh dry run"
+        Write-Host "Source:        $OfficialBaseRef -> $PersonalMainBranch -> $DevBranch"
+        Write-Host "Installer:     freshly built NSIS setup for $WindowsAppName"
+        Write-Host "Target:        $WindowsInstallDir"
         Show-PersonalPatchStackPlan
         if ($Force) {
             Write-Host "Would run forced refresh: doctor, sync main into dev, build dev, update-desktop dry-run, update-desktop, verify-desktop."
@@ -1790,6 +1847,8 @@ function Invoke-RefreshOfficialBaseline {
         Assert-HappyRepoClean
         Write-Section "Windows official baseline refresh dry run"
         Write-Host "Source:        $OfficialBaseRef"
+        Write-Host "Installer:     freshly built NSIS setup for $WindowsAppName"
+        Write-Host "Target:        $WindowsInstallDir"
         Write-Host "Local branch:  $PersonalMainBranch"
         Write-Host "App name:      $WindowsAppName"
         Write-Host "Tauri config:  $TauriConfigPath"

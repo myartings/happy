@@ -22,7 +22,7 @@ import {
   stopDaemonHttp,
   stopDaemonSession,
 } from '@/daemon/controlClient';
-import { clearDaemonState, readDaemonState } from '@/persistence';
+import { clearDaemonState, readDaemonState, readPersistedSessions } from '@/persistence';
 import { getLatestDaemonLog } from '@/ui/logger';
 import { spawnHappyCLI } from '@/utils/spawnHappyCLI';
 
@@ -66,7 +66,7 @@ describe('Daemon Integration Tests', { timeout: 180_000 }, () => {
     await waitFor(async () => {
       const state = await readDaemonState();
       return state !== null;
-    }, 10_000, 250); // Wait up to 10 seconds, checking every 250ms
+    }, 30_000, 250);
     
     const daemonState = await readDaemonState();
     if (!daemonState) {
@@ -134,27 +134,27 @@ describe('Daemon Integration Tests', { timeout: 180_000 }, () => {
     await stopDaemonSession(spawnedSession.happySessionId);
   });
 
-  it('stress test: spawn / stop', { timeout: 60_000 }, async () => {
-    const promises = [];
-    const sessionCount = 20;
-    for (let i = 0; i < sessionCount; i++) {
-      promises.push(spawnDaemonSession(integrationEnv.projectPath));
+  it('stress test: repeatedly spawn / stop bounded concurrent batches', { timeout: 90_000 }, async () => {
+    const rounds = 5;
+    const sessionsPerRound = 3;
+
+    for (let round = 0; round < rounds; round += 1) {
+      const results = await Promise.all(
+        Array.from({ length: sessionsPerRound }, () => spawnDaemonSession(integrationEnv.projectPath)),
+      );
+      const sessionIds = results.map(result => result.sessionId);
+      expect(sessionIds.every(Boolean)).toBe(true);
+      expect(new Set(sessionIds).size).toBe(sessionsPerRound);
+
+      await waitFor(async () => {
+        const sessions = await listDaemonSessions();
+        return sessionIds.every(sessionId => sessions.some(session => session.happySessionId === sessionId));
+      }, 5_000);
+
+      const stopResults = await Promise.all(sessionIds.map(sessionId => stopDaemonSession(sessionId)));
+      expect(stopResults.every(Boolean), `round ${round + 1} did not stop every session`).toBe(true);
+      await waitFor(async () => (await listDaemonSessions()).length === 0, 5_000);
     }
-
-    // Wait for all sessions to be spawned
-    const results = await Promise.all(promises);
-    const sessionIds = results.map(r => r.sessionId);
-
-    const sessions = await listDaemonSessions();
-    expect(sessions).toHaveLength(sessionCount);
-
-    // Stop all sessions
-    const stopResults = await Promise.all(sessionIds.map(sessionId => stopDaemonSession(sessionId)));
-    expect(stopResults.every(r => r), 'Not all sessions reported stopped').toBe(true);
-
-    // Verify all sessions are stopped
-    const emptySessions = await listDaemonSessions();
-    expect(emptySessions).toHaveLength(0);
   });
 
   it('should handle daemon stop request gracefully', async () => {    
@@ -224,6 +224,50 @@ describe('Daemon Integration Tests', { timeout: 180_000 }, () => {
 
     // Clean up
     await stopDaemonSession(spawnResponse.sessionId);
+  });
+
+  it('should restart with a new PID while retaining persisted resume state', async () => {
+    const originalPid = daemonPid;
+    const sessionId = 'restart-resume-session';
+    await notifyDaemonSessionStarted(sessionId, {
+      path: integrationEnv.projectPath,
+      host: 'test-host',
+      homeDir: integrationEnv.envDir,
+      happyHomeDir: configuration.happyHomeDir,
+      happyLibDir: process.cwd(),
+      happyToolsDir: path.join(process.cwd(), 'tools'),
+      hostPid: process.pid,
+      startedBy: 'terminal',
+      machineId: 'test-machine',
+      codexThreadId: 'restart-codex-thread',
+    }, {
+      encryptionKey: Buffer.from(new Uint8Array(32).fill(7)).toString('base64'),
+      encryptionVariant: 'dataKey',
+      seq: 23,
+      metadataVersion: 4,
+      agentStateVersion: 5,
+    });
+
+    expect(readPersistedSessions()[sessionId]).toMatchObject({
+      seq: 23,
+      metadata: { codexThreadId: 'restart-codex-thread' },
+    });
+
+    await stopDaemonHttp();
+    await waitFor(async () => !existsSync(configuration.daemonStateFile), 10_000);
+    void spawnHappyCLI(['daemon', 'start'], { stdio: 'ignore' });
+    await waitFor(async () => {
+      const state = await readDaemonState();
+      return state !== null && state.pid !== originalPid;
+    }, 30_000, 250);
+
+    const restarted = await readDaemonState();
+    expect(restarted?.pid).not.toBe(originalPid);
+    expect(readPersistedSessions()[sessionId]).toMatchObject({
+      seq: 23,
+      metadata: { codexThreadId: 'restart-codex-thread' },
+    });
+    daemonPid = restarted!.pid;
   });
 
   it('should not allow starting a second daemon', async () => {

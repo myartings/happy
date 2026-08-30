@@ -17,6 +17,8 @@ const GLOB_MARKERS = [
     /\.uproject$/i,
 ];
 
+export const MAX_WORKSPACE_PROJECT_QUERY_LENGTH = 256;
+
 const SKIP_DIRECTORIES = new Set([
     '.git',
     'node_modules',
@@ -55,13 +57,19 @@ export async function listWorkspaceProjects({
     root,
     maxDepth = 3,
     maxProjects = 200,
+    query,
 }: {
     root: string;
     maxDepth?: number;
     maxProjects?: number;
+    query?: string;
 }): Promise<ListWorkspaceProjectsResult> {
     const projects: WorkspaceProject[] = [];
     const resolvedRoot = resolve(root);
+    const normalizedQuery = query
+        ?.trim()
+        .slice(0, MAX_WORKSPACE_PROJECT_QUERY_LENGTH)
+        .toLocaleLowerCase() ?? '';
     const pending = [{ path: resolvedRoot, depth: 0 }];
 
     while (pending.length > 0) {
@@ -88,14 +96,23 @@ export async function listWorkspaceProjects({
             markers.sort((left, right) => left.localeCompare(right));
 
             if (markers.length > 0) {
-                projects.push({
+                const project = {
                     name: basename(current.path),
                     path: current.path,
                     relativePath: relative(resolvedRoot, current.path),
                     markers,
                     depth: current.depth,
-                });
-                if (projects.length > maxProjects) break;
+                };
+                if (
+                    !normalizedQuery
+                    || project.name.toLocaleLowerCase().includes(normalizedQuery)
+                    || project.path.toLocaleLowerCase().includes(normalizedQuery)
+                    || project.relativePath.toLocaleLowerCase().includes(normalizedQuery)
+                ) {
+                    projects.push(project);
+                    if (projects.length > maxProjects) break;
+                }
+                continue;
             }
         }
 

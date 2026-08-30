@@ -1,5 +1,75 @@
 # Happy Product Requirements
 
+## Non-UI Session Transport Reliability
+
+### Problem
+
+Happy's coding-session transport spans CLI/daemon processes, Socket.IO, HTTP
+message persistence, server-side RPC routing, and provider-owned Codex threads.
+Network interruption, process restart, retries, or lost acknowledgements can
+therefore expose users to a missing or repeated prompt, reordered transcript,
+or an RPC that waits after its target has died.
+
+### Desired outcome
+
+For persisted session messages, an interrupted client converges to the server's
+ordered log without loss or duplicate delivery. Retried writes are idempotent.
+CLI/daemon and Codex thread restarts resume the intended identity and history.
+RPC calls either complete or return a bounded failure when their target dies.
+
+### Product requirements
+
+1. Disconnect and reconnect catch up every persisted message after the last
+   message actually consumed by the client.
+2. Duplicate or out-of-order socket notifications trigger ordered catch-up and
+   do not produce duplicate application-level delivery.
+3. A write retried after a lost acknowledgement creates one persisted message,
+   identified by a stable client-generated idempotency key.
+4. Pending writes survive transient transport failure for the life of the
+   running CLI process and drain after recovery without reordering that queue.
+5. CLI/daemon restart and Codex thread resume use durable identifiers and do
+   not silently attach to a different Happy session or provider thread.
+6. An RPC whose target is absent, disconnects, or never acknowledges returns a
+   deterministic error within a documented bound; no call waits forever.
+7. Each named failure mode has a deterministic automated test or repeatable,
+   bounded stress script, and critical scenarios pass multiple consecutive
+   rounds with zero lost, duplicate, or misordered messages.
+
+### Observable success
+
+- Automated fault injection covers offline recovery, Socket reconnect,
+  CLI/daemon restart, Codex thread resume, duplicate delivery, reordering,
+  acknowledgement loss, and dead RPC targets.
+- Relevant happy-cli, happy-server, and happy-wire tests pass together.
+- Relevant typecheck/build commands, strict workflow audit, and whole-feature
+  verification pass.
+- The workflow validation record states commands, round counts, elapsed time,
+  findings, remaining limitations, and rollback instructions.
+
+### Scope
+
+- `packages/happy-cli`, `packages/happy-server`, and `packages/happy-wire`.
+- Deterministic fault-injection tests and repeatable bounded stress tooling.
+- Protocol and workflow documentation required to explain and verify the
+  reliability contract.
+
+### Non-goals
+
+- Any change to `happy-app`, Studio, themes, visual assets, or UI behavior.
+- Deployment, release, publication, database migration, or a new messaging
+  product surface.
+- Exactly-once execution of arbitrary RPC side effects; RPC guarantees are
+  bounded completion and explicit retry semantics.
+
+### Constraints
+
+- Preserve wire compatibility with existing clients and server data.
+- Prefer server-persisted sequence numbers for receive ordering and stable
+  client local IDs for write idempotency.
+- Tests must be deterministic; stress scripts must have explicit rounds and
+  timeouts and must not require production infrastructure.
+- Changes must be locally reversible and require no data rollback.
+
 ## Workspace Project Discovery
 
 ### Problem
@@ -28,13 +98,15 @@ Checkout management system.
 ### Product requirements
 
 1. The picker presents existing Session-history paths as `Recent`, preserving
-   their current content and priority.
+   their current content and priority when no search is active.
 2. The picker can present projects discovered on the selected online Machine
    under a separate `Workspace Projects` section.
 3. Discovery is requested only when the picker is open and the selected
    Machine is online.
-4. Users can search discovered projects by project name, absolute path, and
-   path relative to the workspace root.
+4. One project search covers both Recent and discovered projects by project
+   name, absolute path, and path relative to the workspace root. Search results
+   prioritize exact name matches, then name-prefix/name-substring matches, then
+   relative-path and absolute-path matches.
 5. Recent and discovered paths are normalized according to the target
    platform and deduplicated. A matching Recent path wins.
 6. Selecting a discovered project only updates the existing selected working
@@ -51,6 +123,10 @@ Checkout management system.
 11. Discovery results are short-lived in-memory UI data. They are not uploaded
     or persisted in Server, Machine, Session, or sync metadata.
 12. The behavior works for native macOS, Linux, and Windows paths.
+13. Discovery presents project roots rather than every nested package or IDE
+    bundle inside an already recognized project.
+14. When an unfiltered result is truncated, a search can ask a supporting
+    daemon for matching projects beyond the original result window.
 
 ### Observable success
 
@@ -334,3 +410,92 @@ user action even when a realtime update is missed or a socket becomes half-open.
   Session content.
 - Foreground reconciliation is incremental and restricted to visible Sessions.
 - A transient probe failure must not cause an immediate reconnect loop.
+
+# Windows Native Reliability
+
+## Problem
+
+Happy's Windows devtools, package scripts, and CLI tests do not yet have one
+native, deterministic verification loop. PowerShell behavior is partly covered
+only by Unix smoke tests or ad hoc commands, while known Windows-only failures
+can be hidden by missing worktree dependencies or POSIX assumptions. Commands
+near installation, registry, scheduled-task, daemon, Git-branch, and push-guard
+boundaries also need proof that validation itself does not change external
+state.
+
+## Desired outcome
+
+From an isolated worktree based on the validated `dev` commit, a maintainer can
+run one Windows PowerShell 5.1-compatible smoke suite and a bounded set of real
+build checks to prove Happy's Windows devtools, CLI, and desktop build path are
+repeatable and non-destructive. Stable Windows-only failures are fixed with
+regression coverage; failures that cannot be reproduced retain exact
+environment and counter-evidence instead of speculative changes.
+
+## Product requirements
+
+1. `devtools/happyctl.ps1` has a self-contained Windows smoke/contract entry
+   that runs under Windows PowerShell 5.1 without Pester or a new global
+   dependency.
+2. The suite covers PowerShell parsing, paths containing spaces and non-ASCII
+   characters, isolated Node 20 resolution, doctor success/failure behavior,
+   Git and product-difference guards, artifact discovery, and the supported
+   desktop update/refresh dry runs.
+3. Test fixtures and dry runs are isolated from real installs, uninstall
+   registry entries, scheduled tasks, running applications, daemons, branches,
+   remotes, and user configuration.
+4. The `@slopus/happy-wire` package's standard test command works from native
+   Windows package-script execution.
+5. CLI tests express the platform behavior actually exercised on Windows:
+   sandbox tests do not require non-Windows mocks when production skips that
+   path, and path/tool-launcher assertions use native path semantics. Any
+   production correction is limited to a runtime failure reproduced by the
+   complete native suite.
+6. A real Windows `doctor` and `build-desktop` run from the selected worktree
+   succeeds with isolated Node 20 and produces fresh `app.exe`, NSIS, and MSI
+   outputs without installing them.
+7. Repository status, installed executable hashes, uninstall entries, Happy
+   scheduled tasks, and Happy daemon/application process status are captured
+   before and after final verification and remain unchanged except for tracked
+   task changes and ignored build outputs.
+
+## Observable success
+
+- Windows PowerShell 5.1 parses the production script and the smoke entry with
+  zero errors; PowerShell 7 also parses and runs it when installed.
+- The complete Windows smoke suite passes twice consecutively.
+- `happyctl.ps1 doctor` passes against the selected worktree.
+- `happyctl.ps1 build-desktop` completes without installation, and all three
+  required artifacts are newer than the recorded build start time.
+- The standard happy-wire test, focused sandbox regressions, and complete CLI
+  suite pass on native Windows.
+- A machine-readable before/after comparison finds no external-state drift.
+
+## Scope
+
+- Windows PowerShell devtools tests and the narrow production seams required by
+  failures those tests reproduce.
+- Windows-compatible package-script and CLI corrections for the recorded gaps
+  and any additional stable Windows failures exposed by the required complete
+  baseline run.
+- Native Windows dependency, doctor, dry-run, build, artifact, and invariant
+  evidence.
+
+## Non-goals
+
+- Daemon/service startup architecture.
+- Product UI, Studio, theme, animation, or visual alignment work.
+- Installing, replacing, launching for install verification, or rolling back a
+  desktop application.
+- Writing uninstall registry state or registering/removing scheduled tasks.
+- Publishing, branch synchronization, commit, push, merge, or work on another
+  platform or product feature.
+
+## Constraints
+
+- Behavior changes require a stable native Windows reproduction first.
+- Tests use temporary fixtures and restore process-scoped environment changes.
+- Real validation may write only ignored dependency/build outputs and
+  repository workflow evidence.
+- A daemon architecture choice or any required external-state mutation blocks
+  completion pending explicit owner approval.

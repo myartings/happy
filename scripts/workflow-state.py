@@ -56,6 +56,7 @@ RIGHT_SIZING_POLICY_VERSION = 1
 RIGHT_SIZING_CONTRACT_POLICY_VERSION = 1
 PARALLEL_ASSESSMENT_POLICY_VERSION = 2
 CHECK_EVIDENCE_POLICY_VERSION = 1
+CHECK_ACCEPTED_FAILURES_POLICY_VERSION = 1
 REVIEW_CONVERGENCE_POLICY_VERSION = 2
 SUPPORTED_REVIEW_CONVERGENCE_POLICIES = (1, REVIEW_CONVERGENCE_POLICY_VERSION)
 REVIEW_LEDGER_POLICY_VERSION = 1
@@ -660,23 +661,34 @@ def check_binding_errors(
 ) -> list[str]:
     receipt = state.get("gates", {}).get("check", {})
     status = receipt.get("status")
-    if status not in ("passed", "accepted_gaps"):
+    structured_statuses = ("passed", "accepted_gaps")
+    if status not in structured_statuses:
         if any(
             key in state
-            for key in ("checkEvidencePolicy", "checkRunId", "checkRunFingerprint")
+            for key in (
+                "checkEvidencePolicy", "checkRunId", "checkRunFingerprint",
+                "checkedCandidate", "checkAcceptedFailures",
+                "checkAcceptedFailuresFingerprint",
+            )
         ):
             return [
-                "structured check binding requires check=passed or accepted_gaps"
+                "structured check binding requires check=passed or "
+                "check=accepted_gaps"
             ]
         return []
+    errors: list[str] = []
+    try:
+        accepted_failure_indexes = accepted_check_failure_indexes(state)
+    except SystemExit as exc:
+        errors.append(str(exc))
+        accepted_failure_indexes = ()
     version = state.get("checkEvidencePolicy")
     run_id = state.get("checkRunId")
     fingerprint = state.get("checkRunFingerprint")
     if version is None and run_id is None and fingerprint is None:
-        return [
+        return errors + [
             f"check={status} requires a bound structured workflow-check run"
         ]
-    errors: list[str] = []
     if version != CHECK_EVIDENCE_POLICY_VERSION:
         errors.append(
             f"checkEvidencePolicy must be {CHECK_EVIDENCE_POLICY_VERSION}"
@@ -698,7 +710,7 @@ def check_binding_errors(
                     state.get("phase") != "archived"
                     if current_scope is None else current_scope
                 ),
-                allow_command_failures=(status == "accepted_gaps"),
+                accepted_failure_indexes=accepted_failure_indexes,
             )
         )
         if (
@@ -710,17 +722,101 @@ def check_binding_errors(
             errors.append("bound structured check run content changed")
         records = check_module.evidence_records(path / "evidence" / "checks.jsonl")
         run = [item for item in records if item.get("runId") == run_id]
-        if status == "accepted_gaps" and not any(
-            item.get("exitCode") != 0
-            or item.get("result") not in ("passed", "reused")
-            for item in run
-        ):
-            errors.append("check=accepted_gaps requires at least one failed command")
         if not records or records[-1].get("runId") != run_id:
             errors.append("bound structured check run is not the final evidence run")
+        if run:
+            identity = run[0]
+            expected_candidate = (
+                {
+                    "identityKind": "staged-candidate-v1",
+                    "baseCommit": identity.get("candidateBaseCommit"),
+                    "candidateFingerprint": identity.get("candidateFingerprint"),
+                }
+                if identity.get("identityKind") == "staged-candidate-v1"
+                else {
+                    "identityKind": "worktree-candidate-v1",
+                    "baseCommit": str(identity.get("head", "")),
+                    "candidateFingerprint": identity.get("scopeFingerprint"),
+                }
+            )
+            if state.get("checkedCandidate") != expected_candidate:
+                errors.append(
+                    "checkedCandidate does not match the bound structured check run"
+                )
     except (RuntimeError, OSError, SystemExit) as exc:
         errors.append(f"cannot validate bound structured check run: {exc}")
     return errors
+
+
+def check_accepted_failures_fingerprint(state: dict[str, Any]) -> str:
+    payload = {
+        "policy": state.get("checkAcceptedFailures"),
+        "runId": state.get("checkRunId"),
+        "runFingerprint": state.get("checkRunFingerprint"),
+        "candidate": state.get("checkedCandidate"),
+    }
+    canonical = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def accepted_check_failure_indexes(state: dict[str, Any]) -> tuple[int, ...]:
+    status = state.get("gates", {}).get("check", {}).get("status")
+    if status != "accepted_gaps":
+        if any(
+            key in state for key in (
+                "checkAcceptedFailures", "checkAcceptedFailuresFingerprint",
+            )
+        ):
+            raise SystemExit(
+                "accepted failure policy requires check=accepted_gaps"
+            )
+        return ()
+    value = state.get("checkAcceptedFailures")
+    expected = {"policyVersion", "commandIndexes", "approval"}
+    if not isinstance(value, dict) or set(value) != expected:
+        raise SystemExit(
+            "check=accepted_gaps requires a canonical checkAcceptedFailures policy"
+        )
+    if value.get("policyVersion") != CHECK_ACCEPTED_FAILURES_POLICY_VERSION:
+        raise SystemExit(
+            "checkAcceptedFailures policyVersion must be "
+            f"{CHECK_ACCEPTED_FAILURES_POLICY_VERSION}"
+        )
+    indexes = value.get("commandIndexes")
+    if not isinstance(indexes, list) or not indexes:
+        raise SystemExit("checkAcceptedFailures commandIndexes must be non-empty")
+    if any(type(index) is not int or index < 0 for index in indexes):
+        raise SystemExit(
+            "checkAcceptedFailures commandIndexes must be non-negative integers"
+        )
+    if indexes != sorted(indexes) or len(set(indexes)) != len(indexes):
+        raise SystemExit(
+            "checkAcceptedFailures commandIndexes must be sorted and unique"
+        )
+    approval = value.get("approval")
+    if not isinstance(approval, str) or not approval.strip():
+        raise SystemExit("checkAcceptedFailures approval must be non-empty")
+    fingerprint = state.get("checkAcceptedFailuresFingerprint")
+    if not isinstance(fingerprint, str) or not re.fullmatch(
+        r"[0-9a-f]{64}", fingerprint,
+    ):
+        raise SystemExit(
+            "checkAcceptedFailuresFingerprint must be a SHA-256 hex digest"
+        )
+    if fingerprint != check_accepted_failures_fingerprint(state):
+        raise SystemExit("checkAcceptedFailures fingerprint changed")
+    return tuple(indexes)
+
+
+def clear_check_binding(state: dict[str, Any]) -> None:
+    for key in (
+        "checkEvidencePolicy", "checkRunId", "checkRunFingerprint",
+        "checkedCandidate", "checkAcceptedFailures",
+        "checkAcceptedFailuresFingerprint", "finalReview", "completionEvidence",
+    ):
+        state.pop(key, None)
 
 
 def committed_parallel_reassessments(path: Path) -> tuple[list[dict[str, Any]], str]:
@@ -1447,12 +1543,7 @@ def reset_downstream(state: dict[str, Any], phase: str) -> None:
         if state["gates"][name]["status"] != "not_required":
             state["gates"][name] = gate()
     if "check" in names:
-        state.pop("checkEvidencePolicy", None)
-        state.pop("checkRunId", None)
-        state.pop("checkRunFingerprint", None)
-        state.pop("checkedCandidate", None)
-        state.pop("finalReview", None)
-        state.pop("completionEvidence", None)
+        clear_check_binding(state)
 
 
 def transition(args: argparse.Namespace) -> None:
@@ -1868,13 +1959,11 @@ def record_gate(args: argparse.Namespace) -> None:
             )
     if args.name == "check" and args.status in ("passed", "accepted_gaps"):
         raise SystemExit(
-            f"check={args.status} requires a bound structured workflow-check "
-            "run; use check-receipt with its run id"
+            f"check={args.status} requires a bound structured workflow-check run; "
+            "run workflow-check.py --applicable --record <slug>"
         )
     if args.name == "check":
-        state.pop("checkEvidencePolicy", None)
-        state.pop("checkRunId", None)
-        state.pop("checkRunFingerprint", None)
+        clear_check_binding(state)
     if args.name == "scoping" and args.status == "passed":
         if (
             state.get("rightSizingPolicy") == RIGHT_SIZING_POLICY_VERSION
@@ -1905,6 +1994,8 @@ def record_gate(args: argparse.Namespace) -> None:
         projected["gates"] = dict(state["gates"])
         projected["gates"]["review"] = gate(args.status, evidence)
         errors = final_review_errors(projected)
+        if args.status in ("passed", "accepted_gaps"):
+            errors.extend(check_binding_errors(state, workflow_dir(slug)))
         if errors:
             raise SystemExit("; ".join(errors))
         if identity["identityKind"] == "staged-candidate-v1":
@@ -1976,64 +2067,107 @@ def record_check_receipt(args: argparse.Namespace) -> None:
             "structured check receipt requires phase=verification, "
             f"found {state['phase']}"
         )
+    review_status = state.get("gates", {}).get("review", {}).get("status")
+    if review_status != "pending":
+        raise SystemExit(
+            "structured check receipt requires review=pending, "
+            f"found {review_status}"
+        )
     evidence = args.evidence.strip()
     run_id = args.run_id.strip()
     if not evidence or not run_id:
         raise SystemExit("structured check receipt requires evidence and run id")
+    raw_indexes = args.accepted_command_index or []
+    approval = args.approval.strip()
+    if args.status != "accepted_gaps" and (raw_indexes or approval):
+        raise SystemExit(
+            "accepted failure indexes and approval require status=accepted_gaps"
+        )
+    accepted_failure_indexes: tuple[int, ...] = ()
+    if args.status == "accepted_gaps":
+        if not raw_indexes:
+            raise SystemExit(
+                "accepted check failures require at least one "
+                "--accepted-command-index"
+            )
+        if len(set(raw_indexes)) != len(raw_indexes):
+            raise SystemExit("accepted command indexes must be unique")
+        if any(index < 0 for index in raw_indexes):
+            raise SystemExit("accepted command indexes must be non-negative")
+        if not approval:
+            raise SystemExit("accepted check failures require --approval")
+        accepted_failure_indexes = tuple(sorted(raw_indexes))
     if args.status in ("passed", "accepted_gaps"):
         check_module = load_check_module()
         try:
             errors = check_module.formal_run_errors(
                 slug, run_id, current_scope=True,
-                allow_command_failures=(args.status == "accepted_gaps"),
-            )
-            records = check_module.evidence_records(
-                workflow_dir(slug) / "evidence" / "checks.jsonl"
+                accepted_failure_indexes=accepted_failure_indexes,
             )
         except (RuntimeError, OSError, SystemExit) as exc:
             errors = [str(exc)]
-            records = []
-        run = [item for item in records if item.get("runId") == run_id]
-        if args.status == "accepted_gaps" and not any(
-            item.get("exitCode") != 0
-            or item.get("result") not in ("passed", "reused")
-            for item in run
-        ):
-            errors.append("check=accepted_gaps requires at least one failed command")
         if errors:
             raise SystemExit("; ".join(sorted(set(errors))))
-        state["checkEvidencePolicy"] = CHECK_EVIDENCE_POLICY_VERSION
-        state["checkRunId"] = run_id
-        state["checkRunFingerprint"] = check_module.formal_run_fingerprint(
-            slug, run_id
+        records = check_module.evidence_records(
+            workflow_dir(slug) / "evidence" / "checks.jsonl"
         )
+        if not records or records[-1].get("runId") != run_id:
+            raise SystemExit(
+                "structured check receipt requires the final evidence run"
+            )
+        run = [item for item in records if item.get("runId") == run_id]
         identity = run[0] if run else {}
+        if (
+            args.status == "accepted_gaps"
+            and identity.get("identityKind") != "staged-candidate-v1"
+        ):
+            raise SystemExit(
+                "check=accepted_gaps requires a staged-candidate-v1 run"
+            )
         if identity.get("identityKind") == "staged-candidate-v1":
-            state["checkedCandidate"] = {
+            candidate = {
                 "identityKind": "staged-candidate-v1",
                 "baseCommit": identity["candidateBaseCommit"],
                 "candidateFingerprint": identity["candidateFingerprint"],
             }
         else:
-            state["checkedCandidate"] = {
+            candidate = {
                 "identityKind": "worktree-candidate-v1",
                 "baseCommit": str(identity.get("head", "")),
                 "candidateFingerprint": identity["scopeFingerprint"],
             }
+        fingerprint = check_module.formal_run_fingerprint(slug, run_id)
+        clear_check_binding(state)
+        state["checkEvidencePolicy"] = CHECK_EVIDENCE_POLICY_VERSION
+        state["checkRunId"] = run_id
+        state["checkRunFingerprint"] = fingerprint
+        state["checkedCandidate"] = candidate
+        if args.status == "accepted_gaps":
+            state["checkAcceptedFailures"] = {
+                "policyVersion": CHECK_ACCEPTED_FAILURES_POLICY_VERSION,
+                "commandIndexes": list(accepted_failure_indexes),
+                "approval": approval,
+            }
+            state["checkAcceptedFailuresFingerprint"] = (
+                check_accepted_failures_fingerprint(state)
+            )
     else:
-        state.pop("checkEvidencePolicy", None)
-        state.pop("checkRunId", None)
-        state.pop("checkRunFingerprint", None)
-        state.pop("checkedCandidate", None)
-        state.pop("finalReview", None)
+        clear_check_binding(state)
     state["gates"]["check"] = gate(args.status, evidence)
+    history_evidence = f"{evidence}; structured run: {run_id}"
+    if args.status == "accepted_gaps":
+        history_evidence += (
+            "; accepted command indexes: "
+            + ", ".join(str(index) for index in accepted_failure_indexes)
+            + f"; approval: {approval}"
+        )
     state["history"].append(
         {
             "at": timestamp(),
             "type": "gate",
             "gate": "check",
             "status": args.status,
-            "evidence": f"{evidence}; structured run: {run_id}",
+            "evidence": history_evidence,
         }
     )
     save_state(state)
@@ -2174,6 +2308,12 @@ def record_review_conclusion(args: argparse.Namespace) -> None:
     ):
         raise SystemExit("final review requires the applicable final check first")
     identity = checked_candidate(state)
+    binding_errors = check_binding_errors(state, workflow_dir(slug))
+    if binding_errors:
+        raise SystemExit(
+            "final review requires a valid bound final check: "
+            + "; ".join(binding_errors)
+        )
     if identity["identityKind"] == "staged-candidate-v1":
         try:
             package = load_review_module().verify_package(slug)
@@ -2788,6 +2928,10 @@ def parser() -> argparse.ArgumentParser:
         "status", choices=("passed", "accepted_gaps", "blocked")
     )
     check_receipt_parser.add_argument("--run-id", required=True)
+    check_receipt_parser.add_argument(
+        "--accepted-command-index", action="append", type=int, default=[]
+    )
+    check_receipt_parser.add_argument("--approval", default="")
     check_receipt_parser.add_argument("--evidence", required=True)
     check_receipt_parser.set_defaults(func=record_check_receipt)
 

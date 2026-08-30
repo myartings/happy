@@ -73,7 +73,7 @@ function isListWorkspaceProjectsResult(value: unknown): value is ListWorkspacePr
 
 export class WorkspaceProjectDiscoveryLoader {
     private generation = 0;
-    private readonly request: (machineId: string) => Promise<ListWorkspaceProjectsResult>;
+    private readonly request: (machineId: string, query: string) => Promise<ListWorkspaceProjectsResult>;
     private readonly timeoutMs: number;
     private readonly cacheMs: number;
     private readonly now: () => number;
@@ -85,7 +85,7 @@ export class WorkspaceProjectDiscoveryLoader {
         cacheMs = 45_000,
         now = Date.now,
     }: {
-        request: (machineId: string) => Promise<ListWorkspaceProjectsResult>;
+        request: (machineId: string, query: string) => Promise<ListWorkspaceProjectsResult>;
         timeoutMs?: number;
         cacheMs?: number;
         now?: () => number;
@@ -96,9 +96,11 @@ export class WorkspaceProjectDiscoveryLoader {
         this.now = now;
     }
 
-    async load(machineId: string): Promise<WorkspaceProjectDiscoveryOutcome | null> {
+    async load(machineId: string, query = ''): Promise<WorkspaceProjectDiscoveryOutcome | null> {
         const generation = ++this.generation;
-        const cached = this.cache.get(machineId);
+        const normalizedQuery = query.trim();
+        const cacheKey = JSON.stringify([machineId, normalizedQuery]);
+        const cached = this.cache.get(cacheKey);
         if (cached && this.now() - cached.cachedAt <= this.cacheMs) {
             return { status: 'ready', result: cached.result };
         }
@@ -106,7 +108,7 @@ export class WorkspaceProjectDiscoveryLoader {
 
         try {
             const result = await Promise.race([
-                this.request(machineId),
+                this.request(machineId, normalizedQuery),
                 new Promise<never>((_resolve, reject) => {
                     timeout = setTimeout(() => reject(new Error('Workspace project discovery timed out')), this.timeoutMs);
                 }),
@@ -115,7 +117,7 @@ export class WorkspaceProjectDiscoveryLoader {
             if (!isListWorkspaceProjectsResult(result)) {
                 return { status: 'unavailable' };
             }
-            this.cache.set(machineId, { result, cachedAt: this.now() });
+            this.cache.set(cacheKey, { result, cachedAt: this.now() });
             return { status: 'ready', result };
         } catch {
             if (generation !== this.generation) return null;
@@ -152,42 +154,75 @@ function pathName(path: string): string {
     return parts.at(-1) || path;
 }
 
+function projectSearchScore(
+    project: Pick<WorkspaceProjectPickerItem, 'name' | 'path' | 'relativePath'>,
+    normalizedQuery: string,
+): number | null {
+    if (!normalizedQuery) return 0;
+
+    const name = project.name.toLocaleLowerCase();
+    if (name === normalizedQuery) return 0;
+    if (name.startsWith(normalizedQuery)) return 1;
+    if (name.includes(normalizedQuery)) return 2;
+
+    const relativePath = project.relativePath?.toLocaleLowerCase();
+    if (relativePath?.includes(normalizedQuery)) return 3;
+    if (project.path.toLocaleLowerCase().includes(normalizedQuery)) return 4;
+    return null;
+}
+
+function filterAndRankProjects<T extends Pick<WorkspaceProjectPickerItem, 'name' | 'path' | 'relativePath'>>(
+    projects: T[],
+    normalizedQuery: string,
+): T[] {
+    if (!normalizedQuery) return projects;
+
+    return projects
+        .map((project) => ({ project, score: projectSearchScore(project, normalizedQuery) }))
+        .filter((candidate): candidate is { project: T; score: number } => candidate.score !== null)
+        .sort((left, right) => (
+            left.score - right.score
+            || left.project.name.localeCompare(right.project.name, undefined, { sensitivity: 'base' })
+            || left.project.path.localeCompare(right.project.path)
+        ))
+        .map((candidate) => candidate.project);
+}
+
 export function buildWorkspaceProjectSections({
     recentPaths,
+    recentProjects,
     discoveredProjects,
     homeDir,
     platform,
     query,
 }: {
-    recentPaths: string[];
+    recentPaths?: string[];
+    recentProjects?: Array<{ name?: string; path: string }>;
     discoveredProjects: WorkspaceProject[];
     homeDir?: string;
     platform: TargetPlatform;
     query: string;
 }): WorkspaceProjectSections {
-    const recent = recentPaths.map((path) => ({
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    const recentProjectInputs: Array<{ name?: string; path: string }> = recentProjects
+        ?? (recentPaths ?? []).map((path) => ({ path }));
+    const allRecent = recentProjectInputs.map((project) => ({
         source: 'recent' as const,
-        name: pathName(path),
-        path,
+        name: project.name?.trim() || pathName(project.path),
+        path: project.path,
         markers: [],
     }));
-    const recentKeys = new Set(recent.map((item) => normalizePath(item.path, platform, homeDir)));
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-    const workspaceProjects = discoveredProjects
+    const recentKeys = new Set(allRecent.map((item) => normalizePath(item.path, platform, homeDir)));
+    const recent = filterAndRankProjects(allRecent, normalizedQuery);
+    const workspaceProjects = filterAndRankProjects(discoveredProjects
         .filter((project) => !recentKeys.has(normalizePath(project.path, platform, homeDir)))
-        .filter((project) => (
-            !normalizedQuery
-            || project.name.toLocaleLowerCase().includes(normalizedQuery)
-            || project.path.toLocaleLowerCase().includes(normalizedQuery)
-            || project.relativePath.toLocaleLowerCase().includes(normalizedQuery)
-        ))
         .map((project) => ({
             source: 'workspace' as const,
             name: project.name,
             path: project.path,
             relativePath: project.relativePath,
             markers: project.markers,
-        }));
+        })), normalizedQuery);
 
     return { recent, workspaceProjects };
 }
