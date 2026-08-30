@@ -190,11 +190,10 @@ function findClaudeInPath() {
  * @returns {string} Installation method/source
  */
 function detectSourceFromPath(resolvedPath) {
-    const normalized = resolvedPath.toLowerCase();
-    const path = require('path');
-
-    // Use path.normalize() for proper cross-platform path handling
-    const normalizedPath = path.normalize(resolvedPath).toLowerCase();
+    // Normalize separators independently of the current host. Detection may
+    // inspect paths reported by another platform, and Windows path.normalize()
+    // would otherwise turn Unix separators into backslashes before matching.
+    const normalizedPath = path.posix.normalize(resolvedPath.replace(/\\/g, '/')).toLowerCase();
 
     // Bun: ~/.bun/bin/claude -> ../node_modules/@anthropic-ai/claude-code/cli.js
     // Works on Windows too: C:\Users\[user]\.bun\bin\claude

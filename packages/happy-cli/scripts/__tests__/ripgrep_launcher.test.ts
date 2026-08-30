@@ -91,4 +91,56 @@ describe('Ripgrep Launcher Runtime Compatibility', () => {
             expect(content).toContain('Search functionality unavailable');
         }).not.toThrow();
     });
+
+    it('uses the packaged rg.exe on Windows when PATH has no system ripgrep', () => {
+        if (process.platform !== 'win32') {
+            return;
+        }
+
+        const fs = require('fs');
+        const os = require('os');
+        const path = require('path');
+        const { spawnSync } = require('child_process');
+        const launcher = path.join(__dirname, '../ripgrep_launcher.cjs');
+        const packageRoot = path.resolve(__dirname, '../..');
+        const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'happy-ripgrep-launcher-'));
+        const disableSystemDiscovery = path.join(fixtureRoot, 'disable-system-ripgrep.cjs');
+        fs.writeFileSync(disableSystemDiscovery, `
+            const childProcess = require('node:child_process');
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const originalExistsSync = fs.existsSync;
+            const blocked = new Set([
+                'C:\\\\Program Files\\\\ripgrep\\\\rg.exe',
+                'C:\\\\Program Files (x86)\\\\ripgrep\\\\rg.exe',
+            ].map((candidate) => path.normalize(candidate).toLowerCase()));
+            childProcess.execFileSync = () => {
+                throw new Error('system ripgrep lookup disabled by fixture');
+            };
+            fs.existsSync = (candidate) => blocked.has(path.normalize(String(candidate)).toLowerCase())
+                ? false
+                : originalExistsSync(candidate);
+        `);
+
+        try {
+            const result = spawnSync(
+                process.execPath,
+                ['--require', disableSystemDiscovery, launcher, JSON.stringify(['describe', 'src/modules/ripgrep/index.test.ts'])],
+                {
+                    cwd: packageRoot,
+                    encoding: 'utf8',
+                    env: {
+                        ...process.env,
+                        PATH: path.dirname(process.execPath),
+                    },
+                },
+            );
+
+            expect(result.status, result.stderr).toBe(0);
+            expect(result.stderr).toContain('Using packaged ripgrep binary');
+            expect(result.stdout).toContain('describe');
+        } finally {
+            fs.rmSync(fixtureRoot, { recursive: true, force: true });
+        }
+    });
 });

@@ -1,0 +1,18 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"AGENTS.md","reason":"Lifecycle and branch invariants to audit"}
+{"path":"devtools/AGENTS.md","reason":"External-state and safe-command constraints"}
+{"path":"docs/specs/windows-native-reliability.md","reason":"Acceptance-to-evidence mapping"}
+{"path":"docs/tasks/windows-native-reliability-tasks.md","reason":"Whole-feature verification boundaries"}
+{"path":"devtools/happyctl.ps1","reason":"Production PowerShell syntax and behavior under test"}
+{"path":"devtools/tests/","reason":"Required native smoke suite and fixture isolation"}
+{"path":"packages/happy-wire/package.json","reason":"Windows-compatible standard test command"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"Focused sandbox regression"}
+{"path":"packages/happy-cli/src/claude/claudeLocal.test.ts","reason":"Focused Claude sandbox regression"}
+{"path":"packages/happy-cli/src/claude/utils/path.test.ts","reason":"Native project-path regression"}
+{"path":"packages/happy-cli/src/codex/utils/imageInput.test.ts","reason":"Native image-cache path regression"}
+{"path":"packages/happy-cli/scripts/ripgrep_launcher.cjs","reason":"Windows packaged-ripgrep runtime correction"}
+{"path":"packages/happy-cli/scripts/__tests__/ripgrep_launcher.test.ts","reason":"Packaged rg.exe fallback regression"}
+{"path":"packages/happy-cli/src/modules/ripgrep/index.test.ts","reason":"Complete-suite ripgrep behavior"}
+{"path":"packages/happy-cli/scripts/claude_version_utils.cjs","reason":"Cross-platform Claude path classifier"}
+{"path":"packages/happy-cli/scripts/claude_version_utils.test.ts","reason":"Native and foreign-platform classifier coverage"}
+{"path":"docs/workspace/windows-native-reliability/validation.md","reason":"Evidence ledger for exact check outcomes"}
