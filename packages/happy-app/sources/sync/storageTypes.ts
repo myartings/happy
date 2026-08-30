@@ -38,6 +38,7 @@ export const MetadataSchema = z.object({
         description: z.string().nullish(),
     })).optional(),
     currentThoughtLevelCode: z.string().optional(),
+    serviceTiers: z.array(z.string()).optional(),
     rigMetadataVersion: z.number().int().positive().optional(),
     client: z.object({
         id: z.string(),
@@ -195,6 +196,7 @@ export const MetadataSchema = z.object({
     permissionMode: z.string().nullish(),
     modelMode: z.string().nullish(),
     effortLevel: z.string().nullish(),
+    serviceTier: z.string().nullish(),
     // Passthrough so read-modify-write metadata updates from this app never
     // drop fields written by newer CLI or app versions.
 }).passthrough();
@@ -351,6 +353,11 @@ export const AgentStateSchema = z.object({
         reason: z.string().nullish(),
         mode: z.string().nullish(),
         allowedTools: z.array(z.string()).nullish(),
+        // The CLI completes a request by echoing the RPC's own field name,
+        // `allowTools`, so every deployed CLI reports the "don't ask again"
+        // grant under this key. Declared here so parsing keeps it; the
+        // reducer folds it into `allowedTools` when reading.
+        allowTools: z.array(z.string()).nullish(),
         decision: z.enum(['approved', 'approved_for_session', 'denied', 'abort']).nullish(),
         toolUseId: z.string().nullish()
     })).nullish(),
@@ -378,6 +385,7 @@ export interface SessionAgentModesPatch {
     permissionMode?: string | null;
     modelMode?: string | null;
     effortLevel?: string | null;
+    serviceTier?: string | null;
 }
 
 export interface Session {
@@ -401,6 +409,7 @@ export interface Session {
     permissionMode?: string | null; // Permission pick; local mirror of synced metadata.permissionMode (#1492)
     modelMode?: string | null; // Model pick; local mirror of synced metadata.modelMode (#1492)
     effortLevel?: string | null; // Effort pick; local mirror of synced metadata.effortLevel (#1492)
+    serviceTier?: string | null; // Codex service-tier pick; local mirror of synced metadata.serviceTier
     // Device-local cache derived from both locally sent and inbound user messages.
     // It is not a separate server field; it drives cross-device activity ordering.
     lastMessageSentAt?: number;

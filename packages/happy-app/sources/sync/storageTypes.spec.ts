@@ -23,6 +23,18 @@ describe('MetadataSchema', () => {
         expect(metadata.archiveReason).toBe('User terminated');
     });
 
+    it('preserves Codex Fast capability and selected tier', () => {
+        const metadata = MetadataSchema.parse({
+            path: '/tmp/project',
+            host: 'local-machine',
+            serviceTiers: ['default', 'fast'],
+            serviceTier: 'fast',
+        });
+
+        expect(metadata.serviceTiers).toEqual(['default', 'fast']);
+        expect(metadata.serviceTier).toBe('fast');
+    });
+
     it('parses the additive Rig v1 extension and tolerates future fields', () => {
         const metadata = MetadataSchema.parse({
             ...rigMetadataFixture,

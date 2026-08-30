@@ -41,6 +41,17 @@ export function selectVisibleSessionIds(
         .map(([sessionId]) => sessionId);
 }
 
+/** Advance a live message cursor without letting a slower REST page rewind it. */
+export function advanceSessionMessageCursor(
+    cursors: Map<string, number>,
+    sessionId: string,
+    candidateSeq: number,
+): number {
+    const nextSeq = Math.max(cursors.get(sessionId) ?? 0, candidateSeq);
+    cursors.set(sessionId, nextSeq);
+    return nextSeq;
+}
+
 /**
  * Select the least-recently-used, unprotected session message caches to evict.
  *

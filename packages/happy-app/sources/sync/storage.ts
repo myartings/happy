@@ -40,6 +40,9 @@ import { resolveSessionRuntimeDisplay, type SessionPlatformKind } from '@/utils/
 import { resolveLatestSessionActivityAt } from '@/utils/sessionActivity';
 import { t } from '@/text';
 import { SessionRowProjectionCache } from '@/features/client-performance/sessionRowProjectionCache';
+import { SessionListDraftProjectionIndex } from '@/features/client-performance/sessionListDraftProjection';
+import { recordClientLongSessionCounter } from '@/features/client-performance/clientLongSessionDiagnostics';
+import { IncrementalOrderedMessageCollection } from '@/features/client-performance/orderedMessageCollection';
 import type { Project } from './projectTypes';
 import { getSessionProjectId, isHappyAgentSession } from './projectTypes';
 
@@ -93,7 +96,7 @@ function relativeDayTitle(timestamp: number): string {
 // Known entitlement IDs
 export type KnownEntitlements = 'pro';
 
-interface SessionMessages {
+export interface SessionMessages {
     messages: Message[];
     messagesMap: Record<string, Message>;
     reducerState: ReducerState;
@@ -108,6 +111,11 @@ interface SessionMessages {
     // and to suppress duplicate triggers from FlatList onEndReached.
     isLoadingOlder: boolean;
 }
+
+export type VisibleSessionMessageTailCandidate = Pick<
+    SessionMessages,
+    'messages' | 'messagesMap' | 'reducerState' | 'hasMoreOlder'
+>;
 
 // Machine type is now imported from storageTypes - represents persisted machine data
 
@@ -298,6 +306,11 @@ interface StorageState {
     applyMessagesLoaded: (sessionId: string) => void;
     applyOlderMessagesPagination: (sessionId: string, info: { hasMore: boolean }) => void;
     applyOlderMessagesLoading: (sessionId: string, isLoading: boolean) => void;
+    replaceSessionMessageTail: (
+        sessionId: string,
+        expectedEntry: SessionMessages,
+        candidate: VisibleSessionMessageTailCandidate,
+    ) => boolean;
     evictSessionMessages: (sessionId: string) => void;
     applySettings: (settings: Settings, version: number) => void;
     applySettingsLocal: (settings: Partial<Settings>) => void;
@@ -347,6 +360,7 @@ interface StorageState {
 }
 
 const sessionRowProjectionCache = new SessionRowProjectionCache<Session, Machine, SessionRowData>();
+const sessionListDraftProjectionIndex = new SessionListDraftProjectionIndex();
 
 // Helper function to build unified list view data from sessions and machines
 function buildSessionListViewData(
@@ -454,6 +468,7 @@ function buildSessionListViewData(
         listData.push({ type: 'session', session: toRow(session) });
     }
 
+    sessionListDraftProjectionIndex.rebuild(listData);
     return listData;
 }
 
@@ -464,6 +479,14 @@ export const storage = create<StorageState>()((set, get) => {
     let profile = loadProfile();
     let sessionDrafts = loadSessionDrafts();
     let sessionLastMessageSentAt = loadSessionLastMessageSentAt();
+    const orderedMessageCollection = new IncrementalOrderedMessageCollection<Message>({
+        onFallback: (reason) => {
+            recordClientLongSessionCounter('messageSortFallbacks');
+            if (typeof __DEV__ !== 'undefined' && __DEV__) {
+                console.warn(`[message-order] Rebuilt Session messages after invariant violation: ${reason}`);
+            }
+        },
+    });
     return {
         settings,
         settingsVersion: version,
@@ -543,7 +566,7 @@ export const storage = create<StorageState>()((set, get) => {
                 // events then still carry the OLD metadata, and applying it
                 // would bounce the fresh local pick back. Metadata without
                 // the field keeps the local value.
-                const resolveModePick = (field: 'permissionMode' | 'modelMode' | 'effortLevel'): string | null => {
+                const resolveModePick = (field: 'permissionMode' | 'modelMode' | 'effortLevel' | 'serviceTier'): string | null => {
                     const existing = state.sessions[session.id]?.[field] ?? null;
                     if (isAgentModePushPending(session.id, field)) {
                         return existing;
@@ -555,6 +578,7 @@ export const storage = create<StorageState>()((set, get) => {
                 const resolvedPermissionMode = resolveModePick('permissionMode');
                 const resolvedModelMode = resolveModePick('modelMode');
                 const resolvedEffortLevel = resolveModePick('effortLevel');
+                const resolvedServiceTier = resolveModePick('serviceTier');
 
                 // Local activity timestamp — preserve in-memory value, else restore from MMKV.
                 const resolvedLastMessageSentAt = state.sessions[session.id]?.lastMessageSentAt ?? savedLastMessageSentAt[session.id];
@@ -566,6 +590,7 @@ export const storage = create<StorageState>()((set, get) => {
                     permissionMode: resolvedPermissionMode,
                     modelMode: resolvedModelMode,
                     effortLevel: resolvedEffortLevel,
+                    serviceTier: resolvedServiceTier,
                     lastMessageSentAt: resolvedLastMessageSentAt,
                 };
             });
@@ -680,17 +705,16 @@ export const storage = create<StorageState>()((set, get) => {
                     // reference, so leaving the entry untouched still carries
                     // the new agentState forward.
                     if (processedMessages.length > 0) {
-                        const mergedMessagesMap = { ...existingSessionMessages.messagesMap };
-                        processedMessages.forEach(message => {
-                            mergedMessagesMap[message.id] = message;
-                        });
-
-                        const messagesArray = Object.values(mergedMessagesMap)
-                            .sort((a, b) => b.createdAt - a.createdAt);
+                        const ordered = orderedMessageCollection.apply(
+                            session.id,
+                            existingSessionMessages.messages,
+                            existingSessionMessages.messagesMap,
+                            processedMessages,
+                        );
 
                         updatedSessionMessages[session.id] = {
-                            messages: messagesArray,
-                            messagesMap: mergedMessagesMap,
+                            messages: ordered.messages,
+                            messagesMap: ordered.messagesMap,
                             reducerState: existingSessionMessages.reducerState, // The reducer modifies state in-place, so this has the updates
                             isLoaded: existingSessionMessages.isLoaded,
                             hasMoreOlder: existingSessionMessages.hasMoreOlder,
@@ -815,15 +839,12 @@ export const storage = create<StorageState>()((set, get) => {
                     hasReadyEvent = true;
                 }
 
-                // Merge messages
-                const mergedMessagesMap = { ...existingSession.messagesMap };
-                processedMessages.forEach(message => {
-                    mergedMessagesMap[message.id] = message;
-                });
-
-                // Convert to array and sort by createdAt
-                const messagesArray = Object.values(mergedMessagesMap)
-                    .sort((a, b) => b.createdAt - a.createdAt);
+                const ordered = orderedMessageCollection.apply(
+                    sessionId,
+                    existingSession.messages,
+                    existingSession.messagesMap,
+                    processedMessages,
+                );
 
                 // Update session with todos and latestUsage
                 // IMPORTANT: We extract latestUsage from the mutable reducerState and copy it to the Session object
@@ -854,8 +875,8 @@ export const storage = create<StorageState>()((set, get) => {
                         ...state.sessionMessages,
                         [sessionId]: {
                             ...existingSession,
-                            messages: messagesArray,
-                            messagesMap: mergedMessagesMap,
+                            messages: ordered.messages,
+                            messagesMap: ordered.messagesMap,
                             reducerState: existingSession.reducerState, // Explicitly include the mutated reducer state
                             isLoaded: true
                         }
@@ -886,12 +907,14 @@ export const storage = create<StorageState>()((set, get) => {
                     const reducerResult = reducer(reducerState, [], agentState);
                     const processedMessages = reducerResult.messages;
 
-                    processedMessages.forEach(message => {
-                        messagesMap[message.id] = message;
-                    });
-
-                    messages = Object.values(messagesMap)
-                        .sort((a, b) => b.createdAt - a.createdAt);
+                    const ordered = orderedMessageCollection.apply(
+                        sessionId,
+                        messages,
+                        messagesMap,
+                        processedMessages,
+                    );
+                    messages = ordered.messages;
+                    messagesMap = ordered.messagesMap;
                 }
 
                 // Extract latestUsage from reducerState if available and update session
@@ -976,16 +999,44 @@ export const storage = create<StorageState>()((set, get) => {
                 }
             };
         }),
-        evictSessionMessages: (sessionId: string) => set((state) => {
-            if (!state.sessionMessages[sessionId]) {
-                return state;
-            }
-            const { [sessionId]: _evicted, ...remainingSessionMessages } = state.sessionMessages;
-            return {
-                ...state,
-                sessionMessages: remainingSessionMessages,
-            };
-        }),
+        replaceSessionMessageTail: (sessionId, expectedEntry, candidate) => {
+            let replaced = false;
+            set((state) => {
+                if (state.sessionMessages[sessionId] !== expectedEntry) {
+                    return state;
+                }
+                orderedMessageCollection.remove(sessionId);
+                replaced = true;
+                return {
+                    ...state,
+                    sessionMessages: {
+                        ...state.sessionMessages,
+                        [sessionId]: {
+                            messages: candidate.messages,
+                            messagesMap: candidate.messagesMap,
+                            reducerState: candidate.reducerState,
+                            isLoaded: true,
+                            hasMoreOlder: candidate.hasMoreOlder,
+                            isLoadingOlder: false,
+                        } satisfies SessionMessages,
+                    },
+                };
+            });
+            return replaced;
+        },
+        evictSessionMessages: (sessionId: string) => {
+            orderedMessageCollection.remove(sessionId);
+            set((state) => {
+                if (!state.sessionMessages[sessionId]) {
+                    return state;
+                }
+                const { [sessionId]: _evicted, ...remainingSessionMessages } = state.sessionMessages;
+                return {
+                    ...state,
+                    sessionMessages: remainingSessionMessages,
+                };
+            });
+        },
         applySettingsLocal: (settings: Partial<Settings>) => set((state) => {
             const updatedSettings = applySettings(state.settings, settings);
             const unreadSessionIds = getUnreadSessionIds(updatedSettings.sessionAttentionMarkers);
@@ -1143,25 +1194,27 @@ export const storage = create<StorageState>()((set, get) => {
         }),
         updateSessionDraft: (sessionId: string, draft: string | null) => set((state) => {
             const session = state.sessions[sessionId];
+            recordClientLongSessionCounter('draftSessionReads');
             if (!session) return state;
 
             // Don't store empty strings, convert to null
             const normalizedDraft = draft?.trim() ? draft : null;
+            if ((session.draft ?? null) === normalizedDraft) {
+                return state;
+            }
 
-            // Collect all drafts for persistence
-            const allDrafts: Record<string, string> = {};
-            Object.entries(state.sessions).forEach(([id, sess]) => {
-                if (id === sessionId) {
-                    if (normalizedDraft) {
-                        allDrafts[id] = normalizedDraft;
-                    }
-                } else if (sess.draft) {
-                    allDrafts[id] = sess.draft;
-                }
-            });
+            const updatedDrafts = { ...sessionDrafts };
+            if (normalizedDraft) {
+                updatedDrafts[sessionId] = normalizedDraft;
+            } else {
+                delete updatedDrafts[sessionId];
+            }
 
-            // Persist drafts
-            saveSessionDrafts(allDrafts);
+            // Persist first so a storage failure cannot advance the in-memory
+            // snapshot or publish a Session state that was never saved.
+            saveSessionDrafts(updatedDrafts);
+            recordClientLongSessionCounter('draftPersistenceWrites');
+            sessionDrafts = updatedDrafts;
 
             const updatedSessions = {
                 ...state.sessions,
@@ -1170,11 +1223,20 @@ export const storage = create<StorageState>()((set, get) => {
                     draft: normalizedDraft
                 }
             };
+            const draftProjection = sessionListDraftProjectionIndex.patch(
+                state.sessionListViewData,
+                sessionId,
+                !!normalizedDraft,
+            );
+            recordClientLongSessionCounter(
+                'sessionRowReprojections',
+                draftProjection.reprojectedRows,
+            );
 
             return {
                 ...state,
                 sessions: updatedSessions,
-                sessionListViewData: buildSessionListViewData(updatedSessions, state.unreadSessionIds, state.machines, state.projects)
+                sessionListViewData: draftProjection.data,
             };
         }),
         // Permission / model / effort picks are local mirrors of synced session
@@ -1191,6 +1253,7 @@ export const storage = create<StorageState>()((set, get) => {
                     ...(patch.permissionMode !== undefined && { permissionMode: patch.permissionMode }),
                     ...(patch.modelMode !== undefined && { modelMode: patch.modelMode }),
                     ...(patch.effortLevel !== undefined && { effortLevel: patch.effortLevel }),
+                    ...(patch.serviceTier !== undefined && { serviceTier: patch.serviceTier }),
                 },
             };
 
@@ -1359,37 +1422,42 @@ export const storage = create<StorageState>()((set, get) => {
                 artifacts: remainingArtifacts
             };
         }),
-        deleteSession: (sessionId: string) => set((state) => {
-            // Remove session from sessions
-            const { [sessionId]: deletedSession, ...remainingSessions } = state.sessions;
-            
-            // Remove session messages if they exist
-            const { [sessionId]: deletedMessages, ...remainingSessionMessages } = state.sessionMessages;
-            
-            const { [sessionId]: _fileCache, ...remainingFileCache } = state.sessionFileCache;
+        deleteSession: (sessionId: string) => {
+            orderedMessageCollection.remove(sessionId);
+            set((state) => {
+                // Remove session from sessions
+                const { [sessionId]: deletedSession, ...remainingSessions } = state.sessions;
 
-            // Clear local session data from persistent storage (permission / model / effort
-            // picks live in synced session metadata, #1492)
-            const drafts = loadSessionDrafts();
-            delete drafts[sessionId];
-            saveSessionDrafts(drafts);
+                // Remove session messages if they exist
+                const { [sessionId]: deletedMessages, ...remainingSessionMessages } = state.sessionMessages;
 
-            const lastMessageSentAt = loadSessionLastMessageSentAt();
-            delete lastMessageSentAt[sessionId];
-            saveSessionLastMessageSentAt(lastMessageSentAt);
+                const { [sessionId]: _fileCache, ...remainingFileCache } = state.sessionFileCache;
 
-            // Rebuild sessionListViewData without the deleted session.
-            // Pass unreadSessionIds so the remaining sessions keep their unread badges.
-            const sessionListViewData = buildSessionListViewData(remainingSessions, state.unreadSessionIds, state.machines, state.projects);
-            
-            return {
-                ...state,
-                sessions: remainingSessions,
-                sessionMessages: remainingSessionMessages,
-                sessionFileCache: remainingFileCache,
-                sessionListViewData
-            };
-        }),
+                // Clear local session data from persistent storage (permission / model / effort
+                // picks live in synced session metadata, #1492)
+                const updatedDrafts = { ...sessionDrafts };
+                delete updatedDrafts[sessionId];
+                saveSessionDrafts(updatedDrafts);
+                recordClientLongSessionCounter('draftPersistenceWrites');
+                sessionDrafts = updatedDrafts;
+
+                const lastMessageSentAt = loadSessionLastMessageSentAt();
+                delete lastMessageSentAt[sessionId];
+                saveSessionLastMessageSentAt(lastMessageSentAt);
+
+                // Rebuild sessionListViewData without the deleted session.
+                // Pass unreadSessionIds so the remaining sessions keep their unread badges.
+                const sessionListViewData = buildSessionListViewData(remainingSessions, state.unreadSessionIds, state.machines, state.projects);
+
+                return {
+                    ...state,
+                    sessions: remainingSessions,
+                    sessionMessages: remainingSessionMessages,
+                    sessionFileCache: remainingFileCache,
+                    sessionListViewData
+                };
+            });
+        },
         // Friend management methods
         applyFriends: (friends: UserProfile[]) => set((state) => {
             const mergedFriends = { ...state.friends };

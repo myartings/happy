@@ -1,0 +1,12 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/client-long-session-performance.md","reason":"Accepted residual performance behavior, budgets, failure handling, and compatibility boundary"}
+{"path":"docs/tasks/client-long-session-performance-tasks.md","reason":"Dependency-ordered implementation slices, file boundaries, stop conditions, and validation seams"}
+{"path":"docs/specs/client-performance-bounded-state.md","reason":"Previously delivered paging, projection, cache, and rendering behavior that must remain"}
+{"path":"packages/happy-app/sources/hooks/useDraft.ts","reason":"Current per-value cleanup, debounce, AppState, unmount, and clear behavior"}
+{"path":"packages/happy-app/sources/sync/storage.ts","reason":"Current draft persistence, Session-row projection, reducer, message map, and ordered array integration"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Current live message queue, locks, generation checks, latest/older paging, and cache lifecycle"}
+{"path":"packages/happy-app/sources/sync/sessionMessageCachePolicy.ts","reason":"Existing hidden-cache bounds and new visible-tail policy boundary"}
+{"path":"packages/happy-app/sources/sync/reducer/reducer.ts","reason":"Reducer state and complete tool/sidechain invariants required by staged tail replacement"}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"Current live-tail, older-loading, targeting, anchoring, and virtualization signals"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Composer draft ownership and narrow IME/composition protection seam"}
+{"path":"packages/happy-app/sources/features/client-performance","reason":"Existing deterministic fixture and focused policy/projection modules"}

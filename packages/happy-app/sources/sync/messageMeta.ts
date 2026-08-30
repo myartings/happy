@@ -17,6 +17,7 @@ export type MessageModeMeta = {
     model?: string | null;
     modelProviderId?: string;
     effort?: string | null;
+    serviceTier?: 'default' | 'fast';
 };
 
 /**
@@ -43,7 +44,7 @@ export class UnsupportedPermissionModeError extends Error {
 }
 
 export function resolveMessageModeMeta(
-    session: Pick<Session, 'permissionMode' | 'modelMode' | 'metadata' | 'effortLevel'>,
+    session: Pick<Session, 'permissionMode' | 'modelMode' | 'metadata' | 'effortLevel' | 'serviceTier'>,
     settings?: Pick<Settings, 'agentDefaultOverrides'>,
 ): MessageModeMeta {
     if (isRigMetadataV1(session.metadata)) {
@@ -99,13 +100,14 @@ export function resolveMessageModeMeta(
     // Keep this Codex-only so fixing that app-server invariant does not change
     // the established default semantics of other harnesses.
     if (flavor === 'codex') {
-        const defaults = resolveAgentDefaultConfig(settings?.agentDefaultOverrides, flavor);
+        const defaults = resolveAgentDefaultConfig(settings?.agentDefaultOverrides, flavor, cliVersion);
         meta.permissionMode = supported(retirePermissionMode(session.permissionMode ?? defaults.permissionMode));
 
         const modelMode = session.modelMode ?? defaults.modelMode;
         meta.model = modelMode === 'default' ? null : modelMode;
 
         meta.effort = session.effortLevel ?? defaults.effortLevel;
+        meta.serviceTier = session.serviceTier === 'fast' ? 'fast' : 'default';
         return meta;
     }
 

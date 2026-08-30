@@ -1,0 +1,5 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/cross-device-active-day-grouping/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/cross-device-active-day-grouping.md","reason":"Acceptance criteria to verify"}
+{"path":"packages/happy-app/sources/utils/visibleSessionListViewData.ts","reason":"Production diff under verification"}
+{"path":"packages/happy-app/sources/hooks/useVisibleSessionListViewData.test.ts","reason":"Focused regression coverage"}

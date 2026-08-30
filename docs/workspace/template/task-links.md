@@ -1,6 +1,10 @@
 # Task Links: `<feature>`
 
-- Task list: `docs/tasks/<feature>-tasks.md`
-- Tracker item: `<GitHub Issue, Linear/Jira ticket, GitLab issue, or local-only reason>`
+- Delivery slice: `<tracker URL or stable local source>`
+- Delivery source: `<GitHub Issue URL or approved local-only exception>`
+- Acceptance slice: `<spec section or acceptance criteria>`
+- Blocked by: `<ticket/source or none>`
+- Validation gate: `<command or review signal>`
+- Task checklist: `<docs/tasks/<feature>-tasks.md or not required — self-contained slice>`
 - Pull request: `<URL or none>`
 - Branch/worktree: `<path or none>`

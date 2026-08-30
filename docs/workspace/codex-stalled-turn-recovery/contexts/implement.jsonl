@@ -1,0 +1,11 @@
+{"path":"CONTEXT.md","reason":"Repository boundaries and personal feature rules"}
+{"path":".ai/project.json","reason":"Authoritative checks and risk triggers"}
+{"path":"docs/specs/codex-stalled-turn-recovery.md","reason":"Accepted observable recovery contract"}
+{"path":"docs/tasks/codex-stalled-turn-recovery-tasks.md","reason":"Bounded implementation slices"}
+{"path":"docs/workspace/codex-stalled-turn-recovery/decisions.md","reason":"Resolved timeout, retry, and recovery choices"}
+{"path":"packages/happy-cli/src/codex/codexAppServerTypes.ts","reason":"Codex request and history correlation types"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.ts","reason":"Steer, reconciliation, inactivity, and recovery lifecycle"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.ts","reason":"Exactly-once steer fallback decision"}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Inbound message identity and visible recovery host seam"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"App-server lifecycle behavior tests"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.test.ts","reason":"Delivery and fallback behavior tests"}

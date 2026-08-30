@@ -1007,6 +1007,24 @@ export function mapCodexMcpMessageToSessionEnvelopes(message: Record<string, unk
     const collabReceiverThreadIdsByCall = getCollabReceiverThreadIdsByCall(state);
     const collabToolByCall = getCollabToolByCall(state);
 
+    // Codex app-server emits turn lifecycle for collaboration child threads as
+    // well as for Happy's primary thread. The adapter tags those events with a
+    // provider subagent reference; they must not create or close the one
+    // top-level Session protocol turn.
+    if ((type === 'task_started' || type === 'task_complete' || type === 'turn_aborted')
+        && pickProviderSubagent(message)) {
+        return {
+            currentTurnId: state.currentTurnId,
+            startedSubagents,
+            activeSubagents,
+            providerSubagentToSessionSubagent,
+            subagentTitles,
+            collabReceiverThreadIdsByCall,
+            collabToolByCall,
+            envelopes: [],
+        };
+    }
+
     if (type === 'task_started') {
         const turnId = createId();
         const turnStart = createEnvelope('agent', { t: 'turn-start' }, { turn: turnId });

@@ -356,3 +356,51 @@ or all historical messages.
   commit real Session content.
 - Bounds must fail safe: active turns, pending permissions, unsent outbox data,
   and the currently targeted message cannot be silently discarded.
+
+# Session Realtime Recovery
+
+## Problem
+
+During an active coding turn, Happy can show a Session as idle while Codex is
+still working, and a visible client can miss persisted agent messages until the
+user sends another prompt. The two failures overlap: Codex child-turn lifecycle
+events can be mistaken for the primary turn, while a user-scoped data socket can
+remain apparently connected without delivering updates.
+
+## Desired outcome
+
+Primary-turn activity remains accurate during multi-agent work, and a visible
+client converges on the server's durable message log without requiring another
+user action even when a realtime update is missed or a socket becomes half-open.
+
+## Product requirements
+
+1. A child Codex thread cannot replace, complete, abort, or clear the primary
+   turn used for Session activity and user-message steering.
+2. Only completion of the primary turn may change the Session from thinking to
+   idle.
+3. A visible Session performs bounded incremental reconciliation when a turn
+   becomes idle, when its data socket reconnects, and while it remains visible
+   in the foreground.
+4. The App detects an apparently connected user-scoped socket that no longer
+   acknowledges server pings and reconnects it automatically.
+5. Reconnection and reconciliation are idempotent and do not duplicate
+   messages, visibility references, prompts, or turn completion.
+6. Existing wire formats, encrypted message storage, server message ordering,
+   and older clients remain compatible.
+
+## Non-goals
+
+- Enabling Socket.IO connection-state recovery or changing the server database.
+- Treating React render forcing as the default fix without evidence that the
+  message already reached the subscribed store.
+- Changing proxy timeout configuration or guaranteeing foreground timers while
+  a mobile operating system suspends the App.
+
+## Constraints
+
+- REST message history remains canonical; socket events are low-latency hints.
+- Health probes use the existing acknowledged `ping` socket event and contain no
+  Session content.
+- Foreground reconciliation is incremental and restricted to visible Sessions.
+- A transient probe failure must not cause an immediate reconnect loop.

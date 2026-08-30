@@ -1,0 +1,7 @@
+{"path":"docs/specs/codex-stalled-turn-recovery-hardening.md","reason":"Accepted hardening behavior and safety controls"}
+{"path":"docs/tasks/codex-stalled-turn-recovery-hardening-tasks.md","reason":"Bounded implementation slices"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.ts","reason":"Turn start, inactivity, recovery, and reconciliation owner"}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"Client timeout and recovery regression seam"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.ts","reason":"Follow-up delivery decision boundary"}
+{"path":"packages/happy-cli/src/codex/codexUserMessageRouter.test.ts","reason":"Router preservation and duplicate-prevention regression seam"}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Host integration for start and steer reconciliation"}

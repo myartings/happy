@@ -26,3 +26,8 @@ automation lives in `devtools/` and is invoked through `happyctl`.
 The repository adopts only the execution core from `ai-coding-template`.
 Happy-owned root instructions, official skills, product CI, and release behavior
 remain authoritative and must not be replaced by template synchronization.
+Adoption is explicit, version-pinned, selective, and dry-run-first through
+`.ai/template-adoption.json`; a target-relative source checkout is never an
+authority. Codex workflow assets may advance through the accepted allowlist,
+while the existing `.claude/` tree remains frozen and unmanaged unless the user
+separately re-enables it.

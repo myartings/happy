@@ -2,9 +2,32 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
     WorkspaceProjectDiscoveryLoader,
+    buildRecentProjectPreview,
     buildWorkspaceProjectSections,
     type ListWorkspaceProjectsResult,
+    type WorkspaceProjectPickerItem,
 } from './workspaceProjectDiscovery';
+
+describe('buildRecentProjectPreview', () => {
+    const recentItems: WorkspaceProjectPickerItem[] = Array.from({ length: 8 }, (_, index) => ({
+        source: 'recent',
+        name: `project-${index + 1}`,
+        path: `/workspace/project-${index + 1}`,
+        markers: [],
+    }));
+
+    it('keeps the first five Recent projects visible until the user expands them', () => {
+        expect(buildRecentProjectPreview(recentItems, false)).toEqual({
+            visibleItems: recentItems.slice(0, 5),
+            hiddenCount: 3,
+        });
+
+        expect(buildRecentProjectPreview(recentItems, true)).toEqual({
+            visibleItems: recentItems,
+            hiddenCount: 0,
+        });
+    });
+});
 
 describe('buildWorkspaceProjectSections', () => {
     it('keeps Recent first and removes Windows-equivalent discovered paths', () => {

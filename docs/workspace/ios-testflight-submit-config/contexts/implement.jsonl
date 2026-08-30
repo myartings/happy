@@ -1,0 +1,4 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"packages/happy-app/eas.json","reason":"Personal TestFlight submit profile and fixed App Store identity"}
+{"path":"devtools/happyctl","reason":"Release profile validation and guarded submit command"}
+{"path":"docs/specs/happy-ios-release.md","reason":"Accepted Happy Personal iOS release contract"}

@@ -1,0 +1,18 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/realtime-sync-and-rpc.md","reason":"Accepted realtime transport and synchronization boundary."}
+{"path":"docs/session-protocol.md","reason":"Accepted Session lifecycle protocol boundary."}
+{"path":"docs/specs/session-realtime-recovery.md","reason":"Accepted behavior and compatibility contract."}
+{"path":"docs/tasks/session-realtime-recovery-tasks.md","reason":"Bounded implementation slices and acceptance mapping."}
+{"path":"docs/workspace/session-realtime-recovery/decisions.md","reason":"Resolved lifecycle, recovery, and retry decisions."}
+{"path":"docs/workspace/session-realtime-recovery/risk.md","reason":"Required retry, compatibility, rollback, and stop controls."}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.ts","reason":"Primary and subagent turn lifecycle ownership."}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Global thinking and steering integration."}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"Codex lifecycle regression seam."}
+{"path":"packages/happy-cli/src/codex/utils/sessionProtocolMapper.ts","reason":"Unified Session turn lifecycle mapping."}
+{"path":"packages/happy-cli/src/codex/__tests__/sessionProtocolMapper.test.ts","reason":"Protocol lifecycle regression seam."}
+{"path":"packages/happy-app/sources/sync/apiSocket.ts","reason":"User-scoped socket connection and liveness owner."}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Visible Session message reconciliation owner."}
+{"path":"packages/happy-app/sources/sync/reducer/activityUpdateAccumulator.ts","reason":"Existing terminal activity transition batching behavior."}
+{"path":"packages/happy-app/sources/sync/sessionMessageCachePolicy.ts","reason":"Existing visible Session selection boundary."}
+{"path":"packages/happy-app/sources/sync/sessionRealtimeRecovery.ts","reason":"Feature-owned bounded reconciliation coordinator."}
+{"path":"packages/happy-server/sources/app/api/socket/pingHandler.ts","reason":"Read-only acknowledged health-probe contract."}

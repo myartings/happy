@@ -74,10 +74,12 @@ import {
     MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
     MAX_RETAINED_MESSAGES_PER_HIDDEN_SESSION,
     MAX_RETAINED_SESSION_MESSAGE_CACHES,
+    advanceSessionMessageCursor,
     selectSessionMessageCacheEvictions,
     selectVisibleSessionIds,
     shouldEvictHiddenSessionMessageCache,
 } from './sessionMessageCachePolicy';
+import { SessionRealtimeRecovery } from './sessionRealtimeRecovery';
 import type { AttachmentPreview, UploadedAttachment } from './attachmentTypes';
 import { requestAttachmentUpload, uploadEncryptedBlob } from './apiAttachments';
 import { encryptBlob } from '@/encryption/blob';
@@ -88,6 +90,28 @@ import { isRigMetadataV1, rigCanUseAttachments, usesControlledSessionUi } from '
 import { fetchProjects as fetchProjectRecords } from './apiProjects';
 import { decryptProjectRecord, loadProjectAvatar, type DecryptedProjectRecord } from './projects';
 import type { Project, ProjectAvatar } from './projectTypes';
+import {
+    SessionMessageBatchScheduler,
+    type SessionMessageBatch,
+} from '@/features/client-performance/sessionMessageBatchScheduler';
+import {
+    observeClientLongSessionRetainedMessages,
+    recordClientLongSessionCounter,
+    recordClientLongSessionTailRebaseAbort,
+    recordClientLongSessionTailRebaseBoundaryExcess,
+} from '@/features/client-performance/clientLongSessionDiagnostics';
+import {
+    VISIBLE_SESSION_TAIL_REBASE_IDLE_MS,
+    evaluateVisibleSessionTailRebase,
+    selectVisibleSessionTailBoundary,
+} from '@/features/client-performance/visibleSessionTailPolicy';
+import { stageVisibleSessionTail } from '@/features/client-performance/visibleSessionTailStaging';
+import { validateVisibleSessionTailCommit } from '@/features/client-performance/visibleSessionTailCommit';
+import {
+    aggregateVisibleSessionTailUiSources,
+    type VisibleSessionTailUiState,
+} from '@/features/client-performance/visibleSessionTailUiState';
+import { selectPendingCommunications } from './agentCommunications';
 
 type V3GetSessionMessagesResponse = {
     messages: ApiMessage[];
@@ -125,6 +149,10 @@ type SendMessageOptions = {
     awaitDelivery?: boolean;
 };
 
+type VersionedVisibleSessionTailUiState = VisibleSessionTailUiState & {
+    revision: number;
+};
+
 function sameBytes(a: Uint8Array | null | undefined, b: Uint8Array | null): boolean {
     if (a === undefined) return false;
     if (a === null || b === null) return a === b;
@@ -139,7 +167,7 @@ function avatarDescriptorKey(descriptor: NonNullable<DecryptedProjectRecord['ava
     return `${descriptor.ref}:${descriptor.version}`;
 }
 
-class Sync {
+export class Sync {
     private static readonly BACKGROUND_SEND_TIMEOUT_MS = 30_000;
     private static readonly PROMPT_HISTORY_PAGE_SIZE = 100;
     encryption!: Encryption;
@@ -159,13 +187,21 @@ class Sync {
     // advanced downward by loadOlderMessages.
     private sessionOldestSeq = new Map<string, number>();
     private pendingOutbox = new Map<string, OutboxMessage[]>();
-    private sessionMessageQueue = new Map<string, NormalizedMessage[]>();
     private sessionQueueProcessing = new Set<string>();
     private sessionMessageLocks = new Map<string, AsyncLock>();
+    private sessionMessageScheduler: SessionMessageBatchScheduler<NormalizedMessage>;
     private sessionMessageCacheAccessOrder = new Map<string, number>();
     private sessionMessageCacheAccessCounter = 0;
     private sessionMessageCacheGeneration = new Map<string, number>();
     private visibleSessionRefCounts = new Map<string, number>();
+    private visibleSessionTailUiStates = new Map<string, VersionedVisibleSessionTailUiState>();
+    private visibleSessionTailUiSources = new Map<
+        string,
+        Map<string, Partial<VisibleSessionTailUiState>>
+    >();
+    private visibleSessionTailRebaseTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    private visibleSessionTailRebaseInFlight = new Set<string>();
+    private visibleSessionTailLastActivityAt = new Map<string, number>();
     private sessionDataKeys = new Map<string, Uint8Array>(); // Store session data encryption keys internally
     private machineDataKeys = new Map<string, Uint8Array>(); // Store machine data encryption keys internally
     private artifactDataKeys = new Map<string, Uint8Array>(); // Store artifact data encryption keys internally
@@ -187,6 +223,7 @@ class Sync {
     private friendRequestsSync: InvalidateSync;
     private feedSync: InvalidateSync;
     private activityAccumulator: ActivityUpdateAccumulator;
+    private realtimeRecovery: SessionRealtimeRecovery;
     private pendingSettings: Partial<Settings> = loadPendingSettings();
     private appState: AppStateStatus = AppState.currentState;
     private backgroundSendTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -199,6 +236,13 @@ class Sync {
     private lastRecalculationTime = 0;
 
     constructor() {
+        this.sessionMessageScheduler = new SessionMessageBatchScheduler({
+            drain: this.drainScheduledMessages,
+            onError: (error, sessionId) => {
+                log.log(`Session message scheduler failure for ${sessionId}: ${String(error)}`);
+            },
+            onIdle: this.onSessionMessageSchedulerIdle,
+        });
         this.sessionsSync = new InvalidateSync(this.fetchSessions);
         this.projectsSync = new InvalidateSync(this.fetchProjects);
         this.settingsSync = new InvalidateSync(this.syncSettings);
@@ -216,6 +260,13 @@ class Sync {
         }
         this.pushTokenSync = new InvalidateSync(registerPushToken);
         this.activityAccumulator = new ActivityUpdateAccumulator(this.flushActivityUpdates.bind(this), 2000);
+        this.realtimeRecovery = new SessionRealtimeRecovery({
+            isActive: () => getCurrentAppState() === 'active',
+            getVisibleSessionIds: () => selectVisibleSessionIds(this.visibleSessionRefCounts),
+            reconcile: (sessionId, reason) => this.refreshSessionMessageCache(sessionId, reason),
+            ensureSocketHealthy: () => apiSocket.ensureHealthy(),
+        });
+        this.realtimeRecovery.start();
 
         // Listen for app state changes to refresh purchases
         AppState.addEventListener('change', (nextAppState) => {
@@ -250,6 +301,7 @@ class Sync {
                 this.friendsSync.invalidate();
                 this.friendRequestsSync.invalidate();
                 this.feedSync.invalidate();
+                void this.realtimeRecovery.onForeground();
 
                 // Refresh the open chat's message log on resume. While the app is
                 // backgrounded the data socket is suspended/dropped, so any messages
@@ -261,8 +313,9 @@ class Sync {
                 // if the socket hasn't reconnected yet, InvalidateSync's backoff retries
                 // until it has.
                 const resumeViewingSessionId = storage.getState().currentViewingSessionId;
-                if (resumeViewingSessionId) {
-                    this.onSessionVisible(resumeViewingSessionId);
+                const resumeVisibleSessionIds = selectVisibleSessionIds(this.visibleSessionRefCounts);
+                if (resumeViewingSessionId && !resumeVisibleSessionIds.includes(resumeViewingSessionId)) {
+                    this.refreshSessionMessageCache(resumeViewingSessionId, 'app-resumed-fallback');
                 }
             } else {
                 log.log(`📱 App state changed to: ${nextAppState}`);
@@ -281,6 +334,9 @@ class Sync {
         if (Platform.OS === 'web' && typeof document !== 'undefined') {
             const broadcast = () => {
                 apiSocket.sendAppState(getCurrentAppState());
+                if (getCurrentAppState() === 'active') {
+                    void this.realtimeRecovery.onForeground();
+                }
                 if (document.visibilityState === 'hidden') {
                     this.pruneSessionMessageCaches(
                         MAX_BACKGROUND_SESSION_MESSAGE_CACHES,
@@ -393,6 +449,7 @@ class Sync {
             sessionId,
             (this.visibleSessionRefCounts.get(sessionId) ?? 0) + 1
         );
+        this.markVisibleSessionTailActivity(sessionId);
         this.refreshSessionMessageCache(sessionId, 'session-visible');
 
         // Also invalidate git status sync for this session
@@ -421,6 +478,7 @@ class Sync {
             this.visibleSessionRefCounts.set(sessionId, nextCount);
         } else {
             this.visibleSessionRefCounts.delete(sessionId);
+            this.clearVisibleSessionTailRebaseState(sessionId);
         }
 
         if (nextCount <= 0 && this.evictOversizedHiddenSessionMessageCache(sessionId)) {
@@ -434,10 +492,371 @@ class Sync {
     }
 
     private isSessionMessageCacheBusy(sessionId: string) {
-        return this.sessionQueueProcessing.has(sessionId) ||
+        return this.sessionMessageScheduler.isBusy(sessionId) ||
+            this.sessionQueueProcessing.has(sessionId) ||
             this.sendAbortControllers.has(sessionId) ||
             (this.pendingOutbox.get(sessionId)?.length ?? 0) > 0;
     }
+
+    updateVisibleSessionTailState = (
+        sessionId: string,
+        patch: Partial<VisibleSessionTailUiState>,
+        sourceId = 'default',
+    ) => {
+        if (!this.visibleSessionRefCounts.has(sessionId)) {
+            return;
+        }
+        let sources = this.visibleSessionTailUiSources.get(sessionId);
+        if (!sources) {
+            sources = new Map();
+            this.visibleSessionTailUiSources.set(sessionId, sources);
+        }
+        const previousSource = sources.get(sourceId) ?? {};
+        const nextSource = { ...previousSource, ...patch };
+        const changed = (Object.keys(patch) as Array<keyof VisibleSessionTailUiState>)
+            .some((key) => previousSource[key] !== nextSource[key]);
+        if (!changed) {
+            return;
+        }
+        sources.set(sourceId, nextSource);
+        this.refreshVisibleSessionTailUiAggregate(sessionId);
+        this.markVisibleSessionTailActivity(sessionId);
+    };
+
+    removeVisibleSessionTailState = (sessionId: string, sourceId: string) => {
+        const sources = this.visibleSessionTailUiSources.get(sessionId);
+        if (!sources?.delete(sourceId)) {
+            return;
+        }
+        if (sources.size === 0) {
+            this.visibleSessionTailUiSources.delete(sessionId);
+        }
+        this.refreshVisibleSessionTailUiAggregate(sessionId);
+        this.markVisibleSessionTailActivity(sessionId);
+    };
+
+    private refreshVisibleSessionTailUiAggregate(sessionId: string) {
+        const previous = this.visibleSessionTailUiStates.get(sessionId);
+        const aggregated = aggregateVisibleSessionTailUiSources(
+            this.visibleSessionTailUiSources.get(sessionId)?.values() ?? [],
+        );
+        if (!aggregated) {
+            this.visibleSessionTailUiStates.delete(sessionId);
+            return;
+        }
+        this.visibleSessionTailUiStates.set(sessionId, {
+            ...aggregated,
+            revision: (previous?.revision ?? 0) + 1,
+        });
+    }
+
+    private markVisibleSessionTailActivity(sessionId: string) {
+        this.visibleSessionTailLastActivityAt.set(sessionId, Date.now());
+        this.scheduleVisibleSessionTailRebase(sessionId);
+    }
+
+    private scheduleVisibleSessionTailRebase(sessionId: string) {
+        const existing = this.visibleSessionTailRebaseTimers.get(sessionId);
+        if (existing) {
+            clearTimeout(existing);
+        }
+        if (!this.visibleSessionRefCounts.has(sessionId)) {
+            this.visibleSessionTailRebaseTimers.delete(sessionId);
+            return;
+        }
+        const timer = setTimeout(() => {
+            this.visibleSessionTailRebaseTimers.delete(sessionId);
+            void this.runVisibleSessionTailRebase(sessionId);
+        }, VISIBLE_SESSION_TAIL_REBASE_IDLE_MS);
+        this.visibleSessionTailRebaseTimers.set(sessionId, timer);
+    }
+
+    private clearVisibleSessionTailRebaseState(sessionId: string) {
+        const timer = this.visibleSessionTailRebaseTimers.get(sessionId);
+        if (timer) {
+            clearTimeout(timer);
+        }
+        this.visibleSessionTailRebaseTimers.delete(sessionId);
+        this.visibleSessionTailUiStates.delete(sessionId);
+        this.visibleSessionTailUiSources.delete(sessionId);
+        this.visibleSessionTailLastActivityAt.delete(sessionId);
+    }
+
+    private hasRunningMutableTool(sessionId: string, messages: readonly Message[]): boolean {
+        for (const message of messages) {
+            if (message.kind !== 'tool-call') continue;
+            if (
+                message.tool.state === 'running'
+                && message.tool.callId
+                && storage.getState().isMutableToolCall(sessionId, message.tool.callId)
+            ) {
+                return true;
+            }
+            if (this.hasRunningMutableTool(sessionId, message.children)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private evaluateCurrentVisibleSessionTail(
+        sessionId: string,
+        messageCount: number,
+        estimatedBytes: number,
+        rebaseInFlight: boolean,
+    ) {
+        const state = storage.getState();
+        const cached = state.sessionMessages[sessionId];
+        const session = state.sessions[sessionId];
+        const ui = this.visibleSessionTailUiStates.get(sessionId);
+        return evaluateVisibleSessionTailRebase({
+            messageCount,
+            estimatedBytes,
+            atLiveTail: ui?.atLiveTail ?? false,
+            targetActive: ui?.targetActive ?? false,
+            olderHistoryLoading: cached?.isLoadingOlder ?? false,
+            readingOlderHistory: ui?.readingOlderHistory ?? true,
+            messageQueueBusy: this.sessionMessageScheduler.isBusy(sessionId)
+                || this.sessionQueueProcessing.has(sessionId),
+            sendControllerBusy: this.sendAbortControllers.has(sessionId),
+            pendingOutbox: (this.pendingOutbox.get(sessionId)?.length ?? 0) > 0,
+            pendingInteraction: Object.keys(session?.agentState?.requests ?? {}).length > 0
+                || selectPendingCommunications(session?.agentState ?? null).length > 0,
+            mutableToolRunning: cached
+                ? this.hasRunningMutableTool(sessionId, cached.messages)
+                : false,
+            sessionThinking: session?.thinking === true,
+            composerBusy: ui?.composerBusy ?? false,
+            viewportBusy: ui?.viewportBusy ?? false,
+            rebaseInFlight,
+            quietForMs: Date.now() - (this.visibleSessionTailLastActivityAt.get(sessionId) ?? Date.now()),
+        });
+    }
+
+    private abortVisibleSessionTailRebase(sessionId: string, reason: string) {
+        recordClientLongSessionTailRebaseAbort(reason);
+        if (typeof __DEV__ !== 'undefined' && __DEV__) {
+            log.log(`💾 Visible Session tail rebase aborted: session=${sessionId} reason=${reason}`);
+        }
+    }
+
+    private runVisibleSessionTailRebase = async (sessionId: string) => {
+        if (!this.visibleSessionRefCounts.has(sessionId)) {
+            return;
+        }
+        const state = storage.getState();
+        const liveEntry = state.sessionMessages[sessionId];
+        const session = state.sessions[sessionId];
+        if (!liveEntry || !session) {
+            return;
+        }
+
+        const estimatedBytes = estimateNormalizedMessageCacheBytes(liveEntry.messages);
+        observeClientLongSessionRetainedMessages(liveEntry.messages.length, estimatedBytes);
+        const eligibility = this.evaluateCurrentVisibleSessionTail(
+            sessionId,
+            liveEntry.messages.length,
+            estimatedBytes,
+            this.visibleSessionTailRebaseInFlight.has(sessionId),
+        );
+        if (!eligibility.eligible && eligibility.reason === 'below-trigger') {
+            return;
+        }
+        recordClientLongSessionCounter('tailRebaseAttempts');
+        if (!eligibility.eligible) {
+            this.abortVisibleSessionTailRebase(sessionId, eligibility.reason);
+            return;
+        }
+
+        const boundary = selectVisibleSessionTailBoundary(liveEntry.messages);
+        if (!boundary.selected) {
+            this.abortVisibleSessionTailRebase(sessionId, boundary.reason);
+            return;
+        }
+        const boundaryReducerMessage = liveEntry.reducerState.messages.get(
+            boundary.oldestRetainedMessageId,
+        );
+        if (!boundaryReducerMessage?.realID) {
+            this.abortVisibleSessionTailRebase(sessionId, 'boundary-without-server-id');
+            return;
+        }
+        recordClientLongSessionTailRebaseBoundaryExcess(
+            boundary.excessMessageCount,
+            boundary.excessEstimatedBytes,
+        );
+
+        const snapshotGeneration = this.getSessionMessageCacheGeneration(sessionId);
+        const snapshotLastSeq = this.sessionLastSeq.get(sessionId);
+        const snapshotAgentStateVersion = session.agentStateVersion;
+        const snapshotSessionSeq = session.seq;
+        const snapshotUiRevision = this.visibleSessionTailUiStates.get(sessionId)?.revision;
+        if (snapshotLastSeq === undefined || snapshotUiRevision === undefined) {
+            this.abortVisibleSessionTailRebase(sessionId, 'missing-snapshot-cursor');
+            return;
+        }
+        const commitSnapshot = {
+            generation: snapshotGeneration,
+            lastSeq: snapshotLastSeq,
+            agentStateVersion: snapshotAgentStateVersion,
+            sessionSeq: snapshotSessionSeq,
+            uiRevision: snapshotUiRevision,
+            entry: liveEntry,
+            eligible: true,
+        };
+
+        this.visibleSessionTailRebaseInFlight.add(sessionId);
+        try {
+            const encryption = this.encryption.getSessionEncryption(sessionId);
+            if (!encryption) {
+                this.abortVisibleSessionTailRebase(sessionId, 'encryption-unavailable');
+                return;
+            }
+
+            const fetched: ApiMessage[] = [];
+            let beforeSeq = SEQ_BACKWARD_INITIAL_SENTINEL;
+            let boundaryIndex = -1;
+            let hasMoreAfterBoundaryPage = false;
+            while (boundaryIndex < 0) {
+                const response = await apiSocket.request(
+                    `/v3/sessions/${sessionId}/messages?before_seq=${beforeSeq}&limit=500`,
+                );
+                if (!response.ok) {
+                    throw new Error(`Latest-tail fetch failed with ${response.status}`);
+                }
+                const data = await response.json() as V3GetSessionMessagesResponse;
+                const page = Array.isArray(data.messages) ? data.messages : [];
+                if (page.length === 0) {
+                    this.abortVisibleSessionTailRebase(sessionId, 'boundary-not-on-server');
+                    return;
+                }
+                fetched.push(...page);
+                boundaryIndex = fetched.findIndex((message) => (
+                    message.id === boundaryReducerMessage.realID
+                    || (
+                        boundaryReducerMessage.localId
+                        && message.localId === boundaryReducerMessage.localId
+                    )
+                ));
+                hasMoreAfterBoundaryPage = !!data.hasMore;
+                if (boundaryIndex >= 0) {
+                    break;
+                }
+                if (!data.hasMore) {
+                    this.abortVisibleSessionTailRebase(sessionId, 'boundary-not-on-server');
+                    return;
+                }
+                const nextBeforeSeq = Math.min(...page.map((message) => message.seq));
+                if (!Number.isFinite(nextBeforeSeq) || nextBeforeSeq >= beforeSeq) {
+                    this.abortVisibleSessionTailRebase(sessionId, 'pagination-stalled');
+                    return;
+                }
+                beforeSeq = nextBeforeSeq;
+            }
+
+            const fetchedMaxSeq = Math.max(...fetched.map((message) => message.seq));
+            if (fetchedMaxSeq !== snapshotLastSeq) {
+                this.abortVisibleSessionTailRebase(sessionId, 'latest-seq-mismatch');
+                return;
+            }
+            const includedApiMessages = fetched
+                .slice(0, boundaryIndex + 1)
+                .sort((left, right) => left.seq - right.seq);
+            const decryptedMessages = await encryption.decryptMessages(includedApiMessages);
+            const normalizedMessages: NormalizedMessage[] = [];
+            for (const decrypted of decryptedMessages) {
+                if (!decrypted) continue;
+                const normalized = normalizeRawMessage(
+                    decrypted.id,
+                    decrypted.localId,
+                    decrypted.createdAt,
+                    decrypted.content,
+                );
+                if (normalized) normalizedMessages.push(normalized);
+            }
+
+            const staged = stageVisibleSessionTail({
+                normalizedMessages,
+                agentState: session.agentState,
+                liveReducerState: liveEntry.reducerState,
+                expectedMessages: boundary.messages,
+            });
+            if (!staged.staged) {
+                this.abortVisibleSessionTailRebase(sessionId, staged.reason);
+                return;
+            }
+
+            const currentState = storage.getState();
+            const currentSession = currentState.sessions[sessionId];
+            const currentEntry = currentState.sessionMessages[sessionId];
+            const currentEstimatedBytes = currentEntry
+                ? estimateNormalizedMessageCacheBytes(currentEntry.messages)
+                : 0;
+            const currentEligibility = this.evaluateCurrentVisibleSessionTail(
+                sessionId,
+                currentEntry?.messages.length ?? 0,
+                currentEstimatedBytes,
+                false,
+            );
+            const commitValidation = validateVisibleSessionTailCommit(commitSnapshot, {
+                generation: this.getSessionMessageCacheGeneration(sessionId),
+                lastSeq: this.sessionLastSeq.get(sessionId),
+                agentStateVersion: currentSession?.agentStateVersion ?? Number.NaN,
+                sessionSeq: currentSession?.seq ?? Number.NaN,
+                uiRevision: this.visibleSessionTailUiStates.get(sessionId)?.revision,
+                entry: currentEntry,
+                eligible: currentEligibility.eligible,
+                ...(!currentEligibility.eligible
+                    ? { eligibilityReason: currentEligibility.reason }
+                    : {}),
+            });
+            if (!commitValidation.valid) {
+                this.abortVisibleSessionTailRebase(sessionId, commitValidation.reason);
+                return;
+            }
+
+            const oldestSeq = Math.min(...includedApiMessages.map((message) => message.seq));
+            const hasMoreOlder = boundaryIndex < fetched.length - 1 || hasMoreAfterBoundaryPage;
+            const previousOldestSeq = this.sessionOldestSeq.get(sessionId);
+            this.sessionOldestSeq.set(sessionId, oldestSeq);
+            let replaced = false;
+            try {
+                replaced = storage.getState().replaceSessionMessageTail(sessionId, liveEntry, {
+                    messages: staged.messages,
+                    messagesMap: staged.messagesMap,
+                    reducerState: staged.reducerState,
+                    hasMoreOlder,
+                });
+            } catch (error) {
+                if (previousOldestSeq === undefined) {
+                    this.sessionOldestSeq.delete(sessionId);
+                } else {
+                    this.sessionOldestSeq.set(sessionId, previousOldestSeq);
+                }
+                throw error;
+            }
+            if (!replaced) {
+                if (previousOldestSeq === undefined) {
+                    this.sessionOldestSeq.delete(sessionId);
+                } else {
+                    this.sessionOldestSeq.set(sessionId, previousOldestSeq);
+                }
+                this.abortVisibleSessionTailRebase(sessionId, 'store-entry-changed');
+                return;
+            }
+            recordClientLongSessionCounter('tailRebaseSwaps');
+            observeClientLongSessionRetainedMessages(staged.messages.length, boundary.estimatedBytes);
+            log.log(
+                `💾 Visible Session tail rebased: session=${sessionId} `
+                + `retainedMessages=${staged.messages.length} estimatedBytes=${boundary.estimatedBytes} `
+                + `oldestSeq=${oldestSeq} hasMoreOlder=${hasMoreOlder}`,
+            );
+        } catch (error) {
+            this.abortVisibleSessionTailRebase(sessionId, 'fetch-or-decrypt-failed');
+            log.log(`Visible Session tail staging failed for ${sessionId}: ${String(error)}`);
+        } finally {
+            this.visibleSessionTailRebaseInFlight.delete(sessionId);
+        }
+    };
 
     private evictOversizedHiddenSessionMessageCache(sessionId: string): boolean {
         if (this.visibleSessionRefCounts.has(sessionId) || this.isSessionMessageCacheBusy(sessionId)) {
@@ -482,6 +901,9 @@ class Sync {
         for (const sessionId of this.sessionQueueProcessing) {
             protectedSessionIds.add(sessionId);
         }
+        for (const sessionId of this.sessionMessageScheduler.busySessionIds()) {
+            protectedSessionIds.add(sessionId);
+        }
         for (const sessionId of this.sendAbortControllers.keys()) {
             protectedSessionIds.add(sessionId);
         }
@@ -517,12 +939,13 @@ class Sync {
             sessionId,
             this.getSessionMessageCacheGeneration(sessionId) + 1
         );
+        this.sessionMessageScheduler.cancel(sessionId);
         this.messagesSync.get(sessionId)?.stop();
         this.messagesSync.delete(sessionId);
         this.sessionLastSeq.delete(sessionId);
         this.sessionOldestSeq.delete(sessionId);
         this.sessionMessageCacheAccessOrder.delete(sessionId);
-        this.sessionMessageQueue.delete(sessionId);
+        this.clearVisibleSessionTailRebaseState(sessionId);
         if (!this.sessionQueueProcessing.has(sessionId)) {
             this.sessionMessageLocks.delete(sessionId);
         }
@@ -555,19 +978,23 @@ class Sync {
         return sync;
     }
 
-    private enqueueMessages(sessionId: string, messages: NormalizedMessage[]) {
+    private enqueueMessages(
+        sessionId: string,
+        messages: NormalizedMessage[],
+        options: { coalesce?: boolean } = {},
+    ) {
         if (messages.length === 0) {
             return;
         }
 
-        let queue = this.sessionMessageQueue.get(sessionId);
-        if (!queue) {
-            queue = [];
-            this.sessionMessageQueue.set(sessionId, queue);
+        this.sessionMessageScheduler.enqueue(
+            sessionId,
+            this.getSessionMessageCacheGeneration(sessionId),
+            messages,
+        );
+        if (!options.coalesce) {
+            this.sessionMessageScheduler.flush(sessionId);
         }
-        queue.push(...messages);
-
-        this.scheduleQueuedMessagesProcessing(sessionId);
     }
 
     private getSessionMessageLock(sessionId: string): AsyncLock {
@@ -579,32 +1006,35 @@ class Sync {
         return lock;
     }
 
-    private scheduleQueuedMessagesProcessing(sessionId: string) {
-        if (this.sessionQueueProcessing.has(sessionId)) {
-            return;
-        }
-
+    private drainScheduledMessages = async (batch: SessionMessageBatch<NormalizedMessage>) => {
+        const { sessionId } = batch;
         this.sessionQueueProcessing.add(sessionId);
         const lock = this.getSessionMessageLock(sessionId);
-        void lock.inLock(() => {
-            while (true) {
-                const pending = this.sessionMessageQueue.get(sessionId);
-                if (!pending || pending.length === 0) {
-                    break;
+        try {
+            await lock.inLock(() => {
+                if (
+                    !batch.isCurrent()
+                    || !this.isSessionMessageCacheGenerationCurrent(sessionId, batch.generation)
+                ) {
+                    return;
                 }
-                const batch = pending.splice(0, pending.length);
-                this.applyMessages(sessionId, batch);
-            }
-        }).finally(() => {
+                recordClientLongSessionCounter('messageQueueBatches');
+                this.applyMessages(sessionId, batch.messages);
+            });
+        } finally {
             this.sessionQueueProcessing.delete(sessionId);
-            const pending = this.sessionMessageQueue.get(sessionId);
-            if (pending && pending.length > 0) {
-                this.scheduleQueuedMessagesProcessing(sessionId);
-            } else {
-                this.evictOversizedHiddenSessionMessageCache(sessionId);
+        }
+    };
+
+    private onSessionMessageSchedulerIdle = (sessionId: string) => {
+        if (!this.sessionQueueProcessing.has(sessionId)) {
+            if (!storage.getState().sessionMessages[sessionId]) {
+                this.sessionMessageLocks.delete(sessionId);
             }
-        });
-    }
+            this.evictOversizedHiddenSessionMessageCache(sessionId);
+            this.scheduleVisibleSessionTailRebase(sessionId);
+        }
+    };
 
     private hasPendingOutboxMessages() {
         if (this.sendAbortControllers.size > 0) {
@@ -836,7 +1266,7 @@ class Sync {
                 t('common.error'),
                 'The message was not sent: this session has not finished syncing. Please try again.',
             );
-            return;
+            return false;
         }
 
         let modeMeta: ReturnType<typeof resolveMessageModeMeta>;
@@ -847,7 +1277,7 @@ class Sync {
                 // Refuse loudly instead of substituting a mode: swapping in a
                 // default would silently change what the agent may do.
                 Modal.alert(t('common.error'), error.message);
-                return;
+                return false;
             }
             throw error;
         }
@@ -880,7 +1310,7 @@ class Sync {
                 [{ text: t('common.ok'), style: 'cancel' }],
             );
             if (!attachmentPlan.shouldSendText || (!text.trim() && (effectiveAttachments?.length ?? 0) === 0)) {
-                return;
+                return false;
             }
         }
 
@@ -1014,6 +1444,7 @@ class Sync {
             this.getSendSync(sessionId).invalidate();
         }
         this.maybeStartBackgroundSendWatchdog();
+        return true;
     }
 
     /** Server sent us settings — merge any pending local changes on top, then apply as one update. */
@@ -2300,6 +2731,7 @@ class Sync {
             throw error;
         } finally {
             this.sendAbortControllers.delete(sessionId);
+            this.markVisibleSessionTailActivity(sessionId);
         }
 
         if (pending.length === 0) {
@@ -2488,7 +2920,7 @@ class Sync {
             for (const message of messages) {
                 if (message.seq > maxSeq) maxSeq = message.seq;
             }
-            this.sessionLastSeq.set(sessionId, maxSeq);
+            advanceSessionMessageCursor(this.sessionLastSeq, sessionId, maxSeq);
 
             if (!data.hasMore) break;
             if (maxSeq === afterSeq) {
@@ -2597,6 +3029,7 @@ class Sync {
             });
         } finally {
             storage.getState().applyOlderMessagesLoading(sessionId, false);
+            this.markVisibleSessionTailActivity(sessionId);
         }
     }
 
@@ -2617,7 +3050,7 @@ class Sync {
         }
     }
 
-    private subscribeToUpdates = () => {
+    subscribeToUpdates = () => {
         // Subscribe to message updates
         apiSocket.onMessage('update', this.handleUpdate.bind(this));
         apiSocket.onMessage('ephemeral', this.handleEphemeralUpdate.bind(this));
@@ -2641,16 +3074,14 @@ class Sync {
             // Refresh only messages for sessions that are currently mounted. Git status and
             // voice focus are visibility concerns and must not be repeated on reconnect.
             const visibleSessionIds = selectVisibleSessionIds(this.visibleSessionRefCounts);
-            for (const sessionId of visibleSessionIds) {
-                this.refreshSessionMessageCache(sessionId, 'socket-reconnected');
-            }
+            this.realtimeRecovery.onSocketReconnected();
             // Session metadata + agentState (including permission requests) are already
             // refreshed by sessionsSync.invalidate() above.
             // The current viewer should normally be registered above. Keep the upstream
             // fallback for reconnects that happen before its visibility ref is restored.
             const reconnectViewingSessionId = storage.getState().currentViewingSessionId;
             if (reconnectViewingSessionId && !visibleSessionIds.includes(reconnectViewingSessionId)) {
-                this.onSessionVisible(reconnectViewingSessionId);
+                this.refreshSessionMessageCache(reconnectViewingSessionId, 'socket-reconnected-fallback');
             }
             for (const sync of this.sendSync.values()) {
                 sync.invalidate();
@@ -2755,7 +3186,7 @@ class Sync {
                         currentLastSeq !== undefined &&
                         incomingSeq === currentLastSeq + 1
                     ) {
-                        this.enqueueMessages(updateData.body.sid, [lastMessage]);
+                        this.enqueueMessages(updateData.body.sid, [lastMessage], { coalesce: true });
                         this.sessionLastSeq.set(updateData.body.sid, incomingSeq);
                         let hasMutableTool = false;
                         if (lastMessage.role === 'agent' && lastMessage.content[0] && lastMessage.content[0].type === 'tool-result') {
@@ -2777,6 +3208,12 @@ class Sync {
             log.log('🗑️ Delete session update received');
             const sessionId = updateData.body.sid;
 
+            this.sessionMessageCacheGeneration.set(
+                sessionId,
+                this.getSessionMessageCacheGeneration(sessionId) + 1
+            );
+            this.sessionMessageScheduler.cancel(sessionId);
+
             // Remove session from storage
             storage.getState().deleteSession(sessionId);
 
@@ -2785,10 +3222,6 @@ class Sync {
 
             // Clear any cached git status
             gitStatusSync.clearForSession(sessionId);
-            this.sessionMessageCacheGeneration.set(
-                sessionId,
-                this.getSessionMessageCacheGeneration(sessionId) + 1
-            );
             this.messagesSync.get(sessionId)?.stop();
             this.messagesSync.delete(sessionId);
             this.sendSync.delete(sessionId);
@@ -2797,9 +3230,10 @@ class Sync {
             this.sessionOldestSeq.delete(sessionId);
             this.sessionMessageCacheAccessOrder.delete(sessionId);
             this.visibleSessionRefCounts.delete(sessionId);
-            this.sessionMessageLocks.delete(sessionId);
-            this.sessionMessageQueue.delete(sessionId);
-            this.sessionQueueProcessing.delete(sessionId);
+            this.clearVisibleSessionTailRebaseState(sessionId);
+            if (!this.sessionQueueProcessing.has(sessionId)) {
+                this.sessionMessageLocks.delete(sessionId);
+            }
             this.projectsSync.invalidate();
 
             log.log(`🗑️ Session ${sessionId} deleted from local storage`);
@@ -3237,16 +3671,23 @@ class Sync {
 
 
         const sessions: Session[] = [];
+        const thinkingTransitions: Array<{ sessionId: string; previous: boolean; next: boolean }> = [];
 
         for (const [sessionId, update] of updates) {
             const session = storage.getState().sessions[sessionId];
             if (session) {
+                const nextThinking = update.thinking ?? false;
                 sessions.push({
                     ...session,
                     active: update.active,
                     activeAt: update.activeAt,
-                    thinking: update.thinking ?? false,
+                    thinking: nextThinking,
                     thinkingAt: update.activeAt // Always use activeAt for consistency
+                });
+                thinkingTransitions.push({
+                    sessionId,
+                    previous: session.thinking,
+                    next: nextThinking,
                 });
             }
         }
@@ -3254,6 +3695,13 @@ class Sync {
         if (sessions.length > 0) {
             // console.log('flushing activity updates ' + sessions.length);
             this.applySessions(sessions);
+            for (const transition of thinkingTransitions) {
+                this.realtimeRecovery.onThinkingTransition(
+                    transition.sessionId,
+                    transition.previous,
+                    transition.next,
+                );
+            }
             // log.log(`🔄 Activity updates flushed - updated ${sessions.length} sessions`);
         }
     }
@@ -3293,6 +3741,9 @@ class Sync {
         // This is the same signal that triggers the mobile push — bump browser-tab
         // unread counter on these only, ignore the noisy per-message stream.
         if (updateData.type === 'session-event') {
+            if (updateData.kind === 'done') {
+                this.realtimeRecovery.onSessionDone(updateData.sessionId);
+            }
             notifyUnreadMessage();
             if (storage.getState().localSettings.desktopSessionNotificationsEnabled) {
                 void maybeShowDesktopSessionNotification(updateData);
@@ -3337,6 +3788,7 @@ class Sync {
             'messages-applied',
             [sessionId]
         );
+        this.markVisibleSessionTailActivity(sessionId);
     }
 
     private applySessions = (sessions: (Omit<Session, "presence"> & {
@@ -3354,6 +3806,16 @@ class Sync {
             const previous = beforeState.sessions[incoming.id];
             const session = afterState.sessions[incoming.id];
             if (!previous || !session) continue;
+            if (
+                this.visibleSessionRefCounts.has(session.id)
+                && (
+                    previous.seq !== session.seq
+                    || previous.agentStateVersion !== session.agentStateVersion
+                    || previous.thinking !== session.thinking
+                )
+            ) {
+                this.markVisibleSessionTailActivity(session.id);
+            }
             const becameUnread = didSessionBecomeUnread({
                 thinking: previous.thinking === true,
                 hasPendingRequests: !!previous.agentState?.requests && Object.keys(previous.agentState.requests).length > 0,

@@ -40,6 +40,9 @@ import { isMachineOnline } from '@/utils/machineUtils';
 import {
     listWorkspaceProjects as requestWorkspaceProjects,
     machineSpawnNewSession,
+    machineStopSession,
+    sessionArchive,
+    sessionKill,
     sessionSetAgentModes,
     type SessionAgentModesPatch,
 } from '@/sync/ops';
@@ -59,6 +62,7 @@ import {
     machineChoiceAgentAvailable,
     resolveAgentMachine,
     resolveChoiceAgent,
+    resolveWorktreeCreationMachine,
 } from '@/sync/machineChoices';
 import {
     filterPermissionModesForCli,
@@ -72,6 +76,8 @@ import {
     type EffortLevel,
 } from '@/components/modelModeOptions';
 import { isRunningOnMac } from '@/utils/platform';
+import { HardwareKeyboardCommandBoundary } from '@/keyboard/HardwareKeyboardCommandBoundary';
+import { resolveHardwareReturnAction } from '@/keyboard/hardwareKeyboardSubmitPolicy';
 import { getNewSessionSidebarLayout } from '@/utils/newSessionSidebarLayout';
 import { getAgentPickerItems, getModePickerItems } from '@/utils/newSessionPickerItems';
 import {
@@ -92,6 +98,7 @@ import {
     resolveSpawnRequestId,
 } from '@/sync/spawnRequestId';
 import { resolvePermissionStyle, resolveSelectedOption } from '@/utils/newSessionModeSelection';
+import { resolveHappyAgentSpawnTarget } from '@/sync/happyAgentSpawn';
 import { MobileGlassSurface } from '@/components/MobileGlass';
 import { getNativeGlassInteractivity } from '@/components/glassInteractionPolicy';
 import { BubblePressable } from '@/components/BubblePressable';
@@ -103,7 +110,9 @@ import {
     LocalBlurHalo,
 } from '@/components/AnimatedOverlay';
 import {
+    RECENT_PROJECT_PREVIEW_LIMIT,
     WorkspaceProjectDiscoveryLoader,
+    buildRecentProjectPreview,
     buildWorkspaceProjectSections,
     type ListWorkspaceProjectsResult,
 } from '@/utils/workspaceProjectDiscovery';
@@ -535,6 +544,11 @@ function PathPickerContent({
     const inputRef = React.useRef<TextInput>(null);
     const currentValue = value ?? '';
     const [selection, setSelection] = React.useState<{ start: number; end: number } | undefined>(undefined);
+    const [showAllRecent, setShowAllRecent] = React.useState(false);
+    const recentPreview = React.useMemo(
+        () => buildRecentProjectPreview(recentItems, showAllRecent),
+        [recentItems, showAllRecent],
+    );
 
     React.useEffect(() => {
         // Embedded mobile pickers are positioned next to their trigger. Opening
@@ -660,15 +674,48 @@ function PathPickerContent({
             )}
 
             <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Recent
+                Workspace Projects
             </Text>
+
+            <View style={[pickerStyles.pathInputRow, { borderColor: theme.colors.divider }]}>
+                <Ionicons name="search-outline" size={16} color={theme.colors.textSecondary} />
+                <TextInput
+                    value={searchQuery}
+                    onChangeText={onChangeSearchQuery}
+                    placeholder="Search workspace projects"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                />
+            </View>
+
+            {discoveryStatus === 'loading' && (
+                <View style={pickerStyles.discoveryStatusRow}>
+                    <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+                    <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
+                        scanning workspace projects…
+                    </Text>
+                </View>
+            )}
+
+            {discoveryStatus === 'unavailable' && (
+                <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
+                    workspace projects unavailable; recent and custom paths still work
+                </Text>
+            )}
 
             <ScrollView
                 style={[pickerStyles.optionList, embedded && pickerStyles.embeddedOptionList]}
                 contentContainerStyle={embedded && pickerStyles.embeddedOptionListContent}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator
             >
-                {recentItems.map((item) => {
+                <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
+                    Recent
+                </Text>
+
+                {recentPreview.visibleItems.map((item) => {
                     const isSelected = item.key === matchedItemKey;
 
                     return (
@@ -709,35 +756,32 @@ function PathPickerContent({
                     </Text>
                 )}
 
-                <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                    Workspace Projects
-                </Text>
-
-                <View style={[pickerStyles.pathInputRow, { borderColor: theme.colors.divider }]}>
-                    <Ionicons name="search-outline" size={16} color={theme.colors.textSecondary} />
-                    <TextInput
-                        value={searchQuery}
-                        onChangeText={onChangeSearchQuery}
-                        placeholder="Search workspace projects"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-                </View>
-
-                {discoveryStatus === 'loading' && (
-                    <View style={pickerStyles.discoveryStatusRow}>
-                        <ActivityIndicator size="small" color={theme.colors.textSecondary} />
-                        <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
-                            scanning workspace projects…
+                {(recentPreview.hiddenCount > 0 || showAllRecent)
+                    && recentItems.length > RECENT_PROJECT_PREVIEW_LIMIT && (
+                    <BubblePressable
+                        scaleFeedback={false}
+                        style={(p) => [
+                            pickerStyles.recentDisclosure,
+                            p.pressed && pickerStyles.optionPressed,
+                        ]}
+                        onPress={() => setShowAllRecent((value) => !value)}
+                    >
+                        <Text style={[pickerStyles.recentDisclosureText, { color: theme.colors.textSecondary }]}>
+                            {showAllRecent
+                                ? 'Show fewer recent projects'
+                                : `View all recent projects (${recentItems.length})`}
                         </Text>
-                    </View>
+                        <Ionicons
+                            name={showAllRecent ? 'chevron-up' : 'chevron-down'}
+                            size={15}
+                            color={theme.colors.textSecondary}
+                        />
+                    </BubblePressable>
                 )}
 
-                {discoveryStatus === 'unavailable' && (
-                    <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
-                        workspace projects unavailable; recent and custom paths still work
+                {discoveryStatus === 'ready' && (
+                    <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
+                        Workspace Results
                     </Text>
                 )}
 
@@ -793,6 +837,7 @@ function PathPickerContent({
 type PromptInputProps = {
     compact?: boolean;
     placeholder: string;
+    onHardwareReturn: () => void;
     onKeyPress?: (e: KeyPressEvent) => boolean;
 };
 const PromptInput = React.memo(React.forwardRef<MultiTextInputHandle, PromptInputProps>(
@@ -800,23 +845,25 @@ const PromptInput = React.memo(React.forwardRef<MultiTextInputHandle, PromptInpu
         const value = useNewSessionDraft((s) => s.input);
         const onChangeText = useNewSessionDraft((s) => s.setInput);
         return (
-            <MultiTextInput
-                ref={ref}
-                value={value}
-                onChangeText={onChangeText}
-                placeholder={props.placeholder}
-                lineHeight={MULTI_TEXT_INPUT_LINE_HEIGHT}
-                paddingTop={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
-                paddingBottom={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
-                maxHeight={props.compact ? COMPACT_COMPOSER_INPUT_MAX_HEIGHT : COMPOSER_INPUT_MAX_HEIGHT}
-                // No multiline/returnKeyType/submitBehavior overrides: MultiTextInput
-                // already defaults to a multiline field whose return key types a line
-                // break. The compact composer used to opt out of that, which turned the
-                // key into "Done" and left the first message of a session as the only
-                // one that could not contain a newline — the in-session composer
-                // (AgentInput) has always been multiline.
-                onKeyPress={props.onKeyPress}
-            />
+            <HardwareKeyboardCommandBoundary onHardwareReturn={props.onHardwareReturn}>
+                <MultiTextInput
+                    ref={ref}
+                    value={value}
+                    onChangeText={onChangeText}
+                    placeholder={props.placeholder}
+                    lineHeight={MULTI_TEXT_INPUT_LINE_HEIGHT}
+                    paddingTop={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
+                    paddingBottom={props.compact ? 0 : COMPOSER_INPUT_VERTICAL_PADDING}
+                    maxHeight={props.compact ? COMPACT_COMPOSER_INPUT_MAX_HEIGHT : COMPOSER_INPUT_MAX_HEIGHT}
+                    // No multiline/returnKeyType/submitBehavior overrides: MultiTextInput
+                    // already defaults to a multiline field whose return key types a line
+                    // break. The compact composer used to opt out of that, which turned the
+                    // key into "Done" and left the first message of a session as the only
+                    // one that could not contain a newline — the in-session composer
+                    // (AgentInput) has always been multiline.
+                    onKeyPress={props.onKeyPress}
+                />
+            </HardwareKeyboardCommandBoundary>
         );
     },
 ));
@@ -948,6 +995,7 @@ function NewSessionScreen() {
         [selectedRigMachine],
     );
     const rigCreation = selectedAgent === 'rig' ? selectedRigCreation : null;
+    const happyCliVersion = selectedChoice?.happyMachine?.metadata?.happyCliVersion;
     const supportsWorktree = rigCreation?.supportsWorktrees
         ?? (selectedAgent === 'rig' ? false : getSupportsWorktree(selectedAgent));
     const selectedHomeDir = selectedChoice?.happyMachine?.metadata?.homeDir
@@ -1099,12 +1147,20 @@ function NewSessionScreen() {
         return () => clearTimeout(timeout);
     }, [resolvedSelectedPath]);
 
-    // Existing Happy Agent workspaces are named places in the same project. Git worktrees remain
-    // available for ordinary CLI projects, and their RPC always goes to Happy CLI's machine even
-    // when the session itself will be started by Happy Agent.
+    // Existing Happy Agent workspaces are named places in the same project. Happy Agent creates
+    // new ones through its own catalog; Git worktree RPCs remain for ordinary code-agent projects.
     const picksWorkspaces = selectedProjectId !== null;
+    const createsNativeHappyAgentWorkspace = selectedAgent === 'rig'
+        && picksWorkspaces
+        && rigCreation !== null;
     const worktreeMachine = selectedChoice?.happyMachine ?? selectedMachine;
     const canPickWorktree = supportsWorktree || picksWorkspaces;
+    const worktreeCreationMachine = React.useMemo(
+        () => resolveWorktreeCreationMachine(selectedChoice, selectedAgent, supportsWorktree),
+        [selectedAgent, selectedChoice, supportsWorktree],
+    );
+    const canCreateWorktree = createsNativeHappyAgentWorkspace
+        || (selectedAgent !== 'rig' && worktreeCreationMachine !== null);
 
     // Fetch existing worktrees/workspaces from the selected computer/path
     const [worktreeItems, setWorktreeItems] = React.useState<PickerItem[]>([]);
@@ -1154,11 +1210,11 @@ function NewSessionScreen() {
     }, [canPickWorktree, worktreeItems, worktreeKey]);
 
     const worktreeFixedItems = React.useMemo<PickerItem[]>(() => [
-        { key: '__none__', label: picksWorkspaces ? 'no workspace' : 'no worktree' },
-        ...(supportsWorktree
-            ? [{ key: '__new__', label: picksWorkspaces ? 'new workspace' : 'new worktree' }]
+        ...(canCreateWorktree
+            ? [{ key: '__new__', label: picksWorkspaces ? 'Create New' : 'new worktree' }]
             : []),
-    ], [picksWorkspaces, supportsWorktree]);
+        { key: '__none__', label: picksWorkspaces ? 'Main' : 'no worktree' },
+    ], [canCreateWorktree, picksWorkspaces]);
 
     // Filter available agents based on the daemon that actually runs each harness on this
     // computer, rather than the machine id that happened to be stored in the draft.
@@ -1179,9 +1235,9 @@ function NewSessionScreen() {
     const permissionModes = React.useMemo<PermissionMode[]>(
         () => rigCreation?.permissionModes ?? filterPermissionModesForCli(
             getHardcodedPermissionModes(selectedAgent, t),
-            selectedChoice?.happyMachine?.metadata?.happyCliVersion,
+            happyCliVersion,
         ),
-        [selectedAgent, rigCreation, selectedChoice],
+        [happyCliVersion, selectedAgent, rigCreation],
     );
     const effectiveAgentDefaults = React.useMemo(() => rigCreation
         ? {
@@ -1189,7 +1245,7 @@ function NewSessionScreen() {
             modelMode: rigCreation.defaultModelKey ?? '',
             effortLevel: rigCreation.defaultEffortForModel(rigCreation.defaultModelKey),
         }
-        : resolveAgentDefaultConfig(agentDefaultOverrides, selectedAgent), [agentDefaultOverrides, selectedAgent, rigCreation]);
+        : resolveAgentDefaultConfig(agentDefaultOverrides, selectedAgent, happyCliVersion), [agentDefaultOverrides, happyCliVersion, selectedAgent, rigCreation]);
     const modelModes = React.useMemo<ModelMode[]>(
         () => rigCreation?.models ?? includeConfiguredModel(
             selectedAgent,
@@ -1222,7 +1278,7 @@ function NewSessionScreen() {
             // When the saved and default modes were both filtered out for an
             // old CLI, land on the flavor's code default rather than whichever
             // mode happens to lead the list.
-            rigCreation ? null : getCodeAgentDefaults(selectedAgent).permissionMode,
+            rigCreation ? null : getCodeAgentDefaults(selectedAgent, happyCliVersion).permissionMode,
         ]));
 
         setModelIndex(findPreferredModeIndex(modelModes, [
@@ -1241,6 +1297,7 @@ function NewSessionScreen() {
         effectiveAgentDefaults.permissionMode,
         effectiveAgentDefaults.modelMode,
         rigCreation,
+        happyCliVersion,
         selectedAgent,
     ]);
 
@@ -1373,9 +1430,9 @@ function NewSessionScreen() {
         ? formatPathRelativeToHome(trimPathInput(selectedPath), selectedHomeDir)
         : '~';
     const worktreeLabel = worktreeKey === '__none__'
-        ? picksWorkspaces ? 'no workspace' : 'no worktree'
+        ? picksWorkspaces ? 'Main' : 'no worktree'
         : worktreeKey === '__new__'
-            ? picksWorkspaces ? 'new workspace' : 'new worktree'
+            ? picksWorkspaces ? 'Create New' : 'new worktree'
             : worktreeItems.find(wt => wt.key === worktreeKey)?.label || worktreeKey;
     const selectedMachineKey = selectedChoice?.id ?? selectedMachineId;
 
@@ -1564,7 +1621,32 @@ function NewSessionScreen() {
         const agentSupportsWorktree = spawnRigCreation?.supportsWorktrees
             ?? (agentType === 'rig' ? false : getSupportsWorktree(agentType));
         const requestedWorktree = canPickWorktree ? worktreeKey : '__none__';
-        const worktreeSelection = !agentSupportsWorktree && requestedWorktree === '__new__'
+        let happyAgentTarget: ReturnType<typeof resolveHappyAgentSpawnTarget>;
+        try {
+            happyAgentTarget = spawnRigCreation
+                ? resolveHappyAgentSpawnTarget({
+                    projectId: selectedProjectId,
+                    workspaceSelection: requestedWorktree,
+                    workspaces: agentWorkspaces,
+                })
+                : null;
+        } catch (error) {
+            Modal.alert(
+                t('common.error'),
+                error instanceof Error ? error.message : 'The selected workspace is unavailable',
+            );
+            return;
+        }
+        const creationMachine = happyAgentTarget
+            ? null
+            : resolveWorktreeCreationMachine(
+                choice,
+                agentType,
+                agentSupportsWorktree,
+            );
+        const canCreateSelectedWorktree = happyAgentTarget?.kind === 'newWorkspace'
+            || creationMachine !== null;
+        const worktreeSelection = !canCreateSelectedWorktree && requestedWorktree === '__new__'
             ? '__none__'
             : requestedWorktree;
 
@@ -1590,15 +1672,20 @@ function NewSessionScreen() {
 
             // Handle worktree selection
             let spawnDirectory = absolutePath;
-            const worktreeMachine = choice.happyMachine ?? machine;
-            if (worktreeSelection === '__new__') {
-                const worktreeResult = await createWorktree(worktreeMachine.id, absolutePath);
+            if (worktreeSelection === '__new__' && !happyAgentTarget) {
+                if (!creationMachine) {
+                    Modal.alert(t('common.error'), picksWorkspaces
+                        ? 'This computer cannot create a new workspace'
+                        : 'This computer cannot create a new worktree');
+                    return;
+                }
+                const worktreeResult = await createWorktree(creationMachine.id, absolutePath);
                 if (!worktreeResult.success) {
                     Modal.alert(t('common.error'), worktreeResult.error || 'Failed to create worktree');
                     return;
                 }
                 spawnDirectory = worktreeResult.worktreePath;
-            } else if (worktreeSelection !== '__none__') {
+            } else if (worktreeSelection !== '__none__' && worktreeSelection !== '__new__') {
                 // Existing worktree — use its path directly
                 spawnDirectory = worktreeSelection;
             }
@@ -1614,6 +1701,7 @@ function NewSessionScreen() {
                         permissionMode: permissionKey,
                         effort: currentEffort?.key,
                     }),
+                    ...(happyAgentTarget ? { happyAgentTarget } : {}),
                 }
                 : {
                     machineId: machine.id,
@@ -1666,14 +1754,34 @@ function NewSessionScreen() {
                     const draftState = useNewSessionDraft.getState();
                     const trimmedPrompt = draftState.input.trim();
                     const attachments = draftState.attachments;
-                    draftState.setInput('');
-                    draftState.setAttachments([]);
 
                     // Send initial message if provided
                     if (trimmedPrompt || attachments.length > 0) {
-                        await sync.sendMessage(result.sessionId, trimmedPrompt, { source: 'new_session', attachments });
+                        const discardSession = async () => {
+                            const stopped = await machineStopSession(machine.id, result.sessionId);
+                            if (!stopped.success) {
+                                const killed = await sessionKill(result.sessionId);
+                                if (!killed.success) {
+                                    await sessionArchive(result.sessionId);
+                                }
+                            }
+                            await sync.refreshSessions().catch(() => { /* the list catches up on its own */ });
+                        };
+                        let queued: boolean;
+                        try {
+                            queued = await sync.sendMessage(result.sessionId, trimmedPrompt, { source: 'new_session', attachments });
+                        } catch (error) {
+                            await discardSession();
+                            throw error;
+                        }
+                        if (!queued) {
+                            await discardSession();
+                            return;
+                        }
                     }
 
+                    draftState.setInput('');
+                    draftState.setAttachments([]);
                     router.back();
                     navigateToSession(result.sessionId);
                     break;
@@ -1708,7 +1816,7 @@ function NewSessionScreen() {
         } finally {
             if (isMountedRef.current) setIsSpawning(false);
         }
-    }, [allMachines, canPickWorktree, currentEffort?.key, currentModelKey, currentPermission?.key, effectiveAgentDefaults.effortLevel, effectiveAgentDefaults.modelMode, effectiveAgentDefaults.permissionMode, navigateToSession, router, selectedAgent, selectedMachineId, selectedPath, worktreeKey]);
+    }, [agentWorkspaces, allMachines, canPickWorktree, currentEffort?.key, currentModelKey, currentPermission?.key, effectiveAgentDefaults.effortLevel, effectiveAgentDefaults.modelMode, effectiveAgentDefaults.permissionMode, navigateToSession, picksWorkspaces, router, selectedAgent, selectedMachineId, selectedPath, selectedProjectId, worktreeKey]);
 
     const canSend = selectedMachineId && selectedMachine && isMachineOnline(selectedMachine) && !isSpawning;
     React.useEffect(() => {
@@ -1754,6 +1862,16 @@ function NewSessionScreen() {
         }
         return false;
     }, [agentInputEnterToSend, canSend, handleSend]);
+
+    const handleHardwareReturn = React.useCallback(() => {
+        const action = resolveHardwareReturnAction({
+            platform: Platform.OS,
+            hasSuggestions: false,
+        });
+        if (action === 'send' && canSend) {
+            void handleSend();
+        }
+    }, [canSend, handleSend]);
 
     // Auto-focus the text input when the composer mounts
     React.useEffect(() => {
@@ -2242,6 +2360,7 @@ function NewSessionScreen() {
                     ref={composerInputRef}
                     compact={isNativeMobile}
                     placeholder={isNativeMobile ? composerPlaceholder : 'What would you like to work on?'}
+                    onHardwareReturn={handleHardwareReturn}
                     onKeyPress={handleKeyPress}
                 />
             </View>
@@ -3217,11 +3336,31 @@ const pickerStyles = {
         maxWidth: '100%',
         minWidth: 0,
         maxHeight: 176,
+        ...Platform.select({
+            web: { overflowY: 'auto', overscrollBehavior: 'contain' } as any,
+            default: {},
+        }),
     } as const,
     embeddedOptionListContent: {
         width: '100%',
         maxWidth: '100%',
         minWidth: 0,
+    } as const,
+    recentDisclosure: {
+        minHeight: 36,
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        justifyContent: 'space-between' as const,
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+    } as const,
+    recentDisclosureText: {
+        flex: 1,
+        fontSize: 13,
+        ...Typography.default('semiBold'),
+        ...Platform.select({ web: { userSelect: 'none' } as any, default: {} }),
     } as const,
     emptyText: {
         fontSize: 14,

@@ -11,7 +11,9 @@ import {
     getAvailablePermissionModes,
     getEffortLevelsForModel,
     getRigCurrentModelOptionKey,
+    resolveCodexServiceTierForModel,
     resolveCurrentOption,
+    supportsCodexFastMode,
     EffortLevel,
 } from '@/components/modelModeOptions';
 import { getSuggestions } from '@/components/autocomplete/suggestions';
@@ -20,9 +22,8 @@ import { GithubIssuesButton } from '@/components/GithubIssuesButton';
 import { ChatList } from '@/components/ChatList';
 import { Deferred } from '@/components/Deferred';
 import { EmptyMessages } from '@/components/EmptyMessages';
-import { SessionStatusBar } from '@/components/SessionStatusBar';
 import { Avatar } from '@/components/Avatar';
-import { VoiceAssistantStatusBar } from '@/components/VoiceAssistantStatusBar';
+import { VoiceAssistantStatusBar, VOICE_PILL_TOTAL_HEIGHT } from '@/components/VoiceAssistantStatusBar';
 import { useDraft } from '@/hooks/useDraft';
 import { useImagePicker } from '@/hooks/useImagePicker';
 import { Modal } from '@/modal';
@@ -38,12 +39,15 @@ import { useHappyAction } from '@/hooks/useHappyAction';
 import { HappyError } from '@/utils/errors';
 import { Session } from '@/sync/storageTypes';
 import { sync } from '@/sync/sync';
+import { VISIBLE_SESSION_TAIL_REBASE_IDLE_MS } from '@/features/client-performance/visibleSessionTailPolicy';
+import { supportsImageAttachmentsForFlavor } from '@/sync/attachmentSupport';
 import { t } from '@/text';
 import { tracking } from '@/track';
 import { getVoiceMessageCount, getVoiceOnboardingPromptLoadCount } from '@/sync/persistence';
 import { isRunningOnMac } from '@/utils/platform';
 import { useDeviceType, useHeaderHeight, useIsLandscape, useIsTablet } from '@/utils/responsive';
 import { resolveStatusBarGitBranch } from '@/utils/sessionStatusBar';
+import { visibleRigGitLineChanges } from '@/utils/rigGitLineChanges';
 import { FilesSidebar, SidebarMode } from '@/components/FilesSidebar';
 import { SideChatQuickPanelControls } from '@/components/SideChatQuickPanelControls';
 import { AllFilesDiffView } from '@/components/AllFilesDiffView';
@@ -68,8 +72,10 @@ import { resolveAgentDefaultConfig } from '@/sync/agentDefaults';
 import { performAgentGoalAction } from './agentGoalActionHandler';
 import { MOBILE_GLASS_HEADER_HEIGHT } from '@/components/navigation/headerMetrics';
 import {
+    getRigGitSummary,
     getRigReasoningSelection,
     isRigMetadata,
+    isRigMetadataV1,
     isRigModelSelectionEnabled,
     isRigPermissionSelectionEnabled,
     isRigReasoningSelectionEnabled,
@@ -548,7 +554,7 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                     paddingTop: !(isLandscape && deviceType === 'phone' && Platform.OS !== 'web')
                         ? contentRunsUnderHeader
                             ? 0
-                            : safeArea.top + mobileHeaderHeight + (!isTablet && realtimeStatus !== 'disconnected' ? 32 : 0)
+                            : safeArea.top + mobileHeaderHeight + (!isTablet && realtimeStatus !== 'disconnected' ? VOICE_PILL_TOTAL_HEIGHT : 0)
                         : 0,
                 }}
             >
@@ -776,6 +782,8 @@ const ChatComposer = React.memo(function ChatComposer(props: ChatComposerProps) 
         return storage.getState().sessions[sessionId]?.draft ?? '';
     }, [sessionId]);
     const inputHandleRef = React.useRef<MultiTextInputHandle>(null);
+    const tailSignalSourceId = `composer:${React.useId()}`;
+    const composerSettleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const [message, setMessage] = React.useState(initialDraft);
 
     const applyDraft = React.useCallback((text: string) => {
@@ -785,11 +793,43 @@ const ChatComposer = React.memo(function ChatComposer(props: ChatComposerProps) 
 
     const { clearDraft } = useDraft(sessionId, message, applyDraft);
 
+    const markComposerBusy = React.useCallback(() => {
+        if (composerSettleTimerRef.current) {
+            clearTimeout(composerSettleTimerRef.current);
+        }
+        sync.updateVisibleSessionTailState(sessionId, { composerBusy: true }, tailSignalSourceId);
+        composerSettleTimerRef.current = setTimeout(() => {
+            composerSettleTimerRef.current = null;
+            sync.updateVisibleSessionTailState(sessionId, { composerBusy: false }, tailSignalSourceId);
+        }, VISIBLE_SESSION_TAIL_REBASE_IDLE_MS);
+    }, [sessionId, tailSignalSourceId]);
+
+    React.useEffect(() => {
+        if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+        const handleCompositionStart = () => markComposerBusy();
+        const handleCompositionEnd = () => markComposerBusy();
+        document.addEventListener('compositionstart', handleCompositionStart);
+        document.addEventListener('compositionend', handleCompositionEnd);
+        return () => {
+            document.removeEventListener('compositionstart', handleCompositionStart);
+            document.removeEventListener('compositionend', handleCompositionEnd);
+        };
+    }, [markComposerBusy]);
+
+    React.useEffect(() => () => {
+        if (composerSettleTimerRef.current) {
+            clearTimeout(composerSettleTimerRef.current);
+            composerSettleTimerRef.current = null;
+        }
+        sync.removeVisibleSessionTailState(sessionId, tailSignalSourceId);
+    }, [sessionId, tailSignalSourceId]);
+
     const handleChangeText = React.useCallback((text: string) => {
+        markComposerBusy();
         // Transition keeps the textarea responsive even when the draft
         // autosave / re-render takes longer than a frame.
         React.startTransition(() => setMessage(text));
-    }, []);
+    }, [markComposerBusy]);
 
     React.useImperativeHandle(composerHandleRef, () => ({
         getMessage: () => inputHandleRef.current?.getText() ?? '',
@@ -797,8 +837,13 @@ const ChatComposer = React.memo(function ChatComposer(props: ChatComposerProps) 
             inputHandleRef.current?.setTextAndSelection('', { start: 0, end: 0 });
             setMessage('');
             clearDraft();
+            if (composerSettleTimerRef.current) {
+                clearTimeout(composerSettleTimerRef.current);
+                composerSettleTimerRef.current = null;
+            }
+            sync.updateVisibleSessionTailState(sessionId, { composerBusy: false }, tailSignalSourceId);
         },
-    }), [clearDraft]);
+    }), [clearDraft, sessionId, tailSignalSourceId]);
 
     return (
         <AgentInput
@@ -843,9 +888,13 @@ export function SessionViewLoaded({
         && !isLandscape;
     const [bottomDockInset, setBottomDockInset] = React.useState(0);
     const [composerY, setComposerY] = React.useState(0);
+    // Offset of the composer card inside AgentInput — the faded status rows
+    // above it keep their space, so anchoring to the dock top floats the
+    // scroll button over a visually empty band.
+    const [composerCardOffset, setComposerCardOffset] = React.useState(0);
     const [isChatAtBottom, setIsChatAtBottom] = React.useState(true);
     const showBottomDockDetails = !usesFloatingMobileDock || isChatAtBottom;
-    const scrollButtonInset = Math.max(0, bottomDockInset - composerY);
+    const scrollButtonInset = Math.max(0, bottomDockInset - composerY - composerCardOffset);
 
     const handleBottomDockInsetChange = React.useCallback((nextInset: number) => {
         setBottomDockInset((currentInset) => (
@@ -856,6 +905,12 @@ export function SessionViewLoaded({
         const nextY = Math.ceil(event.nativeEvent.layout.y);
         setComposerY((currentY) => (
             Math.abs(currentY - nextY) < 1 ? currentY : nextY
+        ));
+    }, []);
+    const handleComposerCardOffsetChange = React.useCallback((offset: number) => {
+        const nextOffset = Math.ceil(offset);
+        setComposerCardOffset((currentOffset) => (
+            Math.abs(currentOffset - nextOffset) < 1 ? currentOffset : nextOffset
         ));
     }, []);
     const handleChatBottomVisibilityChange = React.useCallback((visible: boolean) => {
@@ -884,7 +939,7 @@ export function SessionViewLoaded({
         : deviceType === 'phone' && Platform.OS !== 'web'
             ? safeArea.top
                 + MOBILE_GLASS_HEADER_HEIGHT
-                + (realtimeStatus !== 'disconnected' ? 32 : 0)
+                + (realtimeStatus !== 'disconnected' ? VOICE_PILL_TOTAL_HEIGHT : 0)
                 + 12
             : undefined;
 
@@ -898,8 +953,8 @@ export function SessionViewLoaded({
     const isRig = isRigMetadata(session.metadata);
     const agentDefaultOverrides = useSetting('agentDefaultOverrides');
     const effectiveAgentDefaults = React.useMemo(() => (
-        resolveAgentDefaultConfig(agentDefaultOverrides, flavor)
-    ), [agentDefaultOverrides, flavor]);
+        resolveAgentDefaultConfig(agentDefaultOverrides, flavor, cliVersion)
+    ), [agentDefaultOverrides, cliVersion, flavor]);
     const availableModels = React.useMemo(() => (
         getAvailableModels(
             flavor,
@@ -933,6 +988,10 @@ export function SessionViewLoaded({
             isRig ? undefined : session.metadata?.currentModelCode,
         ])
     ), [availableModels, session.modelMode, effectiveAgentDefaults.modelMode, session.metadata, isRig]);
+    const supportsFastMode = !isRig
+        && flavor === 'codex'
+        && supportsCodexFastMode(session.metadata, modelMode);
+    const fastMode = supportsFastMode && session.serviceTier === 'fast';
 
     // Effort level state
     const modelKey = modelMode?.key ?? 'default';
@@ -950,17 +1009,16 @@ export function SessionViewLoaded({
     const sessionUsage = useSessionUsage(sessionId);
     const gitStatus = useSessionGitStatus(sessionId);
     const alwaysShowContextSize = useSetting('alwaysShowContextSize');
-    const sessionStatusBarDisplay = useSetting('sessionStatusBarDisplay');
-    const showSessionModel = useLocalSetting('devShowSessionModelEnabled');
     const experiments = useSetting('experiments');
     const { canResume, resumeSession, resumingSession } = useSessionQuickActions(session);
     const isDisconnected = !sessionStatus.isConnected;
     const resumeCommandBlock = getResumeCommandBlock(session);
 
-    // Image attachment state (expImageUpload feature flag)
-    const expImageUpload = useSetting('expImageUpload');
+    // Attachment availability is capability-driven by the active session.
     const { selectedImages, pickImages, removeImage, clearImages, addImages } = useImagePicker();
-    const canUseAttachments = rigCanUseAttachments(session.metadata);
+    const canUseAttachments = isRigMetadataV1(session.metadata)
+        ? rigCanUseAttachments(session.metadata)
+        : supportsImageAttachmentsForFlavor(session.metadata?.flavor);
     React.useEffect(() => {
         if (!canUseAttachments && selectedImages.length > 0) {
             clearImages();
@@ -998,11 +1056,16 @@ export function SessionViewLoaded({
         sessionSetAgentModes(sessionId, {
             modelMode: mode.key,
             ...(!currentEffortSupported ? { effortLevel: mode.defaultThinkingLevel ?? null } : {}),
+            serviceTier: resolveCodexServiceTierForModel(session.serviceTier, mode),
         });
-    }, [sessionId, flavor, session.metadata, session.effortLevel]);
+    }, [sessionId, flavor, session.metadata, session.effortLevel, session.serviceTier]);
 
     const updateEffortLevel = React.useCallback((level: EffortLevel) => {
         sessionSetAgentModes(sessionId, { effortLevel: level.key });
+    }, [sessionId]);
+
+    const updateFastMode = React.useCallback((enabled: boolean) => {
+        sessionSetAgentModes(sessionId, { serviceTier: enabled ? 'fast' : 'default' });
     }, [sessionId]);
 
     // Memoize header-dependent styles to prevent re-renders
@@ -1019,11 +1082,11 @@ export function SessionViewLoaded({
     // need to re-create on every keystroke.
     const handleSend = React.useCallback(() => {
         const liveMessage = composerHandleRef.current?.getMessage() ?? '';
-        if (liveMessage.trim() || (expImageUpload && selectedImages.length > 0)) {
-            const attachments = expImageUpload ? selectedImages : undefined;
+        if (liveMessage.trim() || selectedImages.length > 0) {
+            const attachments = selectedImages.length > 0 ? selectedImages : undefined;
             const communicationsToDismiss = [...pendingCommunications];
             composerHandleRef.current?.clearMessage();
-            if (expImageUpload) clearImages();
+            clearImages();
 
             void (async () => {
                 try {
@@ -1049,7 +1112,7 @@ export function SessionViewLoaded({
                 }
             })();
         }
-    }, [sessionId, expImageUpload, selectedImages, clearImages, pendingCommunications]);
+    }, [sessionId, selectedImages, clearImages, pendingCommunications]);
 
     const handleAbort = React.useCallback(() => {
         // Stop cancels only the active turn. Permission, model, and effort are
@@ -1089,12 +1152,24 @@ export function SessionViewLoaded({
         return typeof gitBranch === 'string' && gitBranch.trim() ? gitBranch.trim() : null;
     }, [session.metadata]);
     const statusBarGitBranch = resolveStatusBarGitBranch(gitStatus?.branch, metadataGitBranch);
-    const statusBarModelLabel = showSessionModel
-        ? modelMode?.name ?? session.metadata?.currentModelCode ?? session.modelMode ?? null
-        : null;
-    const statusBarEffortLabel = effortLevel?.name
-        ? effortLevel.name.charAt(0).toUpperCase() + effortLevel.name.slice(1)
-        : null;
+    // Same source and fallback chain as the session list rows.
+    const statusBarGitChanges = React.useMemo(() => {
+        const liveInsertions = gitStatus?.unstagedLinesAdded ?? 0;
+        const liveDeletions = gitStatus?.unstagedLinesRemoved ?? 0;
+        if (liveInsertions > 0 || liveDeletions > 0) {
+            return { approximate: false, insertions: liveInsertions, deletions: liveDeletions };
+        }
+        const rigGit = getRigGitSummary(session.metadata);
+        if (rigGit && rigGit.changedFiles !== null) {
+            return visibleRigGitLineChanges({
+                changedFiles: rigGit.changedFiles,
+                countsExact: rigGit.countsExact ?? true,
+                deletions: rigGit.deletions ?? 0,
+                insertions: rigGit.insertions ?? 0,
+            });
+        }
+        return null;
+    }, [gitStatus?.unstagedLinesAdded, gitStatus?.unstagedLinesRemoved, session.metadata]);
 
     const visibleAgentGoal = React.useMemo(() => (
         resolveVisibleAgentGoalStatus(session)
@@ -1164,11 +1239,14 @@ export function SessionViewLoaded({
         }
     }, [realtimeStatus, sessionId]);
 
-    // Memoize mic button state to prevent flashing during chat transitions
+    // Memoize mic button state to prevent flashing during chat transitions.
+    // While a call runs the pill under the header is the only stop control,
+    // so the composer mic disappears instead of doubling as a stop button.
+    const voiceSessionActive = realtimeStatus === 'connected' || realtimeStatus === 'connecting';
     const micButtonState = useMemo(() => ({
-        onMicPress: handleMicrophonePress,
-        isMicActive: realtimeStatus === 'connected' || realtimeStatus === 'connecting'
-    }), [handleMicrophonePress, realtimeStatus]);
+        onMicPress: voiceSessionActive ? undefined : handleMicrophonePress,
+        isMicActive: false,
+    }), [handleMicrophonePress, voiceSessionActive]);
 
     // Register session visibility once per mount. Socket reconnect message refreshes are
     // handled inside Sync without repeating Git status or voice-focus work.
@@ -1244,6 +1322,9 @@ export function SessionViewLoaded({
                 effortLevel={effortLevel}
                 availableEffortLevels={availableEffortLevels}
                 onEffortLevelChange={isRigReasoningSelectionEnabled(session.metadata) ? updateEffortLevel : undefined}
+                fastMode={fastMode}
+                showFastModeToggle={supportsFastMode}
+                onFastModeChange={supportsFastMode ? updateFastMode : undefined}
                 metadata={session.metadata}
                 connectionStatus={connectionStatus}
                 blockSend={isRig && session.thinking && session.metadata?.capabilities?.steering !== true}
@@ -1261,20 +1342,20 @@ export function SessionViewLoaded({
                     || (Platform.OS === 'web' && sessionStatus.state === 'waiting')
                 )}
                 onFileViewerPress={experiments && !isTablet && rigCanBrowseFiles(session.metadata) && rigCanReadFiles(session.metadata) ? handleFileViewerPress : undefined}
-                selectedImages={expImageUpload && canUseAttachments ? selectedImages : undefined}
-                onPickImages={expImageUpload && canUseAttachments ? pickImages : undefined}
-                onRemoveImage={expImageUpload && canUseAttachments ? removeImage : undefined}
-                onAddImages={expImageUpload && canUseAttachments ? addImages : undefined}
+                selectedImages={canUseAttachments ? selectedImages : undefined}
+                onPickImages={canUseAttachments ? pickImages : undefined}
+                onRemoveImage={canUseAttachments ? removeImage : undefined}
+                onAddImages={canUseAttachments ? addImages : undefined}
                 autocompletePrefixes={AGENT_INPUT_AUTOCOMPLETE_PREFIXES}
                 autocompleteSuggestions={handleAutocompleteSuggestions}
                 usageData={usageData}
                 alwaysShowContextSize={alwaysShowContextSize}
                 zenMode={zenMode}
-                showSessionStatusInfoInSettings={false}
                 showStatusDetails={showBottomDockDetails}
-                sessionStatusGitBranch={statusBarGitBranch}
-                sessionStatusModelLabel={statusBarModelLabel}
-                sessionStatusEffortLabel={statusBarEffortLabel}
+                sessionStatusGitBranch={statusBarGitBranch ?? 'main'}
+                sessionStatusGitChanges={statusBarGitChanges}
+                sessionStatusUsageLimits={session.agentState?.usageLimits ?? null}
+                onActionAreaOffsetChange={usesFloatingMobileDock ? handleComposerCardOffsetChange : undefined}
             />
         </View>
     );
@@ -1299,29 +1380,6 @@ export function SessionViewLoaded({
         </AnimatedFade>
     ) : null;
 
-    const showSessionStatusBar = sessionStatusBarDisplay === 'above' || sessionStatusBarDisplay === 'below';
-    const sessionStatusBarPosition = sessionStatusBarDisplay === 'above' ? 'above' : 'below';
-    const sessionStatusBar = showSessionStatusBar ? (
-        <AnimatedFade visible={showBottomDockDetails}>
-            <CenteredInputWidth horizontalPadding={sessionInputHorizontalPadding}>
-                <SessionStatusBar
-                    gitBranch={statusBarGitBranch}
-                    modelLabel={statusBarModelLabel}
-                    modelMode={modelMode}
-                    availableModels={availableModels}
-                    onModelModeChange={isRigModelSelectionEnabled(session.metadata) ? updateModelMode : undefined}
-                    effortLabel={statusBarEffortLabel}
-                    effortLevel={effortLevel}
-                    availableEffortLevels={availableEffortLevels}
-                    onEffortLevelChange={isRigReasoningSelectionEnabled(session.metadata) ? updateEffortLevel : undefined}
-                    contextSize={usageData?.contextSize}
-                    contextWindow={usageData?.contextWindow}
-                    usageLimits={session.agentState?.usageLimits}
-                />
-            </CenteredInputWidth>
-        </AnimatedFade>
-    ) : null;
-
     const input = (
         <>
             {inactiveHint}
@@ -1341,12 +1399,10 @@ export function SessionViewLoaded({
                     <AgentQuestionBanner sessionId={sessionId} />
                 </CenteredInputWidth>
             </AnimatedFade>
-            {sessionStatusBarPosition === 'above' ? sessionStatusBar : null}
             <AnimatedFade visible={showBottomDockDetails}>
                 <RigActivityBar metadata={session.metadata} />
             </AnimatedFade>
             {composer}
-            {sessionStatusBarPosition === 'below' ? sessionStatusBar : null}
         </>
     );
 

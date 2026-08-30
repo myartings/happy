@@ -12,7 +12,12 @@ vi.mock('react-native-mmkv', () => ({
     },
 }));
 
-const { loadPendingSettings, savePendingSettings } = await import('./persistence');
+const {
+    loadPendingSettings,
+    loadSessionDrafts,
+    savePendingSettings,
+    saveSessionDrafts,
+} = await import('./persistence');
 
 describe('loadPendingSettings', () => {
     beforeEach(() => store.clear());
@@ -47,5 +52,21 @@ describe('loadPendingSettings', () => {
     it('falls back to an empty queue on malformed json', () => {
         store.set('pending-settings', '{not json');
         expect(loadPendingSettings()).toEqual({});
+    });
+});
+
+describe('session draft persistence compatibility', () => {
+    beforeEach(() => store.clear());
+
+    it('keeps the existing session-drafts key and flat JSON record shape', () => {
+        const drafts = {
+            'session-a': 'CJK 草稿',
+            'session-b': 'emoji 👩🏽‍💻 draft',
+        };
+
+        saveSessionDrafts(drafts);
+
+        expect(store.get('session-drafts')).toBe(JSON.stringify(drafts));
+        expect(loadSessionDrafts()).toEqual(drafts);
     });
 });

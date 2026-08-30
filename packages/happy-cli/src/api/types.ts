@@ -207,7 +207,8 @@ export const MessageMetaSchema = z.object({
   appendSystemPrompt: z.string().nullable().optional(), // Append to system prompt for this message (null = reset)
   allowedTools: z.array(z.string()).nullable().optional(), // Allowed tools for this message (null = reset)
   disallowedTools: z.array(z.string()).nullable().optional(), // Disallowed tools for this message (null = reset)
-  effort: z.string().nullable().optional() // Effort level for this message (null = reset). happy-app sends this key; without it Zod strips the value before runClaude reads it.
+  effort: z.string().nullable().optional(), // Effort level for this message (null = reset). happy-app sends this key; without it Zod strips the value before runClaude reads it.
+  serviceTier: z.string().nullable().optional(), // Codex service tier; each harness validates supported values.
 })
 
 export type MessageMeta = z.infer<typeof MessageMetaSchema>
@@ -305,6 +306,8 @@ export type Metadata = {
   currentOperatingModeCode?: string,
   thoughtLevels?: Array<{ code: string; value: string; description?: string | null }>,
   currentThoughtLevelCode?: string,
+  /** Codex service tiers this Happy CLI can transport end to end. */
+  serviceTiers?: string[],
   path: string,
   host: string,
   version?: string,
@@ -428,7 +431,11 @@ export type AgentState = {
       reason?: string,
       mode?: PermissionMode,
       decision?: 'approved' | 'approved_for_session' | 'denied' | 'abort',
+      // Historical field name from the RPC payload; the app reads
+      // `allowedTools`. Both are written until every app build folds the
+      // old key.
       allowTools?: string[],
+      allowedTools?: string[],
       toolUseId?: string
     }
   }

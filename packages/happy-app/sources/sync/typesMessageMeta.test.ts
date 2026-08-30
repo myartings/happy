@@ -11,4 +11,8 @@ describe('MessageMetaSchema', () => {
         expect(parsed.permissionMode).toBe('team-custom-mode');
         expect(parsed.model).toBe('custom-model');
     });
+
+    it('preserves the Codex service tier', () => {
+        expect(MessageMetaSchema.parse({ serviceTier: 'fast' }).serviceTier).toBe('fast');
+    });
 });

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "hardware-keyboard-enter-send",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/hardware-keyboard-enter-send.md",
+      "updated": "2026-08-27T16:22:43+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/hardware-keyboard-enter-send/decisions.md",
+      "updated": "2026-08-27T16:22:43+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/specs/hardware-keyboard-enter-send.md; docs/tasks/hardware-keyboard-enter-send-tasks.md; docs/workspace/hardware-keyboard-enter-send/context.md",
+      "updated": "2026-08-27T16:22:43+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/specs/hardware-keyboard-enter-send.md#risk-controls",
+      "updated": "2026-08-27T16:22:43+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "focused tests; happy-app typecheck; Expo autolinking; HardwareKeyboardCommand xcodebuild BUILD SUCCEEDED",
+      "updated": "2026-08-27T16:46:34+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures",
+      "updated": "2026-08-27T16:45:54+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "whole-diff review: no blocking findings; docs/workspace/hardware-keyboard-enter-send/validation.md",
+      "updated": "2026-08-27T16:47:19+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/hardware-keyboard-enter-send/finish.md; physical iPad Happy Personal 1.7.0 (9) validation",
+      "updated": "2026-08-28T03:26:28+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-27T16:20:16+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-27T16:22:43+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/hardware-keyboard-enter-send.md"
+    },
+    {
+      "at": "2026-08-27T16:22:43+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/hardware-keyboard-enter-send/decisions.md"
+    },
+    {
+      "at": "2026-08-27T16:22:43+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/specs/hardware-keyboard-enter-send.md#risk-controls"
+    },
+    {
+      "at": "2026-08-27T16:22:43+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/hardware-keyboard-enter-send.md; docs/tasks/hardware-keyboard-enter-send-tasks.md; docs/workspace/hardware-keyboard-enter-send/context.md"
+    },
+    {
+      "at": "2026-08-27T16:22:53+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED hardware-return policy test"
+    },
+    {
+      "at": "2026-08-27T16:45:54+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "2 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-27T16:46:34+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "focused tests; happy-app typecheck; Expo autolinking; HardwareKeyboardCommand xcodebuild BUILD SUCCEEDED"
+    },
+    {
+      "at": "2026-08-27T16:46:35+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Complete whole-diff review and record physical-device gap"
+    },
+    {
+      "at": "2026-08-27T16:47:19+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "whole-diff review: no blocking findings; docs/workspace/hardware-keyboard-enter-send/validation.md"
+    },
+    {
+      "at": "2026-08-28T03:26:15+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record final acceptance and archive validated work"
+    },
+    {
+      "at": "2026-08-28T03:26:28+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/hardware-keyboard-enter-send/finish.md; physical iPad Happy Personal 1.7.0 (9) validation"
+    },
+    {
+      "at": "2026-08-28T03:26:35+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and physically validated iPad hardware-keyboard Return-to-send with Shift+Return and IME safeguards; commit: pending; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-28T03:26:35+00:00",
+  "archivedAt": "2026-08-28T03:26:35+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Implemented and physically validated iPad hardware-keyboard Return-to-send with Shift+Return and IME safeguards",
+  "archiveFollowUp": "None"
+}

@@ -46,6 +46,11 @@
   "jest": {
     "preset": "jest-expo"
   },
+  "expo": {
+    "autolinking": {
+      "nativeModulesDir": "./modules"
+    }
+  },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/lang-css": "^6.3.1",

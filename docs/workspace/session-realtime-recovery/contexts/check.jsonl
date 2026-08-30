@@ -1,0 +1,17 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/session-realtime-recovery/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/PRD.md","reason":"Accepted product outcome and constraints."}
+{"path":"docs/specs/session-realtime-recovery.md","reason":"Acceptance criteria for verification."}
+{"path":"docs/tasks/session-realtime-recovery-tasks.md","reason":"Task and evidence coverage."}
+{"path":"docs/workspace/session-realtime-recovery/validation.md","reason":"Exact RED, GREEN, suite, and final check evidence."}
+{"path":"docs/workspace/session-realtime-recovery/risk.md","reason":"Verify required risk controls and rollback."}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.ts","reason":"Review primary-turn lifecycle implementation."}
+{"path":"packages/happy-cli/src/codex/runCodex.ts","reason":"Review global thinking integration."}
+{"path":"packages/happy-cli/src/codex/codexAppServerClient.test.ts","reason":"Verify lifecycle regressions."}
+{"path":"packages/happy-cli/src/codex/utils/sessionProtocolMapper.ts","reason":"Review unified Session lifecycle mapping."}
+{"path":"packages/happy-cli/src/codex/__tests__/sessionProtocolMapper.test.ts","reason":"Verify subagent lifecycle cannot close the primary protocol turn."}
+{"path":"packages/happy-app/sources/sync/apiSocket.ts","reason":"Review health timers, reconnection, and cleanup."}
+{"path":"packages/happy-app/sources/sync/apiSocket.test.ts","reason":"Verify liveness behavior."}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Review reconciliation triggers and bounds."}
+{"path":"packages/happy-app/sources/sync/sessionRealtimeRecovery.ts","reason":"Review reconciliation scheduling and cleanup."}
+{"path":"packages/happy-app/sources/sync/sessionRealtimeRecovery.test.ts","reason":"Verify reconciliation policy behavior."}

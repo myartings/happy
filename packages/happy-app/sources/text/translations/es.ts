@@ -15,6 +15,13 @@ function plural({ count, singular, plural }: { count: number; singular: string; 
  * Must match the exact structure of the English translations
  */
 export const es: TranslationStructure = {
+    voiceStatusBar: {
+        tapToEnd: 'toca para finalizar',
+        connecting: 'Conectando…',
+        error: 'Error de conexión',
+        active: 'Asistente de voz activo',
+    },
+
     tabs: {
         // Tab navigation labels
         inbox: 'Bandeja',
@@ -166,13 +173,6 @@ export const es: TranslationStructure = {
         },
         chat: 'Chat',
         chatDescription: 'Personaliza la apariencia de los mensajes del chat',
-        sessionStatusBar: 'Información de estado de la sesión',
-        sessionStatusBarDescription: 'Elige dónde aparecen la rama, el modelo, el esfuerzo y el contexto',
-        sessionStatusDisplayOptions: {
-            hidden: 'Oculto',
-            above: 'Sobre el compositor',
-            below: 'Bajo el compositor',
-        },
         usageLimitShowRemaining: 'Mostrar cuota restante',
         usageLimitShowRemainingDescription: 'Los indicadores de límite cuentan hacia atrás en vez de hacia adelante',
         userMessageBubbleColor: 'Color de tus mensajes',
@@ -191,8 +191,10 @@ export const es: TranslationStructure = {
         compactToolCallsDescription: 'Muestra las llamadas no interactivas en una sola línea; abre una fila para ver los detalles',
         showLineNumbersInToolViews: 'Mostrar números de línea en vistas de herramientas',
         showLineNumbersInToolViewsDescription: 'Mostrar números de línea en diferencias de vistas de herramientas',
-        alwaysShowContextSize: 'Mostrar siempre tamaño del contexto',
-        alwaysShowContextSizeDescription: 'Mostrar uso del contexto incluso cuando no esté cerca del límite',
+        alwaysShowContextSize: 'Mostrar uso',
+        alwaysShowContextSizeDescription: 'Contexto y límites del plan bajo el campo de mensaje. Los avisos cerca del límite siempre se muestran.',
+        input: 'Entrada',
+        inputDescription: 'Configura el campo de mensaje',
         showHarnessIconInSessionHeader: 'Mostrar el icono del harness en el encabezado de la sesión',
         showHarnessIconInSessionHeaderDescription: 'Mostrar el icono del harness en el encabezado de la sesión',
         showHarnessIconsInSessionList: 'Mostrar iconos de harness en la lista de sesiones',
@@ -235,8 +237,6 @@ export const es: TranslationStructure = {
         commandPaletteDisabled: 'Acceso rápido a comandos deshabilitado',
         markdownCopyV2: 'Markdown Copy v2',
         markdownCopyV2Subtitle: 'Pulsación larga abre modal de copiado',
-        hideInactiveSessions: 'Ocultar sesiones inactivas',
-        hideInactiveSessionsSubtitle: 'Muestra solo los chats activos en tu lista',
         groupToolCalls: 'Agrupar llamadas a herramientas',
         groupToolCallsSubtitle: 'Contrae las llamadas consecutivas a herramientas en un solo contenedor',
         showActiveSessionRuntime: 'Mostrar entorno de sesiones activas',
@@ -399,7 +399,12 @@ export const es: TranslationStructure = {
         failedToConnectToServer: 'Falló al conectar con el servidor',
         currentlyUsingCustomServer: 'Actualmente usando servidor personalizado',
         customServerUrlLabel: 'URL del servidor personalizado',
-        advancedFeatureFooter: 'Esta es una característica avanzada. Solo cambia el servidor si sabes lo que haces. Necesitarás cerrar sesión e iniciarla nuevamente después de cambiar servidores.'
+        advancedFeatureFooter: 'Esta es una característica avanzada. Solo cambia el servidor si sabes lo que haces. Necesitarás cerrar sesión e iniciarla nuevamente después de cambiar servidores.',
+        services: 'Servicios',
+        useCustomServerForVoice: 'Usar servidor personalizado para voz',
+        customServerVoiceEnabled: 'Las credenciales y el uso de voz utilizan tu servidor personalizado',
+        customServerVoiceDisabled: 'La voz utiliza Happy Cloud y tu suscripción de Happy',
+        customServerVoiceFooter: 'Cuando está desactivado, iniciar la voz contacta con Happy Cloud y ElevenLabs. Actívalo solo si tu servidor personalizado está configurado para voz.',
     },
 
     sessionInfo: {
@@ -485,14 +490,6 @@ export const es: TranslationStructure = {
             stopGoal: 'Detener objetivo',
             editGoal: 'Editar objetivo',
         },
-        sessionStatusBar: {
-            contextUsage: ({ used, total, percent }: { used: string; total: string; percent: number }) => `Contexto ${used} de ${total} tokens, ${percent}%`,
-            limitFiveHour: 'Límite de 5 horas',
-            limitSevenDay: 'Límite de 7 días',
-            limitResets: ({ time }: { time: string }) => `se restablece ${time}`,
-            limitAsOf: ({ age }: { age: string }) => `hace ${age}`,
-            limitRemaining: ({ percent }: { percent: number }) => `${percent}% restante`,
-        },
     },
 
     agentInput: {
@@ -559,7 +556,14 @@ export const es: TranslationStructure = {
             badgePlan: 'Planificación',
         },
         context: {
-            remaining: ({ percent }: { percent: number }) => `${percent}% restante`,
+            detailContext: ({ used, total }: { used: string; total: string }) => `${used} / ${total} de contexto`,
+            percentContext: ({ percent }: { percent: number }) => `${percent}% contexto`,
+            percentWeek: ({ percent }: { percent: number }) => `${percent}% semana`,
+        },
+        usagePopup: {
+            session: 'Sesión',
+            week: 'Semana',
+            resets: ({ time }: { time: string }) => `Se restablece ${time}`,
         },
         suggestion: {
             fileLabel: 'ARCHIVO',

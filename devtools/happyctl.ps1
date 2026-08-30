@@ -436,7 +436,7 @@ function Assert-PersonalPatches {
     if ($LASTEXITCODE -ne 0) {
         throw "Codex default model patch missing from ${cliFile}; expected $CodexDefaultModel"
     }
-    & git -C $HappyRepo grep -q "codex: { permissionMode: 'yolo', modelMode: '$CodexDefaultModel'" -- $defaultsFile
+    & git -C $HappyRepo grep -q "codex: .*modelMode: '$CodexDefaultModel'" -- $defaultsFile
     if ($LASTEXITCODE -ne 0) {
         throw "Desktop Codex default model patch missing from ${defaultsFile}; expected $CodexDefaultModel"
     }

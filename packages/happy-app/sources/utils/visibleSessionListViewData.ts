@@ -116,7 +116,7 @@ function applyPreferenceOrder(
 }
 
 function activityTime(session: SessionRowData): number {
-    return session.lastMessageSentAt ?? session.createdAt ?? 0;
+    return session.lastActivityAt;
 }
 
 function filterProjectSessions(

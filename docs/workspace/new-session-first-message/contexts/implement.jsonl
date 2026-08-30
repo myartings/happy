@@ -1,0 +1,7 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/tasks/new-session-first-message-tasks.md","reason":"Accepted low-risk bug-fix contract"}
+{"path":"packages/happy-app/sources/sync/sync.ts","reason":"Public message enqueue result and missing-session behavior"}
+{"path":"packages/happy-app/sources/sync/sync.realtimeRecovery.test.ts","reason":"Public Sync regression seam for unavailable new sessions"}
+{"path":"packages/happy-app/sources/hooks/useStartSessionFromDraft.ts","reason":"Home new-session launch sequencing and cleanup"}
+{"path":"packages/happy-app/sources/hooks/useStartSessionFromDraft.test.ts","reason":"Focused public-hook regression seam"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Dedicated new-session screen launch sequencing"}

@@ -15,6 +15,13 @@ function plural({ count, singular, plural }: { count: number; singular: string; 
  * Must match the exact structure of the English translations
  */
 export const pt: TranslationStructure = {
+    voiceStatusBar: {
+        tapToEnd: 'toque para encerrar',
+        connecting: 'Conectando…',
+        error: 'Erro de conexão',
+        active: 'Assistente de voz ativo',
+    },
+
     tabs: {
         // Tab navigation labels
         inbox: 'Caixa de entrada',
@@ -165,13 +172,6 @@ export const pt: TranslationStructure = {
         },
         chat: 'Chat',
         chatDescription: 'Personalize a aparência das mensagens do chat',
-        sessionStatusBar: 'Informações de status da sessão',
-        sessionStatusBarDescription: 'Escolha onde a branch, o modelo, o esforço e o contexto aparecem',
-        sessionStatusDisplayOptions: {
-            hidden: 'Oculto',
-            above: 'Acima do compositor',
-            below: 'Abaixo do compositor',
-        },
         usageLimitShowRemaining: 'Mostrar cota restante',
         usageLimitShowRemainingDescription: 'Os indicadores de limite contam para baixo em vez de para cima',
         userMessageBubbleColor: 'Cor das suas mensagens',
@@ -190,8 +190,10 @@ export const pt: TranslationStructure = {
         compactToolCallsDescription: 'Mostre chamadas não interativas em uma linha; abra a linha para ver detalhes',
         showLineNumbersInToolViews: 'Mostrar números de linha nas visualizações de ferramentas',
         showLineNumbersInToolViewsDescription: 'Exibir números de linha nos diffs das visualizações de ferramentas',
-        alwaysShowContextSize: 'Sempre mostrar tamanho do contexto',
-        alwaysShowContextSizeDescription: 'Exibir uso do contexto mesmo quando não estiver próximo do limite',
+        alwaysShowContextSize: 'Mostrar uso',
+        alwaysShowContextSizeDescription: 'Contexto e limites do plano abaixo do campo. Avisos perto do limite sempre aparecem.',
+        input: 'Entrada',
+        inputDescription: 'Configure o campo de mensagem',
         showHarnessIconInSessionHeader: 'Mostrar ícone do harness no cabeçalho da sessão',
         showHarnessIconInSessionHeaderDescription: 'Exibir o ícone do harness no cabeçalho da sessão',
         showHarnessIconsInSessionList: 'Mostrar ícones de harness na lista de sessões',
@@ -234,8 +236,6 @@ export const pt: TranslationStructure = {
         commandPaletteDisabled: 'Acesso rápido a comandos desativado',
         markdownCopyV2: 'Markdown Copy v2',
         markdownCopyV2Subtitle: 'Pressione e segure para abrir modal de cópia',
-        hideInactiveSessions: 'Ocultar sessões inativas',
-        hideInactiveSessionsSubtitle: 'Mostre apenas os chats ativos na sua lista',
         groupToolCalls: 'Agrupar chamadas de ferramentas',
         groupToolCallsSubtitle: 'Recolher chamadas consecutivas de ferramentas em um único contêiner',
         showActiveSessionRuntime: 'Mostrar ambiente das sessões ativas',
@@ -398,7 +398,12 @@ export const pt: TranslationStructure = {
         failedToConnectToServer: 'Falha ao conectar com o servidor',
         currentlyUsingCustomServer: 'Atualmente usando servidor personalizado',
         customServerUrlLabel: 'URL do servidor personalizado',
-        advancedFeatureFooter: 'Este é um recurso avançado. Altere o servidor apenas se souber o que está fazendo. Você precisará sair e entrar novamente após alterar servidores.'
+        advancedFeatureFooter: 'Este é um recurso avançado. Altere o servidor apenas se souber o que está fazendo. Você precisará sair e entrar novamente após alterar servidores.',
+        services: 'Serviços',
+        useCustomServerForVoice: 'Usar servidor personalizado para voz',
+        customServerVoiceEnabled: 'As credenciais e o uso de voz utilizam seu servidor personalizado',
+        customServerVoiceDisabled: 'A voz utiliza a Happy Cloud e sua assinatura Happy',
+        customServerVoiceFooter: 'Quando desativado, iniciar a voz contata a Happy Cloud e a ElevenLabs. Ative somente se seu servidor personalizado estiver configurado para voz.',
     },
 
     sessionInfo: {
@@ -484,14 +489,6 @@ export const pt: TranslationStructure = {
             stopGoal: 'Parar objetivo',
             editGoal: 'Editar objetivo',
         },
-        sessionStatusBar: {
-            contextUsage: ({ used, total, percent }: { used: string; total: string; percent: number }) => `Contexto ${used} de ${total} tokens, ${percent}%`,
-            limitFiveHour: 'Limite de 5 horas',
-            limitSevenDay: 'Limite de 7 dias',
-            limitResets: ({ time }: { time: string }) => `redefine ${time}`,
-            limitAsOf: ({ age }: { age: string }) => `há ${age}`,
-            limitRemaining: ({ percent }: { percent: number }) => `${percent}% restante`,
-        },
     },
 
     agentInput: {
@@ -558,7 +555,14 @@ export const pt: TranslationStructure = {
             badgePlan: 'Planejamento',
         },
         context: {
-            remaining: ({ percent }: { percent: number }) => `${percent}% restante`,
+            detailContext: ({ used, total }: { used: string; total: string }) => `${used} / ${total} de contexto`,
+            percentContext: ({ percent }: { percent: number }) => `${percent}% contexto`,
+            percentWeek: ({ percent }: { percent: number }) => `${percent}% semana`,
+        },
+        usagePopup: {
+            session: 'Sessão',
+            week: 'Semana',
+            resets: ({ time }: { time: string }) => `Redefine ${time}`,
         },
         suggestion: {
             fileLabel: 'ARQUIVO',

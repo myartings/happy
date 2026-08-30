@@ -1,0 +1,8 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/codex-fast-mode-toggle.md","reason":"Accepted Fast mode behavior and compatibility contract"}
+{"path":"docs/tasks/codex-fast-mode-toggle-tasks.md","reason":"Dependency-ordered implementation slices"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"Native desktop and mobile composer control"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"Session-mode selection and model compatibility wiring"}
+{"path":"packages/happy-app/sources/sync","reason":"Synced session state and outbound message metadata"}
+{"path":"packages/happy-cli/src/codex","reason":"Validated remote mode state and app-server serviceTier transport"}
+{"path":"packages/happy-cli/src/api/types.ts","reason":"Additive user-message and session metadata contracts"}

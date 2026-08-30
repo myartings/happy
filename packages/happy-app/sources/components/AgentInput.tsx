@@ -1,6 +1,7 @@
 import { Ionicons, Octicons } from '@expo/vector-icons';
+import Svg, { Circle } from 'react-native-svg';
 import * as React from 'react';
-import { Keyboard, View, Platform, useWindowDimensions, Text, ActivityIndicator, Pressable, TouchableWithoutFeedback } from 'react-native';
+import { Keyboard, View, Platform, useWindowDimensions, Text, ActivityIndicator, Pressable, TouchableWithoutFeedback, LayoutChangeEvent } from 'react-native';
 import { Image } from 'expo-image';
 import { AgentInputAttachmentStrip } from './AgentInputAttachmentStrip';
 import type { AttachmentPreview } from '@/sync/attachmentTypes';
@@ -17,7 +18,6 @@ import { useActiveWord } from './autocomplete/useActiveWord';
 import { useActiveSuggestions } from './autocomplete/useActiveSuggestions';
 import { AgentInputAutocomplete } from './AgentInputAutocomplete';
 import { FloatingOverlay } from './FloatingOverlay';
-import { SessionStatusBar } from './SessionStatusBar';
 import { TextInputState, MultiTextInputHandle } from './MultiTextInput';
 import { applySuggestion } from './autocomplete/applySuggestion';
 import { GitStatusBadge, useHasMeaningfulGitStatus } from './GitStatusBadge';
@@ -25,6 +25,8 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useLocalSetting, useSetting } from '@/sync/storage';
 import { hackMode, hackModes } from '@/sync/modeHacks';
 import { getPermissionModeMenuLabel, getPermissionModeShortLabel } from '@/utils/permissionModeLabels';
+import { getUsageLimitDisplayPercentage, getUsageLimitRows, formatUsageLimitResetTime, type UsageLimitsLike } from '@/utils/sessionStatusBar';
+import { compactCount } from '@/utils/rigGitLineChanges';
 import { Theme } from '@/theme';
 import { t } from '@/text';
 import { Metadata } from '@/sync/storageTypes';
@@ -33,7 +35,7 @@ import { MobileGlassSurface } from './MobileGlass';
 import { AnimatedClickAwayBackdrop, AnimatedFade } from './AnimatedOverlay';
 import { BubblePressable } from './BubblePressable';
 import { resolveAgentInputPrimaryAction } from './agentInputPrimaryAction';
-import { NativeSettingsMenu, type NativeSettingsMenuGroup } from './NativeSettingsMenu';
+import { NativeSettingsMenu, type NativeSettingsMenuGroup, type NativeSettingsMenuOption } from './NativeSettingsMenu';
 import { ProviderIcon } from './ProviderIcon';
 import { isRigMetadata } from '@/sync/rig';
 import {
@@ -49,6 +51,9 @@ import {
     resolveDesktopComposerStyle,
     resolveStudioComposerStatePresentation,
 } from '@/features/studio-composer/studioComposerStyle';
+import { HardwareKeyboardCommandBoundary } from '@/keyboard/HardwareKeyboardCommandBoundary';
+import { resolveHardwareReturnAction } from '@/keyboard/hardwareKeyboardSubmitPolicy';
+import { DesktopComposerModeChips } from '@/features/studio-composer/desktopComposerModeChips';
 
 interface AgentInputProps {
     // `initialValue` seeds the uncontrolled textarea once; keystrokes never
@@ -73,6 +78,9 @@ interface AgentInputProps {
     effortLevel?: EffortLevel | null;
     availableEffortLevels?: EffortLevel[];
     onEffortLevelChange?: (level: EffortLevel) => void;
+    fastMode?: boolean;
+    showFastModeToggle?: boolean;
+    onFastModeChange?: (enabled: boolean) => void;
     metadata?: Metadata | null;
     onAbort?: () => void | Promise<void>;
     showAbortButton?: boolean;
@@ -98,12 +106,19 @@ interface AgentInputProps {
         contextWindow?: number;
     };
     alwaysShowContextSize?: boolean;
-    showSessionStatusInfoInSettings?: boolean;
     /** Hide the auxiliary connection/mode row while reading older messages. */
     showStatusDetails?: boolean;
+    /**
+     * Reports the composer card's top offset from AgentInput's own top edge.
+     * The status/chips rows above the card keep their layout space when faded
+     * out, so callers anchoring to AgentInput would float above empty space.
+     */
+    onActionAreaOffsetChange?: (offset: number) => void;
     sessionStatusGitBranch?: string | null;
-    sessionStatusModelLabel?: string | null;
-    sessionStatusEffortLabel?: string | null;
+    /** Unstaged line changes for the checkout, matching the session list. */
+    sessionStatusGitChanges?: { insertions: number; deletions: number; approximate: boolean } | null;
+    /** Plan quota windows from agent state, for the week stat and its popup. */
+    sessionStatusUsageLimits?: UsageLimitsLike | null;
     onFileViewerPress?: () => void;
     agentType?: 'claude' | 'codex' | 'gemini' | 'openclaw' | 'agy';
     onAgentClick?: () => void;
@@ -116,7 +131,7 @@ interface AgentInputProps {
     isSending?: boolean;
     minHeight?: number;
     zenMode?: boolean;
-    /** Image attachments waiting to be sent (expImageUpload feature). */
+    /** Image attachments waiting to be sent. */
     selectedImages?: AttachmentPreview[];
     onPickImages?: () => void;
     onRemoveImage?: (id: string) => void;
@@ -137,11 +152,16 @@ const MOBILE_ACTION_ROW_GEOMETRY = resolveMobileComposerActionRowGeometry();
 const MOBILE_ICON_ACTION_GEOMETRY = resolveMobileComposerActionGeometry('icon');
 const MOBILE_PRIMARY_ACTION_GEOMETRY = resolveMobileComposerActionGeometry('primary');
 
+// Shared with the action-area offset reported to onActionAreaOffsetChange —
+// the Shaker's layout.y is relative to innerContainer, which sits this far
+// below AgentInput's top edge.
+const CONTAINER_TOP_PADDING = 8;
+
 const stylesheet = StyleSheet.create((theme, runtime) => ({
     container: {
         alignItems: 'center',
         paddingBottom: 8,
-        paddingTop: 8,
+        paddingTop: CONTAINER_TOP_PADDING,
     },
     innerContainer: {
         width: '100%',
@@ -464,26 +484,46 @@ const stylesheet = StyleSheet.create((theme, runtime) => ({
     },
 }));
 
-const getContextWarning = (contextSize: number, alwaysShow: boolean = false, theme: Theme, contextWindow?: number) => {
+const formatTokenCount = (tokens: number): string => {
+    if (tokens < 1000) {
+        return `${Math.max(0, Math.round(tokens))}`;
+    }
+    if (tokens < 999500) {
+        return `${Math.round(tokens / 1000)}k`;
+    }
+    const millions = tokens / 1000000;
+    return `${millions >= 10 ? Math.round(millions) : Math.round(millions * 10) / 10}M`;
+};
+
+const getContextStatus = (contextSize: number, alwaysShow: boolean = false, theme: Theme, contextWindow: number | undefined) => {
     // Until the session reports its window there is no honest denominator, so
     // nothing is shown rather than dividing by a guess — a percentage that
     // later corrects itself upward reads as the context refilling.
     if (typeof contextWindow !== 'number' || !Number.isFinite(contextWindow) || contextWindow <= 0) {
         return null;
     }
-    const maxContextSize = contextWindow;
-    const percentageUsed = (contextSize / maxContextSize) * 100;
-    const percentageRemaining = Math.max(0, Math.min(100, 100 - percentageUsed));
+    const percentageUsed = Math.max(0, Math.min(100, (contextSize / contextWindow) * 100));
+    const percentageRemaining = 100 - percentageUsed;
 
+    let color: string;
     if (percentageRemaining <= 5) {
-        return { text: t('agentInput.context.remaining', { percent: Math.round(percentageRemaining) }), color: theme.colors.warningCritical };
+        color = theme.colors.warningCritical;
     } else if (percentageRemaining <= 10) {
-        return { text: t('agentInput.context.remaining', { percent: Math.round(percentageRemaining) }), color: theme.colors.warning };
+        color = theme.colors.warning;
     } else if (alwaysShow) {
-        // Show context remaining in neutral color when not near limit
-        return { text: t('agentInput.context.remaining', { percent: Math.round(percentageRemaining) }), color: theme.colors.warning };
+        color = theme.colors.textSecondary;
+    } else {
+        return null; // No display needed
     }
-    return null; // No display needed
+
+    return {
+        percent: Math.round(percentageUsed),
+        detailText: t('agentInput.context.detailContext', {
+            used: formatTokenCount(contextSize),
+            total: formatTokenCount(contextWindow),
+        }),
+        color,
+    };
 };
 
 // Stable sub-trees extracted from AgentInput so they don't reconcile when
@@ -493,22 +533,13 @@ const getContextWarning = (contextSize: number, alwaysShow: boolean = false, the
 
 type StatusRowProps = {
     connectionStatus?: AgentInputProps['connectionStatus'];
-    contextWarning: { text: string; color: string } | null;
-    displayPermissionMode: ReturnType<typeof hackMode> | null;
-    permissionModeKey: string;
-    permissionSemanticKind?: string | null;
-    isSandboxedYoloMode: boolean;
-    permissionLabel: string | null;
-    zenMode?: boolean;
+    gitBranch: string | null;
+    gitChanges: { insertions: number; deletions: number; approximate: boolean } | null;
 };
 
 const AgentInputStatusRow = React.memo(function AgentInputStatusRow(p: StatusRowProps) {
     const { theme } = useUnistyles();
-    const showPermissionBadge = !!p.displayPermissionMode
-        && p.permissionModeKey !== 'default'
-        && !p.zenMode
-        && !!p.permissionLabel;
-    if (!p.connectionStatus && !p.contextWarning && !showPermissionBadge) {
+    if (!p.connectionStatus && !p.gitBranch) {
         return null;
     }
     return (
@@ -528,6 +559,8 @@ const AgentInputStatusRow = React.memo(function AgentInputStatusRow(p: StatusRow
                                 color={p.connectionStatus.dotColor}
                                 isPulsing={p.connectionStatus.isPulsing}
                                 size={6}
+                                // Optically centers the dot against the 11pt text baseline.
+                                style={{ marginTop: 1 }}
                             />
                             <Text style={{
                                 fontSize: 11,
@@ -593,43 +626,141 @@ const AgentInputStatusRow = React.memo(function AgentInputStatusRow(p: StatusRow
                         )}
                     </>
                 )}
-                {p.contextWarning && (
-                    <Text style={{
-                        fontSize: 11,
-                        color: p.contextWarning.color,
-                        marginLeft: p.connectionStatus ? 8 : 0,
-                        ...Typography.default()
-                    }}>
-                        {p.connectionStatus ? '• ' : ''}{p.contextWarning.text}
-                    </Text>
-                )}
             </View>
-            {showPermissionBadge && (() => {
-                const presentationKind = p.permissionSemanticKind ?? p.permissionModeKey;
-                const permColor = p.isSandboxedYoloMode ? '#4169E1' :
-                    presentationKind === 'acceptEdits' ? theme.colors.permission.acceptEdits :
-                        presentationKind === 'bypassPermissions' ? theme.colors.permission.bypass :
-                            presentationKind === 'plan' ? theme.colors.permission.plan :
-                                presentationKind === 'read-only' ? theme.colors.permission.readOnly :
-                                    presentationKind === 'safe-yolo' ? theme.colors.permission.safeYolo :
-                                        presentationKind === 'yolo' ? theme.colors.permission.yolo :
-                                            theme.colors.textSecondary;
-                const permIcon: 'play-forward' | 'pause' =
-                    presentationKind === 'plan' || presentationKind === 'read-only'
-                        ? 'pause' : 'play-forward';
-                return (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Ionicons name={permIcon} size={11} color={permColor} />
-                        <Text style={{
-                            fontSize: 11,
-                            color: permColor,
-                            ...Typography.default()
-                        }}>
-                            {p.permissionLabel}
+            {p.gitBranch && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 }}>
+                    <Octicons name="git-branch" size={11} color={theme.colors.textSecondary} />
+                    <Text style={{ fontSize: 11, color: theme.colors.textSecondary, flexShrink: 1, ...Typography.default() }} numberOfLines={1}>
+                        {p.gitBranch}
+                    </Text>
+                    {p.gitChanges?.approximate && (
+                        <Text style={{ fontSize: 11, color: theme.colors.textSecondary, ...Typography.default() }}>≈</Text>
+                    )}
+                    {p.gitChanges && p.gitChanges.insertions > 0 && (
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: theme.colors.gitAddedText, ...Typography.default() }}>
+                            +{compactCount(p.gitChanges.insertions)}
                         </Text>
-                    </View>
-                );
-            })()}
+                    )}
+                    {p.gitChanges && p.gitChanges.deletions > 0 && (
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: theme.colors.gitRemovedText, ...Typography.default() }}>
+                            -{compactCount(p.gitChanges.deletions)}
+                        </Text>
+                    )}
+                </View>
+            )}
+        </View>
+    );
+});
+
+// Grayscale ring that fills and darkens with context usage — reads at a
+// glance without color, sized to sit beside the 11pt status text.
+function ContextGaugeIcon(props: { percent: number }) {
+    const { theme } = useUnistyles();
+    const size = 14;
+    const strokeWidth = 2.5;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const progress = Math.min(100, Math.max(0, props.percent));
+    const intensity = 0.35 + 0.65 * (progress / 100);
+    const color = theme.dark
+        ? `rgba(255, 255, 255, ${intensity})`
+        : `rgba(0, 0, 0, ${intensity})`;
+    return (
+        <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <Circle
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                stroke={theme.colors.divider}
+                strokeWidth={strokeWidth}
+                fill="none"
+            />
+            <Circle
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                stroke={color}
+                strokeWidth={strokeWidth}
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray={`${circumference} ${circumference}`}
+                strokeDashoffset={circumference * (1 - progress / 100)}
+                rotation="-90"
+                originX={size / 2}
+                originY={size / 2}
+            />
+        </Svg>
+    );
+}
+
+type UsageRowProps = {
+    contextStatus: { percent: number; detailText: string; color: string } | null;
+    weekPercent: number | null;
+    /** Prebuilt "Session — 32% · resets 6 PM" rows for the week popup. */
+    usageMenuOptions: NativeSettingsMenuOption[];
+};
+
+// Sits under the composer card, right-aligned with the effort label: week
+// quota (tap for the session/week detail popup) and the context gauge (tap
+// to swap the percent for exact token counts).
+const AgentInputUsageRow = React.memo(function AgentInputUsageRow(p: UsageRowProps) {
+    const { theme } = useUnistyles();
+    const [showPreciseContext, setShowPreciseContext] = React.useState(false);
+    if (!p.contextStatus && p.weekPercent == null) {
+        return null;
+    }
+    const weekText = p.weekPercent != null ? (
+        <Text style={{ fontSize: 11, color: theme.colors.textSecondary, ...Typography.default() }}>
+            {t('agentInput.context.percentWeek', { percent: Math.round(p.weekPercent) })}
+        </Text>
+    ) : null;
+    return (
+        <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 10,
+            // 18 = 10pt shell inset + 8pt action inset: lines the gauge up
+            // with the effort label's right edge.
+            paddingHorizontal: 18,
+            paddingTop: 6,
+            minHeight: 18,
+        }}>
+            {weekText && (
+                p.usageMenuOptions.length > 0 ? (
+                    <NativeSettingsMenu
+                        anchor="bottom"
+                        groups={[{
+                            key: 'usage',
+                            label: '',
+                            title: '',
+                            options: p.usageMenuOptions,
+                            selectedKey: null,
+                            onSelect: () => { },
+                        }]}
+                    >
+                        {/* Native menu triggers hit only their own bounds, so
+                            pad the target out and pull the layout back in. */}
+                        <View style={{ padding: 10, margin: -10 }}>
+                            {weekText}
+                        </View>
+                    </NativeSettingsMenu>
+                ) : weekText
+            )}
+            {p.contextStatus && (
+                <Pressable
+                    onPress={() => setShowPreciseContext((current) => !current)}
+                    hitSlop={{ top: 12, bottom: 14, left: 10, right: 14 }}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+                >
+                    <Text style={{ fontSize: 11, color: p.contextStatus.color, ...Typography.default() }}>
+                        {showPreciseContext
+                            ? p.contextStatus.detailText
+                            : t('agentInput.context.percentContext', { percent: p.contextStatus.percent })}
+                    </Text>
+                    <ContextGaugeIcon percent={p.contextStatus.percent} />
+                </Pressable>
+            )}
         </View>
     );
 });
@@ -796,10 +927,37 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
         return label;
     }, [isSandboxEnabled]);
 
-    // Calculate context warning
-    const contextWarning = props.usageData?.contextSize
-        ? getContextWarning(props.usageData.contextSize, props.alwaysShowContextSize ?? false, theme, props.usageData.contextWindow)
+    // Usage row under the card: week quota + context gauge
+    const usageLimitShowRemaining = useSetting('usageLimitShowRemaining');
+    const contextStatus = props.usageData?.contextSize
+        ? getContextStatus(props.usageData.contextSize, props.alwaysShowContextSize ?? false, theme, props.usageData.contextWindow)
         : null;
+    // Only Session and Week are user-meaningful; provider-internal windows
+    // (nimbus_quill and friends) stay out of the popup.
+    const usageRows = React.useMemo(() => {
+        const rows = getUsageLimitRows(props.sessionStatusUsageLimits ?? null);
+        const session = rows.find((row) => row.id === 'five_hour') ?? null;
+        const week = rows.find((row) => row.id === 'seven_day') ?? null;
+        return { session, week };
+    }, [props.sessionStatusUsageLimits]);
+    const weekPercent = usageRows.week?.utilization != null && (props.alwaysShowContextSize || contextStatus != null)
+        ? getUsageLimitDisplayPercentage(usageRows.week.utilization, usageLimitShowRemaining)
+        : null;
+    const usageMenuOptions = React.useMemo<NativeSettingsMenuOption[]>(() => {
+        const options: NativeSettingsMenuOption[] = [];
+        const push = (key: string, label: string, row: { utilization: number | null; resetsAt: number | null } | null) => {
+            if (!row || row.utilization == null) return;
+            const percent = getUsageLimitDisplayPercentage(row.utilization, usageLimitShowRemaining);
+            // The newline renders as a second line inside the native menu row.
+            const reset = row.resetsAt != null
+                ? `\n${t('agentInput.usagePopup.resets', { time: formatUsageLimitResetTime(row.resetsAt) })}`
+                : '';
+            options.push({ key, label: `${label} · ${Math.round(percent)}%${reset}` });
+        };
+        push('session', t('agentInput.usagePopup.session'), usageRows.session);
+        push('week', t('agentInput.usagePopup.week'), usageRows.week);
+        return options;
+    }, [usageRows, usageLimitShowRemaining]);
 
     const agentInputEnterToSend = useSetting('agentInputEnterToSend');
 
@@ -930,6 +1088,11 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
         text: props.initialValue,
         selection: { start: props.initialValue.length, end: props.initialValue.length }
     }));
+
+    const onActionAreaOffsetChange = props.onActionAreaOffsetChange;
+    const handleActionAreaLayout = React.useCallback((event: LayoutChangeEvent) => {
+        onActionAreaOffsetChange?.(CONTAINER_TOP_PADDING + event.nativeEvent.layout.y);
+    }, [onActionAreaOffsetChange]);
 
     const onChangeTextProp = props.onChangeText;
     const handleTextChange = React.useCallback((text: string) => {
@@ -1233,6 +1396,22 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
         <Ionicons name="shield-outline" size={18} color={theme.colors.text} />
     ));
 
+    const handleHardwareReturn = React.useCallback(() => {
+        const action = resolveHardwareReturnAction({
+            platform: Platform.OS,
+            hasSuggestions: suggestions.length > 0,
+        });
+
+        if (action === 'select-suggestion') {
+            handleSuggestionSelect(selected >= 0 ? selected : 0);
+            return;
+        }
+
+        if (action === 'send') {
+            handleSendPress();
+        }
+    }, [handleSendPress, handleSuggestionSelect, selected, suggestions.length]);
+
     // Handle keyboard navigation
     const handleKeyPress = React.useCallback((event: KeyPressEvent): boolean => {
         // Handle autocomplete navigation first
@@ -1371,6 +1550,24 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                 </Pressable>
                             )
                         )}
+
+                        <DesktopComposerModeChips
+                            isStudioComposer={isStudioComposer}
+                            zenMode={!!props.zenMode}
+                            modelLabel={props.modelMode?.name ?? null}
+                            effortLabel={props.effortLevel?.name ?? null}
+                            canSelectModel={canOpenModelPicker}
+                            canSelectEffort={canOpenEffortPicker}
+                            showFastToggle={props.showFastModeToggle && !!props.onFastModeChange}
+                            fastMode={props.fastMode}
+                            activePicker={openPicker === 'model' || openPicker === 'effort' ? openPicker : null}
+                            onModelPress={handleModelPress}
+                            onEffortPress={handleEffortPress}
+                            onFastPress={() => {
+                                hapticsLight();
+                                props.onFastModeChange?.(!props.fastMode);
+                            }}
+                        />
 
                         {props.agentType && props.onAgentClick && (
                             <Pressable
@@ -1604,21 +1801,6 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                 { paddingHorizontal: screenWidth > 700 ? 0 : 8 },
             ]}>
                 <FloatingOverlay maxHeight={400} keyboardShouldPersistTaps="always">
-                    {props.showSessionStatusInfoInSettings ? (
-                        <>
-                            <View style={styles.settingsStatusInfo}>
-                                <SessionStatusBar
-                                    gitBranch={props.sessionStatusGitBranch}
-                                    modelLabel={props.sessionStatusModelLabel ?? null}
-                                    effortLabel={props.sessionStatusEffortLabel ?? null}
-                                    contextSize={props.usageData?.contextSize}
-                                    contextWindow={props.usageData?.contextWindow}
-                                />
-                            </View>
-                            <View style={{ height: 1, backgroundColor: theme.colors.divider, marginHorizontal: 16 }} />
-                        </>
-                    ) : null}
-
                     <View style={styles.overlaySection}>
                         <Text style={styles.overlaySectionTitle}>
                             {isCodex
@@ -1751,7 +1933,9 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
 
                 {/* Permission, model, and effort pickers open independently
                     from their matching controls in the compact composer action row. */}
-                {compactMobileComposer && !useNativeSettingsMenus && openPicker && (
+                {!useNativeSettingsMenus && openPicker && (
+                    compactMobileComposer || (isStudioComposer && openPicker !== 'permission')
+                ) && (
                     <>
                         <AnimatedClickAwayBackdrop
                             onPress={closePicker}
@@ -1762,21 +1946,6 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             { paddingHorizontal: screenWidth > 700 ? 0 : 16 }
                         ]}>
                             <FloatingOverlay maxHeight={400} keyboardShouldPersistTaps="always">
-                                {props.showSessionStatusInfoInSettings ? (
-                                    <>
-                                        <View style={styles.settingsStatusInfo}>
-                                            <SessionStatusBar
-                                                gitBranch={props.sessionStatusGitBranch}
-                                                modelLabel={props.sessionStatusModelLabel ?? null}
-                                                effortLabel={props.sessionStatusEffortLabel ?? null}
-                                                contextSize={props.usageData?.contextSize}
-                                                contextWindow={props.usageData?.contextWindow}
-                                            />
-                                        </View>
-                                        <View style={styles.overlayDivider} />
-                                    </>
-                                ) : null}
-
                                 {openPicker === 'permission' ? (
                                     <View style={styles.overlaySection}>
                                         <Text style={styles.overlaySectionTitle}>
@@ -2030,13 +2199,8 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                 <AnimatedFade visible={props.showStatusDetails !== false}>
                     <AgentInputStatusRow
                         connectionStatus={props.connectionStatus}
-                        contextWarning={contextWarning}
-                        displayPermissionMode={displayPermissionMode}
-                        permissionModeKey={permissionModeKey}
-                        permissionSemanticKind={displayPermissionMode?.semanticKind}
-                        isSandboxedYoloMode={isSandboxedYoloMode}
-                        permissionLabel={displayPermissionMode ? withSandboxSuffix(displayPermissionMode.name, permissionModeKey) : null}
-                        zenMode={props.zenMode}
+                        gitBranch={props.sessionStatusGitBranch ?? null}
+                        gitChanges={props.sessionStatusGitChanges ?? null}
                     />
 
                     <AgentInputContextChips
@@ -2048,7 +2212,7 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                 </AnimatedFade>
 
                 {/* Box 2: Action Area (Input + Send) */}
-                <Shaker ref={sendBlockShakerRef}>
+                <Shaker ref={sendBlockShakerRef} onLayout={handleActionAreaLayout}>
                     <View style={[
                         compactMobileComposer && styles.unifiedPanelShadow,
                         compactMobileComposer && styles.mobileUnifiedPanelShadow,
@@ -2102,22 +2266,24 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                         isStudioComposer && { minHeight: composerStyle.inputMinHeight! },
                         props.minHeight ? { minHeight: props.minHeight } : undefined,
                     ]}>
-                        <MultiTextInput
-                            ref={inputRef}
-                            defaultValue={props.initialValue}
-                            paddingTop={compactMobileComposer
-                                ? MOBILE_COMPOSER_METRICS.inputPaddingTop
-                                : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
-                            paddingBottom={compactMobileComposer
-                                ? MOBILE_COMPOSER_METRICS.inputPaddingBottom
-                                : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
-                            onChangeText={handleTextChange}
-                            placeholder={props.placeholder}
-                            onKeyPress={handleKeyPress}
-                            onStateChange={handleInputStateChange}
-                            maxHeight={Platform.OS === 'web' ? 480 : MOBILE_COMPOSER_METRICS.inputMaxHeight}
-                            lineHeight={compactMobileComposer ? MOBILE_COMPOSER_METRICS.inputLineHeight : undefined}
-                        />
+                        <HardwareKeyboardCommandBoundary onHardwareReturn={handleHardwareReturn}>
+                            <MultiTextInput
+                                ref={inputRef}
+                                defaultValue={props.initialValue}
+                                paddingTop={compactMobileComposer
+                                    ? MOBILE_COMPOSER_METRICS.inputPaddingTop
+                                    : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
+                                paddingBottom={compactMobileComposer
+                                    ? MOBILE_COMPOSER_METRICS.inputPaddingBottom
+                                    : isStudioComposer ? 8 : Platform.OS === 'web' ? 10 : 8}
+                                onChangeText={handleTextChange}
+                                placeholder={props.placeholder}
+                                onKeyPress={handleKeyPress}
+                                onStateChange={handleInputStateChange}
+                                maxHeight={Platform.OS === 'web' ? 480 : MOBILE_COMPOSER_METRICS.inputMaxHeight}
+                                lineHeight={compactMobileComposer ? MOBILE_COMPOSER_METRICS.inputLineHeight : undefined}
+                            />
+                        </HardwareKeyboardCommandBoundary>
                     </View>
 
                     {compactMobileComposer ? (
@@ -2179,6 +2345,30 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                     {renderPermissionValue()}
                                 </BubblePressable>
                             )
+                        )}
+
+                        {!props.zenMode && props.showFastModeToggle && props.onFastModeChange && (
+                            <BubblePressable
+                                onPress={() => {
+                                    hapticsLight();
+                                    props.onFastModeChange?.(!props.fastMode);
+                                }}
+                                hitSlop={6}
+                                style={(p) => [
+                                    styles.mobileIconButton,
+                                    props.fastMode && { backgroundColor: theme.colors.surfaceSelected },
+                                    { opacity: p.pressed ? 0.7 : 1 },
+                                ]}
+                                accessibilityRole="switch"
+                                accessibilityLabel="Fast mode"
+                                accessibilityState={{ checked: !!props.fastMode }}
+                            >
+                                <Ionicons
+                                    name={props.fastMode ? 'flash' : 'flash-outline'}
+                                    size={16}
+                                    color={props.fastMode ? theme.colors.radio.active : theme.colors.text}
+                                />
+                            </BubblePressable>
                         )}
 
                         {!props.zenMode ? (
@@ -2359,6 +2549,14 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                         </MobileGlassSurface>
                     </View>
                 </Shaker>
+
+                <AnimatedFade visible={props.showStatusDetails !== false}>
+                    <AgentInputUsageRow
+                        contextStatus={contextStatus}
+                        weekPercent={weekPercent}
+                        usageMenuOptions={usageMenuOptions}
+                    />
+                </AnimatedFade>
             </View>
         </View>
     );

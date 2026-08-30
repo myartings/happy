@@ -3,6 +3,18 @@ import { resolveMessageModeMeta, UnsupportedPermissionModeError } from './messag
 import { rigMetadataFixture } from './__testdata__/rigMetadata';
 
 describe('resolveMessageModeMeta', () => {
+    it('reasserts the selected Codex service tier on every message', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: 'gpt-5.6-sol',
+            effortLevel: null,
+            serviceTier: 'fast',
+            metadata: { flavor: 'codex' },
+        } as any);
+
+        expect(meta.serviceTier).toBe('fast');
+    });
+
     it('reasserts the displayed codex defaults after abort clears session overrides', () => {
         const meta = resolveMessageModeMeta({
             permissionMode: null,
@@ -12,10 +24,46 @@ describe('resolveMessageModeMeta', () => {
         } as any);
 
         expect(meta).toEqual({
-            permissionMode: 'yolo',
+            permissionMode: 'auto',
             model: 'gpt-5.6-sol',
             effort: 'medium',
+            serviceTier: 'default',
         });
+    });
+
+    it('uses Default for an unset Codex code default on an old CLI', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: { flavor: 'codex', version: '1.2.0' },
+        } as any);
+
+        expect(meta.permissionMode).toBe('default');
+    });
+
+    it('uses Auto for an unset Codex code default on a new CLI', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: { flavor: 'codex', version: '1.2.1-beta.2' },
+        } as any);
+
+        expect(meta.permissionMode).toBe('auto');
+    });
+
+    it('keeps an explicit Codex YOLO override on an old CLI', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: { flavor: 'codex', version: '1.2.0' },
+        } as any, {
+            agentDefaultOverrides: { codex: { permissionMode: 'yolo' } },
+        } as any);
+
+        expect(meta.permissionMode).toBe('yolo');
     });
 
     // The composer resolves a saved `dontAsk` to Auto because the key is gone
@@ -46,10 +94,10 @@ describe('resolveMessageModeMeta', () => {
     });
 
     // A session on an old CLI can still carry `auto` — saved before the gate
-    // existed, or applied from a global default — and CLIs before 1.2.1-beta.2
+    // existed, or persisted as an explicit default — and CLIs before 1.2.1-beta.2
     // reject the whole message envelope on it. The resolver refuses loudly:
     // substituting the code default would silently change permissions (for
-    // Claude it would escalate reviewed Auto into yolo).
+    // Claude it could change a previously selected mode without consent.
     it('refuses a saved auto for a claude session on an old CLI', () => {
         expect(() => resolveMessageModeMeta({
             permissionMode: 'auto',
@@ -131,6 +179,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'read-only',
             model: 'gpt-5.6-terra',
             effort: 'high',
+            serviceTier: 'default',
         });
     });
 
@@ -177,6 +226,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'default',
             model: 'gpt-5.6-terra',
             effort: 'xhigh',
+            serviceTier: 'default',
         });
     });
 
@@ -189,9 +239,10 @@ describe('resolveMessageModeMeta', () => {
         } as any);
 
         expect(meta).toEqual({
-            permissionMode: 'yolo',
+            permissionMode: 'auto',
             model: 'my-workspace-model',
             effort: 'medium',
+            serviceTier: 'default',
         });
     });
 
@@ -208,9 +259,10 @@ describe('resolveMessageModeMeta', () => {
         } as any);
 
         expect(meta).toEqual({
-            permissionMode: 'yolo',
+            permissionMode: 'auto',
             model: 'my-workspace-model',
             effort: 'medium',
+            serviceTier: 'default',
         });
     });
 
@@ -234,6 +286,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'read-only',
             model: 'gpt-5.6-terra',
             effort: 'high',
+            serviceTier: 'default',
         });
     });
 
