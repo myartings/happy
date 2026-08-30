@@ -12,6 +12,7 @@ export const MessageMetaSchema = z.object({
     allowedTools: z.array(z.string()).nullable().optional(), // Allowed tools for this message (null = reset)
     disallowedTools: z.array(z.string()).nullable().optional(), // Disallowed tools for this message (null = reset)
     effort: z.string().nullable().optional(), // Reasoning / thinking effort for this message (null = reset)
+    serviceTier: z.string().nullable().optional(), // Codex service tier; CLI validates supported values
     displayText: z.string().optional() // Optional text to display in UI instead of actual message text
 });
 

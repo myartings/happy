@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "restore-personal-features-sync-guard",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Build/install Happy (dev) only when separately authorized.",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/restore-personal-features-sync-guard.md: owner-requested visible personal feature surface plus pre-push sync protection.",
+      "updated": "2026-08-29T18:10:33+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/restore-personal-features-sync-guard/decisions.md: dedicated module/route, single owner, existing keys, pre-push guard, local-only delivery resolved.",
+      "updated": "2026-08-29T18:10:33+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: one personal UI module with two host seams, one happyctl pre-push guard, targeted Vitest and smoke coverage, typecheck and workflow checks; no tracker needed for immediate single-owner work.",
+      "updated": "2026-08-29T18:10:33+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared with controls in spec and validation.md: deterministic network-free guard stops before push/build/install; failure leaves only an unpushed local merge; no data migration.",
+      "updated": "2026-08-29T18:10:33+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "TDD RED failed 4/4 UI and exit 127 guard; GREEN passed 6/6 focused, 25/25 nearest suite, refresh guard smoke, shell parsing, diff check, and happy-app typecheck.",
+      "updated": "2026-08-29T18:16:24+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures",
+      "updated": "2026-08-29T18:18:50+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues: one dedicated personal module, two narrow navigation seams, existing keys/defaults preserved, deterministic fail-closed guard before push/build/install, positive and negative coverage; unrelated Studio baseline failures recorded.",
+      "updated": "2026-08-29T18:21:09+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records outcome, exact validation including unrelated baseline failures, whole-diff review, rollback, no learning promotion, and no tracker/PR/install action.",
+      "updated": "2026-08-29T18:21:48+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T18:07:30+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T18:10:33+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/restore-personal-features-sync-guard.md: owner-requested visible personal feature surface plus pre-push sync protection."
+    },
+    {
+      "at": "2026-08-29T18:10:33+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/restore-personal-features-sync-guard/decisions.md: dedicated module/route, single owner, existing keys, pre-push guard, local-only delivery resolved."
+    },
+    {
+      "at": "2026-08-29T18:10:33+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared with controls in spec and validation.md: deterministic network-free guard stops before push/build/install; failure leaves only an unpushed local merge; no data migration."
+    },
+    {
+      "at": "2026-08-29T18:10:33+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: one personal UI module with two host seams, one happyctl pre-push guard, targeted Vitest and smoke coverage, typecheck and workflow checks; no tracker needed for immediate single-owner work."
+    },
+    {
+      "at": "2026-08-29T18:16:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD RED failed 4/4 UI and exit 127 guard; GREEN passed 6/6 focused, 25/25 nearest suite, refresh guard smoke, shell parsing, diff check, and happy-app typecheck."
+    },
+    {
+      "at": "2026-08-29T18:16:48+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implementation complete; prepare verification"
+    },
+    {
+      "at": "2026-08-29T18:16:48+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete applicable checks and whole-diff review"
+    },
+    {
+      "at": "2026-08-29T18:18:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "4 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-29T18:21:09+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Whole-diff review found no blocking issues: one dedicated personal module, two narrow navigation seams, existing keys/defaults preserved, deterministic fail-closed guard before push/build/install, positive and negative coverage; unrelated Studio baseline failures recorded."
+    },
+    {
+      "at": "2026-08-29T18:21:18+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record final evidence, archive, stage, and run staged workflow CI"
+    },
+    {
+      "at": "2026-08-29T18:21:48+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records outcome, exact validation including unrelated baseline failures, whole-diff review, rollback, no learning promotion, and no tracker/PR/install action."
+    },
+    {
+      "at": "2026-08-29T18:21:48+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Restore the always-visible personal feature settings surface and block sync when it is lost.; commit: pending; follow-up: Build/install Happy (dev) only when separately authorized."
+    }
+  ],
+  "updated": "2026-08-29T18:21:48+00:00",
+  "archivedAt": "2026-08-29T18:21:48+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Restore the always-visible personal feature settings surface and block sync when it is lost.",
+  "archiveFollowUp": "Build/install Happy (dev) only when separately authorized."
+}

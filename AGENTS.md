@@ -16,7 +16,14 @@ Personal-only features branch from `dev` and merge back through review;
 upstream-bound work branches from `upstream/main` or another verified clean
 official base.
 
-Every formal personal feature uses the repository-local lifecycle:
+Do not infer a Trellis task from a repository diff. Clear, bounded,
+normal-risk single-session work may stay in the current context.
+No-task work needs no lifecycle receipt. Ask before creating durable task state
+when work is complex, high-risk, cross-session, coordination-heavy, or the user
+requests it.
+
+After explicit acceptance, every formal personal feature uses the
+repository-local lifecycle:
 
 ```text
 Start -> Plan -> Scope -> Build -> Verify -> Review -> Finish -> Archive
@@ -24,17 +31,35 @@ Start -> Plan -> Scope -> Build -> Verify -> Review -> Finish -> Archive
 
 - Read `.ai/project.json` for exact commands, protected paths, and tracker
   configuration.
-- Create durable state under `docs/workspace/<slug>/` and use
+- Create durable state under `docs/workspace/<slug>/` only for an accepted
+  task and use
   `scripts/workflow-state.py` for phase transitions and gate receipts.
 - Run `python3 scripts/workflow-audit.py --strict --require-active` before
-  implementation, handoff, and finish.
+  implementation and completion when a task is active. Run
+  `python3 scripts/workflow-audit.py --all --strict` for current repository
+  health. Historical Workspace and archive files are passive.
+- Run `python3 scripts/workflow-check.py --applicable` for accepted-task final
+  verification; ambiguous changed scope selects the complete configured family.
 - Keep personal product code under explicit feature modules where possible;
   host integration files should contain only small, reviewable seams.
-- Before an authorized commit, archive with `commit=pending`, stage product and
-  workflow evidence together, and pass `python3 scripts/workflow-ci.py --staged`.
+- Before an authorized delivery commit, finish check and independent review,
+  stage the complete accepted candidate, generate the canonical terminal
+  archive projection for an active task, and pass
+  `python3 scripts/workflow-ci.py --staged`. No-task work still stages and
+  verifies its atomic candidate but creates no lifecycle evidence.
+- Root sustained implementation must stay in the current human-facing session root.
+  A command-level `workdir` override does not rebind the session; moving
+  sustained Root work to another linked worktree requires a visible native
+  handoff or a user-authorized fresh session there.
 - Do not run the upstream template's full synchronization manifest in this
-  repository. Use `.ai/template-adoption.json` for dry-run-first workflow-core
-  updates so Happy-owned rules and skills remain intact.
+  repository. Use the version-pinned schema-2 `.ai/template-adoption.json`
+  allowlist from a clean accepted release checkout, dry-run before apply, and
+  preserve Happy-owned rules, project configuration, skills, CI, and release
+  behavior.
+- Codex workflow skills live in `.agents/skills/`. Treat `CLAUDE.md` and
+  `.claude/` as frozen, unmanaged compatibility files: do not synchronize,
+  validate, distribute, or delete them unless the user explicitly re-enables
+  Claude maintenance.
 
 ## Personal Branch Model
 

@@ -828,6 +828,58 @@ abort_patch_stack_merge() {
   fi
 }
 
+validate_personal_feature_surface() {
+  local personal_screen personal_route settings_view path setting_key settings_entry_line developer_boundary_line
+  local required_paths=() protected_setting_keys=()
+
+  personal_screen="packages/happy-app/sources/features/personal-settings/PersonalFeaturesSettingsScreen.tsx"
+  personal_route="packages/happy-app/sources/app/(app)/settings/personal-features.tsx"
+  settings_view="packages/happy-app/sources/components/SettingsView.tsx"
+  required_paths=("$personal_screen" "$personal_route" "$settings_view")
+  protected_setting_keys=(
+    flatSessionList
+    devSideChatQuickPanelEnabled
+    devProjectTodosEnabled
+    devGithubIssuesEnabled
+    needsAttentionSessionsEnabled
+    devPromptHistoryNavigatorEnabled
+    devSessionEnvironmentLabelsEnabled
+    devEnhancedStatusDotsEnabled
+    sortActiveSessionsGlobally
+    groupActiveSessionsByDate
+    devShowActiveSessionRuntimeEnabled
+    devShowSessionModelEnabled
+    desktopSessionNotificationsEnabled
+  )
+
+  for path in "${required_paths[@]}"; do
+    if [[ ! -f "$HAPPY_REPO/$path" ]]; then
+      echo "Personal feature sync guard: missing $path" >&2
+      return 1
+    fi
+  done
+
+  if ! grep -Fq "@/features/personal-settings/PersonalFeaturesSettingsScreen" "$HAPPY_REPO/$personal_route"; then
+    echo "Personal feature sync guard: route no longer delegates to the personal feature module" >&2
+    return 1
+  fi
+  settings_entry_line="$(grep -nF "router.push('/settings/personal-features')" "$HAPPY_REPO/$settings_view" | head -n 1 | cut -d: -f1 || true)"
+  developer_boundary_line="$(grep -nF '{/* Developer */}' "$HAPPY_REPO/$settings_view" | head -n 1 | cut -d: -f1 || true)"
+  if [[ -z "$settings_entry_line" || -z "$developer_boundary_line" || "$settings_entry_line" -ge "$developer_boundary_line" ]]; then
+    echo "Personal feature sync guard: always-visible Settings entry is missing" >&2
+    return 1
+  fi
+
+  for setting_key in "${protected_setting_keys[@]}"; do
+    if ! grep -Eq "use(Local)?SettingMutable\\('$setting_key'\\)" "$HAPPY_REPO/$personal_screen"; then
+      echo "Personal feature sync guard: missing protected switch $setting_key" >&2
+      return 1
+    fi
+  done
+
+  echo "ok   personal features: protected surface verified"
+}
+
 sync_patch_stack_locally() {
   ensure_repo
   ensure_clean_repo
@@ -887,6 +939,12 @@ sync_patch_stack_locally() {
 
   if [[ "$parent" != "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
     echo "Patch-stack configuration did not finish on $HAPPY_DEVTOOLS_FINAL_BRANCH." >&2
+    run git -C "$HAPPY_REPO" switch "$original_branch" || true
+    return 1
+  fi
+
+  if ! validate_personal_feature_surface; then
+    echo "Final personal branch lost its protected feature settings surface; refusing push, build, or install." >&2
     run git -C "$HAPPY_REPO" switch "$original_branch" || true
     return 1
   fi

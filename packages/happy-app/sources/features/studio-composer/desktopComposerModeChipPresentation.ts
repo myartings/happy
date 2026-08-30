@@ -1,7 +1,8 @@
 export type DesktopComposerModeChip = {
-    key: 'model' | 'effort';
+    key: 'model' | 'effort' | 'fast';
     label: string;
     enabled: boolean;
+    selected?: boolean;
 };
 
 export type ResolveDesktopComposerModeChipsInput = {
@@ -11,6 +12,8 @@ export type ResolveDesktopComposerModeChipsInput = {
     effortLabel: string | null;
     canSelectModel: boolean;
     canSelectEffort: boolean;
+    showFastToggle?: boolean;
+    fastMode?: boolean;
 };
 
 export function resolveDesktopComposerModeChips({
@@ -20,15 +23,20 @@ export function resolveDesktopComposerModeChips({
     effortLabel,
     canSelectModel,
     canSelectEffort,
+    showFastToggle = false,
+    fastMode = false,
 }: ResolveDesktopComposerModeChipsInput): DesktopComposerModeChip[] {
-    if (!isStudioComposer || zenMode) return [];
+    if (zenMode) return [];
 
     const chips: DesktopComposerModeChip[] = [];
-    if (modelLabel) {
+    if (isStudioComposer && modelLabel) {
         chips.push({ key: 'model', label: modelLabel, enabled: canSelectModel });
     }
-    if (effortLabel) {
+    if (isStudioComposer && effortLabel) {
         chips.push({ key: 'effort', label: effortLabel, enabled: canSelectEffort });
+    }
+    if (showFastToggle) {
+        chips.push({ key: 'fast', label: 'Fast', enabled: true, selected: fastMode });
     }
     return chips;
 }

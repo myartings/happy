@@ -3,6 +3,18 @@ import { resolveMessageModeMeta, UnsupportedPermissionModeError } from './messag
 import { rigMetadataFixture } from './__testdata__/rigMetadata';
 
 describe('resolveMessageModeMeta', () => {
+    it('reasserts the selected Codex service tier on every message', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: 'gpt-5.6-sol',
+            effortLevel: null,
+            serviceTier: 'fast',
+            metadata: { flavor: 'codex' },
+        } as any);
+
+        expect(meta.serviceTier).toBe('fast');
+    });
+
     it('reasserts the displayed codex defaults after abort clears session overrides', () => {
         const meta = resolveMessageModeMeta({
             permissionMode: null,
@@ -15,6 +27,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'auto',
             model: 'gpt-5.6-sol',
             effort: 'medium',
+            serviceTier: 'default',
         });
     });
 
@@ -166,6 +179,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'read-only',
             model: 'gpt-5.6-terra',
             effort: 'high',
+            serviceTier: 'default',
         });
     });
 
@@ -212,6 +226,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'default',
             model: 'gpt-5.6-terra',
             effort: 'xhigh',
+            serviceTier: 'default',
         });
     });
 
@@ -227,6 +242,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'auto',
             model: 'my-workspace-model',
             effort: 'medium',
+            serviceTier: 'default',
         });
     });
 
@@ -246,6 +262,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'auto',
             model: 'my-workspace-model',
             effort: 'medium',
+            serviceTier: 'default',
         });
     });
 
@@ -269,6 +286,7 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'read-only',
             model: 'gpt-5.6-terra',
             effort: 'high',
+            serviceTier: 'default',
         });
     });
 

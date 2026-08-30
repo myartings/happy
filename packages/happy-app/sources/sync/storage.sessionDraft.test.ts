@@ -311,3 +311,29 @@ describe('session draft storage', () => {
         });
     });
 });
+
+describe('session agent mode storage', () => {
+    it('updates Fast optimistically for only the selected session', () => {
+        const first = makeSession('session-1', null, '/tmp/first');
+        const second = makeSession('session-2', null, '/tmp/second');
+        applySessions([first, second]);
+
+        storage.getState().updateSessionAgentModes(first.id, { serviceTier: 'fast' });
+
+        expect(storage.getState().sessions[first.id].serviceTier).toBe('fast');
+        expect(storage.getState().sessions[second.id].serviceTier).toBeNull();
+    });
+
+    it('reconciles Fast from synced session metadata', () => {
+        const session = makeSession('session-1', null, '/tmp/project');
+        applySessions([session]);
+
+        applySessions([{
+            ...session,
+            metadata: { ...session.metadata!, serviceTier: 'fast' },
+            metadataVersion: 2,
+        }]);
+
+        expect(storage.getState().sessions[session.id].serviceTier).toBe('fast');
+    });
+});

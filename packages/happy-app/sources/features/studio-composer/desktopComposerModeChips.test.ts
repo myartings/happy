@@ -38,12 +38,33 @@ describe('desktop Studio composer model and effort chips', () => {
         expect(resolveDesktopComposerModeChips({ ...base, zenMode: true })).toEqual([]);
     });
 
+    it('adds a selected Fast toggle only when the Codex session supports it', () => {
+        expect(resolveDesktopComposerModeChips({
+            isStudioComposer: true,
+            zenMode: false,
+            modelLabel: 'GPT-5.6 Sol',
+            effortLabel: 'High',
+            canSelectModel: true,
+            canSelectEffort: true,
+            showFastToggle: true,
+            fastMode: true,
+        })).toContainEqual({
+            key: 'fast',
+            label: 'Fast',
+            enabled: true,
+            selected: true,
+        });
+    });
+
     it('wires each desktop label to its matching existing picker', () => {
         const input = readSource('../../components/AgentInput.tsx');
 
         expect(input).toContain('<DesktopComposerModeChips');
         expect(input).toContain('onModelPress={handleModelPress}');
         expect(input).toContain('onEffortPress={handleEffortPress}');
+        expect(input).toContain('onFastPress={() => {');
+        expect(input).toContain('accessibilityRole="switch"');
+        expect(input).toContain('accessibilityLabel="Fast mode"');
         expect(input).toContain("isStudioComposer && openPicker !== 'permission'");
     });
 });

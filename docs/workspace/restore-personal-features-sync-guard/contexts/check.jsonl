@@ -1,0 +1,6 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/restore-personal-features-sync-guard/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/specs/restore-personal-features-sync-guard.md","reason":"Acceptance-to-evidence contract"}
+{"path":"packages/happy-app/sources/utils/flatSessionListPreferenceWiring.test.ts","reason":"Personal layout preference regression signal"}
+{"path":"packages/happy-app/sources/utils/personalFeaturesSettingsWiring.test.ts","reason":"Visible route and key coverage"}
+{"path":"devtools/tests/happyctl-refresh-guards-smoke.sh","reason":"Sync guard behavior and wiring coverage"}

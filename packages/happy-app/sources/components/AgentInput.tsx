@@ -78,6 +78,9 @@ interface AgentInputProps {
     effortLevel?: EffortLevel | null;
     availableEffortLevels?: EffortLevel[];
     onEffortLevelChange?: (level: EffortLevel) => void;
+    fastMode?: boolean;
+    showFastModeToggle?: boolean;
+    onFastModeChange?: (enabled: boolean) => void;
     metadata?: Metadata | null;
     onAbort?: () => void | Promise<void>;
     showAbortButton?: boolean;
@@ -1555,9 +1558,15 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                             effortLabel={props.effortLevel?.name ?? null}
                             canSelectModel={canOpenModelPicker}
                             canSelectEffort={canOpenEffortPicker}
+                            showFastToggle={props.showFastModeToggle && !!props.onFastModeChange}
+                            fastMode={props.fastMode}
                             activePicker={openPicker === 'model' || openPicker === 'effort' ? openPicker : null}
                             onModelPress={handleModelPress}
                             onEffortPress={handleEffortPress}
+                            onFastPress={() => {
+                                hapticsLight();
+                                props.onFastModeChange?.(!props.fastMode);
+                            }}
                         />
 
                         {props.agentType && props.onAgentClick && (
@@ -2336,6 +2345,30 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
                                     {renderPermissionValue()}
                                 </BubblePressable>
                             )
+                        )}
+
+                        {!props.zenMode && props.showFastModeToggle && props.onFastModeChange && (
+                            <BubblePressable
+                                onPress={() => {
+                                    hapticsLight();
+                                    props.onFastModeChange?.(!props.fastMode);
+                                }}
+                                hitSlop={6}
+                                style={(p) => [
+                                    styles.mobileIconButton,
+                                    props.fastMode && { backgroundColor: theme.colors.surfaceSelected },
+                                    { opacity: p.pressed ? 0.7 : 1 },
+                                ]}
+                                accessibilityRole="switch"
+                                accessibilityLabel="Fast mode"
+                                accessibilityState={{ checked: !!props.fastMode }}
+                            >
+                                <Ionicons
+                                    name={props.fastMode ? 'flash' : 'flash-outline'}
+                                    size={16}
+                                    color={props.fastMode ? theme.colors.radio.active : theme.colors.text}
+                                />
+                            </BubblePressable>
                         )}
 
                         {!props.zenMode ? (

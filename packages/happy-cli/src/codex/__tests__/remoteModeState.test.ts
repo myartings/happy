@@ -3,6 +3,22 @@ import { describe, expect, it } from 'vitest';
 import { CodexRemoteModeState } from '../remoteModeState';
 
 describe('CodexRemoteModeState', () => {
+    it('applies valid service tiers and ignores invalid values without poisoning sticky state', () => {
+        const state = new CodexRemoteModeState({
+            permissionMode: 'auto',
+            serviceTier: 'default',
+        });
+
+        expect(state.resolve({ serviceTier: 'fast' } as any)).toMatchObject({
+            serviceTier: 'fast',
+            serviceTierResolution: { kind: 'updated', value: 'fast' },
+        });
+        expect(state.resolve({ serviceTier: 'turbo' } as any)).toMatchObject({
+            serviceTier: 'fast',
+            serviceTierResolution: { kind: 'ignored', incoming: 'turbo', value: 'fast' },
+        });
+    });
+
     it('uses the exact launch permission, model, and effort before any app override', () => {
         const state = new CodexRemoteModeState({
             permissionMode: 'safe-yolo',
