@@ -2,7 +2,13 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { acquireDaemonLock, releaseDaemonLock, SandboxConfigSchema } from './persistence';
+import {
+    acquireDaemonLock,
+    persistSession,
+    readPersistedSessions,
+    releaseDaemonLock,
+    SandboxConfigSchema,
+} from './persistence';
 
 const mockConfiguration = vi.hoisted(() => ({
     daemonLockFile: '',
@@ -132,5 +138,60 @@ describe('acquireDaemonLock', () => {
 
         expect(lockHandle).toBeNull();
         expect(readFileSync(mockConfiguration.daemonLockFile, 'utf-8')).toBe(String(process.pid));
+    });
+});
+
+describe('daemon session persistence', () => {
+    let testDir: string;
+
+    beforeEach(() => {
+        testDir = mkdtempSync(join(tmpdir(), 'happy-daemon-sessions-'));
+        mockConfiguration.sessionsFile = join(testDir, 'sessions.json');
+    });
+
+    afterEach(() => {
+        rmSync(testDir, { recursive: true, force: true });
+    });
+
+    it('round-trips resume identity and sequence state through the restart file', () => {
+        const savedAt = Date.now();
+        persistSession('happy-session-1', {
+            encryptionKey: 'encoded-key',
+            encryptionVariant: 'dataKey',
+            seq: 41,
+            metadataVersion: 7,
+            agentStateVersion: 9,
+            metadata: {
+                path: '/tmp/project',
+                host: 'test-host',
+                homeDir: '/tmp',
+                happyHomeDir: '/tmp/.happy',
+                happyLibDir: '/tmp/happy',
+                happyToolsDir: '/tmp/happy/tools',
+                hostPid: 123,
+                startedBy: 'daemon',
+                machineId: 'machine-1',
+                codexThreadId: 'codex-thread-1',
+            },
+            savedAt,
+        });
+
+        // A new daemon process reconstructs its finished-session map from this
+        // file before accepting resume RPCs.
+        expect(readPersistedSessions()).toEqual({
+            'happy-session-1': expect.objectContaining({
+                encryptionKey: 'encoded-key',
+                encryptionVariant: 'dataKey',
+                seq: 41,
+                metadataVersion: 7,
+                agentStateVersion: 9,
+                metadata: expect.objectContaining({
+                    path: '/tmp/project',
+                    codexThreadId: 'codex-thread-1',
+                }),
+                savedAt,
+            }),
+        });
+        expect(existsSync(`${mockConfiguration.sessionsFile}.tmp`)).toBe(false);
     });
 });
