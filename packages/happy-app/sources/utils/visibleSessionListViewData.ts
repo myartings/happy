@@ -41,18 +41,9 @@ function applyPinnedSessionOrder(
             continue;
         }
         if (item.type === 'attention-sessions') {
-            result.push({
-                ...item,
-                sessions: item.sessions
-                    .map((session, originalIndex) => ({ session, originalIndex }))
-                    .sort((left, right) => {
-                        const permissionPriority = Number(right.session.state === 'permission_required')
-                            - Number(left.session.state === 'permission_required');
-                        const pinPriority = Number(pinned.has(right.session.id)) - Number(pinned.has(left.session.id));
-                        return permissionPriority || pinPriority || left.originalIndex - right.originalIndex;
-                    })
-                    .map(({ session }) => session),
-            });
+            // Attention severity, activity, and stable identity own this order.
+            // Pinning never moves a less urgent row ahead of a current request.
+            result.push(item);
             continue;
         }
         if (item.type === 'active-sessions') {
@@ -185,50 +176,65 @@ function removeEmptyFlatHeaders(data: readonly SessionListViewItem[]): SessionLi
 }
 
 function needsAttention(session: SessionRowData): boolean {
-    return !session.archived && (session.state === 'permission_required' || session.hasUnread);
+    return !session.archived && (
+        session.attention != null
+        || session.state === 'permission_required'
+        || session.hasUnread
+    );
+}
+
+function attentionPriority(session: SessionRowData): number {
+    const kind = session.attention?.primaryReason.kind;
+    if (kind === 'permission_required') return 0;
+    if (kind === 'answer_required') return 1;
+    if (session.state === 'permission_required') return 0;
+    return 2;
 }
 
 function prioritizeAttentionSessions(data: readonly SessionListViewItem[]): SessionListViewItem[] {
-    const attentionSessions: SessionRowData[] = [];
+    const attentionSessions = new Map<string, SessionRowData>();
     const remainingItems: SessionListViewItem[] = [];
+    const collectAttention = (session: SessionRowData) => {
+        if (!attentionSessions.has(session.id)) attentionSessions.set(session.id, session);
+    };
 
     for (const item of data) {
         if (item.type === 'attention-sessions') {
-            attentionSessions.push(...item.sessions);
+            item.sessions.forEach(collectAttention);
             continue;
         }
         if (item.type === 'active-sessions') {
             const attention = item.sessions.filter(needsAttention);
             const remaining = item.sessions.filter((session) => !needsAttention(session));
-            attentionSessions.push(...attention);
+            attention.forEach(collectAttention);
             if (remaining.length > 0) remainingItems.push({ ...item, sessions: remaining });
             continue;
         }
         if (item.type === 'project') {
             for (const workspace of item.project.workspaces) {
-                attentionSessions.push(...workspace.sessions.filter(needsAttention));
+                workspace.sessions.filter(needsAttention).forEach(collectAttention);
             }
             const project = filterProjectSessions(item, (session) => !needsAttention(session));
             if (project) remainingItems.push(project);
             continue;
         }
         if (item.type === 'session' && needsAttention(item.session)) {
-            attentionSessions.push(item.session);
+            collectAttention(item.session);
             continue;
         }
         remainingItems.push(item);
     }
 
-    if (attentionSessions.length === 0) return [...data];
+    if (attentionSessions.size === 0) return [...data];
 
-    attentionSessions.sort((left, right) => {
-        const permissionPriority = Number(right.state === 'permission_required')
-            - Number(left.state === 'permission_required');
-        return permissionPriority || activityTime(right) - activityTime(left);
+    const orderedAttentionSessions = [...attentionSessions.values()].sort((left, right) => {
+        return attentionPriority(left) - attentionPriority(right)
+            || activityTime(right) - activityTime(left)
+            || left.id.localeCompare(right.id);
     });
 
     const cleanedItems = removeEmptyProjectHeaders(removeEmptyFlatHeaders(remainingItems));
-    return [{ type: 'attention-sessions', sessions: attentionSessions }, ...cleanedItems];
+    return [{ type: 'attention-sessions', sessions: orderedAttentionSessions }, ...cleanedItems];
 }
 
 function filterArchivedSessions(

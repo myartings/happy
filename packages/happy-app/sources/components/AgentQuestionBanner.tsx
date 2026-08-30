@@ -23,7 +23,10 @@ import { AgentQuestionModal } from './AgentQuestionModal';
  * build does not implement says so and offers to dismiss it, so the session is
  * never stuck on something this client cannot render.
  */
-export function AgentQuestionBanner({ sessionId }: { sessionId: string }) {
+export function AgentQuestionBanner({ sessionId, focusCommunicationId }: {
+    sessionId: string;
+    focusCommunicationId?: string;
+}) {
     const pendingCommunications = useSessionPendingCommunications(sessionId);
     const [openId, setOpenId] = React.useState<string | null>(null);
 
@@ -32,9 +35,11 @@ export function AgentQuestionBanner({ sessionId }: { sessionId: string }) {
     // the fallback also claimed that intermediate frame, the legacy form flashed
     // before being replaced by the inline card. Keep the banner/modal solely for
     // forms the inline renderer cannot display and unsupported communication kinds.
-    const pending = pendingCommunications.find(communication => (
+    const fallbackCommunications = pendingCommunications.filter(communication => (
         shouldUseAgentQuestionFallback(communication)
     ));
+    const pending = fallbackCommunications.find(communication => communication.id === focusCommunicationId)
+        ?? fallbackCommunications[0];
     const open = pending?.kind === 'form' && openId === pending.id;
 
     // Drop the modal as soon as its request is gone, so an answer from another
@@ -44,6 +49,12 @@ export function AgentQuestionBanner({ sessionId }: { sessionId: string }) {
             setOpenId(null);
         }
     }, [openId, pendingCommunications]);
+
+    React.useEffect(() => {
+        if (pending?.id === focusCommunicationId && pending.kind === 'form') {
+            setOpenId(pending.id);
+        }
+    }, [focusCommunicationId, pending]);
 
     const handleDismissUnsupported = React.useCallback(async (id: string, rawKind: string) => {
         try {

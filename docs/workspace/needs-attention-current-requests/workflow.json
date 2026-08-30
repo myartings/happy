@@ -1,0 +1,565 @@
+{
+  "schemaVersion": 3,
+  "slug": "needs-attention-current-requests",
+  "intensity": "feature",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User accepted GitHub Issue #70 and continued in the dedicated owning Root session; live Issue was re-read unchanged and docs/specs/needs-attention-current-requests.md freezes its current-request-only criteria.",
+      "updated": "2026-08-30T15:19:07+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/needs-attention-current-requests/decisions.md resolves slice, offline membership, focus authority, and legacy unread compatibility with no open material decision.",
+      "updated": "2026-08-30T15:19:07+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current-root serial topology in confirmed Issue worktree; feature-level capability is sufficient; accepted test authority and scope containment are recorded in spec, tasks, context, and validation files.",
+      "updated": "2026-08-30T15:19:07+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared with controls in docs/specs/needs-attention-current-requests.md: destination validates safe equal agentStateVersion plus source identity; list performs navigation only and touches no response handler, provider, promise, or state write.",
+      "updated": "2026-08-30T15:19:07+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Final completion-record alignment made no product-code change: completed T4 status and structured session/index summary are now intended delivery-candidate content; the unchanged implementation still passes 8 focused files/93 tests, Happy App typecheck, and git diff HEAD --check with all prior safety boundaries intact.",
+      "updated": "2026-08-30T16:44:57+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Fresh final-completion-record staged run bound candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a. Command indexes 0, 1, 3, 4, 6, 7, and 8 passed; only indexes 2 and 5 failed, matching the previously reproduced base failures (15 Studio assertions and 2 committed-merge workflow fixtures). Product code and tests are unchanged from the prior independently accepted candidate; no new candidate failure was introduced.",
+      "updated": "2026-08-30T16:49:49+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Fresh independent capable Spec and Standards axes both accepted pinned candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a with no blocking or non-blocking findings; review package diff 2e35bb0ee255c3c67e76a27e37faaf66b91ba8f596e3e60c5b6db17691a638b2 and accepted-gap run 7d707cfd-0dbc-420b-9506-3855e6f8ec8b are exact-candidate bound.",
+      "updated": "2026-08-30T16:54:57+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "cbf63a29bd3f03767baf5a8e6bd893ecf393ad6a",
+        "candidateFingerprint": "13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish evidence is complete for exact reviewed candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a: accepted-gap run 7d707cfd-0dbc-420b-9506-3855e6f8ec8b, independent capable Spec and Standards acceptance with no findings, all seven acceptance criteria verified, rollback and tracker recommendation recorded, strict active audit and workflow validation passed, and git diff HEAD --check passed. No commit, push, PR, or tracker mutation is authorized or performed.",
+      "updated": "2026-08-30T16:56:33+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-30T15:15:05+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-30T15:15:05+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/70"
+    },
+    {
+      "at": "2026-08-30T15:19:07+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted GitHub Issue #70 and continued in the dedicated owning Root session; live Issue was re-read unchanged and docs/specs/needs-attention-current-requests.md freezes its current-request-only criteria."
+    },
+    {
+      "at": "2026-08-30T15:19:07+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/needs-attention-current-requests/decisions.md resolves slice, offline membership, focus authority, and legacy unread compatibility with no open material decision."
+    },
+    {
+      "at": "2026-08-30T15:19:07+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared with controls in docs/specs/needs-attention-current-requests.md: destination validates safe equal agentStateVersion plus source identity; list performs navigation only and touches no response handler, provider, promise, or state write."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-30T15:19:07+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One truthful navigation-only App projection for current permission and communication requests",
+      "acceptanceSeam": "Pure projection/list tests plus row presentation and destination stale-focus interaction tests",
+      "dependencies": "Existing encrypted agentState.requests and communications, Session agentStateVersion, SessionRowData, and existing Session route/control surfaces",
+      "reviewBoundary": "App-only projection, presentation, and conservative navigation can be accepted or rejected without terminal outcomes, Goal state, providers, or protocols",
+      "rollbackBoundary": "Existing needsAttentionSessionsEnabled setting restores ordinary list; no migration or data rollback",
+      "contextBoundary": "One focused Happy App feature context owned serially by the current Issue Root",
+      "consequence": "Permission-bearing UI is sensitive, controlled by navigation-only ownership, fail-closed destination validation, and zero response/state effects",
+      "evidence": "Live Issue #70 right-sizing assessment, verified source design blob ae8f16b1eb9fd29933b6b9b1c9243d74d43a4db8, current code seams, and docs/specs/needs-attention-current-requests.md",
+      "contractFingerprint": "08df9f3d82ae79470253dded66df534687445c4232e6aadfdb3bca129508d89b",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-30T15:19:07+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current-root serial topology in confirmed Issue worktree; feature-level capability is sufficient; accepted test authority and scope containment are recorded in spec, tasks, context, and validation files."
+    },
+    {
+      "at": "2026-08-30T15:19:07+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement T1 current-request projection with focused RED-to-GREEN tests"
+    },
+    {
+      "at": "2026-08-30T15:30:22+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T3 complete: focused candidate suite passed 6 files/74 tests, Happy App typecheck passed, git diff --check passed, and feature/navigation inspection found no response or state-write operations."
+    },
+    {
+      "at": "2026-08-30T15:30:22+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete candidate-bound applicable checks and acceptance mapping"
+    },
+    {
+      "at": "2026-08-30T15:32:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 4b15cb9f-0afe-4651-a2c7-1e6d00b6a583"
+    },
+    {
+      "at": "2026-08-30T15:44:48+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: b126b0ea-7aa6-4b13-bfe8-d747e15132e6"
+    },
+    {
+      "at": "2026-08-30T15:45:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged run bound candidate 0af48ada3b400c3252584ac6eb220b6f05fe3c3c4bce34efba0dcf173a31cd12; accepted failures are exactly 15 baseline Studio assertions in StudioMarkdownOptions.test.ts, studioRichTextWiring.test.ts, and ToolViewStudioPresentation.test.ts plus two baseline workflow archive fixtures test_committed_merge_auto_detects_second_parent_as_source and test_committed_merge_preserves_explicit_first_parent_source; verified base cbf63a29bd3f03767baf5a8e6bd893ecf393ad6a reproduces all; no new candidate failure.; structured run: b126b0ea-7aa6-4b13-bfe8-d747e15132e6; accepted command indexes: 2, 5; approval: User explicitly accepted the recommended baseline-gap route on 2026-08-30."
+    },
+    {
+      "at": "2026-08-30T15:50:13+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Both independent capable axes blocked unchanged candidate 0af48ada3b400c3252584ac6eb220b6f05fe3c3c4bce34efba0dcf173a31cd12: resolve transcript message identity for exact permission focus, fully gate row presentation/navigation by the setting, and add localized Review/Answer affordance plus behavior coverage."
+    },
+    {
+      "at": "2026-08-30T15:50:19+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate the complete first-review finding set: disabled-setting compatibility, transcript message-ID resolution, and localized Review/Answer affordance coverage"
+    },
+    {
+      "at": "2026-08-30T16:03:17+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Complete first-review remediation implemented in accepted App-only scope: 8 focused files/88 tests passed, Happy App typecheck passed, git diff HEAD --check passed, all three row variants use one setting-aware reason/action/focus policy, destination maps current tool join keys to actual transcript message IDs, and added-line inspection found no response, provider, agent-state, or settings mutation operation."
+    },
+    {
+      "at": "2026-08-30T16:03:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete remediated candidate and run a fresh applicable candidate-bound check before a fresh dual-axis review"
+    },
+    {
+      "at": "2026-08-30T16:05:49+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 68281c8e-3c74-4476-a741-f3caad8292e1"
+    },
+    {
+      "at": "2026-08-30T16:06:05+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh remediated staged run bound candidate a1f92231fbe2356df9829c331f6daedcef0ef9dafb3ef657c156cd79facebee6; accepted failures remain exactly 15 baseline Studio assertions in the same three named files plus the same two workflow archive fixtures; all new Issue #70 tests, both typechecks, Happy Server 112/112, workflow validation, validation tests, and strict audit passed; no new candidate failure.; structured run: 68281c8e-3c74-4476-a741-f3caad8292e1; accepted command indexes: 2, 5; approval: User explicitly accepted the recommended baseline-gap route on 2026-08-30; this unchanged acceptance covers only the same reproduced baseline failures."
+    },
+    {
+      "at": "2026-08-30T16:10:05+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Both independent capable axes blocked pinned candidate a1f92231 on one shared accepted-contract gap: non-canonical route-version strings can be coerced into valid numbers and authorize exact focus; add strict canonical decimal parsing plus route-boundary coverage."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-30T16:10:44+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep the accepted Issue #70 slice intact and add only strict canonical route-version parsing plus route-boundary coverage",
+      "acceptanceSeam": "RED-to-GREEN tests at the route parsing boundary prove empty, whitespace, hexadecimal, fractional, signed, and nonnumeric inputs fail closed while canonical non-negative decimal safe integers remain valid",
+      "dependencies": "Existing Expo route string input, current attention focus hint shape, and destination resolver; no new product or protocol dependency",
+      "reviewBoundary": "One bounded parser seam and its route-boundary tests, followed by the same complete candidate check and fresh independent dual-axis review",
+      "rollbackBoundary": "The existing needsAttentionSessionsEnabled setting still restores legacy list presentation and navigation; parser change is side-effect free",
+      "contextBoundary": "Current human-facing Issue #70 Root remains the single implementation owner; no independent remainder or delegation is needed",
+      "consequence": "Permission-bearing exact focus must fail closed; strict parsing reduces authorization ambiguity without changing response, state, provider, or protocol behavior",
+      "evidence": "Second review found one shared candidate-caused parsing gap and explicitly accepted all first-round remediations; the finding is narrow, causally understood, testable in isolation, and does not change the accepted contract or create a separable remainder",
+      "contractFingerprint": "83d8788f776100e0db393db3172637816489079cba518ccd6238aeda20992caf",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-30T16:10:46+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate second-review finding with strict fail-closed route-version parsing and route-boundary tests, then rerun candidate-bound check and dual-axis review"
+    },
+    {
+      "at": "2026-08-30T16:14:37+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second-review remediation complete: two focused REDs proved missing canonical parsing and non-string route coercion; strict runtime-string canonical-decimal safe-integer parsing plus Session route wiring now pass the 8-file/90-test focused suite, Happy App typecheck, and git diff HEAD --check; added-line inspection remains navigation-only with no response, provider, protocol, agent-state, or settings mutation."
+    },
+    {
+      "at": "2026-08-30T16:14:38+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete strictly parsed candidate and run a fresh applicable candidate-bound check before a fresh dual-axis review"
+    },
+    {
+      "at": "2026-08-30T16:17:40+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 72e0933c-2b56-4bc5-89b6-96a16cf78946"
+    },
+    {
+      "at": "2026-08-30T16:18:02+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh strictly parsed staged run bound candidate 9b614de04d633a8765737d08acbcf2e61ecebce1823a26633099de05a1f77b36; accepted failures remain exactly 15 baseline Studio assertions in the same three named files plus the same two workflow archive fixtures; all 90 focused tests, all new Issue #70 full-suite tests, both typechecks, Happy Server 112/112, workflow state upgrade, validation, validation tests, and strict audit passed; no new candidate failure.; structured run: 72e0933c-2b56-4bc5-89b6-96a16cf78946; accepted command indexes: 2, 5; approval: User explicitly accepted the recommended baseline-gap route on 2026-08-30; this unchanged acceptance covers only the same reproduced baseline failures."
+    },
+    {
+      "at": "2026-08-30T16:21:54+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh capable review of pinned candidate 9b614de0: Spec accepted with no findings; Standards blocked one accepted-criterion-2 gap where legacy permission state can override an answer-only projection after the permission request is completed."
+    },
+    {
+      "at": "2026-08-30T16:21:55+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate third-review mixed completed-permission and pending-answer ordering gap with a focused regression test, then rerun candidate-bound check and dual-axis review"
+    },
+    {
+      "at": "2026-08-30T16:24:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Third-review remediation complete: after correcting an invalid empty-form fixture, the isolated RED proved a stale legacy permission state could outrank an answer-only projection; priority now trusts any present projected primary reason and falls back to legacy permission only without projection; mixed projection/list tests pass 29/29, full focused suite 8 files/92 tests, Happy App typecheck, and git diff HEAD --check; no response, provider, protocol, agent-state, or settings mutation was added."
+    },
+    {
+      "at": "2026-08-30T16:24:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete projected-priority candidate and run a fresh applicable candidate-bound check before a fresh dual-axis review"
+    },
+    {
+      "at": "2026-08-30T16:26:19+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: a816fd38-1d94-4b5d-9eb4-7d7b480e056d"
+    },
+    {
+      "at": "2026-08-30T16:26:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh projected-priority staged run bound candidate b5b5f47b424a1d937fff25e9ba15da2f51b5b2ade2770f0ae1b6d283b734f664; accepted failures remain exactly 15 baseline Studio assertions in the same three named files plus the same two workflow archive fixtures; all 92 focused tests, all new Issue #70 full-suite tests, both typechecks, Happy Server 112/112, workflow state upgrade, validation, validation tests, and strict audit passed; no new candidate failure.; structured run: a816fd38-1d94-4b5d-9eb4-7d7b480e056d; accepted command indexes: 2, 5; approval: User explicitly accepted the recommended baseline-gap route on 2026-08-30; this unchanged acceptance covers only the same reproduced baseline failures."
+    },
+    {
+      "at": "2026-08-30T16:31:01+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh capable review of pinned candidate b5b5f47b: Standards accepted with no findings; Spec blocked one legacy-snapshot exact-focus gap where a supported inline form without explicit toolUseId must use its communication ID as the established transcript join key."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-30T16:31:01+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep the accepted Issue #70 slice intact and add only the established communication-ID transcript join-key fallback for supported older form snapshots",
+      "acceptanceSeam": "A focused RED-to-GREEN resolver test proves a version-matched current form without toolUseId returns the communication ID join key and resolves only to an actual current transcript tool-call message ID",
+      "dependencies": "Existing selectAgentFormCommunication communication.toolUseId-or-ID semantics, current focus resolver, and transcript callId-to-message-ID resolver; no new product or protocol dependency",
+      "reviewBoundary": "One compatibility branch in the focus resolver and its focused regression, followed by the same complete candidate check and fresh independent dual-axis review",
+      "rollbackBoundary": "The existing needsAttentionSessionsEnabled setting still removes structured focus navigation; the fallback remains destination-validated and side-effect free",
+      "contextBoundary": "Current human-facing Issue #70 Root remains the single owner; the compatibility fix is not an independent remainder",
+      "consequence": "Exact focus remains permission-sensitive and is allowed only after exact version/source validation plus an actual current transcript join; no response or agent-state mutation is introduced",
+      "evidence": "Two post-reassessment review boundaries exposed separate narrow compatibility edges; Standards accepted the entire latest candidate while Spec isolated this established old-snapshot join-key mismatch, which is causally understood and testable without contract or scope expansion",
+      "contractFingerprint": "4d289d562bd54d8a16c5fb054d586362a3da74202edc2ceb7b6ded7592cac3f2",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-30T16:31:02+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate fourth-review older-form communication-ID join-key fallback with focused regression coverage, then rerun candidate-bound check and dual-axis review"
+    },
+    {
+      "at": "2026-08-30T16:33:08+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fourth-review remediation complete: focused RED proved an older supported inline form without explicit toolUseId fell back to general; explicit tool IDs still win, fallback forms retain communication targeting, and only older inline forms now use communication ID as the established join key before mandatory current transcript callId-to-message-ID resolution; focus tests pass 4/4, full focused suite 8 files/93 tests, Happy App typecheck, and git diff HEAD --check; no response, provider, protocol, agent-state, or settings mutation was added."
+    },
+    {
+      "at": "2026-08-30T16:33:08+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete older-form-compatible candidate and run a fresh applicable candidate-bound check before a fresh dual-axis review"
+    },
+    {
+      "at": "2026-08-30T16:34:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 782801d8-569e-4f7f-a7c7-4ebcf580d881"
+    },
+    {
+      "at": "2026-08-30T16:34:59+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh older-form-compatible staged run bound candidate 9c71abfd827e390a551eb08fd3de6654cb9261d79c66d9c145028c39dc4c14a6; accepted failures remain exactly 15 baseline Studio assertions in the same three named files plus the same two workflow archive fixtures; all 93 focused tests, all new Issue #70 full-suite tests, both typechecks, Happy Server 112/112, workflow state upgrade, validation, validation tests, and strict audit passed; no new candidate failure.; structured run: 782801d8-569e-4f7f-a7c7-4ebcf580d881; accepted command indexes: 2, 5; approval: User explicitly accepted the recommended baseline-gap route on 2026-08-30; this unchanged acceptance covers only the same reproduced baseline failures."
+    },
+    {
+      "at": "2026-08-30T16:38:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Both fresh independent capable axes accepted pinned candidate 9c71abfd827e390a551eb08fd3de6654cb9261d79c66d9c145028c39dc4c14a6 with no blocking or non-blocking findings; complete contract, architecture, permission safety, rollback, and all four remediation sets passed; only the explicitly accepted reproduced baseline gaps remain."
+    },
+    {
+      "at": "2026-08-30T16:39:12+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, tracker recommendation, pre-archive CI, and local archive without committing or mutating the tracker"
+    },
+    {
+      "at": "2026-08-30T16:42:07+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence is complete: final candidate 9c71abfd is bound to accepted-gap run 782801d8 and independently accepted by both capable axes with no findings; all seven acceptance rows are verified; rollback and mitigation are explicit; no reusable lesson promotion or candidate-owned follow-up remains; live Issue #70 was re-read read-only and the recommended future delivery is an authorized PR with Closes #70; strict active audit and workflow validation passed."
+    },
+    {
+      "at": "2026-08-30T16:44:29+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Rebind final completed task and structured-session records into the exact delivery candidate, then rerun candidate-bound check, dual-axis review, and finish archive"
+    },
+    {
+      "at": "2026-08-30T16:44:57+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final completion-record alignment made no product-code change: completed T4 status and structured session/index summary are now intended delivery-candidate content; the unchanged implementation still passes 8 focused files/93 tests, Happy App typecheck, and git diff HEAD --check with all prior safety boundaries intact."
+    },
+    {
+      "at": "2026-08-30T16:44:58+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the final completed task/session candidate and run a fresh candidate-bound check before final dual-axis review and archive"
+    },
+    {
+      "at": "2026-08-30T16:49:26+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 7d707cfd-0dbc-420b-9506-3855e6f8ec8b"
+    },
+    {
+      "at": "2026-08-30T16:49:49+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh final-completion-record staged run bound candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a. Command indexes 0, 1, 3, 4, 6, 7, and 8 passed; only indexes 2 and 5 failed, matching the previously reproduced base failures (15 Studio assertions and 2 committed-merge workflow fixtures). Product code and tests are unchanged from the prior independently accepted candidate; no new candidate failure was introduced.; structured run: 7d707cfd-0dbc-420b-9506-3855e6f8ec8b; accepted command indexes: 2, 5; approval: User explicitly accepted the recommended baseline-gap route on 2026-08-30; this unchanged acceptance covers only the same reproduced baseline failures."
+    },
+    {
+      "at": "2026-08-30T16:54:57+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh independent capable Spec and Standards axes both accepted pinned candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a with no blocking or non-blocking findings; review package diff 2e35bb0ee255c3c67e76a27e37faaf66b91ba8f596e3e60c5b6db17691a638b2 and accepted-gap run 7d707cfd-0dbc-420b-9506-3855e6f8ec8b are exact-candidate bound."
+    },
+    {
+      "at": "2026-08-30T16:55:27+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Update mutable final evidence for exact reviewed candidate 13dde813…, validate finish records, pass staged pre-archive CI, and archive without commit, push, PR, or tracker mutation."
+    },
+    {
+      "at": "2026-08-30T16:56:33+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence is complete for exact reviewed candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a: accepted-gap run 7d707cfd-0dbc-420b-9506-3855e6f8ec8b, independent capable Spec and Standards acceptance with no findings, all seven acceptance criteria verified, rollback and tracker recommendation recorded, strict active audit and workflow validation passed, and git diff HEAD --check passed. No commit, push, PR, or tracker mutation is authorized or performed."
+    },
+    {
+      "at": "2026-08-30T16:57:31+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #70 current permission-and-communication Needs Attention slice completed: exact candidate 13dde813 passed focused 93/93, typechecks, accepted-gap full check, independent capable Spec and Standards review with no findings, finish validation, and pre-archive staged CI. Only the user-accepted base-reproduced Studio and workflow fixture gaps remain; no commit, push, PR, or tracker mutation was performed.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-30T16:57:31+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/70",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-08-30T15:19:07+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One truthful navigation-only App projection for current permission and communication requests",
+      "acceptanceSeam": "Pure projection/list tests plus row presentation and destination stale-focus interaction tests",
+      "dependencies": "Existing encrypted agentState.requests and communications, Session agentStateVersion, SessionRowData, and existing Session route/control surfaces",
+      "reviewBoundary": "App-only projection, presentation, and conservative navigation can be accepted or rejected without terminal outcomes, Goal state, providers, or protocols",
+      "rollbackBoundary": "Existing needsAttentionSessionsEnabled setting restores ordinary list; no migration or data rollback",
+      "contextBoundary": "One focused Happy App feature context owned serially by the current Issue Root",
+      "consequence": "Permission-bearing UI is sensitive, controlled by navigation-only ownership, fail-closed destination validation, and zero response/state effects",
+      "evidence": "Live Issue #70 right-sizing assessment, verified source design blob ae8f16b1eb9fd29933b6b9b1c9243d74d43a4db8, current code seams, and docs/specs/needs-attention-current-requests.md",
+      "contractFingerprint": "08df9f3d82ae79470253dded66df534687445c4232e6aadfdb3bca129508d89b",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-30T16:10:44+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep the accepted Issue #70 slice intact and add only strict canonical route-version parsing plus route-boundary coverage",
+      "acceptanceSeam": "RED-to-GREEN tests at the route parsing boundary prove empty, whitespace, hexadecimal, fractional, signed, and nonnumeric inputs fail closed while canonical non-negative decimal safe integers remain valid",
+      "dependencies": "Existing Expo route string input, current attention focus hint shape, and destination resolver; no new product or protocol dependency",
+      "reviewBoundary": "One bounded parser seam and its route-boundary tests, followed by the same complete candidate check and fresh independent dual-axis review",
+      "rollbackBoundary": "The existing needsAttentionSessionsEnabled setting still restores legacy list presentation and navigation; parser change is side-effect free",
+      "contextBoundary": "Current human-facing Issue #70 Root remains the single implementation owner; no independent remainder or delegation is needed",
+      "consequence": "Permission-bearing exact focus must fail closed; strict parsing reduces authorization ambiguity without changing response, state, provider, or protocol behavior",
+      "evidence": "Second review found one shared candidate-caused parsing gap and explicitly accepted all first-round remediations; the finding is narrow, causally understood, testable in isolation, and does not change the accepted contract or create a separable remainder",
+      "contractFingerprint": "83d8788f776100e0db393db3172637816489079cba518ccd6238aeda20992caf",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-30T16:31:01+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep the accepted Issue #70 slice intact and add only the established communication-ID transcript join-key fallback for supported older form snapshots",
+      "acceptanceSeam": "A focused RED-to-GREEN resolver test proves a version-matched current form without toolUseId returns the communication ID join key and resolves only to an actual current transcript tool-call message ID",
+      "dependencies": "Existing selectAgentFormCommunication communication.toolUseId-or-ID semantics, current focus resolver, and transcript callId-to-message-ID resolver; no new product or protocol dependency",
+      "reviewBoundary": "One compatibility branch in the focus resolver and its focused regression, followed by the same complete candidate check and fresh independent dual-axis review",
+      "rollbackBoundary": "The existing needsAttentionSessionsEnabled setting still removes structured focus navigation; the fallback remains destination-validated and side-effect free",
+      "contextBoundary": "Current human-facing Issue #70 Root remains the single owner; the compatibility fix is not an independent remainder",
+      "consequence": "Exact focus remains permission-sensitive and is allowed only after exact version/source validation plus an actual current transcript join; no response or agent-state mutation is introduced",
+      "evidence": "Two post-reassessment review boundaries exposed separate narrow compatibility edges; Standards accepted the entire latest candidate while Spec isolated this established old-snapshot join-key mismatch, which is causally understood and testable without contract or scope expansion",
+      "contractFingerprint": "4d289d562bd54d8a16c5fb054d586362a3da74202edc2ceb7b6ded7592cac3f2",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "7d707cfd-0dbc-420b-9506-3855e6f8ec8b",
+  "checkRunFingerprint": "684b14a67024fcc23c2a50d36eedbcd72b78ce5cfbcf05d7b6d5fd9efb14593c",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "cbf63a29bd3f03767baf5a8e6bd893ecf393ad6a",
+    "candidateFingerprint": "13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      5
+    ],
+    "approval": "User explicitly accepted the recommended baseline-gap route on 2026-08-30; this unchanged acceptance covers only the same reproduced baseline failures."
+  },
+  "checkAcceptedFailuresFingerprint": "1fd69bdfc0e8195a7ecb77fc65a407d8ba7172d3cf6f0ba210dc5ef76b071504",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "cbf63a29bd3f03767baf5a8e6bd893ecf393ad6a",
+      "candidateFingerprint": "13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Independent capable Spec review accepted exact staged candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a against base cbf63a29bd3f03767baf5a8e6bd893ecf393ad6a. Blocking findings: none. Non-blocking findings: none. The two explicitly accepted base-reproduced command gaps were excluded as directed."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Independent capable Standards review accepted exact staged candidate 13dde813971b5434ad3906841052ce7d22bba48f197290e9e3957d29bf754c7a and diff 2e35bb0ee255c3c67e76a27e37faaf66b91ba8f596e3e60c5b6db17691a638b2. Blocking findings: none. Non-blocking findings: none. No correctness, regression, security/privacy, architecture, maintainability, rollback, verification, or repository-standard violation was found."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Update mutable final evidence for exact reviewed candidate 13dde813…, validate finish records, pass staged pre-archive CI, and archive without commit, push, PR, or tracker mutation.",
+    "prearchiveUpdated": "2026-08-30T16:56:33+00:00",
+    "prearchiveActive": {
+      "feature": "needs-attention-current-requests",
+      "phase": "finish",
+      "updated": "2026-08-31",
+      "next": "Update mutable final evidence for exact reviewed candidate 13dde813…, validate finish records, pass staged pre-archive CI, and archive without commit, push, PR, or tracker mutation.",
+      "branch / worktree": "issue/70-needs-attention-surface-pending-permissions-and"
+    },
+    "prearchiveArchiveObject": "40ce0c6f0ac5c73b091f54abbdd82b180188630a",
+    "fingerprint": "50a6f96b7dad67a4b4b12ea0b5f510e9f8b3d9d185a16961bd5c5924a16aec98"
+  },
+  "archivedAt": "2026-08-30T16:57:31+00:00",
+  "archiveDate": "2026-08-31",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #70 current permission-and-communication Needs Attention slice completed: exact candidate 13dde813 passed focused 93/93, typechecks, accepted-gap full check, independent capable Spec and Standards review with no findings, finish validation, and pre-archive staged CI. Only the user-accepted base-reproduced Studio and workflow fixture gaps remain; no commit, push, PR, or tracker mutation was performed.",
+  "archiveFollowUp": "None"
+}

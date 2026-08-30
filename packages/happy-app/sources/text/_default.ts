@@ -90,6 +90,8 @@ export const en = {
         lastSeen: ({ time }: { time: string }) => `last seen ${time}`,
         permissionRequired: 'permission required',
         inputRequired: 'waiting for your answer',
+        reviewRequest: 'Review',
+        answerRequest: 'Answer',
         activeNow: 'Active now',
         unknown: 'unknown',
         unread: 'new results',
