@@ -541,6 +541,34 @@ describe("v3SessionRoutes", () => {
         expect(emitUpdateMock).not.toHaveBeenCalled();
     });
 
+    it("replays the persisted result without duplicating after an acknowledgement is lost", async () => {
+        seedSession({ id: "session-1", accountId: "user-1", seq: 0 });
+        app = await createApp();
+        const request = {
+            method: "POST" as const,
+            url: "/v3/sessions/session-1/messages",
+            headers: { "x-user-id": "user-1" },
+            payload: {
+                messages: [{ localId: "stable-after-ack-loss", content: "encrypted" }]
+            }
+        };
+
+        const persistedButAckLost = await app.inject(request);
+        // The caller discards this first response to model a connection loss
+        // after commit and retries the exact logical write.
+        const retry = await app.inject(request);
+
+        expect(persistedButAckLost.statusCode).toBe(200);
+        expect(retry.statusCode).toBe(200);
+        expect(retry.json().messages).toEqual(persistedButAckLost.json().messages);
+        expect(state.messages).toHaveLength(1);
+        expect(state.messages[0]).toMatchObject({
+            seq: 1,
+            localId: "stable-after-ack-loss"
+        });
+        expect(emitUpdateMock).toHaveBeenCalledTimes(1);
+    });
+
     it("enforces send validation limits and auth/session ownership", async () => {
         seedSession({ id: "session-1", accountId: "owner-user" });
         app = await createApp();
