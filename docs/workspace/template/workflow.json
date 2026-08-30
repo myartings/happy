@@ -1,12 +1,14 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "slug": "<feature>",
   "intensity": "feature",
+  "workspaceKind": "standard",
   "phase": "planning",
   "nextAction": "Resolve scope and acceptance criteria",
   "riskRequired": false,
   "decisionsRequired": false,
-  "legacyImport": false,
+  "deliverySourcePolicy": 1,
+  "deliverySource": {"kind": "pending"},
   "gates": {
     "acceptance": {"status": "pending", "evidence": "", "updated": "<date>"},
     "decisions": {"status": "pending", "evidence": "", "updated": "<date>"},
