@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 3,
+  "slug": "workflow-candidate-bound-accepted-gaps",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "Push prerequisite branch and open a dev PR; user merge is required before restoring the stashed Windows Native candidate",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/workflow-candidate-bound-accepted-gaps.md defines nine observable criteria and verification mappings",
+      "updated": "2026-08-30T08:28:25+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-candidate-bound-accepted-gaps/decisions.md resolves exact indexes, staged identity, approval state, downstream validation, generic-gate rejection, and separate delivery",
+      "updated": "2026-08-30T08:28:25+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: serial current-root; runtime/state/CI/test files only; public CLI tests and workflow profile are authority",
+      "updated": "2026-08-30T08:28:25+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls in decisions.md: exact complete staged run, approval, fingerprints, negative tests, two-axis review, and one-revert rollback",
+      "updated": "2026-08-30T08:28:25+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Second review remediation: 3/3 focused RED reproduced; 3/3 GREEN in 103.694 s; complete runtime 12/12 in 218.644 s; validator 9/9; state-upgrade 2/2; compile and diff checks passed",
+      "updated": "2026-08-30T09:38:38+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures",
+      "updated": "2026-08-30T09:42:54+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards reviews accepted frozen candidate 2588349a7fbd; no actionable findings or follow-up candidates",
+      "updated": "2026-08-30T09:50:00+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "f97b5d73800b45a37a3fc9a008867757b7a19fe2",
+        "candidateFingerprint": "2588349a7fbd80dcf28836f942af72b6d135b9edd3a7ae20b4349ccd144dd793"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md and validation.md record the final 5/5 run, accepted dual-axis review, exact rollback, no implementation gaps, and prerequisite dev PR follow-up",
+      "updated": "2026-08-30T09:50:49+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-30T08:25:40+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-30T08:25:40+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — A schema-3 staged check with explicit baseline failures cannot retain a candidate binding, so review and archive reject an otherwise fully structured run. (approval: User selected a separate workflow-gap repair in this session.)"
+    },
+    {
+      "at": "2026-08-30T08:28:25+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/workflow-candidate-bound-accepted-gaps.md defines nine observable criteria and verification mappings"
+    },
+    {
+      "at": "2026-08-30T08:28:25+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/workflow-candidate-bound-accepted-gaps/decisions.md resolves exact indexes, staged identity, approval state, downstream validation, generic-gate rejection, and separate delivery"
+    },
+    {
+      "at": "2026-08-30T08:28:25+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls in decisions.md: exact complete staged run, approval, fingerprints, negative tests, two-axis review, and one-revert rollback"
+    },
+    {
+      "at": "2026-08-30T08:28:25+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: serial current-root; runtime/state/CI/test files only; public CLI tests and workflow profile are authority"
+    },
+    {
+      "at": "2026-08-30T08:28:26+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T2: add public-boundary RED coverage for exact accepted failures"
+    },
+    {
+      "at": "2026-08-30T08:45:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Public-CLI RED reproduced 3 expected failures; focused GREEN 4/4; complete runtime 10/10; validator 9/9; state-upgrade 2/2; scoped diff only"
+    },
+    {
+      "at": "2026-08-30T08:45:10+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact candidate and run the applicable workflow profile"
+    },
+    {
+      "at": "2026-08-30T08:48:49+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 37145aa5-4c41-48c8-ad13-ee7379ef24e5"
+    },
+    {
+      "at": "2026-08-30T08:55:01+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Both independent axes found the same blocking accepted-contract gap: approval-only tamper survives the candidate-bound run fingerprint; Spec also requires positive-exit wording reconciliation"
+    },
+    {
+      "at": "2026-08-30T08:55:03+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate approval-policy fingerprint binding and exit-code contract wording"
+    },
+    {
+      "at": "2026-08-30T09:02:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation complete: accepted-policy fingerprint binds approval/run/candidate; active and six terminal tamper boundaries reject drift; runtime 10/10, validator 9/9, state-upgrade 2/2"
+    },
+    {
+      "at": "2026-08-30T09:02:53+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage remediated candidate and rerun applicable workflow profile"
+    },
+    {
+      "at": "2026-08-30T09:06:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: b29088bb-8476-4097-82c9-10eaff0c3bee"
+    },
+    {
+      "at": "2026-08-30T09:10:05+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent Spec and Standards remediation reviews accepted frozen candidate 95d2bdf5f2a4; no actionable findings or follow-up candidates"
+    },
+    {
+      "at": "2026-08-30T09:11:56+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Run pre-archive staged CI and generate canonical terminal archive"
+    },
+    {
+      "at": "2026-08-30T09:11:57+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md and validation.md record complete acceptance evidence, accepted dual-axis review, exact rollback, no implementation gaps, and prerequisite PR follow-up"
+    },
+    {
+      "at": "2026-08-30T09:13:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "Required session summary was added after the bound final check, so candidate 95d2bdf5 is stale and must be rechecked"
+    },
+    {
+      "at": "2026-08-30T09:13:36+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Reset after candidate-staleness detection; fresh dual-axis review required"
+    },
+    {
+      "at": "2026-08-30T09:13:37+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "pending",
+      "evidence": "Reset after candidate-staleness detection; fresh check and review required before finish"
+    },
+    {
+      "at": "2026-08-30T09:13:38+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Rebind the required session summary added after review"
+    },
+    {
+      "at": "2026-08-30T09:15:42+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implementation remains unchanged after accepted dual-axis review; required structured session index and summary are finalized before the final candidate check"
+    },
+    {
+      "at": "2026-08-30T09:15:44+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the finalized candidate and rerun the applicable workflow profile"
+    },
+    {
+      "at": "2026-08-30T09:18:57+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 4520b728-c791-47a3-8355-f0fb7e86098e"
+    },
+    {
+      "at": "2026-08-30T09:27:40+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh Spec and Standards reviews blocked candidate 2c633f15176b on three fail-closed receipt/review lifecycle gaps"
+    },
+    {
+      "at": "2026-08-30T09:27:44+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add public-boundary RED coverage and minimally remediate final-run, terminal-review, and repeated-receipt invariants"
+    },
+    {
+      "at": "2026-08-30T09:38:38+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second review remediation: 3/3 focused RED reproduced; 3/3 GREEN in 103.694 s; complete runtime 12/12 in 218.644 s; validator 9/9; state-upgrade 2/2; compile and diff checks passed"
+    },
+    {
+      "at": "2026-08-30T09:38:40+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the second-remediation candidate and rerun the applicable workflow profile"
+    },
+    {
+      "at": "2026-08-30T09:42:54+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: a3b37f87-c47f-4e23-9a5e-f484a5031e97"
+    },
+    {
+      "at": "2026-08-30T09:50:00+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards reviews accepted frozen candidate 2588349a7fbd; no actionable findings or follow-up candidates"
+    },
+    {
+      "at": "2026-08-30T09:50:45+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Run pre-archive staged CI and generate the canonical terminal archive"
+    },
+    {
+      "at": "2026-08-30T09:50:49+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md and validation.md record the final 5/5 run, accepted dual-axis review, exact rollback, no implementation gaps, and prerequisite dev PR follow-up"
+    },
+    {
+      "at": "2026-08-30T09:51:51+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Bind explicitly accepted structured check failures to the exact staged candidate, run, approval policy, review, finish, and CI lifecycle; result identity: archive-introducing-commit; follow-up: Push prerequisite branch and open a dev PR; user merge is required before restoring the stashed Windows Native candidate"
+    }
+  ],
+  "updated": "2026-08-30T09:51:51+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "A schema-3 staged check with explicit baseline failures cannot retain a candidate binding, so review and archive reject an otherwise fully structured run.",
+    "approval": "User selected a separate workflow-gap repair in this session."
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "a3b37f87-c47f-4e23-9a5e-f484a5031e97",
+  "checkRunFingerprint": "c16e4a2b1f03da0ff9bc2633d7e30f0e1479b068f02dad86db2dee1d80560e58",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "f97b5d73800b45a37a3fc9a008867757b7a19fe2",
+    "candidateFingerprint": "2588349a7fbd80dcf28836f942af72b6d135b9edd3a7ae20b4349ccd144dd793"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "f97b5d73800b45a37a3fc9a008867757b7a19fe2",
+      "candidateFingerprint": "2588349a7fbd80dcf28836f942af72b6d135b9edd3a7ae20b4349ccd144dd793"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Independent Spec review accepted frozen candidate 2588349a7fbd and diff e5158b1618c1; final-run, pre-mutation, review-lock, terminal binding, CI, and all-success contract verified with no findings"
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Independent Standards review accepted frozen candidate 2588349a7fbd; lifecycle guards, terminal review revalidation, regression coverage, architecture, rollback, and compatibility verified with no findings"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Run pre-archive staged CI and generate the canonical terminal archive",
+    "prearchiveUpdated": "2026-08-30T09:50:49+00:00",
+    "prearchiveActive": {
+      "feature": "workflow-candidate-bound-accepted-gaps",
+      "phase": "finish",
+      "updated": "2026-08-30",
+      "next": "Run pre-archive staged CI and generate the canonical terminal archive",
+      "branch / worktree": "fix/workflow-candidate-bound-accepted-gaps"
+    },
+    "prearchiveArchiveObject": "0c2e7fea513429597c588733830e335502265e40",
+    "fingerprint": "029c444417a15760bb8304c5fcd896b1a32270bb2179d90b96de9a1d3a1740a0"
+  },
+  "archivedAt": "2026-08-30T09:51:51+00:00",
+  "archiveDate": "2026-08-30",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Bind explicitly accepted structured check failures to the exact staged candidate, run, approval policy, review, finish, and CI lifecycle",
+  "archiveFollowUp": "Push prerequisite branch and open a dev PR; user merge is required before restoring the stashed Windows Native candidate"
+}
