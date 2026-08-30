@@ -206,6 +206,56 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         )
         self.git("add", ".")
 
+    def prepare_accepted_gap_candidate(self, slug: str) -> str:
+        self.prepare_verification_candidate(slug)
+        config_path = self.project / ".ai" / "project.json"
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        config["commands"]["check"] = [
+            "{python} -c \"raise SystemExit(7)\""
+        ]
+        config_path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+        self.git("add", ".")
+        failed = self.run_script(
+            "workflow-check.py", "--applicable", "--record", slug,
+            "--staged", "--base", self.base, ok=False,
+        )
+        self.assertIn("commands: 1, failures: 1", failed.stdout)
+        records = [
+            json.loads(line)
+            for line in (
+                self.project / "docs" / "workspace" / slug
+                / "evidence" / "checks.jsonl"
+            ).read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        run_id = str(records[-1]["runId"])
+        self.state(
+            "check-receipt", slug, "accepted_gaps",
+            "--run-id", run_id,
+            "--evidence", "operator accepted the named fixture failure",
+        )
+        self.git("add", ".")
+        return run_id
+
+    def write_completion_docs(self, slug: str) -> None:
+        workspace = self.project / "docs" / "workspace" / slug
+        (workspace / "validation.md").write_text(
+            "# Validation\n\n## Acceptance coverage\n\n"
+            "| Criterion | Status | Evidence |\n| --- | --- | --- |\n"
+            "| Result | verified | fixture |\n\n"
+            "## Remaining gaps\n\n- Named fixture gap accepted.\n",
+            encoding="utf-8",
+        )
+        (workspace / "finish.md").write_text(
+            "# Finish Review\n\n## Summary\n\nDone.\n\n"
+            "## Verification\n\nPass with accepted fixture gap.\n\n"
+            "## Whole-diff review\n\nPass.\n\n"
+            "## Rollback or mitigation\n\nRevert.\n\n"
+            "## Lessons promoted\n\nNone.\n\n"
+            "## Follow-up\n\nNone.\n",
+            encoding="utf-8",
+        )
+
     def prepare_reviewed_finish(self, slug: str) -> tuple[Path, ...]:
         self.prepare_checked_candidate(slug)
         self.run_script(
@@ -219,22 +269,7 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
             )
         self.gate(slug, "review")
         workspace = self.project / "docs" / "workspace" / slug
-        (workspace / "validation.md").write_text(
-            "# Validation\n\n## Acceptance coverage\n\n"
-            "| Criterion | Status | Evidence |\n| --- | --- | --- |\n"
-            "| Result | verified | fixture |\n\n"
-            "## Remaining gaps\n\n- None.\n",
-            encoding="utf-8",
-        )
-        (workspace / "finish.md").write_text(
-            "# Finish Review\n\n## Summary\n\nDone.\n\n"
-            "## Verification\n\nPass.\n\n"
-            "## Whole-diff review\n\nPass.\n\n"
-            "## Rollback or mitigation\n\nRevert.\n\n"
-            "## Lessons promoted\n\nNone.\n\n"
-            "## Follow-up\n\nNone.\n",
-            encoding="utf-8",
-        )
+        self.write_completion_docs(slug)
         self.state("transition", slug, "finish", "Finish fixture")
         self.gate(slug, "finish")
         self.git("add", ".")
@@ -304,6 +339,174 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
             "--status", "accepted", "--evidence", "must fail", ok=False,
         )
         self.assertIn("candidate changed after the final check", rejected.stderr)
+
+    def test_review_conclusion_accepts_explicitly_accepted_check_gaps(self) -> None:
+        slug = "accepted-check-gaps"
+        self.prepare_accepted_gap_candidate(slug)
+        self.run_script(
+            "workflow-review.py", "package", slug,
+            "--base", self.base, "--staged",
+        )
+
+        for axis in ("spec-review", "standards-review"):
+            accepted = self.state(
+                "review-conclusion", slug, "--axis", axis,
+                "--status", "accepted", "--evidence", f"{axis} fixture accepted",
+            )
+            self.assertEqual("accepted", json.loads(accepted.stdout)["status"])
+        self.gate(slug, "review")
+
+        workflow = json.loads(
+            (
+                self.project / "docs" / "workspace" / slug / "workflow.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual("accepted_gaps", workflow["gates"]["check"]["status"])
+        self.assertEqual("passed", workflow["gates"]["review"]["status"])
+        self.write_completion_docs(slug)
+        self.state("transition", slug, "finish", "Finish accepted-gap fixture")
+        self.gate(slug, "finish")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.state("archive", slug, "--summary", "accepted-gap fixture complete")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+
+    def test_review_conclusion_rejects_unapproved_check_states(self) -> None:
+        for status in ("pending", "blocked"):
+            with self.subTest(status=status):
+                slug = f"rejected-check-{status.replace('_', '-')}"
+                self.prepare_checked_candidate(slug)
+                self.gate(slug, "check", status)
+
+                rejected = self.state(
+                    "review-conclusion", slug, "--axis", "spec-review",
+                    "--status", "accepted", "--evidence", "must fail",
+                    ok=False,
+                )
+
+                self.assertIn(
+                    "final review requires the applicable final check first",
+                    rejected.stderr,
+                )
+
+    def test_accepted_gap_receipt_requires_a_failed_bound_run(self) -> None:
+        slug = "accepted-gap-binding"
+        self.prepare_checked_candidate(slug)
+        workflow = json.loads(
+            (
+                self.project / "docs" / "workspace" / slug / "workflow.json"
+            ).read_text(encoding="utf-8")
+        )
+        run_id = str(workflow["checkRunId"])
+
+        passing_run = self.state(
+            "check-receipt", slug, "accepted_gaps",
+            "--run-id", run_id, "--evidence", "must fail", ok=False,
+        )
+        self.assertIn(
+            "check=accepted_gaps requires at least one failed command",
+            passing_run.stderr,
+        )
+        evidence_path = (
+            self.project / "docs" / "workspace" / slug
+            / "evidence" / "checks.jsonl"
+        )
+        records = [
+            json.loads(line)
+            for line in evidence_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        records[-1]["result"] = "failed (0)"
+        evidence_path.write_text(
+            "".join(json.dumps(item) + "\n" for item in records),
+            encoding="utf-8",
+        )
+        relabeled = self.state(
+            "check-receipt", slug, "accepted_gaps",
+            "--run-id", run_id, "--evidence", "must fail", ok=False,
+        )
+        self.assertIn(
+            "result is inconsistent with exitCode/reuse provenance",
+            relabeled.stderr,
+        )
+        unbound = self.state(
+            "gate", slug, "check", "accepted_gaps",
+            "--evidence", "must fail", ok=False,
+        )
+        self.assertIn(
+            "check=accepted_gaps requires a bound structured workflow-check run",
+            unbound.stderr,
+        )
+
+    def test_accepted_gap_evidence_tampering_blocks_finish_and_archive_ci(
+        self,
+    ) -> None:
+        slug = "accepted-gap-tampering"
+        run_id = self.prepare_accepted_gap_candidate(slug)
+        self.run_script(
+            "workflow-review.py", "package", slug,
+            "--base", self.base, "--staged",
+        )
+        for axis in ("spec-review", "standards-review"):
+            self.state(
+                "review-conclusion", slug, "--axis", axis,
+                "--status", "accepted", "--evidence", f"{axis} accepted",
+            )
+        self.gate(slug, "review")
+        self.write_completion_docs(slug)
+        self.state("transition", slug, "finish", "Finish tampering fixture")
+
+        evidence_path = (
+            self.project / "docs" / "workspace" / slug
+            / "evidence" / "checks.jsonl"
+        )
+        original_evidence = evidence_path.read_bytes()
+
+        def write_relabeled_zero_exit() -> None:
+            records = [
+                json.loads(line)
+                for line in original_evidence.decode().splitlines()
+                if line.strip()
+            ]
+            failed = next(
+                item
+                for item in records
+                if item.get("runId") == run_id and item.get("exitCode") != 0
+            )
+            failed["exitCode"] = 0
+            failed["result"] = "failed (0)"
+            evidence_path.write_text(
+                "".join(json.dumps(item) + "\n" for item in records),
+                encoding="utf-8",
+            )
+
+        write_relabeled_zero_exit()
+        rejected_finish = self.state(
+            "gate", slug, "finish", "passed",
+            "--evidence", "must reject tampered check evidence", ok=False,
+        )
+        self.assertIn(
+            "result is inconsistent with exitCode/reuse provenance",
+            rejected_finish.stderr,
+        )
+
+        evidence_path.write_bytes(original_evidence)
+        self.gate(slug, "finish")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.state("archive", slug, "--summary", "tampering fixture complete")
+        self.git("add", ".")
+
+        write_relabeled_zero_exit()
+        self.git("add", str(evidence_path.relative_to(self.project)))
+        rejected_archive = self.run_script(
+            "workflow-ci.py", "--staged", ok=False,
+        )
+        self.assertIn(
+            "result is inconsistent with exitCode/reuse provenance",
+            rejected_archive.stderr + rejected_archive.stdout,
+        )
 
     def test_archive_rejects_post_review_drift_without_mutation(self) -> None:
         slug = "archive-rollback"

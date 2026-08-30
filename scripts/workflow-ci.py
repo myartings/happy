@@ -571,6 +571,10 @@ def prearchive_candidate_errors(
                     check_module.formal_run_errors(
                         slug, run_id, current_scope=False, current_config=True,
                         applicable_paths=check_paths,
+                        allow_command_failures=(
+                            state.get("gates", {}).get("check", {}).get("status")
+                            == "accepted_gaps"
+                        ),
                     )
                 )
                 if (
@@ -740,6 +744,10 @@ def archived_delivery_errors(
                     errors.extend(check_module.formal_run_errors(
                         slug, run_id, current_scope=False, current_config=True,
                         applicable_paths=check_paths,
+                        allow_command_failures=(
+                            state.get("gates", {}).get("check", {}).get("status")
+                            == "accepted_gaps"
+                        ),
                     ))
                     if state.get("checkRunFingerprint") != (
                         check_module.formal_run_fingerprint(slug, run_id)

@@ -358,10 +358,21 @@ def evidence_records(path: Path) -> list[dict[str, object]]:
                 f"invalid structured check evidence at {path}:{line_number}: "
                 "reusedFromRunId must be str"
             )
-        if record["result"] == "reused" and reused_from is None:
+        result = record["result"]
+        exit_code = record["exitCode"]
+        valid_result = (
+            result == "passed" and exit_code == 0 and reused_from is None
+        ) or (
+            result == "reused" and exit_code == 0 and reused_from is not None
+        ) or (
+            exit_code > 0
+            and result == f"failed ({exit_code})"
+            and reused_from is None
+        )
+        if not valid_result:
             raise SystemExit(
                 f"invalid structured check evidence at {path}:{line_number}: "
-                "reused result requires reusedFromRunId"
+                "result is inconsistent with exitCode/reuse provenance"
             )
         identity_kind = record.get("identityKind")
         if identity_kind is not None:
@@ -590,6 +601,7 @@ def formal_run_errors(
     current_scope: bool = True,
     current_config: bool = True,
     applicable_paths: list[str] | None = None,
+    allow_command_failures: bool = False,
 ) -> list[str]:
     errors: list[str] = []
     evidence = ROOT / "docs" / "workspace" / slug / "evidence" / "checks.jsonl"
@@ -620,7 +632,7 @@ def formal_run_errors(
     for field in identity_fields:
         if any(item.get(field) != run[0].get(field) for item in run):
             errors.append(f"bound structured check run has inconsistent {field}")
-    if any(
+    if not allow_command_failures and any(
         item.get("exitCode") != 0 or item.get("result") not in ("passed", "reused")
         for item in run
     ):

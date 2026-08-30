@@ -659,18 +659,23 @@ def check_binding_errors(
     state: dict[str, Any], path: Path, *, current_scope: bool | None = None
 ) -> list[str]:
     receipt = state.get("gates", {}).get("check", {})
-    if receipt.get("status") != "passed":
+    status = receipt.get("status")
+    if status not in ("passed", "accepted_gaps"):
         if any(
             key in state
             for key in ("checkEvidencePolicy", "checkRunId", "checkRunFingerprint")
         ):
-            return ["structured check binding requires check=passed"]
+            return [
+                "structured check binding requires check=passed or accepted_gaps"
+            ]
         return []
     version = state.get("checkEvidencePolicy")
     run_id = state.get("checkRunId")
     fingerprint = state.get("checkRunFingerprint")
     if version is None and run_id is None and fingerprint is None:
-        return ["check=passed requires a bound structured workflow-check run"]
+        return [
+            f"check={status} requires a bound structured workflow-check run"
+        ]
     errors: list[str] = []
     if version != CHECK_EVIDENCE_POLICY_VERSION:
         errors.append(
@@ -693,6 +698,7 @@ def check_binding_errors(
                     state.get("phase") != "archived"
                     if current_scope is None else current_scope
                 ),
+                allow_command_failures=(status == "accepted_gaps"),
             )
         )
         if (
@@ -703,6 +709,13 @@ def check_binding_errors(
         ):
             errors.append("bound structured check run content changed")
         records = check_module.evidence_records(path / "evidence" / "checks.jsonl")
+        run = [item for item in records if item.get("runId") == run_id]
+        if status == "accepted_gaps" and not any(
+            item.get("exitCode") != 0
+            or item.get("result") not in ("passed", "reused")
+            for item in run
+        ):
+            errors.append("check=accepted_gaps requires at least one failed command")
         if not records or records[-1].get("runId") != run_id:
             errors.append("bound structured check run is not the final evidence run")
     except (RuntimeError, OSError, SystemExit) as exc:
@@ -1853,10 +1866,10 @@ def record_gate(args: argparse.Namespace) -> None:
                 f"{args.name}=blocked is already recorded for the current "
                 f"{boundary_phase} boundary"
             )
-    if args.name == "check" and args.status == "passed":
+    if args.name == "check" and args.status in ("passed", "accepted_gaps"):
         raise SystemExit(
-            "check=passed requires a bound structured workflow-check run; "
-            "run workflow-check.py --applicable --record <slug>"
+            f"check={args.status} requires a bound structured workflow-check "
+            "run; use check-receipt with its run id"
         )
     if args.name == "check":
         state.pop("checkEvidencePolicy", None)
@@ -1967,24 +1980,33 @@ def record_check_receipt(args: argparse.Namespace) -> None:
     run_id = args.run_id.strip()
     if not evidence or not run_id:
         raise SystemExit("structured check receipt requires evidence and run id")
-    if args.status == "passed":
+    if args.status in ("passed", "accepted_gaps"):
+        check_module = load_check_module()
         try:
-            errors = load_check_module().formal_run_errors(
-                slug, run_id, current_scope=True
+            errors = check_module.formal_run_errors(
+                slug, run_id, current_scope=True,
+                allow_command_failures=(args.status == "accepted_gaps"),
+            )
+            records = check_module.evidence_records(
+                workflow_dir(slug) / "evidence" / "checks.jsonl"
             )
         except (RuntimeError, OSError, SystemExit) as exc:
             errors = [str(exc)]
+            records = []
+        run = [item for item in records if item.get("runId") == run_id]
+        if args.status == "accepted_gaps" and not any(
+            item.get("exitCode") != 0
+            or item.get("result") not in ("passed", "reused")
+            for item in run
+        ):
+            errors.append("check=accepted_gaps requires at least one failed command")
         if errors:
             raise SystemExit("; ".join(sorted(set(errors))))
         state["checkEvidencePolicy"] = CHECK_EVIDENCE_POLICY_VERSION
         state["checkRunId"] = run_id
-        state["checkRunFingerprint"] = load_check_module().formal_run_fingerprint(
+        state["checkRunFingerprint"] = check_module.formal_run_fingerprint(
             slug, run_id
         )
-        records = load_check_module().evidence_records(
-            workflow_dir(slug) / "evidence" / "checks.jsonl"
-        )
-        run = [item for item in records if item.get("runId") == run_id]
         identity = run[0] if run else {}
         if identity.get("identityKind") == "staged-candidate-v1":
             state["checkedCandidate"] = {
@@ -2147,7 +2169,9 @@ def record_review_conclusion(args: argparse.Namespace) -> None:
         )
     if state.get("gates", {}).get("review", {}).get("status") != "pending":
         raise SystemExit("review conclusion requires review=pending")
-    if state.get("gates", {}).get("check", {}).get("status") != "passed":
+    if state.get("gates", {}).get("check", {}).get("status") not in (
+        "passed", "accepted_gaps",
+    ):
         raise SystemExit("final review requires the applicable final check first")
     identity = checked_candidate(state)
     if identity["identityKind"] == "staged-candidate-v1":
@@ -2760,7 +2784,9 @@ def parser() -> argparse.ArgumentParser:
 
     check_receipt_parser = commands.add_parser("check-receipt")
     check_receipt_parser.add_argument("slug")
-    check_receipt_parser.add_argument("status", choices=("passed", "blocked"))
+    check_receipt_parser.add_argument(
+        "status", choices=("passed", "accepted_gaps", "blocked")
+    )
     check_receipt_parser.add_argument("--run-id", required=True)
     check_receipt_parser.add_argument("--evidence", required=True)
     check_receipt_parser.set_defaults(func=record_check_receipt)
