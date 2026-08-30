@@ -19,7 +19,15 @@ describe('workspace project discovery operation', () => {
         });
     });
 
-    it('calls the optional encrypted Machine RPC without a caller-provided root', async () => {
+    it('calls the optional encrypted Machine RPC with a search query but no caller-provided root', async () => {
+        const { listWorkspaceProjects } = await import('./ops');
+
+        await listWorkspaceProjects('machine-a', 'happy');
+
+        expect(machineRPC).toHaveBeenCalledWith('machine-a', 'list-workspace-projects', { query: 'happy' });
+    });
+
+    it('keeps the request compatible when no search query is provided', async () => {
         const { listWorkspaceProjects } = await import('./ops');
 
         await listWorkspaceProjects('machine-a');

@@ -68,6 +68,19 @@ describe('listWorkspaceProjects', () => {
         ]);
     });
 
+    it('treats a recognized project as a leaf instead of emitting nested packages', async () => {
+        const root = await createWorkspace();
+        const project = join(root, 'monorepo');
+        const nestedPackage = join(project, 'packages', 'child');
+        await mkdir(nestedPackage, { recursive: true });
+        await writeFile(join(project, 'package.json'), '{}');
+        await writeFile(join(nestedPackage, 'package.json'), '{}');
+
+        const result = await listWorkspaceProjects({ root, maxDepth: 3 });
+
+        expect(result.projects.map((item) => item.relativePath)).toEqual(['monorepo']);
+    });
+
     it('does not traverse beyond max depth or into skipped directories', async () => {
         const root = await createWorkspace();
         const visibleProject = join(root, 'group', 'visible');
@@ -97,6 +110,24 @@ describe('listWorkspaceProjects', () => {
 
         expect(result.projects.map((project) => project.name)).toEqual(['alpha', 'bravo']);
         expect(result.truncated).toBe(true);
+    });
+
+    it('applies a search query before the matching-project limit', async () => {
+        const root = await createWorkspace();
+        for (const name of ['charlie', 'alpha', 'bravo']) {
+            const project = join(root, name);
+            await mkdir(project);
+            await writeFile(join(project, 'pyproject.toml'), '[project]');
+        }
+
+        const result = await listWorkspaceProjects({
+            root,
+            maxProjects: 2,
+            query: 'charlie',
+        });
+
+        expect(result.projects.map((project) => project.name)).toEqual(['charlie']);
+        expect(result.truncated).toBe(false);
     });
 
     it('recognizes a Unity project from its canonical directory structure', async () => {

@@ -95,7 +95,101 @@ describe('buildWorkspaceProjectSections', () => {
         });
 
         expect(sections.workspaceProjects.map((item) => item.name)).toEqual(['compiler-kit']);
-        expect(sections.recent.map((item) => item.name)).toEqual(['recent']);
+        expect(sections.recent).toEqual([]);
+    });
+
+    it('ranks exact and name matches ahead of path-only matches', () => {
+        const sections = buildWorkspaceProjectSections({
+            recentPaths: [],
+            discoveredProjects: [
+                {
+                    name: 'codium',
+                    path: '/home/dev/workspace/happy/packages/codium',
+                    relativePath: 'happy/packages/codium',
+                    markers: ['package.json'],
+                    depth: 3,
+                },
+                {
+                    name: 'my-happy-tool',
+                    path: '/home/dev/workspace/my-happy-tool',
+                    relativePath: 'my-happy-tool',
+                    markers: ['package.json'],
+                    depth: 1,
+                },
+                {
+                    name: 'happy-tools',
+                    path: '/home/dev/workspace/happy-tools',
+                    relativePath: 'happy-tools',
+                    markers: ['package.json'],
+                    depth: 1,
+                },
+                {
+                    name: 'happy',
+                    path: '/home/dev/workspace/happy',
+                    relativePath: 'happy',
+                    markers: ['.git'],
+                    depth: 1,
+                },
+                {
+                    name: 'absolute-only',
+                    path: '/home/happy/workspace/absolute-only',
+                    relativePath: 'absolute-only',
+                    markers: ['package.json'],
+                    depth: 1,
+                },
+            ],
+            homeDir: '/home/dev',
+            platform: 'unix',
+            query: 'happy',
+        });
+
+        expect(sections.workspaceProjects.map((item) => item.name)).toEqual([
+            'happy',
+            'happy-tools',
+            'my-happy-tool',
+            'codium',
+            'absolute-only',
+        ]);
+    });
+
+    it('reveals a matching Recent project even when it was outside the collapsed preview', () => {
+        const recentPaths = [
+            '/home/dev/workspace/one',
+            '/home/dev/workspace/two',
+            '/home/dev/workspace/three',
+            '/home/dev/workspace/four',
+            '/home/dev/workspace/five',
+            '/home/dev/workspace/brave-garden',
+        ];
+        const sections = buildWorkspaceProjectSections({
+            recentPaths,
+            discoveredProjects: [],
+            homeDir: '/home/dev',
+            platform: 'unix',
+            query: 'brave',
+        });
+
+        expect(buildRecentProjectPreview(sections.recent, false)).toEqual({
+            visibleItems: [expect.objectContaining({ name: 'brave-garden' })],
+            hiddenCount: 0,
+        });
+    });
+
+    it('searches a named Recent project by its displayed project name', () => {
+        const sections = buildWorkspaceProjectSections({
+            recentProjects: [{
+                name: 'Apollo Control',
+                path: '/home/dev/workspace/internal-slug',
+            }],
+            discoveredProjects: [],
+            homeDir: '/home/dev',
+            platform: 'unix',
+            query: 'apollo',
+        });
+
+        expect(sections.recent).toEqual([
+            expect.objectContaining({ name: 'Apollo Control' }),
+        ]);
     });
 
     it('keeps differently cased Unix paths distinct', () => {
@@ -183,6 +277,38 @@ describe('WorkspaceProjectDiscoveryLoader', () => {
         await expect(loader.load('machine-a')).resolves.toEqual({ status: 'ready', result });
 
         expect(request).toHaveBeenCalledTimes(1);
+    });
+
+    it('requests and caches discovery independently for each search query', async () => {
+        const result = { root: '/workspace', projects: [], scannedAt: 1, truncated: false };
+        const request = vi.fn().mockResolvedValue(result);
+        const loader = new WorkspaceProjectDiscoveryLoader({ request });
+
+        await loader.load('machine-a', 'happy');
+        await loader.load('machine-a', 'happy');
+        await loader.load('machine-a', 'website');
+
+        expect(request).toHaveBeenNthCalledWith(1, 'machine-a', 'happy');
+        expect(request).toHaveBeenNthCalledWith(2, 'machine-a', 'website');
+    });
+
+    it('rejects a late response after a different query starts loading on the same Machine', async () => {
+        const resolvers = new Map<string, (result: ListWorkspaceProjectsResult) => void>();
+        const request = (_machineId: string, query: string) => new Promise<ListWorkspaceProjectsResult>((resolve) => {
+            resolvers.set(query, resolve);
+        });
+        const loader = new WorkspaceProjectDiscoveryLoader({ request, timeoutMs: 10_000 });
+
+        const first = loader.load('machine-a', 'happy');
+        const second = loader.load('machine-a', 'website');
+        resolvers.get('happy')?.({ root: '/workspace', projects: [], scannedAt: 1, truncated: false });
+        resolvers.get('website')?.({ root: '/workspace', projects: [], scannedAt: 2, truncated: false });
+
+        await expect(first).resolves.toBeNull();
+        await expect(second).resolves.toEqual({
+            status: 'ready',
+            result: { root: '/workspace', projects: [], scannedAt: 2, truncated: false },
+        });
     });
 
     it('turns an RPC failure into a non-blocking unavailable outcome', async () => {
