@@ -367,8 +367,12 @@ def right_sizing_acceptance(state: dict[str, Any]) -> dict[str, Any] | None:
     assessments = state.get("rightSizingAssessments")
     if not isinstance(assessments, list):
         return None
+    start = state.get("rightSizingEpochStart", 0)
+    if type(start) is not int or not 0 <= start <= len(assessments):
+        return None
     matches = [
         item for item in assessments
+        [start:]
         if isinstance(item, dict) and item.get("stage") == "acceptance"
     ]
     return matches[-1] if matches else None
@@ -384,7 +388,13 @@ def right_sizing_continuation_trigger(state: dict[str, Any]) -> str | None:
     history = state.get("history")
     if not isinstance(history, list):
         return None
-    last_continue = -1
+    last_continue = max(
+        (
+            index for index, item in enumerate(history)
+            if isinstance(item, dict) and item.get("type") == "replan"
+        ),
+        default=-1,
+    )
     for index, item in enumerate(history):
         if (
             isinstance(item, dict)
@@ -392,7 +402,7 @@ def right_sizing_continuation_trigger(state: dict[str, Any]) -> str | None:
             and item.get("stage") == "continuation"
             and item.get("route") == "continue"
         ):
-            last_continue = index
+            last_continue = max(last_continue, index)
     def boundary_results(gate_name: str, phase: str) -> list[str]:
         boundary = None
         results: dict[int, str] = {}
@@ -925,6 +935,7 @@ def committed_right_sizing_assessments(
         or "rightSizingAcceptanceRequired" in committed
         or "rightSizingContractPolicy" in committed
         or "rightSizingContractPolicyStart" in committed
+        or "rightSizingEpochStart" in committed
     )
     baseline = committed.get("rightSizingAssessments", [])
     if not isinstance(baseline, list):
@@ -940,9 +951,15 @@ def committed_right_sizing_assessments(
             "rightSizingContractPolicyStart": committed.get(
                 "rightSizingContractPolicyStart"
             ),
+            "rightSizingReplanEpochs": [
+                item.get("rightSizingEpochStart")
+                for item in committed.get("history", [])
+                if isinstance(item, dict) and item.get("type") == "replan"
+            ],
         }
         if "rightSizingContractPolicy" in committed
         or "rightSizingContractPolicyStart" in committed
+        or "rightSizingEpochStart" in committed
         else None
     )
     return baseline, marker_present, metadata, ""
@@ -980,6 +997,7 @@ def right_sizing_errors(state: dict[str, Any], path: Path) -> list[str]:
     contract_policy = state.get("rightSizingContractPolicy")
     contract_policy_start = state.get("rightSizingContractPolicyStart")
     acceptance_required = state.get("rightSizingAcceptanceRequired")
+    epoch_start = state.get("rightSizingEpochStart", 0)
     baseline, committed_marker, committed_contract_policy, baseline_error = (
         committed_right_sizing_assessments(path)
     )
@@ -1013,6 +1031,24 @@ def right_sizing_errors(state: dict[str, Any], path: Path) -> list[str]:
         errors.append("rightSizingAcceptanceRequired cannot be false")
     if not isinstance(assessments, list):
         return errors + ["rightSizingAssessments must be a list"]
+    if type(epoch_start) is not int or not 0 <= epoch_start <= len(assessments):
+        errors.append("rightSizingEpochStart is invalid")
+    assessment_count = 0
+    replan_epoch_starts: list[int] = []
+    for item in state.get("history", []):
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") == "right_sizing_assessment":
+            assessment_count += 1
+        elif item.get("type") == "replan":
+            marker = item.get("rightSizingEpochStart")
+            if type(marker) is not int or marker != assessment_count:
+                errors.append("replan right-sizing epoch boundary is invalid")
+            else:
+                replan_epoch_starts.append(marker)
+    expected_epoch_start = replan_epoch_starts[-1] if replan_epoch_starts else 0
+    if epoch_start != expected_epoch_start:
+        errors.append("rightSizingEpochStart does not match replan history")
     if contract_policy is None and contract_policy_start is not None:
         errors.append(
             "rightSizingContractPolicyStart requires rightSizingContractPolicy"
@@ -1050,7 +1086,9 @@ def right_sizing_errors(state: dict[str, Any], path: Path) -> list[str]:
             errors.append(f"{label} has invalid stage")
         elif item.get("route") not in RIGHT_SIZING_ROUTES[stage]:
             errors.append(f"{label} has invalid route for {stage}")
-        if stage == "acceptance":
+        # `epoch_start` is a zero-based slice boundary while `index` is
+        # intentionally one-based for diagnostics.
+        if stage == "acceptance" and index > epoch_start:
             acceptance_count += 1
         if item.get("phase") not in ACTIVE_PHASES:
             errors.append(f"{label} has invalid phase")
@@ -1124,11 +1162,28 @@ def right_sizing_errors(state: dict[str, Any], path: Path) -> list[str]:
         errors.append(baseline_error)
     elif assessments[:len(baseline)] != baseline:
         errors.append("committed right-sizing assessment history changed")
-    if committed_contract_policy is not None and committed_contract_policy != {
-        "rightSizingContractPolicy": contract_policy,
-        "rightSizingContractPolicyStart": contract_policy_start,
-    }:
-        errors.append("committed right-sizing contract policy changed")
+    if committed_contract_policy is not None:
+        if {
+            "rightSizingContractPolicy": committed_contract_policy.get(
+                "rightSizingContractPolicy"
+            ),
+            "rightSizingContractPolicyStart": committed_contract_policy.get(
+                "rightSizingContractPolicyStart"
+            ),
+        } != {
+            "rightSizingContractPolicy": contract_policy,
+            "rightSizingContractPolicyStart": contract_policy_start,
+        }:
+            errors.append("committed right-sizing contract policy changed")
+        committed_replan_epochs = committed_contract_policy.get(
+            "rightSizingReplanEpochs", []
+        )
+        if (
+            not isinstance(committed_replan_epochs, list)
+            or replan_epoch_starts[:len(committed_replan_epochs)]
+            != committed_replan_epochs
+        ):
+            errors.append("committed replan epoch history changed")
     return errors
 
 
@@ -1590,6 +1645,50 @@ def transition(args: argparse.Namespace) -> None:
     save_state(state)
     write_active(slug, target, state["nextAction"], current_branch())
     print(f"{slug}: {target}")
+
+
+def replan(args: argparse.Namespace) -> None:
+    slug = resolve_slug(args.slug)
+    state = load_state(slug)
+    if state.get("phase") not in ("implementation", "verification", "finish"):
+        raise SystemExit(
+            "replan requires implementation, verification, or finish phase"
+        )
+    gates = state.get("gates", {})
+    if not any(
+        gates.get(name, {}).get("status") == "blocked"
+        for name in ("acceptance", "scoping")
+    ):
+        raise SystemExit(
+            "replan requires blocked acceptance or scoping contract evidence"
+        )
+    reason = single_line(args.reason, "replan reason")
+    next_action = single_line(args.next_action, "replan next action")
+    assessments = state.get("rightSizingAssessments", [])
+    if not isinstance(assessments, list):
+        raise SystemExit("replan requires valid rightSizingAssessments")
+
+    state["phase"] = "planning"
+    state["nextAction"] = next_action
+    state["gates"] = initial_gates(
+        state["intensity"], state["riskRequired"], state["decisionsRequired"]
+    )
+    clear_check_binding(state)
+    if state.get("rightSizingPolicy") == RIGHT_SIZING_POLICY_VERSION:
+        state["rightSizingEpochStart"] = len(assessments)
+    state["history"].append(
+        {
+            "at": timestamp(),
+            "type": "replan",
+            "phase": "planning",
+            "evidence": reason,
+            "rightSizingEpochStart": len(assessments),
+        }
+    )
+    save_state(state)
+    if active_data().get("feature") == slug:
+        write_active(slug, "planning", next_action, current_branch())
+    print(f"replanned: {slug}")
 
 
 def finish_evidence_errors(text: str, validation_text: str) -> list[str]:
@@ -2380,9 +2479,12 @@ def record_right_sizing(args: argparse.Namespace) -> None:
             raise SystemExit(
                 "acceptance right-sizing requires a tracker-backed delivery source"
             )
+        start = state.get("rightSizingEpochStart", 0)
+        if type(start) is not int or not 0 <= start <= len(assessments):
+            raise SystemExit("rightSizingEpochStart is invalid")
         if any(
             isinstance(item, dict) and item.get("stage") == "acceptance"
-            for item in assessments
+            for item in assessments[start:]
         ):
             raise SystemExit("right-sizing acceptance assessment is immutable")
         if state.get("phase") not in ("planning", "design"):
@@ -2914,6 +3016,12 @@ def parser() -> argparse.ArgumentParser:
     transition_parser.add_argument("phase", choices=ACTIVE_PHASES)
     transition_parser.add_argument("next_action", nargs="?", default="")
     transition_parser.set_defaults(func=transition)
+
+    replan_parser = commands.add_parser("replan")
+    replan_parser.add_argument("slug")
+    replan_parser.add_argument("--reason", required=True)
+    replan_parser.add_argument("--next-action", required=True)
+    replan_parser.set_defaults(func=replan)
 
     gate_parser = commands.add_parser("gate")
     gate_parser.add_argument("slug")
