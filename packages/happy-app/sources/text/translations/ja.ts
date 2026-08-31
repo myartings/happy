@@ -93,6 +93,8 @@ export const ja: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `最終アクセス: ${time}`,
         permissionRequired: '権限が必要です',
         inputRequired: '回答を待っています',
+        reviewRequest: '確認',
+        answerRequest: '回答',
         activeNow: 'アクティブ',
         unknown: '不明',
         unread: '新しい結果',

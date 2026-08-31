@@ -99,11 +99,27 @@ import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioP
 import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { setStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 import { AnimatedFade } from '@/components/AnimatedOverlay';
+import {
+    resolveCurrentRequestAttentionFocus,
+    resolveCurrentRequestAttentionMessageId,
+    type CurrentRequestAttentionFocusHint,
+} from '@/features/needs-attention/currentRequestAttentionFocus';
 
-export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
+export const SessionView = React.memo((props: {
+    id: string;
+    targetMessageId?: string;
+    targetMessageLocalId?: string;
+    targetMessageCreatedAt?: number;
+    attentionFocusHint?: CurrentRequestAttentionFocusHint;
+}) => {
     const sessionId = props.id;
     const router = useRouter();
     const session = useSession(sessionId);
+    const attentionFocus = React.useMemo(() => (
+        session && props.attentionFocusHint
+            ? resolveCurrentRequestAttentionFocus(session, props.attentionFocusHint)
+            : null
+    ), [props.attentionFocusHint, session]);
     const isDataReady = useIsDataReady();
     const { theme } = useUnistyles();
     const safeArea = useSafeAreaInsets();
@@ -573,9 +589,17 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
                         key={sessionId}
                         sessionId={sessionId}
                         session={session}
-                        targetMessageId={props.targetMessageId}
+                        targetMessageId={props.attentionFocusHint
+                            ? undefined
+                            : props.targetMessageId}
+                        targetAttentionToolUseId={attentionFocus?.kind === 'tool'
+                            ? attentionFocus.toolUseId
+                            : undefined}
                         targetMessageLocalId={props.targetMessageLocalId}
                         targetMessageCreatedAt={props.targetMessageCreatedAt}
+                        targetCommunicationId={attentionFocus?.kind === 'communication'
+                            ? attentionFocus.sourceId
+                            : undefined}
                         onHeaderBackdropVisibilityChange={contentRunsUnderHeader
                             ? setHeaderBackdropVisible
                             : undefined}
@@ -861,16 +885,20 @@ export function SessionViewLoaded({
     session,
     embedded = false,
     targetMessageId,
+    targetAttentionToolUseId,
     targetMessageLocalId,
     targetMessageCreatedAt,
+    targetCommunicationId,
     onHeaderBackdropVisibilityChange,
 }: {
     sessionId: string;
     session: Session;
     embedded?: boolean;
     targetMessageId?: string;
+    targetAttentionToolUseId?: string;
     targetMessageLocalId?: string;
     targetMessageCreatedAt?: number;
+    targetCommunicationId?: string;
     onHeaderBackdropVisibilityChange?: (visible: boolean) => void;
 }) {
     const { theme } = useUnistyles();
@@ -930,6 +958,12 @@ export function SessionViewLoaded({
 
     const realtimeStatus = useRealtimeStatus();
     const { messages, isLoaded } = useSessionMessages(sessionId);
+    const resolvedTargetMessageId = targetAttentionToolUseId
+        ? resolveCurrentRequestAttentionMessageId(messages, {
+            kind: 'tool',
+            toolUseId: targetAttentionToolUseId,
+        })
+        : targetMessageId;
     const pendingCommunications = useSessionPendingCommunications(sessionId);
     const acknowledgedCliVersions = useLocalSetting('acknowledgedCliVersions');
     const zenMode = useLocalSetting('zenMode');
@@ -1281,7 +1315,7 @@ export function SessionViewLoaded({
                 {messages.length > 0 && (
                     <ChatList
                         session={session}
-                        targetMessageId={targetMessageId}
+                        targetMessageId={resolvedTargetMessageId}
                         targetMessageLocalId={targetMessageLocalId}
                         targetMessageCreatedAt={targetMessageCreatedAt}
                         topContentInset={chatListTopContentInset}
@@ -1396,7 +1430,10 @@ export function SessionViewLoaded({
             )}
             <AnimatedFade visible={showBottomDockDetails}>
                 <CenteredInputWidth horizontalPadding={sessionInputHorizontalPadding}>
-                    <AgentQuestionBanner sessionId={sessionId} />
+                    <AgentQuestionBanner
+                        sessionId={sessionId}
+                        focusCommunicationId={targetCommunicationId}
+                    />
                 </CenteredInputWidth>
             </AnimatedFade>
             <AnimatedFade visible={showBottomDockDetails}>

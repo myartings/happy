@@ -43,6 +43,10 @@ import { SessionRowProjectionCache } from '@/features/client-performance/session
 import { SessionListDraftProjectionIndex } from '@/features/client-performance/sessionListDraftProjection';
 import { recordClientLongSessionCounter } from '@/features/client-performance/clientLongSessionDiagnostics';
 import { IncrementalOrderedMessageCollection } from '@/features/client-performance/orderedMessageCollection';
+import {
+    deriveCurrentSessionAttention,
+    type CurrentSessionAttention,
+} from '@/features/needs-attention/currentRequestAttention';
 import type { Project } from './projectTypes';
 import { getSessionProjectId, isHappyAgentSession } from './projectTypes';
 
@@ -138,6 +142,7 @@ export interface SessionRowData {
     gitDeletions: number | null;
     gitInsertions: number | null;
     state: SessionState;
+    attention?: CurrentSessionAttention | null;
     // activeAt is only present on inactive sessions because it changes on every
     // heartbeat. Stable creation/send timestamps are available for display order.
     activeAt?: number;
@@ -221,6 +226,7 @@ function buildSessionRowData(
         gitDeletions: rigGit?.deletions ?? null,
         gitInsertions: rigGit?.insertions ?? null,
         state,
+        attention: deriveCurrentSessionAttention(session.agentState, session.agentStateVersion),
         createdAt: session.createdAt,
         lastActivityAt: getSessionActivityAt(session),
         lastMessageSentAt: session.lastMessageSentAt,
