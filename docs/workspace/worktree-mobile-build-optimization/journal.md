@@ -1,0 +1,21 @@
+# Journal: `worktree-mobile-build-optimization`
+
+- 2026-08-30: Initial fixed-candidate review 32b65319261b blocked: Spec found unsupported profiles reaching EAS, incomplete AC7 field assertions, and two omitted support paths in the allowed-scope list; Standards found invalid Linux rendering of multiword pnpm command and successful malformed EAS JSON reported as success. Remediate all findings in one in-scope revision, then repin/check/review.
+
+- 2026-08-30: Second review blocked: require successful terminal EAS status; keep command outcome distinct from EAS status; require reusable build ID plus available artifact; validate returned platform/profile/channel against request; add native-asset drift coverage. Accepted locked-base Studio failures remain excluded.
+
+- 2026-08-30: Third review: Standards PASS; Spec BLOCKED on staged-only Git changes/content omitted when worktree equals HEAD, and malformed/incomplete EAS response losing durable diagnostic evidence after temporary JSON deletion. Accepted locked-base Studio failures remain excluded.
+
+- 2026-08-30: Fourth review BLOCKED. Spec: native index/worktree divergence can fingerprint only the worktree; derived validation overwrites raw process outcome; parseable partial failure JSON loses available fields. Standards: unknown root build-affecting paths can be ignored; artifact hashing accepts non-HTTPS/redirects; temporary EAS JSON lacks guaranteed cleanup on report/hash failure or interruption. Accepted locked-base Studio failures remain excluded.
+
+- 2026-08-30: Fifth dual-axis review of frozen candidate 4fb66ff4dd0a BLOCKED. Spec: exact-dimension mismatch fixture lacked a valid reusable-artifact positive control. Standards: literal POSIX backslashes could normalize into ignored/Metro prefixes. Both review-conclusion and review gate persistence rejected the user-accepted check status because the tooling requires check=passed; direct reviewer results retained here and in validation/journal.
+
+- 2026-08-30: Sixth dual-axis review of frozen candidate 185aa4b888da: Spec ACCEPTED; Standards BLOCKED because staged deletion plus untracked recreation of the same native path is absent from staged∩unstaged divergence, permitting fingerprint/EAS lookup against only worktree state. Axis conclusions remain notes because review-conclusion requires check=passed and rejects the user-approved accepted_gaps state.
+
+- 2026-08-30: Seventh dual-axis review of frozen candidate 850e1c0aba3d: Spec ACCEPTED; Standards BLOCKED because mobile_require_release_ready is called in an OR-list, suppressing Bash errexit inside it, while mobile_validate_local_configuration lacked explicit failure propagation and could allow mobile_run_eas after failed identity/profile/project validation. Axis conclusions remain notes because review-conclusion rejects check=accepted_gaps.
+
+- 2026-08-30: Eighth dual-axis review of frozen candidate 48f8d5adffdf: Standards ACCEPTED; Spec BLOCKED because Git rename folding in committed/staged/unstaged diff collection can omit a native-sensitive source when renamed to an explicitly unrelated destination. Add --no-renames and real-Git coverage for all three states. Axis conclusions remain notes because review-conclusion rejects check=accepted_gaps.
+
+- 2026-08-30: After ninth dual-axis acceptance, the user authorized the bounded blocking-prerequisite repair needed to close the lifecycle. Preserve all mobile outcomes and allow final review only for check=passed or explicitly accepted_gaps. A failed formal rerun exposed the paired missing identity: accepted gaps must bind that complete run and exact candidate, while finish/archive CI may waive only its command failure. Generic gates, passing-run relabeling, stale evidence/config, candidate/package drift, and missing axes remain rejected. The prior candidate review is stale and must be replaced.
+
+- 2026-08-30: Tenth review of candidate 08b83a091964: Spec ACCEPTED; Standards BLOCKED because arbitrary result text such as failed (0) could relabel exitCode=0 evidence as a gap before receipt fingerprinting. Require canonical result/exit/reuse consistency and prove tampering is rejected at receipt, finish, and archived staged-CI boundaries. The accepted 15 Studio baseline failures remain excluded.

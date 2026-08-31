@@ -358,10 +358,21 @@ def evidence_records(path: Path) -> list[dict[str, object]]:
                 f"invalid structured check evidence at {path}:{line_number}: "
                 "reusedFromRunId must be str"
             )
-        if record["result"] == "reused" and reused_from is None:
+        result = record["result"]
+        exit_code = record["exitCode"]
+        valid_result = (
+            result == "passed" and exit_code == 0 and reused_from is None
+        ) or (
+            result == "reused" and exit_code == 0 and reused_from is not None
+        ) or (
+            exit_code > 0
+            and result == f"failed ({exit_code})"
+            and reused_from is None
+        )
+        if not valid_result:
             raise SystemExit(
                 f"invalid structured check evidence at {path}:{line_number}: "
-                "reused result requires reusedFromRunId"
+                "result is inconsistent with exitCode/reuse provenance"
             )
         identity_kind = record.get("identityKind")
         if identity_kind is not None:
