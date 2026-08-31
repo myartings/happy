@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { randomUUID } from 'expo-crypto';
 import { useAllMachines, useSessions, useSetting } from '@/sync/storage';
 import { getCodeAgentDefaults, resolveAgentDefaultConfig } from '@/sync/agentDefaults';
 import {
@@ -54,6 +55,8 @@ const MAX_RIG_PENDING_RESULTS = 3;
 // stops waiting on it rather than waiting for it: every await below races this,
 // and whatever the machine says afterwards is dealt with off screen.
 const CANCELED = Symbol('canceled');
+
+class LocalizedGithubIssueBindingStartError extends Error {}
 
 /**
  * One attempt at starting a session.
@@ -142,12 +145,40 @@ export function useStartSessionFromDraft() {
         if (activeRunRef.current) return false;
 
         const draft = useNewSessionDraft.getState();
+        const bindingIssueLabel = draft.githubIssueBindingIntent?.issueLabel ?? null;
+        const formatStartError = (message: string) => (
+            bindingIssueLabel
+                ? t('githubIssues.bindingStartFailed', { issue: bindingIssueLabel })
+                : message
+        );
+        if (draft.githubIssueBindingIntent) {
+            const bindingIntent = draft.githubIssueBindingIntent;
+            let bindingAccountMatches: boolean;
+            try {
+                const { validateGithubIssueBindingIntentAccount } = await import('@/features/github-issues/githubIssueBindingIntent');
+                bindingAccountMatches = await validateGithubIssueBindingIntentAccount(bindingIntent);
+            } catch {
+                Modal.alert(
+                    t('common.error'),
+                    t('githubIssues.bindingAccountValidationUnavailable', { issue: bindingIntent.issueLabel }),
+                );
+                return false;
+            }
+            if (!bindingAccountMatches) {
+                draft.setGithubIssueBindingIntent?.(null);
+                Modal.alert(
+                    t('common.error'),
+                    t('githubIssues.bindingAccountChanged', { issue: bindingIntent.issueLabel }),
+                );
+                return false;
+            }
+        }
         // The draft names a computer, which may run both Happy CLI and Happy Agent. Which daemon
         // receives the request follows from the agent, so it is settled here rather than by
         // whichever machine id the draft happened to store.
         const choice = findMachineChoice(collectMachineChoices(machines), draft.selectedMachineId);
         if (!choice) {
-            Modal.alert(t('common.error'), 'Please select a machine');
+            Modal.alert(t('common.error'), formatStartError('Please select a machine'));
             return false;
         }
 
@@ -160,21 +191,21 @@ export function useStartSessionFromDraft() {
         if (!machine) {
             Modal.alert(
                 t('common.error'),
-                agentType === 'rig'
+                formatStartError(agentType === 'rig'
                     ? 'Happy Agent is not running on this computer'
-                    : 'This computer has no Happy CLI daemon to start that agent',
+                    : 'This computer has no Happy CLI daemon to start that agent'),
             );
             return false;
         }
         if (!isMachineOnline(machine)) {
-            Modal.alert(t('common.error'), 'Machine is offline');
+            Modal.alert(t('common.error'), formatStartError('Machine is offline'));
             return false;
         }
         const rigCreation = agentType === 'rig'
             ? getRigMachineSessionCreation(machine.metadata)
             : null;
         if (agentType === 'rig' && !rigCreation) {
-            Modal.alert(t('common.error'), 'This machine cannot start Happy agent sessions');
+            Modal.alert(t('common.error'), formatStartError('This machine cannot start Happy agent sessions'));
             return false;
         }
         const defaults = rigCreation
@@ -219,7 +250,7 @@ export function useStartSessionFromDraft() {
                 : [draft.effortLevel, effortDefault],
         );
         if (!permission || !model) {
-            Modal.alert(t('common.error'), 'The selected agent configuration is unavailable');
+            Modal.alert(t('common.error'), formatStartError('The selected agent configuration is unavailable'));
             return false;
         }
 
@@ -254,7 +285,7 @@ export function useStartSessionFromDraft() {
         } catch (error) {
             Modal.alert(
                 t('common.error'),
-                error instanceof Error ? error.message : 'The selected workspace is unavailable',
+                formatStartError(error instanceof Error ? error.message : 'The selected workspace is unavailable'),
             );
             return false;
         }
@@ -326,7 +357,7 @@ export function useStartSessionFromDraft() {
                 // directory, not a running agent, and the next start offers it.
                 if (worktreeResult === CANCELED) return false;
                 if (!worktreeResult.success) {
-                    Modal.alert(t('common.error'), worktreeResult.error || 'Failed to create worktree');
+                    Modal.alert(t('common.error'), formatStartError(worktreeResult.error || 'Failed to create worktree'));
                     return false;
                 }
                 spawnDirectory = worktreeResult.worktreePath;
@@ -381,13 +412,13 @@ export function useStartSessionFromDraft() {
                 if (!isMountedRef.current || run.canceled) return null;
 
                 if (result.type === 'error') {
-                    Modal.alert(t('common.error'), result.errorMessage);
+                    Modal.alert(t('common.error'), formatStartError(result.errorMessage));
                     return null;
                 }
                 if (result.type === 'pending') {
                     Modal.alert(
                         t('common.error'),
-                        'The session was created, but it is still syncing. It should appear shortly.',
+                        formatStartError('The session was created, but it is still syncing. It should appear shortly.'),
                     );
                     return null;
                 }
@@ -441,13 +472,219 @@ export function useStartSessionFromDraft() {
                 return false;
             }
 
+            const bindingIntent = draft.githubIssueBindingIntent;
+            let committedBindingRevision: number | null = null;
+            if (bindingIntent) {
+                let validateGithubIssueBindingIntentAccount: typeof import('@/features/github-issues/githubIssueBindingIntent')['validateGithubIssueBindingIntentAccount'];
+                let bindingAccountMatches: boolean;
+                try {
+                    ({ validateGithubIssueBindingIntentAccount } = await import('@/features/github-issues/githubIssueBindingIntent'));
+                    bindingAccountMatches = await validateGithubIssueBindingIntentAccount(bindingIntent);
+                } catch {
+                    await stopAbandonedSession(sessionId);
+                    throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingAccountValidationUnavailable', { issue: bindingIntent.issueLabel }));
+                }
+                if (!bindingAccountMatches) {
+                    draft.setGithubIssueBindingIntent?.(null);
+                    await stopAbandonedSession(sessionId);
+                    throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingAccountChanged', { issue: bindingIntent.issueLabel }));
+                }
+                let claim;
+                let mutationStarted = false;
+                try {
+                    if (bindingIntent.operation === 'replace'
+                        && (!bindingIntent.expectedRevision || bindingIntent.expectedRevision < 1)) {
+                        throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingInvalidReplacementRevision', { issue: bindingIntent.issueLabel }));
+                    }
+                    if (bindingIntent.operation === 'replace') {
+                        const confirmed = await untilCanceled(Modal.confirm(
+                            t('githubIssues.replaceBindingTitle'),
+                            t('githubIssues.replaceBindingMessage', {
+                                issue: bindingIntent.issueLabel,
+                                oldSession: bindingIntent.formerSessionId ?? t('githubIssues.missingSession'),
+                                newSession: sessionId,
+                            }),
+                            { cancelText: t('common.cancel'), confirmText: t('githubIssues.replaceBinding') },
+                        ));
+                        if (confirmed === CANCELED || !confirmed) {
+                            await stopAbandonedSession(sessionId);
+                            return false;
+                        }
+                    }
+                    let bindingAccountStillMatches: boolean;
+                    try {
+                        bindingAccountStillMatches = await validateGithubIssueBindingIntentAccount(bindingIntent);
+                    } catch {
+                        throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingAccountValidationUnavailable', { issue: bindingIntent.issueLabel }));
+                    }
+                    if (!bindingAccountStillMatches) {
+                        draft.setGithubIssueBindingIntent?.(null);
+                        throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingAccountChanged', { issue: bindingIntent.issueLabel }));
+                    }
+                    const { githubIssueBindingApi } = await import('@/features/github-issues/githubIssueBindingApi');
+                    const requestBindingMutation = () => bindingIntent.operation === 'replace'
+                        ? githubIssueBindingApi.replace({
+                            accountScope: bindingIntent.accountScope,
+                            issueKey: bindingIntent.issueKey,
+                            encryptedPayload: bindingIntent.encryptedPayload,
+                            requestId: bindingIntent.requestId,
+                            expectedRevision: bindingIntent.expectedRevision!,
+                            replacementSessionId: sessionId,
+                        })
+                        : githubIssueBindingApi.claim({
+                            accountScope: bindingIntent.accountScope,
+                            issueKey: bindingIntent.issueKey,
+                            encryptedPayload: bindingIntent.encryptedPayload,
+                            requestId: bindingIntent.requestId,
+                            candidateSessionId: sessionId,
+                        });
+                    mutationStarted = true;
+                    const authorityMutation = requestBindingMutation();
+                    const mutationResult = await untilCanceled(authorityMutation);
+                    if (mutationResult === CANCELED) {
+                        // The request may commit after Stop wins the local race.
+                        // Replaying the exact request id/candidate distinguishes
+                        // a safe loser from a canonical Session before cleanup.
+                        void authorityMutation.catch(() => requestBindingMutation()).then(
+                            async (settled) => {
+                                if ('binding' in settled && settled.binding.sessionId === sessionId) return;
+                                await stopAbandonedSession(sessionId);
+                            },
+                            () => { /* ambiguity keeps the possibly canonical Session reachable */ },
+                        );
+                        return false;
+                    }
+                    claim = mutationResult;
+                } catch (error) {
+                    if (!mutationStarted) {
+                        await stopAbandonedSession(sessionId);
+                        throw error;
+                    }
+                    try {
+                        // A transport error may be an acknowledgement lost
+                        // after commit. Replay the same id and candidate so the
+                        // authority receipt, not the network exception, decides.
+                        const { githubIssueBindingApi } = await import('@/features/github-issues/githubIssueBindingApi');
+                        claim = await (bindingIntent.operation === 'replace'
+                            ? githubIssueBindingApi.replace({
+                                accountScope: bindingIntent.accountScope,
+                                issueKey: bindingIntent.issueKey,
+                                encryptedPayload: bindingIntent.encryptedPayload,
+                                requestId: bindingIntent.requestId,
+                                expectedRevision: bindingIntent.expectedRevision!,
+                                replacementSessionId: sessionId,
+                            })
+                            : githubIssueBindingApi.claim({
+                                accountScope: bindingIntent.accountScope,
+                                issueKey: bindingIntent.issueKey,
+                                encryptedPayload: bindingIntent.encryptedPayload,
+                                requestId: bindingIntent.requestId,
+                                candidateSessionId: sessionId,
+                            }));
+                    } catch {
+                        navigateToSession(sessionId);
+                        throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingConfirmationUnavailable', { issue: bindingIntent.issueLabel }));
+                    }
+                }
+                if (
+                    (claim.outcome === 'session-conflict' || claim.outcome === 'revision-conflict')
+                    && claim.binding.sessionId === sessionId
+                    && claim.binding.issueKey === bindingIntent.issueKey
+                ) {
+                    draft.setGithubIssueBindingIntent?.(null);
+                    navigateToSession(sessionId);
+                    return true;
+                }
+                if (claim.outcome === 'repair-required') {
+                    draft.setGithubIssueBindingIntent?.({
+                        ...bindingIntent,
+                        operation: 'replace',
+                        requestId: randomUUID(),
+                        expectedRevision: claim.binding.revision,
+                        formerSessionId: claim.binding.lastSessionId ?? null,
+                    });
+                    await stopAbandonedSession(sessionId);
+                    throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingStartRepairRequired', { issue: bindingIntent.issueLabel }));
+                }
+                if (claim.outcome === 'resumed' && claim.binding.sessionId !== sessionId) {
+                    await stopAbandonedSession(sessionId);
+                    draft.setGithubIssueBindingIntent?.(null);
+                    if (claim.binding.sessionId) navigateToSession(claim.binding.sessionId);
+                    return true;
+                }
+                if (claim.outcome === 'revision-conflict' && claim.binding.sessionId !== sessionId) {
+                    await stopAbandonedSession(sessionId);
+                    draft.setGithubIssueBindingIntent?.(null);
+                    if (claim.binding.sessionId) navigateToSession(claim.binding.sessionId);
+                    return !!claim.binding.sessionId;
+                }
+                if (claim.outcome !== 'claimed' && claim.outcome !== 'resumed' && claim.outcome !== 'replaced') {
+                    await stopAbandonedSession(sessionId);
+                    Modal.alert(
+                        t('common.error'),
+                        t('githubIssues.bindingEstablishFailed', { issue: bindingIntent.issueLabel }),
+                    );
+                    return false;
+                }
+                committedBindingRevision = claim.binding.revision;
+            }
+
+            const recoverFailedFirstDispatch = async () => {
+                if (!bindingIntent || committedBindingRevision === null) {
+                    await stopAbandonedSession(sessionId);
+                    return;
+                }
+                const { githubIssueBindingApi } = await import('@/features/github-issues/githubIssueBindingApi');
+                let recovery = await githubIssueBindingApi.abandonFirstDispatch({
+                    accountScope: bindingIntent.accountScope,
+                    issueKey: bindingIntent.issueKey,
+                    abandonedSessionId: sessionId,
+                    expectedRevision: committedBindingRevision,
+                    requestId: `${bindingIntent.requestId}:first-dispatch-failed:${committedBindingRevision}`,
+                });
+                if (recovery.outcome === 'revision-conflict' && recovery.binding.sessionId === sessionId) {
+                    recovery = await githubIssueBindingApi.abandonFirstDispatch({
+                        accountScope: bindingIntent.accountScope,
+                        issueKey: bindingIntent.issueKey,
+                        abandonedSessionId: sessionId,
+                        expectedRevision: recovery.binding.revision,
+                        requestId: `${bindingIntent.requestId}:first-dispatch-failed:${recovery.binding.revision}`,
+                    });
+                }
+                if (recovery.outcome === 'repair-required') {
+                    draft.setGithubIssueBindingIntent?.({
+                        ...bindingIntent,
+                        operation: 'replace',
+                        requestId: randomUUID(),
+                        expectedRevision: recovery.binding.revision,
+                        formerSessionId: sessionId,
+                    });
+                    await stopAbandonedSession(sessionId);
+                    return;
+                }
+                if (recovery.outcome === 'revision-conflict' && recovery.binding.sessionId !== sessionId) {
+                    draft.setGithubIssueBindingIntent?.(null);
+                    await stopAbandonedSession(sessionId);
+                    if (recovery.binding.sessionId) navigateToSession(recovery.binding.sessionId);
+                    return;
+                }
+                // Keep the empty canonical Session alive and reachable when the
+                // authority cannot prove compensation. Stopping it would strand
+                // the binding behind an unavailable Session.
+                navigateToSession(sessionId);
+                throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingRecoveryUnavailable', { issue: bindingIntent.issueLabel }));
+            };
+
             if (prompt || attachments.length > 0) {
                 const enqueueing = sync.sendMessage(sessionId, prompt, { source: 'new_session', attachments });
                 let queued: boolean | typeof CANCELED;
                 try {
                     queued = await untilCanceled(enqueueing);
                 } catch (error) {
-                    await stopAbandonedSession(sessionId);
+                    await recoverFailedFirstDispatch();
+                    if (bindingIntent) {
+                        throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingFirstDispatchFailed', { issue: bindingIntent.issueLabel }));
+                    }
                     throw error;
                 }
                 if (queued === CANCELED) {
@@ -456,26 +693,36 @@ export function useStartSessionFromDraft() {
                     // after that in-flight work settles without touching the
                     // shared draft a newer attempt may already be using.
                     void enqueueing.then(
-                        () => stopAbandonedSession(sessionId),
-                        () => stopAbandonedSession(sessionId),
-                    );
+                        (queuedAfterCancel) => {
+                            if (queuedAfterCancel && bindingIntent) return;
+                            return recoverFailedFirstDispatch();
+                        },
+                        () => recoverFailedFirstDispatch(),
+                    ).catch(() => { /* recovery already keeps the canonical Session reachable */ });
                     return false;
                 }
                 if (!queued) {
-                    await stopAbandonedSession(sessionId);
+                    await recoverFailedFirstDispatch();
+                    if (bindingIntent) {
+                        throw new LocalizedGithubIssueBindingStartError(t('githubIssues.bindingFirstDispatchFailed', { issue: bindingIntent.issueLabel }));
+                    }
                     return false;
                 }
             }
             draft.setInput('');
             draft.setAttachments([]);
+            draft.setGithubIssueBindingIntent?.(null);
             navigateToSession(sessionId);
             return true;
         } catch (error) {
             // A failure the user already walked away from is not news.
             if (!run.canceled) {
+                const message = error instanceof Error ? error.message : 'Failed to start session';
                 Modal.alert(
                     t('common.error'),
-                    error instanceof Error ? error.message : 'Failed to start session',
+                    error instanceof LocalizedGithubIssueBindingStartError
+                        ? error.message
+                        : formatStartError(message),
                 );
             }
             return false;

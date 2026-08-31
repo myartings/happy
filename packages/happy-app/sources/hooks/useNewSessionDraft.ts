@@ -10,6 +10,7 @@ import {
     type NewSessionDraft,
     type NewSessionAgentType,
     type NewSessionSessionType,
+    type NewSessionGithubIssueBindingIntent,
 } from '@/sync/persistence';
 import type { PermissionModeKey } from '@/components/PermissionModeSelector';
 import type { AttachmentPreview } from '@/sync/attachmentTypes';
@@ -25,6 +26,7 @@ interface NewSessionDraftState {
     effortLevel: string | null;
     sessionType: NewSessionSessionType;
     worktreeKey: string | null;
+    githubIssueBindingIntent: NewSessionGithubIssueBindingIntent | null;
 
     setInput: (input: string) => void;
     setAttachments: (attachments: AttachmentPreview[]) => void;
@@ -44,6 +46,7 @@ interface NewSessionDraftState {
     setEffortLevel: (level: string) => void;
     setSessionType: (type: NewSessionSessionType) => void;
     setWorktreeKey: (key: string | null) => void;
+    setGithubIssueBindingIntent: (intent: NewSessionGithubIssueBindingIntent | null) => void;
 }
 
 function persist(state: NewSessionDraftState) {
@@ -57,6 +60,7 @@ function persist(state: NewSessionDraftState) {
         effortLevel: state.effortLevel,
         sessionType: state.sessionType,
         worktreeKey: state.worktreeKey,
+        githubIssueBindingIntent: state.githubIssueBindingIntent,
         updatedAt: Date.now(),
     });
 }
@@ -76,6 +80,7 @@ export const useNewSessionDraft = create<NewSessionDraftState>()((set, get) => (
     effortLevel: initial?.effortLevel ?? null,
     sessionType: initial?.sessionType ?? 'simple',
     worktreeKey: initial?.worktreeKey ?? null,
+    githubIssueBindingIntent: initial?.githubIssueBindingIntent ?? null,
 
     setInput: (input) => { set({ input }); persist(get()); },
     setAttachments: (attachments) => { set({ attachments }); },
@@ -88,4 +93,5 @@ export const useNewSessionDraft = create<NewSessionDraftState>()((set, get) => (
     setEffortLevel: (level) => { set({ effortLevel: level }); persist(get()); },
     setSessionType: (type) => { set({ sessionType: type }); persist(get()); },
     setWorktreeKey: (key) => { set({ worktreeKey: key }); persist(get()); },
+    setGithubIssueBindingIntent: (intent) => { set({ githubIssueBindingIntent: intent }); persist(get()); },
 }));

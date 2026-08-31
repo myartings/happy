@@ -1,0 +1,1871 @@
+{
+  "schemaVersion": 3,
+  "slug": "github-issue-canonical-session-binding",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User accepted the pure-client contract and explicitly authorized replacing GitHub Issue #79; live body was verified byte-equivalent to issue-79-body-draft.md at 2026-08-31T14:23:18Z",
+      "updated": "2026-08-31T14:33:25+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D9-D15 and ADR 0007 resolve existing official account KV, atomic bidirectional CAS, cross-platform daemon scope, one current Session, direct transfer marker only, and no server/daemon/PostgreSQL/mobile changes",
+      "updated": "2026-08-31T14:33:26+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current owning Root, serial current-root execution; accepted product surface packages/happy-app only; remove superseded server/PostgreSQL candidate, then TDD existing-KV association; protected native, daemon/CLI, deployment/release remain blocked",
+      "updated": "2026-08-31T14:33:26+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls client-only KV coordination risk assessment in risk.md; no server deployment, migration, daemon protocol, native, mobile, or GitHub mutation in product behavior",
+      "updated": "2026-08-31T14:33:26+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Lifecycle/history remediation: focused 19/19, related 205/205, happy-app typecheck and diff checks passed; server unchanged",
+      "updated": "2026-08-31T17:09:41+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Bounded-history candidate: 7/9 passed; both typechecks, workflow runtime 19/19, validator 9/9, and repository audit passed; only accepted baseline commands 2 and 3 failed",
+      "updated": "2026-08-31T17:19:48+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards reviewers both accepted candidate b4f082fa with no blockers",
+      "updated": "2026-08-31T17:26:22+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "6be7b9e3cbf7021db758ca0d6cd690166f8c8868",
+        "candidateFingerprint": "b4f082fa02ddf315e12bc645788bf1c601130000b4f6d53ae5577fc2b0325288"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records final b4f082fa check/review evidence, accepted baseline gaps, rollback, no newly discovered follow-up, and the separately authorized live-acceptance limitation",
+      "updated": "2026-08-31T17:36:54+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-31T01:49:08+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-31T01:49:09+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/79"
+    },
+    {
+      "at": "2026-08-31T01:50:12+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User reconfirmed continuation in exact owning Issue session; live Issue #79 AC1-AC12 matched docs/specs/github-issue-canonical-session-binding.md and docs/tasks/github-issue-canonical-session-binding-tasks.md on 2026-08-31; task-links.md binds one Slice"
+    },
+    {
+      "at": "2026-08-31T01:57:52+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/github-issue-canonical-session-binding/decisions.md; docs/adr/0007-canonical-github-issue-session-binding-authority.md"
+    },
+    {
+      "at": "2026-08-31T01:57:52+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/github-issue-canonical-session-binding/risk.md; ADR 0007; validation.md"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T01:58:48+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One account-scoped canonical GitHub Issue-Happy Session binding with atomic claim-or-resume",
+      "acceptanceSeam": "AC1-AC12; server uniqueness/race oracle, client dispatch/projection tests, and cross-device live acceptance",
+      "dependencies": "Inputs: existing account, Session persistence/sync/lifecycle/fork, GitHub Issues Module; output: versioned binding authority and synchronized projection; no blocking tracker dependency",
+      "reviewBoundary": "One High-risk candidate reviewed for persistence, protocol, privacy, concurrency, lifecycle, client dispatch/projection, recovery, and compatibility",
+      "rollbackBoundary": "One default-off server/client capability gate, one additive migration, retained encrypted rows, flag-first whole-slice rollback",
+      "contextBoundary": "One owning Root in the exact Issue #79 worktree; T1-T9 are internal tasks, not child Issues",
+      "consequence": "High-risk session protocol, cross-device synchronization, privacy, and data migration; partial persistence/UI/concurrency paths are not safe releases",
+      "evidence": "Live Issue #79 and docs/specs/github-issue-canonical-session-binding.md AC1-AC12; docs/tasks/github-issue-canonical-session-binding-tasks.md right-sizing decision; repository architecture inspection; ADR 0007",
+      "contractFingerprint": "50c73d1024a3be1c7374fe278f6f1e4c812b2466200b0164f2ce97dc9da0a466",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T01:58:48+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current owning Root; current-root serial topology; capability confirmed for TypeScript/Prisma/workflow tests; docs/workspace/github-issue-canonical-session-binding/context.md; accepted containment and test authority"
+    },
+    {
+      "at": "2026-08-31T02:00:12+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T1 RED: public binding identity and authority contracts"
+    },
+    {
+      "at": "2026-08-31T02:26:48+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T2 in progress: persistence authority, routes, race and invalidation proof"
+    },
+    {
+      "at": "2026-08-31T02:57:08+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T3-T5 in progress: synchronized projection, dispatch, and Session surfaces"
+    },
+    {
+      "at": "2026-08-31T03:30:12+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "validation.md: focused server/app/session/sync suites and both typechecks passed"
+    },
+    {
+      "at": "2026-08-31T03:30:12+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "T1-T8 implementation complete; final candidate verification in progress"
+    },
+    {
+      "at": "2026-08-31T03:39:37+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 34fecc37-1072-4109-b999-edd7e3c15c11"
+    },
+    {
+      "at": "2026-08-31T04:44:57+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Full staged run: 7/9 commands passed; failed App/server commands reproduce only in untouched baseline paths; focused Issue #79 suites and both typechecks passed; structured run: 34fecc37-1072-4109-b999-edd7e3c15c11; accepted command indexes: 2, 3; approval: User explicitly accepted the 18 isolated, unchanged-path baseline failures and requested review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T04:49:52+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Two-axis review of c4efdc65 blocked: Spec 4 findings; Standards 3 findings, with missing rollout gate overlapping"
+    },
+    {
+      "at": "2026-08-31T04:50:00+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate six blocking findings from pinned two-axis review c4efdc65"
+    },
+    {
+      "at": "2026-08-31T05:03:23+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation complete: default-off rollout, availability Restore/Repair, exact New Session replacement confirmation, first-dispatch compensation, reviewable Agent-context refresh, and trailing invalidation refresh; 57 App tests, 38 server tests, both typechecks, and git diff --check passed"
+    },
+    {
+      "at": "2026-08-31T05:03:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Build fresh staged candidate and run configured verification"
+    },
+    {
+      "at": "2026-08-31T05:13:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: f5a43a23-c8d5-43e6-a68a-01816c21eecb"
+    },
+    {
+      "at": "2026-08-31T05:13:54+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate 53328c60: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match previously accepted untouched baseline gaps; Issue #79 focused suites passed; structured run: f5a43a23-c8d5-43e6-a68a-01816c21eecb; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T05:20:08+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Two-axis rereview of staged candidate 53328c60 blocked: Spec 4 findings; Standards 3 findings"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T05:28:10+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one bounded remediation attempt for the same canonical GitHub Issue-Session binding slice",
+      "acceptanceSeam": "Unchanged AC1-AC12; deterministic authority, offline dispatch, projection, recovery, and two-axis review",
+      "dependencies": "Unchanged existing Happy Session persistence/sync/lifecycle and GitHub Issues read APIs; no new external dependency",
+      "reviewBoundary": "One complete high-risk staged candidate rereviewed for the same persistence, protocol, privacy, concurrency, lifecycle, client recovery, and UX-state contract",
+      "rollbackBoundary": "Unchanged default-off server/client gates and additive migration; flag-first whole-slice rollback",
+      "contextBoundary": "Same owning Root and Issue #79 worktree; seven compatible in-scope findings are one remediation batch",
+      "consequence": "Stopping now leaves known AC3/AC5/AC7/AC9/AC12 and idempotency gaps; continuing is bounded and shows productive convergence",
+      "evidence": "First review blockers were remediated and focused suites passed; second review identified distinct deeper contract gaps, all now addressed in the same modules with focused App/server suites and typechecks passing",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T05:28:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate mutated after blocked rereview; prior structured check is stale"
+    },
+    {
+      "at": "2026-08-31T05:28:30+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Second-review remediation verification in progress"
+    },
+    {
+      "at": "2026-08-31T05:28:36+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Blocked rereview candidate was mutated; fresh dual-axis review required"
+    },
+    {
+      "at": "2026-08-31T05:28:36+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Verify and freeze the second-review remediation batch"
+    },
+    {
+      "at": "2026-08-31T05:29:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second-review remediation complete: offline cached canonical continuation, observable dispatch states, Cached/Stale/Replaced surfaces, repair replacement history, idempotent first-dispatch compensation, and caught adoption failures; 139 App tests, 38 server tests, both typechecks passed"
+    },
+    {
+      "at": "2026-08-31T05:29:16+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Build fresh staged candidate and rerun configured verification after second-review remediation"
+    },
+    {
+      "at": "2026-08-31T05:38:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 9131056e-d962-4419-b8c9-f211eba1960f"
+    },
+    {
+      "at": "2026-08-31T05:38:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate 029be4c6: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; GitHub Issues/New Session 139 tests and binding server 38 tests passed; structured run: 9131056e-d962-4419-b8c9-f211eba1960f; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T05:45:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Third two-axis review of candidate 029be4c6 blocked: Spec 2 findings; Standards 2 blocking findings plus one accepted test gap"
+    },
+    {
+      "at": "2026-08-31T05:45:23+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after blocked review"
+    },
+    {
+      "at": "2026-08-31T05:45:23+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Third-review remediation in progress"
+    },
+    {
+      "at": "2026-08-31T05:45:23+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required after remediation"
+    },
+    {
+      "at": "2026-08-31T05:45:23+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate four blockers and two test gaps from candidate 029be4c6 review"
+    },
+    {
+      "at": "2026-08-31T05:49:45+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Third-review remediation complete: fresh repair replacement request id, archived canonical Session resume/open, explicit replace/refresh/compensation CAS, identity-conflict surfaces, workspace failure and concurrent compensation tests; 143 App tests, 38 server tests, both typechecks and diff check passed"
+    },
+    {
+      "at": "2026-08-31T05:49:45+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze fourth candidate and rerun configured verification"
+    },
+    {
+      "at": "2026-08-31T05:58:46+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 31b2c019-f399-49ff-90ef-62cc2bee79e3"
+    },
+    {
+      "at": "2026-08-31T05:59:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate 62a3d16b: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; GitHub Issues/New Session 143 tests and binding server 38 tests passed; structured run: 31b2c019-f399-49ff-90ef-62cc2bee79e3; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T06:08:32+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fourth two-axis review of candidate 62a3d16b blocked: Spec found current-Session eligibility missing existing-other-Issue binding exclusion; Standards found ambiguous post-commit mutation reconciliation and unreadable encrypted evidence repair gaps"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T06:09:00+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep one accepted Issue #79 slice and remediate the three fourth-review blockers in the existing client/server modules",
+      "acceptanceSeam": "Unchanged AC1-AC12 canonical one-Issue-one-Session contract",
+      "dependencies": "Existing synchronized projection, idempotent authority receipts, authenticated mutation routes, and repair dispatch state",
+      "reviewBoundary": "Fresh full two-axis review of one newly checked staged candidate",
+      "rollbackBoundary": "Default-off binding capability and isolated feature modules remain the rollback boundary",
+      "contextBoundary": "Current owning Root session, serial implementation; no new slice or writer delegation",
+      "consequence": "No scope expansion; focused eligibility, acknowledgement-loss reconciliation, invalidation response semantics, and unreadable-evidence repair changes only",
+      "evidence": "Third and fourth reviews surfaced distinct contract-depth gaps after prior remediation; all remain within the accepted Issue #79 interfaces and can be proved with focused App/server tests",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T06:09:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after fourth blocked review"
+    },
+    {
+      "at": "2026-08-31T06:09:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Fourth-review remediation in progress"
+    },
+    {
+      "at": "2026-08-31T06:09:11+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required after remediation"
+    },
+    {
+      "at": "2026-08-31T06:09:11+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate AC2 eligibility, ambiguous mutation acknowledgement, invalidation response, and unreadable-evidence repair gaps"
+    },
+    {
+      "at": "2026-08-31T06:18:34+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fourth-review remediation complete: raw binding eligibility excludes Sessions canonical for another Issue; exact-request claim/replace acknowledgement reconciliation covers cancellation; invalidation is best-effort after commit; unreadable encrypted evidence enters repair; 145 App tests, 39 server tests, both typechecks and diff check passed"
+    },
+    {
+      "at": "2026-08-31T06:18:36+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze fifth candidate and rerun configured verification after fourth-review remediation"
+    },
+    {
+      "at": "2026-08-31T06:27:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: a334d9b5-52f2-45ab-b636-b4e6b48a1174"
+    },
+    {
+      "at": "2026-08-31T06:28:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate 1cc223b4: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; GitHub Issues/New Session 145 tests and binding server 39 tests passed; structured run: a334d9b5-52f2-45ab-b636-b4e6b48a1174; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T06:35:35+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fifth two-axis review of candidate 1cc223b4 blocked: repair-row mutation outcome, durable Agent-context freshness, corrupt-cache repair path, and account-bound intent/cache generation gaps"
+    },
+    {
+      "at": "2026-08-31T06:35:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after fifth blocked review"
+    },
+    {
+      "at": "2026-08-31T06:35:36+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Fifth-review remediation in progress"
+    },
+    {
+      "at": "2026-08-31T06:35:36+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required after remediation"
+    },
+    {
+      "at": "2026-08-31T06:35:36+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate repair-row outcomes, durable context freshness, corrupt cache, and account-generation isolation"
+    },
+    {
+      "at": "2026-08-31T06:46:11+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fifth-review remediation complete: repair-required mutation outcomes preserve replacement intent, durable encrypted Agent-context acknowledgement, corrupt-cache authority fallback, derived account scope for intent/cache, and token-generation guards around asynchronous publication/mutation; 153 App tests, 40 server tests, both typechecks and diff check passed"
+    },
+    {
+      "at": "2026-08-31T06:46:13+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze sixth candidate and rerun configured verification after fifth-review remediation"
+    },
+    {
+      "at": "2026-08-31T06:54:47+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: dac621d0-0596-472c-bc49-697b06ec0259"
+    },
+    {
+      "at": "2026-08-31T06:55:24+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate 0b1a164c: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; GitHub Issues/New Session 153 tests and binding server 40 tests passed; structured run: dac621d0-0596-472c-bc49-697b06ec0259; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T07:04:39+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Sixth two-axis review of candidate 0b1a164c blocked: payload/key correspondence and mutation account-generation transport gaps; projection refresh lifecycle follow-up"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T07:04:40+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep one Issue #79 slice; close contradictory evidence and transport-generation gaps in existing binding modules",
+      "acceptanceSeam": "Unchanged AC1-AC12 account-scoped canonical binding and fail-closed evidence contract",
+      "dependencies": "Existing encrypted payload identity, opaque key derivation, account scope, transport, projection store, and mutation orchestration",
+      "reviewBoundary": "Fresh full two-axis review of one newly checked staged candidate",
+      "rollbackBoundary": "Default-off server capability and isolated feature modules",
+      "contextBoundary": "Current owning Root serial implementation; no new slice or delegation",
+      "consequence": "No scope expansion; add full schema/key correspondence validation, account-bound transport checks, and store-lifecycle refresh tightening",
+      "evidence": "Fifth and sixth reviews revealed distinct same-contract depth gaps; all changes remain inside accepted binding identity/store/transport surfaces",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T07:04:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after sixth blocked review"
+    },
+    {
+      "at": "2026-08-31T07:04:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Sixth-review remediation in progress"
+    },
+    {
+      "at": "2026-08-31T07:04:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required"
+    },
+    {
+      "at": "2026-08-31T07:04:54+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Validate full payload/key correspondence and bind mutations to account generation"
+    },
+    {
+      "at": "2026-08-31T07:13:22+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Sixth-review remediation complete: strict full-schema and payload/opaque-key correspondence validation; account-generation-bound adoption and all mutation transport startup; per-account projection bootstrap; 165 App tests, 40 server tests, both typechecks and diff check passed"
+    },
+    {
+      "at": "2026-08-31T07:13:23+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze seventh candidate and rerun configured verification after sixth-review remediation"
+    },
+    {
+      "at": "2026-08-31T07:22:09+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 13576041-d6f4-44ee-be8d-8adf1ed6189e"
+    },
+    {
+      "at": "2026-08-31T07:22:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate c23e95e5: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; GitHub Issues/New Session 165 tests and binding server 40 tests passed; structured run: 13576041-d6f4-44ee-be8d-8adf1ed6189e; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T07:32:06+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Seventh two-axis review of candidate c23e95e5 blocked: three binding Spec contract gaps and one reconnect convergence gap"
+    },
+    {
+      "at": "2026-08-31T07:32:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after seventh blocked review"
+    },
+    {
+      "at": "2026-08-31T07:32:07+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Seventh-review remediation in progress"
+    },
+    {
+      "at": "2026-08-31T07:32:07+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required"
+    },
+    {
+      "at": "2026-08-31T07:32:07+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add adoption confirmation, idempotent refresh audit, labelled errors, and reconnect refetch"
+    },
+    {
+      "at": "2026-08-31T07:44:14+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Seventh-review remediation complete: unconditional sole-continuation confirmation, Issue-labelled errors, refresh request receipts/audit/replay/conflict handling, and feature-gated reconnect refetch; 169 App tests, 41 server tests, both typechecks and diff check passed"
+    },
+    {
+      "at": "2026-08-31T07:44:14+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze eighth candidate and rerun configured verification after seventh-review remediation"
+    },
+    {
+      "at": "2026-08-31T07:52:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 07a47a5d-1a45-446e-a0dc-80cc30a51357"
+    },
+    {
+      "at": "2026-08-31T07:53:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate c4476a84: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; GitHub Issues/New Session/reconnect 169 tests and binding server 41 tests passed; structured run: 07a47a5d-1a45-446e-a0dc-80cc30a51357; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T08:00:39+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Eighth two-axis review of c4476a84 blocked: New Session draft preservation, AC6 title projection, and socket role-spoofing authority gap"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T08:00:39+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep one Issue #79 slice and close draft, title, and socket authority gaps",
+      "acceptanceSeam": "Unchanged T4 draft preservation, AC6 visible Issue identity, and AC11 incompatible-writer enforcement",
+      "dependencies": "Existing New Session draft store, encrypted projection payload, socket handshake/authentication, and message gate",
+      "reviewBoundary": "Fresh full two-axis review of one newly checked staged candidate",
+      "rollbackBoundary": "Default-off capability and isolated binding enforcement",
+      "contextBoundary": "Current owning Root serial implementation; no delegation",
+      "consequence": "Three same-contract defects; controller consolidation remains a non-blocking follow-up",
+      "evidence": "Eighth frozen review c4476a84 with tasks T4, Issue AC6, and AC11 capability boundary",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T08:00:39+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after eighth blocked review"
+    },
+    {
+      "at": "2026-08-31T08:00:40+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Eighth-review remediation in progress"
+    },
+    {
+      "at": "2026-08-31T08:00:40+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required"
+    },
+    {
+      "at": "2026-08-31T08:00:40+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Preserve New Session drafts, project titles, and verify socket writer roles"
+    },
+    {
+      "at": "2026-08-31T08:13:30+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Eighth-review remediation complete: New Session composer drafts append the Issue task on both detail surfaces; Session badges and Info project the cached Issue title; account-token socket writers cannot bypass capability enforcement by spoofing scoped roles, while server-signed terminal actors retain Agent output. 128 App feature tests, 37 server binding/route/actor tests, both typechecks, and diff check passed."
+    },
+    {
+      "at": "2026-08-31T08:13:30+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze ninth candidate and rerun configured verification after eighth-review remediation"
+    },
+    {
+      "at": "2026-08-31T08:22:13+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 4b7d27f9-c84c-444f-a4c6-79e2294cd490"
+    },
+    {
+      "at": "2026-08-31T08:23:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate ce26ffd3: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; Issue #79 App feature and server binding/role suites passed.; structured run: 4b7d27f9-c84c-444f-a4c6-79e2294cd490; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued repair/review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T08:32:20+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Ninth two-axis review of ce26ffd3 blocked: exceptional intact-Session replacement path, claim/write serialization, and outstanding T9 live evidence."
+    },
+    {
+      "at": "2026-08-31T08:32:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after ninth blocked review"
+    },
+    {
+      "at": "2026-08-31T08:32:21+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Ninth-review remediation in progress"
+    },
+    {
+      "at": "2026-08-31T08:32:21+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required"
+    },
+    {
+      "at": "2026-08-31T08:32:21+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add exceptional replacement and serialize activation against legacy writes"
+    },
+    {
+      "at": "2026-08-31T08:49:59+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Ninth-review remediation complete: both Issue detail surfaces offer explicit exceptional replacement for intact abandoned/unavailable canonical Sessions with fresh authority revision and exact old/new/Issue confirmation; first claim and incompatible App message writes share a database Account-row lock, with READ COMMITTED post-lock checks in HTTP/socket paths. 172 App tests, 47 server tests including PGlite/HTTP/socket races, both typechecks, and diff check passed."
+    },
+    {
+      "at": "2026-08-31T08:50:00+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze tenth candidate and rerun configured verification after ninth-review remediation"
+    },
+    {
+      "at": "2026-08-31T08:58:20+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: e8ecd1cb-5e3f-448c-af5a-18a6abf9df40"
+    },
+    {
+      "at": "2026-08-31T09:00:46+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate a9e46ba9: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 Studio failures and server 2 Windows local-storage failures exactly match accepted untouched baseline gaps; exceptional replacement and PGlite/HTTP/socket race suites passed.; structured run: e8ecd1cb-5e3f-448c-af5a-18a6abf9df40; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and repeatedly requested continued repair/review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T09:37:16+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D8 and the linked Stage B task plan record the user-accepted two-stage boundary, dependency interface, and safe stop"
+    },
+    {
+      "at": "2026-08-31T09:37:16+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Two-stage planning documents changed the candidate after check fingerprint a9e46ba9; rerun configured verification before Stage A review"
+    },
+    {
+      "at": "2026-08-31T09:37:17+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Stage A requires one fresh dual-axis review against the newly checked two-stage candidate"
+    },
+    {
+      "at": "2026-08-31T09:37:17+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze the two-stage Stage A candidate, rerun configured verification, then perform one fresh dual-axis review"
+    },
+    {
+      "at": "2026-08-31T09:48:34+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: d46e9956-a21d-4499-8cb0-180329198b19"
+    },
+    {
+      "at": "2026-08-31T09:50:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Two-stage Stage A staged candidate: 7/9 configured commands passed; both typechecks and all five workflow checks passed. App full run initially had the accepted 16 Studio failures plus one transient 1MB encryption timeout; the encryption file then passed 9/9 and a full App rerun returned exactly the accepted 16 Studio failures. Server returned exactly the accepted 2 Windows local-storage failures. Issue #79 focused suites remain green.; structured run: d46e9956-a21d-4499-8cb0-180329198b19; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued repair/review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T10:02:54+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Stage A dual-axis review of candidate 677486c9 blocked by two Spec contract defects: side-chat canonical eligibility and same-session self-replacement; Standards accepted with Stage B live-evidence gaps."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T10:02:55+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "split-remainder",
+      "outcome": "Stage A freezes and reviews the deterministic candidate; Stage B independently owns installed multi-client and external PostgreSQL acceptance before Issue #79 finish",
+      "acceptanceSeam": "Stage A: configured deterministic checks plus one fresh dual-axis review; Stage B: AC1-AC12 installed/live matrix",
+      "dependencies": "Stage B requires the exact checked and reviewed Stage A candidate fingerprint",
+      "reviewBoundary": "Fresh Spec and Standards review closes Stage A only; live acceptance closes Stage B and Issue #79",
+      "rollbackBoundary": "Existing client/server flags and additive migration rollback controls remain unchanged",
+      "contextBoundary": "Current Root completes Stage A; Stage B receives a dedicated acceptance context only when prerequisites are available",
+      "consequence": "Prevents repeated review/live loops and forbids false Issue completion without required runtime evidence",
+      "evidence": "User selected two-stage replan on 2026-08-31; two formal blocked review boundaries now establish the continuation split; no attached mobile device or runnable emulator was available",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "independent-remainders",
+      "remainderSlices": "github-issue-canonical-session-binding-live-acceptance",
+      "dependencyInterfaces": "Stage B consumes the exact Stage A candidate fingerprint and review result; any live-discovered product defect invalidates that evidence and returns to implementation",
+      "safeStop": "After Stage A review passes, stop before build/install/device mutation and keep Issue #79 unfinished until Stage B is activated and passes"
+    },
+    {
+      "at": "2026-08-31T10:04:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate to remediate Stage A Spec review blockers"
+    },
+    {
+      "at": "2026-08-31T10:04:32+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Remediate AC8 side-chat eligibility and AC9 same-session self-replacement"
+    },
+    {
+      "at": "2026-08-31T10:04:32+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required after remediation"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T10:05:16+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one narrow Stage A remediation for AC8 side-chat eligibility and AC9 same-session replacement while preserving the Stage B live-acceptance split",
+      "acceptanceSeam": "Only the two Stage A Spec blockers on candidate 677486c9; Stage B remains unchanged",
+      "dependencies": "Existing client eligibility selectors, replacement UI preparation, and server replacement authority",
+      "reviewBoundary": "Fresh dual-axis review of one rechecked Stage A candidate; Stage B live evidence remains separate",
+      "rollbackBoundary": "No new rollout surface; existing default-off gates and additive migration remain unchanged",
+      "contextBoundary": "Current Root serially edits only the affected App/server binding paths and focused tests",
+      "consequence": "Bounded contract repair; no build/install/device work and no Issue finish",
+      "evidence": "Stage A Spec review found two deterministic same-contract defects; Standards found no code-candidate blocker",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T10:05:16+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add RED coverage and remediate side-chat eligibility plus same-session replacement"
+    },
+    {
+      "at": "2026-08-31T10:10:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Stage A Spec remediation complete: both Issue surfaces exclude side chats and the current canonical Session from adoption/replacement, action handlers fail closed, and server authority rejects same-session replacement before lookup/write. 180 App tests, 55 server tests, both typechecks, and diff check passed."
+    },
+    {
+      "at": "2026-08-31T10:10:16+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze the remediated Stage A candidate and rerun configured verification"
+    },
+    {
+      "at": "2026-08-31T10:18:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 1a418950-2e2a-4698-8052-6560e72ebd95"
+    },
+    {
+      "at": "2026-08-31T10:19:44+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Remediated two-stage Stage A candidate 9b4dfbb3: 7/9 commands passed; both typechecks and all five workflow checks passed. App returned exactly the accepted 16 Studio failures while all 1722 other tests passed, including side-chat and self-replacement UI coverage. Server returned exactly the accepted 2 Windows local-storage failures while all 153 other tests passed, including authority self-replacement rejection.; structured run: 1a418950-2e2a-4698-8052-6560e72ebd95; accepted command indexes: 2, 3; approval: User explicitly accepted the same 18 isolated unchanged-path baseline failures and requested continued repair/review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T10:28:34+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Dual-axis review of candidate 9b4dfbb3 blocked: localized Issue-labelled New Session errors and destructive same-canonical session-conflict cleanup."
+    },
+    {
+      "at": "2026-08-31T10:28:59+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will mutate after final Stage A dual-axis review"
+    },
+    {
+      "at": "2026-08-31T10:28:59+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Remediate localized Issue-labelled binding errors and preserve same-canonical session-conflict"
+    },
+    {
+      "at": "2026-08-31T10:28:59+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh dual-axis review required after remediation"
+    },
+    {
+      "at": "2026-08-31T10:29:00+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add hook RED coverage for safe errors and same-canonical conflict preservation"
+    },
+    {
+      "at": "2026-08-31T10:35:29+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final-review remediation complete: seven New Session binding failure paths use localized Issue-labelled messages; same-session/same-Issue authority conflicts clear intent and navigate without stopping, sending, or clearing the draft. 42 hook tests, 182 App feature tests, both typechecks, and diff check passed."
+    },
+    {
+      "at": "2026-08-31T10:35:30+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze the localized conflict-safe Stage A candidate and rerun configured verification"
+    },
+    {
+      "at": "2026-08-31T10:44:24+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: ea0e6fa8-a9f1-4f15-a5f9-fb0a03329799"
+    },
+    {
+      "at": "2026-08-31T10:46:36+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 0cbca093806e...: App 1724/1740 passed with exactly 16 accepted Studio failures across four baseline files; Server 153/155 passed with exactly the two accepted Windows local-storage 404 failures; both typechecks and all five workflow checks passed.; structured run: ea0e6fa8-a9f1-4f15-a5f9-fb0a03329799; accepted command indexes: 2, 3; approval: User explicitly accepted the unchanged baseline gaps and asked to continue review."
+    },
+    {
+      "at": "2026-08-31T10:55:13+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh dual-axis review of candidate 0cbca093...: Standards accepted; Spec blocked on remaining Issue-bound localized Issue-label error coverage for validation exceptions, repair-required branches, and enqueue failures."
+    },
+    {
+      "at": "2026-08-31T11:03:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate mutated after Spec-blocked review; prior structured check 0cbca093 is stale."
+    },
+    {
+      "at": "2026-08-31T11:03:40+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Localized Issue-bound failure remediation verification in progress."
+    },
+    {
+      "at": "2026-08-31T11:03:42+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Blocked candidate was mutated; fresh dual-axis review is required."
+    },
+    {
+      "at": "2026-08-31T11:03:45+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final Spec remediation complete: pre-spawn and post-spawn account-validation exceptions, claim repair-required, and first-dispatch throw/false paths use localized Issue-labelled errors while preserving draft and cleanup semantics; hook 43/43, GitHub Issues/New Session 183/183, App typecheck, and diff check passed."
+    },
+    {
+      "at": "2026-08-31T11:04:05+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured check and fresh dual-axis review for the final localized Stage A candidate"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T11:04:36+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one final narrow Stage A remediation for localized Issue-bound New Session failure paths while preserving the Stage B live-acceptance split",
+      "acceptanceSeam": "Only pre-spawn/post-spawn account validation exceptions, repair-required claim recovery, and first-dispatch failure messaging from Spec review of candidate 0cbca093",
+      "dependencies": "Existing New Session binding intent, localized text catalog, cleanup compensation, and Stage A deterministic check interfaces",
+      "reviewBoundary": "One new configured check and one fresh dual-axis review of the complete Stage A candidate",
+      "rollbackBoundary": "No new rollout or persistence surface; existing default-off flags and additive migration remain unchanged",
+      "contextBoundary": "Current Root edits only the New Session hook tests and English/Simplified Chinese binding error strings; no device/build work",
+      "consequence": "Closes a deterministic current-contract UX gap without changing authority semantics; Stage B remains required before Issue finish",
+      "evidence": "Spec reviewer blocked candidate 0cbca093 on four reproducible error-path outcomes; focused RED showed 4 failures and GREEN plus regression/typecheck now pass",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T11:04:51+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Freeze final localized Stage A remediation"
+    },
+    {
+      "at": "2026-08-31T11:04:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final Spec remediation complete: account-validation exceptions, start repair-required, and first-dispatch throw/false paths use localized Issue-labelled errors with draft and cleanup semantics preserved; hook 43/43, GitHub Issues/New Session 183/183, App typecheck, and diff check passed."
+    },
+    {
+      "at": "2026-08-31T11:04:54+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured check and fresh dual-axis review for final Stage A candidate"
+    },
+    {
+      "at": "2026-08-31T11:14:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 8c2a4125-bd1f-4807-b502-bd54dc609e6c"
+    },
+    {
+      "at": "2026-08-31T11:14:48+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate cca631723476...: App 1725/1741 passed with exactly 16 accepted Studio failures across four baseline files; Server 153/155 passed with exactly the two accepted Windows local-storage 404 failures; both typechecks and all five workflow checks passed.; structured run: 8c2a4125-bd1f-4807-b502-bd54dc609e6c; accepted command indexes: 2, 3; approval: User explicitly accepted the unchanged baseline gaps and asked to continue review."
+    },
+    {
+      "at": "2026-08-31T11:23:12+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh review of cca631723: Standards accepted; Spec blocked on generic Issue-bound start/restore localization and stale intent cleanup after post-confirmation account mismatch."
+    },
+    {
+      "at": "2026-08-31T11:30:08+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate mutated after blocked review; prior structured check cca631723 is stale."
+    },
+    {
+      "at": "2026-08-31T11:30:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Generic Issue-bound start/Restore localization and stale-intent remediation verification in progress."
+    },
+    {
+      "at": "2026-08-31T11:30:12+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Blocked candidate was mutated; fresh dual-axis review required."
+    },
+    {
+      "at": "2026-08-31T11:30:13+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Freeze generic localization and stale-intent remediation"
+    },
+    {
+      "at": "2026-08-31T11:30:15+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Generic Issue-bound start/Restore remediation complete: raw start/daemon errors are hidden behind localized Issue-labelled messages, Restore returns no transport text, and post-confirm account mismatch clears stale intent; focused 75/75, related 187/187, App typecheck and diff check passed."
+    },
+    {
+      "at": "2026-08-31T11:30:17+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured check and fresh dual-axis review for final Stage A candidate"
+    },
+    {
+      "at": "2026-08-31T11:39:07+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 5b12b533-8cd0-46e7-bdbd-f0569072be2f"
+    },
+    {
+      "at": "2026-08-31T11:40:25+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 7841aabbcced...: App 1729/1745 passed with exactly 16 accepted Studio failures across four baseline files; Server 153/155 passed with exactly the two accepted Windows local-storage 404 failures; both typechecks and all five workflow checks passed.; structured run: 5b12b533-8cd0-46e7-bdbd-f0569072be2f; accepted command indexes: 2, 3; approval: User explicitly accepted the unchanged baseline gaps and asked to continue review."
+    },
+    {
+      "at": "2026-08-31T11:49:19+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh review of 7841aabb: both axes blocked on raw-labelled transport bypass; Spec also blocked on stale adoption intent on both Issue surfaces."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T11:53:15+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one final Stage A remediation for typed trusted binding errors and dual-surface stale intent cleanup while preserving the Stage B split",
+      "acceptanceSeam": "Only the labelled-raw bypass and two Issue-surface account-mismatch intent cleanup findings on candidate 7841aabb",
+      "dependencies": "Existing New Session error boundary, Issue detail/workspace binding state, localized messages, and draft intent store",
+      "reviewBoundary": "One new configured check and one fresh dual-axis review of the complete Stage A candidate",
+      "rollbackBoundary": "No new rollout/persistence surface; existing flags and additive migration unchanged",
+      "contextBoundary": "Current Root edits only App error typing, dual-surface cleanup, and focused tests; no device/build/database work",
+      "consequence": "Prevents raw disclosure and cross-account stale retry while retaining the Stage B safe stop",
+      "evidence": "Both review axes blocked 7841aabb on the raw-label heuristic; Spec also found dual-surface stale intent. Focused RED 3/72 and GREEN 72/72; related 187/187 and typecheck pass",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T11:53:34+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate mutated after blocked review; prior structured check 7841aabb is stale."
+    },
+    {
+      "at": "2026-08-31T11:53:36+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Typed binding error and dual-surface stale-intent remediation verification in progress."
+    },
+    {
+      "at": "2026-08-31T11:53:38+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Blocked candidate mutated; fresh dual-axis review required."
+    },
+    {
+      "at": "2026-08-31T11:53:39+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Freeze typed binding errors and dual-surface intent cleanup"
+    },
+    {
+      "at": "2026-08-31T11:53:42+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Typed error and stale-intent remediation complete: only LocalizedGithubIssueBindingStartError may preserve a specific localized message; all other Issue-bound start errors suppress raw text; standalone/workspace account mismatch clears local and draft intent and makes stale sheet actions inert. Focused 72/72, related 187/187, App typecheck and diff check passed."
+    },
+    {
+      "at": "2026-08-31T11:53:44+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured check and fresh dual-axis review for final Stage A candidate"
+    },
+    {
+      "at": "2026-08-31T12:03:20+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 3afc27dc-62ef-41aa-8622-b733f6e8a920"
+    },
+    {
+      "at": "2026-08-31T12:04:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate d52698a06233...: App 1729/1745 passed with exactly 16 accepted Studio failures across four baseline files; Server 153/155 passed with exactly the two accepted Windows local-storage 404 failures; both typechecks and all five workflow checks passed.; structured run: 3afc27dc-62ef-41aa-8622-b733f6e8a920; accepted command indexes: 2, 3; approval: User explicitly accepted the unchanged baseline gaps and asked to continue review."
+    },
+    {
+      "at": "2026-08-31T12:12:42+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards axes both accepted checked candidate d52698a0623307d54aec422c602b3b74d834b833483926198092b0e7b3118375 with no Stage A findings."
+    },
+    {
+      "at": "2026-08-31T12:13:31+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage A frozen at d52698a06233; activate dependent Stage B live acceptance when Windows/mobile/external PostgreSQL/two-client prerequisites are available"
+    },
+    {
+      "at": "2026-08-31T13:00:20+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage B stopped at L1: attach one mobile target and provide a non-production external PostgreSQL target; then authorize client launch/sign-in and reversible test fixtures for L2-L5"
+    },
+    {
+      "at": "2026-08-31T14:16:23+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "blocked",
+      "evidence": "User accepted the pure-client AC1-AC10 local contract, but live GitHub Issue #79 still specifies the rejected server/PostgreSQL/mobile AC1-AC12 design; external reconciliation is not yet authorized"
+    },
+    {
+      "at": "2026-08-31T14:16:23+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D9-D15 and ADR 0007 record existing account KV, atomic bidirectional claim, cross-platform daemon scope, one current Session, no full history, and no server/daemon/PostgreSQL/mobile changes"
+    },
+    {
+      "at": "2026-08-31T14:16:23+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls for client-only KV coordination in docs/workspace/github-issue-canonical-session-binding/risk.md; tracker mismatch remains a scoping blocker"
+    },
+    {
+      "at": "2026-08-31T14:16:23+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "blocked",
+      "evidence": "Local accepted scope is packages/happy-app only, but the configured GitHub Issue delivery source remains materially stale and cannot be mutated without explicit authority"
+    },
+    {
+      "at": "2026-08-31T14:16:24+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "All prior Stage A checks target the superseded server design and do not prove the reconciled AC1-AC10 contract"
+    },
+    {
+      "at": "2026-08-31T14:16:24+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "pending",
+      "evidence": "Await delivery-source reconciliation, implementation, verification, and review"
+    },
+    {
+      "at": "2026-08-31T14:18:23+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Prior final review binding was cleared with the stale check; fresh two-axis review is pending a new client-only candidate"
+    },
+    {
+      "at": "2026-08-31T14:18:55+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Old implementation is superseded; new client-only implementation has not started and awaits delivery-source reconciliation"
+    },
+    {
+      "at": "2026-08-31T14:33:25+00:00",
+      "type": "replan",
+      "phase": "planning",
+      "evidence": "GitHub Issue #79 was explicitly reconciled from the rejected server/PostgreSQL/mobile contract to the accepted pure-client account-KV contract",
+      "rightSizingEpochStart": 9
+    },
+    {
+      "at": "2026-08-31T14:33:25+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted the pure-client contract and explicitly authorized replacing GitHub Issue #79; live body was verified byte-equivalent to issue-79-body-draft.md at 2026-08-31T14:23:18Z"
+    },
+    {
+      "at": "2026-08-31T14:33:26+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D9-D15 and ADR 0007 resolve existing official account KV, atomic bidirectional CAS, cross-platform daemon scope, one current Session, direct transfer marker only, and no server/daemon/PostgreSQL/mobile changes"
+    },
+    {
+      "at": "2026-08-31T14:33:26+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls client-only KV coordination risk assessment in risk.md; no server deployment, migration, daemon protocol, native, mobile, or GitHub mutation in product behavior"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T14:33:26+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One client-only current GitHub Issue-to-Happy Session association across compatible clients and desktop daemon platforms",
+      "acceptanceSeam": "AC1-AC10: opaque encrypted identity, atomic bidirectional KV claim before first send, lifecycle continuity, direct transfer marker, desktop projection, safe compatibility limits",
+      "dependencies": "Existing official UserKVStore kvMutate/CAS, account encryption, Session creation/lifecycle, KV invalidation, and GitHub stable IDs",
+      "reviewBoundary": "One pinned client-only candidate with server baseline restored, configured checks, and independent High-risk Spec and Standards review",
+      "rollbackBoundary": "Disable the personal client feature; leave encrypted KV inert; no server schema or GitHub rollback",
+      "contextBoundary": "Current Root in the registered Issue #79 worktree; packages/happy-app and directly required workflow/docs/tests only",
+      "consequence": "Cross-client concurrency and privacy are high-risk, but the slice is bounded by existing atomic KV and excludes deployment/database/native surfaces",
+      "evidence": "Live Issue #79 body reconciled and verified; spec, ADR, T1-T6 task plan, decisions, risk, and repository KV architecture inspection agree",
+      "contractFingerprint": "5b3069db76fa42abe0c36a6291b3b40a2af6342d2b782917996eddd005ec18ce",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T14:33:26+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current owning Root, serial current-root execution; accepted product surface packages/happy-app only; remove superseded server/PostgreSQL candidate, then TDD existing-KV association; protected native, daemon/CLI, deployment/release remain blocked"
+    },
+    {
+      "at": "2026-08-31T14:33:27+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T2: restore official server baseline, then start client KV RED tracer bullet"
+    },
+    {
+      "at": "2026-08-31T15:27:54+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Client-only T1-T5 complete: official KV coordinator, encrypted opaque records, atomic claim/replace/refresh/repair, claim-before-send and desktop projections; GitHub Issues/New Session 196/196, App and Server typechecks, diff check, and zero server diff passed"
+    },
+    {
+      "at": "2026-08-31T15:27:55+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "T6: stage the complete client-only candidate and run fresh applicable verification"
+    },
+    {
+      "at": "2026-08-31T15:36:56+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 9836507d-d078-455c-a694-802c9d7b6d35"
+    },
+    {
+      "at": "2026-08-31T15:38:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged candidate e14db6c07bf7: 7/9 commands passed; both typechecks and all five workflow checks passed; App 16 untouched Studio failures and Server 2 Windows local-storage failures exactly match accepted baseline gaps; Issue #79/New Session 196/196 and replan runtime 19/19 passed; structured run: 9836507d-d078-455c-a694-802c9d7b6d35; accepted command indexes: 2, 3; approval: User explicitly accepted these same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T15:49:07+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh dual-axis review of e14db6c07bf7: Spec blocked on 5 findings; Standards blocked on 2 overlapping P1 findings"
+    },
+    {
+      "at": "2026-08-31T15:49:08+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Blocked review candidate will mutate; structured check 9836507d is stale after remediation starts"
+    },
+    {
+      "at": "2026-08-31T15:49:08+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Remediate the complete fresh client-only dual-axis finding set"
+    },
+    {
+      "at": "2026-08-31T15:50:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Record independent blocked conclusions for frozen candidate e14db6c07bf7"
+    },
+    {
+      "at": "2026-08-31T15:50:41+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Frozen candidate e14db6c07bf7 implementation state restored solely to record already-completed independent review conclusions"
+    },
+    {
+      "at": "2026-08-31T15:50:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Rebind unchanged frozen candidate e14db6c07bf7 to its completed structured check so independent conclusions can be recorded; structured run: 9836507d-d078-455c-a694-802c9d7b6d35; accepted command indexes: 2, 3; approval: User explicitly accepted these same 18 isolated unchanged-path baseline failures and requested continued review on 2026-08-31"
+    },
+    {
+      "at": "2026-08-31T15:50:51+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Record independent conclusions for unchanged frozen candidate e14db6c07bf7"
+    },
+    {
+      "at": "2026-08-31T15:53:25+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Blocked review candidate will mutate; structured check 9836507d is stale after remediation starts"
+    },
+    {
+      "at": "2026-08-31T15:53:25+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Remediate the complete fresh client-only dual-axis finding set"
+    },
+    {
+      "at": "2026-08-31T15:53:26+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate lifecycle composition, desktop states, cache clearing, KV capacity, and candidate-scope findings"
+    },
+    {
+      "at": "2026-08-31T16:06:12+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation: focused 18/18, GitHub Issues 157/157, happy-app typecheck passed; server unchanged; workflow repair excluded from product candidate"
+    },
+    {
+      "at": "2026-08-31T16:06:12+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze the remediated client-only candidate and run full applicable checks"
+    },
+    {
+      "at": "2026-08-31T16:26:25+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 3 failures; structured run: 4c4db6e7-ab19-4f95-b774-f842e23356b1"
+    },
+    {
+      "at": "2026-08-31T16:43:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Workflow replan prerequisite committed separately at 6be7b9e3; prior recorded run used the superseded audit boundary and is stale"
+    },
+    {
+      "at": "2026-08-31T16:52:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 96886e41-5205-4680-92ef-0fa546a0301d"
+    },
+    {
+      "at": "2026-08-31T16:53:20+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged client-only candidate: 7/9 commands passed; both typechecks, workflow runtime 19/19, validator 9/9, and repository audit passed; only the previously accepted baseline commands 2 and 3 failed; structured run: 96886e41-5205-4680-92ef-0fa546a0301d; accepted command indexes: 2, 3; approval: User explicitly accepted the unchanged 16 Studio and 2 Windows local-storage baseline failures and requested continued review"
+    },
+    {
+      "at": "2026-08-31T17:01:15+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Dual-axis review of 88d2aaa0 blocked: Spec lifecycle restore inconsistency; Standards history capacity/account projection degradation"
+    },
+    {
+      "at": "2026-08-31T17:01:16+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate will change after blocked review"
+    },
+    {
+      "at": "2026-08-31T17:01:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Final review remediation in progress"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-08-31T17:01:42+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one bounded client-only remediation for lifecycle restore consistency and bounded transfer history",
+      "acceptanceSeam": "Unchanged AC4/AC5 lifecycle continuity and AC6/AC8 current plus direct-transfer projection",
+      "dependencies": "Existing local Session lifecycle state, official UserKVStore CAS, canonical binding projection, and transfer markers",
+      "reviewBoundary": "One fresh full dual-axis review of a newly checked staged client-only candidate",
+      "rollbackBoundary": "Disable the personal client feature; no server or daemon mutation",
+      "contextBoundary": "Current owning Root session; serial edits limited to binding lifecycle/history modules and tests",
+      "consequence": "Without this remediation archived sessions may skip restore and transfer history can eventually degrade account projections",
+      "evidence": "Dual-axis review of candidate 88d2aaa0 found two distinct same-contract blockers",
+      "contractFingerprint": "2890c57fb36ffbe5b920cbf64f9816c87498aa94e680b5432a73fbe6e66c7a18",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T17:02:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Blocked review candidate will change; prior final outcomes retained in history and a fresh dual-axis review is required"
+    },
+    {
+      "at": "2026-08-31T17:02:23+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Unify lifecycle restore and bound transfer-history capacity without losing current projections"
+    },
+    {
+      "at": "2026-08-31T17:09:41+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Lifecycle/history remediation: focused 19/19, related 205/205, happy-app typecheck and diff checks passed; server unchanged"
+    },
+    {
+      "at": "2026-08-31T17:09:42+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze the bounded-history candidate and run the final applicable check"
+    },
+    {
+      "at": "2026-08-31T17:19:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 3e9c83a5-d061-4ee8-a6a9-6dd59dcb8733"
+    },
+    {
+      "at": "2026-08-31T17:19:48+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Bounded-history candidate: 7/9 passed; both typechecks, workflow runtime 19/19, validator 9/9, and repository audit passed; only accepted baseline commands 2 and 3 failed; structured run: 3e9c83a5-d061-4ee8-a6a9-6dd59dcb8733; accepted command indexes: 2, 3; approval: User explicitly accepted the unchanged 16 Studio and 2 Windows local-storage baseline failures and requested continued review"
+    },
+    {
+      "at": "2026-08-31T17:26:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards reviewers both accepted candidate b4f082fa with no blockers"
+    },
+    {
+      "at": "2026-08-31T17:26:32+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence and prepare the terminal archived candidate without committing"
+    },
+    {
+      "at": "2026-08-31T17:36:54+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records final b4f082fa check/review evidence, accepted baseline gaps, rollback, no newly discovered follow-up, and the separately authorized live-acceptance limitation"
+    },
+    {
+      "at": "2026-08-31T17:39:41+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and reviewed pure-client canonical GitHub Issue current Session binding over official account KV; no server or daemon change; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-31T17:39:41+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/79",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-08-31T01:58:48+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One account-scoped canonical GitHub Issue-Happy Session binding with atomic claim-or-resume",
+      "acceptanceSeam": "AC1-AC12; server uniqueness/race oracle, client dispatch/projection tests, and cross-device live acceptance",
+      "dependencies": "Inputs: existing account, Session persistence/sync/lifecycle/fork, GitHub Issues Module; output: versioned binding authority and synchronized projection; no blocking tracker dependency",
+      "reviewBoundary": "One High-risk candidate reviewed for persistence, protocol, privacy, concurrency, lifecycle, client dispatch/projection, recovery, and compatibility",
+      "rollbackBoundary": "One default-off server/client capability gate, one additive migration, retained encrypted rows, flag-first whole-slice rollback",
+      "contextBoundary": "One owning Root in the exact Issue #79 worktree; T1-T9 are internal tasks, not child Issues",
+      "consequence": "High-risk session protocol, cross-device synchronization, privacy, and data migration; partial persistence/UI/concurrency paths are not safe releases",
+      "evidence": "Live Issue #79 and docs/specs/github-issue-canonical-session-binding.md AC1-AC12; docs/tasks/github-issue-canonical-session-binding-tasks.md right-sizing decision; repository architecture inspection; ADR 0007",
+      "contractFingerprint": "50c73d1024a3be1c7374fe278f6f1e4c812b2466200b0164f2ce97dc9da0a466",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T05:28:10+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one bounded remediation attempt for the same canonical GitHub Issue-Session binding slice",
+      "acceptanceSeam": "Unchanged AC1-AC12; deterministic authority, offline dispatch, projection, recovery, and two-axis review",
+      "dependencies": "Unchanged existing Happy Session persistence/sync/lifecycle and GitHub Issues read APIs; no new external dependency",
+      "reviewBoundary": "One complete high-risk staged candidate rereviewed for the same persistence, protocol, privacy, concurrency, lifecycle, client recovery, and UX-state contract",
+      "rollbackBoundary": "Unchanged default-off server/client gates and additive migration; flag-first whole-slice rollback",
+      "contextBoundary": "Same owning Root and Issue #79 worktree; seven compatible in-scope findings are one remediation batch",
+      "consequence": "Stopping now leaves known AC3/AC5/AC7/AC9/AC12 and idempotency gaps; continuing is bounded and shows productive convergence",
+      "evidence": "First review blockers were remediated and focused suites passed; second review identified distinct deeper contract gaps, all now addressed in the same modules with focused App/server suites and typechecks passing",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T06:09:00+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep one accepted Issue #79 slice and remediate the three fourth-review blockers in the existing client/server modules",
+      "acceptanceSeam": "Unchanged AC1-AC12 canonical one-Issue-one-Session contract",
+      "dependencies": "Existing synchronized projection, idempotent authority receipts, authenticated mutation routes, and repair dispatch state",
+      "reviewBoundary": "Fresh full two-axis review of one newly checked staged candidate",
+      "rollbackBoundary": "Default-off binding capability and isolated feature modules remain the rollback boundary",
+      "contextBoundary": "Current owning Root session, serial implementation; no new slice or writer delegation",
+      "consequence": "No scope expansion; focused eligibility, acknowledgement-loss reconciliation, invalidation response semantics, and unreadable-evidence repair changes only",
+      "evidence": "Third and fourth reviews surfaced distinct contract-depth gaps after prior remediation; all remain within the accepted Issue #79 interfaces and can be proved with focused App/server tests",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T07:04:40+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep one Issue #79 slice; close contradictory evidence and transport-generation gaps in existing binding modules",
+      "acceptanceSeam": "Unchanged AC1-AC12 account-scoped canonical binding and fail-closed evidence contract",
+      "dependencies": "Existing encrypted payload identity, opaque key derivation, account scope, transport, projection store, and mutation orchestration",
+      "reviewBoundary": "Fresh full two-axis review of one newly checked staged candidate",
+      "rollbackBoundary": "Default-off server capability and isolated feature modules",
+      "contextBoundary": "Current owning Root serial implementation; no new slice or delegation",
+      "consequence": "No scope expansion; add full schema/key correspondence validation, account-bound transport checks, and store-lifecycle refresh tightening",
+      "evidence": "Fifth and sixth reviews revealed distinct same-contract depth gaps; all changes remain inside accepted binding identity/store/transport surfaces",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T08:00:39+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep one Issue #79 slice and close draft, title, and socket authority gaps",
+      "acceptanceSeam": "Unchanged T4 draft preservation, AC6 visible Issue identity, and AC11 incompatible-writer enforcement",
+      "dependencies": "Existing New Session draft store, encrypted projection payload, socket handshake/authentication, and message gate",
+      "reviewBoundary": "Fresh full two-axis review of one newly checked staged candidate",
+      "rollbackBoundary": "Default-off capability and isolated binding enforcement",
+      "contextBoundary": "Current owning Root serial implementation; no delegation",
+      "consequence": "Three same-contract defects; controller consolidation remains a non-blocking follow-up",
+      "evidence": "Eighth frozen review c4476a84 with tasks T4, Issue AC6, and AC11 capability boundary",
+      "contractFingerprint": "fea2bc42cc5b0d8c8f93c135d1a3d35cf62776a5530a6a6ec16be35c006c606c",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T10:02:55+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "split-remainder",
+      "outcome": "Stage A freezes and reviews the deterministic candidate; Stage B independently owns installed multi-client and external PostgreSQL acceptance before Issue #79 finish",
+      "acceptanceSeam": "Stage A: configured deterministic checks plus one fresh dual-axis review; Stage B: AC1-AC12 installed/live matrix",
+      "dependencies": "Stage B requires the exact checked and reviewed Stage A candidate fingerprint",
+      "reviewBoundary": "Fresh Spec and Standards review closes Stage A only; live acceptance closes Stage B and Issue #79",
+      "rollbackBoundary": "Existing client/server flags and additive migration rollback controls remain unchanged",
+      "contextBoundary": "Current Root completes Stage A; Stage B receives a dedicated acceptance context only when prerequisites are available",
+      "consequence": "Prevents repeated review/live loops and forbids false Issue completion without required runtime evidence",
+      "evidence": "User selected two-stage replan on 2026-08-31; two formal blocked review boundaries now establish the continuation split; no attached mobile device or runnable emulator was available",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "independent-remainders",
+      "remainderSlices": "github-issue-canonical-session-binding-live-acceptance",
+      "dependencyInterfaces": "Stage B consumes the exact Stage A candidate fingerprint and review result; any live-discovered product defect invalidates that evidence and returns to implementation",
+      "safeStop": "After Stage A review passes, stop before build/install/device mutation and keep Issue #79 unfinished until Stage B is activated and passes"
+    },
+    {
+      "at": "2026-08-31T10:05:16+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one narrow Stage A remediation for AC8 side-chat eligibility and AC9 same-session replacement while preserving the Stage B live-acceptance split",
+      "acceptanceSeam": "Only the two Stage A Spec blockers on candidate 677486c9; Stage B remains unchanged",
+      "dependencies": "Existing client eligibility selectors, replacement UI preparation, and server replacement authority",
+      "reviewBoundary": "Fresh dual-axis review of one rechecked Stage A candidate; Stage B live evidence remains separate",
+      "rollbackBoundary": "No new rollout surface; existing default-off gates and additive migration remain unchanged",
+      "contextBoundary": "Current Root serially edits only the affected App/server binding paths and focused tests",
+      "consequence": "Bounded contract repair; no build/install/device work and no Issue finish",
+      "evidence": "Stage A Spec review found two deterministic same-contract defects; Standards found no code-candidate blocker",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T11:04:36+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one final narrow Stage A remediation for localized Issue-bound New Session failure paths while preserving the Stage B live-acceptance split",
+      "acceptanceSeam": "Only pre-spawn/post-spawn account validation exceptions, repair-required claim recovery, and first-dispatch failure messaging from Spec review of candidate 0cbca093",
+      "dependencies": "Existing New Session binding intent, localized text catalog, cleanup compensation, and Stage A deterministic check interfaces",
+      "reviewBoundary": "One new configured check and one fresh dual-axis review of the complete Stage A candidate",
+      "rollbackBoundary": "No new rollout or persistence surface; existing default-off flags and additive migration remain unchanged",
+      "contextBoundary": "Current Root edits only the New Session hook tests and English/Simplified Chinese binding error strings; no device/build work",
+      "consequence": "Closes a deterministic current-contract UX gap without changing authority semantics; Stage B remains required before Issue finish",
+      "evidence": "Spec reviewer blocked candidate 0cbca093 on four reproducible error-path outcomes; focused RED showed 4 failures and GREEN plus regression/typecheck now pass",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T11:53:15+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one final Stage A remediation for typed trusted binding errors and dual-surface stale intent cleanup while preserving the Stage B split",
+      "acceptanceSeam": "Only the labelled-raw bypass and two Issue-surface account-mismatch intent cleanup findings on candidate 7841aabb",
+      "dependencies": "Existing New Session error boundary, Issue detail/workspace binding state, localized messages, and draft intent store",
+      "reviewBoundary": "One new configured check and one fresh dual-axis review of the complete Stage A candidate",
+      "rollbackBoundary": "No new rollout/persistence surface; existing flags and additive migration unchanged",
+      "contextBoundary": "Current Root edits only App error typing, dual-surface cleanup, and focused tests; no device/build/database work",
+      "consequence": "Prevents raw disclosure and cross-account stale retry while retaining the Stage B safe stop",
+      "evidence": "Both review axes blocked 7841aabb on the raw-label heuristic; Spec also found dual-surface stale intent. Focused RED 3/72 and GREEN 72/72; related 187/187 and typecheck pass",
+      "contractFingerprint": "421179469bfc3dc8e83c5f55fb38b996cd2fe30c3fb379b519df1168d0c201d7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T14:33:26+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One client-only current GitHub Issue-to-Happy Session association across compatible clients and desktop daemon platforms",
+      "acceptanceSeam": "AC1-AC10: opaque encrypted identity, atomic bidirectional KV claim before first send, lifecycle continuity, direct transfer marker, desktop projection, safe compatibility limits",
+      "dependencies": "Existing official UserKVStore kvMutate/CAS, account encryption, Session creation/lifecycle, KV invalidation, and GitHub stable IDs",
+      "reviewBoundary": "One pinned client-only candidate with server baseline restored, configured checks, and independent High-risk Spec and Standards review",
+      "rollbackBoundary": "Disable the personal client feature; leave encrypted KV inert; no server schema or GitHub rollback",
+      "contextBoundary": "Current Root in the registered Issue #79 worktree; packages/happy-app and directly required workflow/docs/tests only",
+      "consequence": "Cross-client concurrency and privacy are high-risk, but the slice is bounded by existing atomic KV and excludes deployment/database/native surfaces",
+      "evidence": "Live Issue #79 body reconciled and verified; spec, ADR, T1-T6 task plan, decisions, risk, and repository KV architecture inspection agree",
+      "contractFingerprint": "5b3069db76fa42abe0c36a6291b3b40a2af6342d2b782917996eddd005ec18ce",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-08-31T17:01:42+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one bounded client-only remediation for lifecycle restore consistency and bounded transfer history",
+      "acceptanceSeam": "Unchanged AC4/AC5 lifecycle continuity and AC6/AC8 current plus direct-transfer projection",
+      "dependencies": "Existing local Session lifecycle state, official UserKVStore CAS, canonical binding projection, and transfer markers",
+      "reviewBoundary": "One fresh full dual-axis review of a newly checked staged client-only candidate",
+      "rollbackBoundary": "Disable the personal client feature; no server or daemon mutation",
+      "contextBoundary": "Current owning Root session; serial edits limited to binding lifecycle/history modules and tests",
+      "consequence": "Without this remediation archived sessions may skip restore and transfer history can eventually degrade account projections",
+      "evidence": "Dual-axis review of candidate 88d2aaa0 found two distinct same-contract blockers",
+      "contractFingerprint": "2890c57fb36ffbe5b920cbf64f9816c87498aa94e680b5432a73fbe6e66c7a18",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "rightSizingEpochStart": 9,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "3e9c83a5-d061-4ee8-a6a9-6dd59dcb8733",
+  "checkRunFingerprint": "69b9c3563a7b4d90a3f8ba125ea87c6e2a064374c5a660afe855239d04dee412",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "6be7b9e3cbf7021db758ca0d6cd690166f8c8868",
+    "candidateFingerprint": "b4f082fa02ddf315e12bc645788bf1c601130000b4f6d53ae5577fc2b0325288"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      3
+    ],
+    "approval": "User explicitly accepted the unchanged 16 Studio and 2 Windows local-storage baseline failures and requested continued review"
+  },
+  "checkAcceptedFailuresFingerprint": "1d7b56fb918212a7740884349fbe7f2e26c07e6722afc25b0256050d213c29df",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "6be7b9e3cbf7021db758ca0d6cd690166f8c8868",
+      "candidateFingerprint": "b4f082fa02ddf315e12bc645788bf1c601130000b4f6d53ae5577fc2b0325288"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Candidate b4f082fa: AC4/AC5 lifecycle restore, desktop states, account cache, capacity handling, and pure-client boundary accepted"
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Candidate b4f082fa: bounded one-marker cleanup CAS, partial history degradation, binding fail-closed, privacy/account isolation, and client-only boundary accepted"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish evidence and prepare the terminal archived candidate without committing",
+    "prearchiveUpdated": "2026-08-31T17:36:54+00:00",
+    "prearchiveActive": {
+      "feature": "github-issue-canonical-session-binding",
+      "phase": "finish",
+      "updated": "2026-09-01",
+      "next": "Complete finish evidence and prepare the terminal archived candidate without committing",
+      "branch / worktree": "issue/79-add-canonical-1-1-github-issue-happy-session-bin"
+    },
+    "prearchiveArchiveObject": "39032c15858f616ee196825de5a21ca5c1b0eed1",
+    "fingerprint": "187f1e74941f0b2f5cd839a7428e61761cbbce3cca228ac6598f73213cd13f62"
+  },
+  "archivedAt": "2026-08-31T17:39:41+00:00",
+  "archiveDate": "2026-09-01",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Implemented and reviewed pure-client canonical GitHub Issue current Session binding over official account KV; no server or daemon change",
+  "archiveFollowUp": "None"
+}

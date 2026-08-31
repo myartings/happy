@@ -22,6 +22,7 @@ import { t } from '@/text';
 import { RigGitLineChanges } from './RigGitLineChanges';
 import { ShimmerText } from './ShimmerText';
 import { resolveFlatSessionRowPresentation } from '@/utils/flatSessionRowPresentation';
+import { GithubIssueSessionBadge } from '@/features/github-issues/GithubIssueSessionBadge';
 
 // Roughly three quarters of the row, the proportion a chat list uses: the row
 // is 10 + 61 + 10, so 60 leaves an even 10 either side of the avatar.
@@ -234,6 +235,8 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
                         )}
                     </View>
                 </View>
+
+                <GithubIssueSessionBadge sessionId={session.id} />
 
                 <Text style={styles.project} numberOfLines={1}>
                     {projectName}

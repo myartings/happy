@@ -262,6 +262,12 @@ Issue dispatch is the bridge back to Happy's primary surface: Sessions. It does
 not change GitHub assignees and does not expose Agent workflow state in the
 Issue UI.
 
+`github-issue-canonical-session-binding.md` is the controlling contract for
+Issue-to-Session identity, uniqueness, continuation, cross-device races, forks,
+and recovery. It supersedes this document's former current/new/matching-Session
+target selection: within one Happy account, an Issue has at most one canonical
+Happy Session and a Session has at most one canonical Issue.
+
 The detail screen contains one primary action:
 
 ```text
@@ -275,28 +281,31 @@ The detail screen contains one primary action:
 └──────────────────────────────────┘
 ```
 
-Selecting it opens a small target confirmation inside the Issues panel/sheet:
+Selecting it first resolves the canonical binding:
 
 ```text
 ┌──────────────────────────────────┐
 │ Work on issue #241               │
 │                                  │
-│ Add to current session           │
-│ Start a new session              │
+│ Unbound          → Work here/new │
+│ Bound            → Continue      │
+│ Archived         → Restore       │
+│ Broken reference → Repair        │
 └──────────────────────────────────┘
 ```
 
-- When opened from a Session, prefer that Session if it belongs to the same
-  resolved repository.
-- Otherwise offer active Sessions for the same repository and `Start a new
-  session`. Never silently send an Issue to a different repository.
-- Existing Session dispatch appends a structured task to its draft without
-  overwriting user text, then focuses the parent Session composer for
-  review/send. The Issues panel may remain open or collapse according to the
-  existing right-workspace behavior; it must not auto-send.
-- New Session dispatch preselects the project path and prepares the structured
-  task while leaving Agent, model, and worktree choices in the normal New
-  Session flow.
+- A bound Issue always continues, restores, or recovers its one canonical
+  Session. It never opens a target picker or prepares a second Session.
+- An unbound Issue opened inside an eligible unbound same-repository Session may
+  bind that parent after explicit confirmation. The structured task is appended
+  to its draft without overwriting user text, then the composer receives focus
+  for review/send; it must not auto-send.
+- Without an eligible parent, the normal New Session flow carries a visible
+  structured Issue intent, preselects the project path when known, and leaves
+  Agent, model, permission, machine, and worktree choices unchanged. Canceling
+  creates no binding.
+- Claim is durable and cross-device safe before the first Issue task is sent.
+  Concurrent starts converge on the winning canonical Session.
 - If no repository match is available, explain the mismatch and offer a new
   correctly scoped Session rather than weakening repository checks.
 
@@ -433,7 +442,7 @@ Suggested UI-local pieces:
 - `GithubRepositoryPicker` — selection/search/manage-access sheet
 - `GithubIssueDetailView` — embeddable detail composition and lifecycle actions
 - `NewGithubIssueView` — embeddable draft form
-- `GithubIssueDispatchSheet` — current/new Session target selection
+- `GithubIssueSessionBindingAction` — canonical resolve/claim/continue adapter
 - `GithubIssuesConnectionState` — disconnected/authorization/no-repository states
 
 These are implementation pieces behind the feature Module, not new public
@@ -447,8 +456,10 @@ navigation destinations.
    desktop panel and mobile sheet.
 4. Preserve repository picker, automatic Session association, rich rows,
    refresh, pagination, drafts, lifecycle actions, and exact deletion safety.
-5. Add repository-safe current/new Session dispatch with explicit Triage-first
-   launch tasks and automatic continuation after an Agent-ready outcome.
+5. Add a repository-safe current Issue-to-Session association coordinated by
+   compatible clients through the existing account KV service, with
+   claim-or-resume before first send, explicit Triage-first launch tasks, and
+   automatic continuation in the same Session after an Agent-ready outcome.
 6. Remove the desktop/global Issues navigation entry and obsolete centered
    Session Modal while retaining Settings connection management.
 7. Add translations, accessibility, component tests, and desktop/mobile live
@@ -456,6 +467,12 @@ navigation destinations.
 
 Each slice must keep `devGithubIssuesEnabled=false` behavior unchanged and avoid
 modifying the official Happy GitHub profile flow.
+
+The current-association work tracked by Issue #79 is a client-only desktop
+slice. Its cross-platform claim covers Sessions hosted by Windows, macOS, and
+Linux daemons, but it does not add server, daemon, PostgreSQL, native-platform,
+or mobile acceptance work. The broader panel specification may retain its own
+mobile sheet acceptance independently of Issue #79.
 
 ## Acceptance criteria
 
@@ -474,9 +491,10 @@ modifying the official Happy GitHub profile flow.
    confirmation.
 6. Embedded New Issue prevents duplicate submission and preserves a
    repository-scoped draft after failure or user-approved exit.
-7. Creating an Issue does not start work. `Work on this issue` targets only a
-   matching current/new Session and explicitly invokes repository-required
-   Triage before implementation.
+7. Creating an Issue does not start work. `Work on this issue` atomically
+   establishes or resumes the Issue's current Session among compatible Happy
+   clients and explicitly invokes repository-required Triage before
+   implementation.
 8. Triage pauses for required maintainer decisions, stops on non-Agent outcomes,
    and automatically continues the same Session after a confirmed Agent-ready
    outcome without exposing workflow state in the Issue UI.

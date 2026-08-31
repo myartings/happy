@@ -99,6 +99,9 @@ import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioP
 import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { setStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 import { AnimatedFade } from '@/components/AnimatedOverlay';
+import { useGithubIssueSessionFreshness, useGithubIssueSessionProjection } from '@/features/github-issues/GithubIssueSessionBadge';
+import { acknowledgeGithubIssueAgentContext } from '@/features/github-issues/githubIssueBindingStore';
+import { prepareGithubIssueAgentContextRefreshDraft } from '@/features/github-issues/githubIssueBindingAgentContext';
 
 export const SessionView = React.memo((props: { id: string; targetMessageId?: string; targetMessageLocalId?: string; targetMessageCreatedAt?: number }) => {
     const sessionId = props.id;
@@ -122,6 +125,8 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
     const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
     const sideChatQuickPanelEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
     const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
+    const githubIssueProjection = useGithubIssueSessionProjection(sessionId, githubIssuesEnabled, true);
+    const githubIssueFreshness = useGithubIssueSessionFreshness(sessionId, githubIssuesEnabled);
     const zenMode = useLocalSetting('zenMode');
     const requestedVisualStyle = useLocalSetting('visualStyle');
     const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
@@ -492,9 +497,77 @@ export const SessionView = React.memo((props: { id: string; targetMessageId?: st
             />
         )
         : null;
-    const headerRight = showGithubIssuesSessionEntry || quickPanelHeaderControls
+    const headerRight = showGithubIssuesSessionEntry || githubIssueProjection || quickPanelHeaderControls
         ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                {githubIssueProjection ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open GitHub Issue ${githubIssueProjection.payload.ownerSnapshot}/${githubIssueProjection.payload.repositorySnapshot}#${githubIssueProjection.payload.number}`}
+                        onPress={() => {
+                            openGithubIssuesWorkspace({
+                                repository: {
+                                    owner: githubIssueProjection.payload.ownerSnapshot,
+                                    repo: githubIssueProjection.payload.repositorySnapshot,
+                                },
+                                mode: 'detail',
+                                issueNumber: githubIssueProjection.payload.number,
+                            });
+                        }}
+                        style={{ minHeight: 44, maxWidth: 260, justifyContent: 'center', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: theme.colors.surfaceHigh }}
+                    >
+                        <Text style={{ color: theme.colors.header.tint, fontSize: 11 }} numberOfLines={1}>
+                            {githubIssueProjection.payload.ownerSnapshot}/{githubIssueProjection.payload.repositorySnapshot}#{githubIssueProjection.payload.number}
+                        </Text>
+                        <Text style={{ color: theme.colors.textSecondary, fontSize: 10 }} numberOfLines={1}>
+                            {githubIssueProjection.payload.titleSnapshot}
+                        </Text>
+                        {githubIssueProjection.status === 'replaced' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.replaced')}
+                            </Text>
+                        ) : githubIssueProjection.status === 'repair-required' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.repairSession')}
+                            </Text>
+                        ) : githubIssueFreshness === 'identity-conflict' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.identityConflict')}
+                            </Text>
+                        ) : githubIssueFreshness === 'changed' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.issueUpdatedSinceLoaded')}
+                            </Text>
+                        ) : githubIssueFreshness === 'unavailable' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.cachedIssueContext')}
+                            </Text>
+                        ) : (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.currentSession')}
+                            </Text>
+                        )}
+                    </Pressable>
+                ) : null}
+                {githubIssueProjection?.status === 'bound' && githubIssueFreshness === 'changed' ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('githubIssues.refreshAgentContext')}
+                        onPress={() => {
+                            const current = storage.getState().sessions[sessionId]?.draft;
+                            storage.getState().updateSessionDraft(
+                                sessionId,
+                                prepareGithubIssueAgentContextRefreshDraft(current, githubIssueProjection.payload),
+                            );
+                            void acknowledgeGithubIssueAgentContext(sessionId);
+                        }}
+                        style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 8, borderRadius: 8, backgroundColor: theme.colors.surfaceHigh }}
+                    >
+                        <Text style={{ color: theme.colors.header.tint, fontSize: 10 }}>
+                            {t('githubIssues.refreshAgentContext')}
+                        </Text>
+                    </Pressable>
+                ) : null}
                 <GithubIssuesButton
                     tintColor={theme.colors.header.tint}
                     sessionId={sessionId}
