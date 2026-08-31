@@ -1,0 +1,716 @@
+{
+  "schemaVersion": 3,
+  "slug": "worktree-mobile-build-optimization",
+  "intensity": "feature",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User-approved local-only P0/P1 delivery source; docs/specs/worktree-mobile-build-optimization.md; docs/tasks/worktree-mobile-build-optimization-tasks.md",
+      "updated": "2026-08-30T07:43:48+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D15; D15 now requires canonical result/exit/reuse consistency and exact failed-run candidate binding across receipt, review, finish, archive, and CI",
+      "updated": "2026-08-30T14:39:14+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready; tenth-review binding-authority violation is an in-scope bounded prerequisite remediation; current Root serial; mobile outcome and protected paths unchanged",
+      "updated": "2026-08-30T14:39:14+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Risk controls reject failed(0), mismatched failed(N), invalid reuse provenance, generic gaps, stale evidence/config/candidate, and tampering at receipt/finish/archive CI",
+      "updated": "2026-08-30T14:39:14+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Tenth-review failed(0) relabel RED-to-GREEN; adversarial receipt, finish, archive staged-CI coverage; 10 runtime, 2 upgrade, 9 validator tests, validation, audit, syntax, and diff checks pass",
+      "updated": "2026-08-30T14:39:14+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap on canonical candidate 6af592e188aa: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; all other 8 configured commands and 10 runtime tests passed.",
+      "updated": "2026-08-30T14:40:39+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Eleventh independent Spec and Standards reviews accepted exact candidate 6af592e188aa / diff 86bae1c19d3b with no findings; accepted 15-test Studio baseline excluded",
+      "updated": "2026-08-30T14:43:55+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "f97b5d73800b45a37a3fc9a008867757b7a19fe2",
+        "candidateFingerprint": "6af592e188aa086f48798085f0ac17a722ca21ef49ed086efb76f6e3ad2f2bc9"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Candidate 6af592e188aa086f48798085f0ac17a722ca21ef49ed086efb76f6e3ad2f2bc9; run ae105c11-8cca-4c26-b47b-50e9042ce4a8 accepted gap; eleventh Spec/Standards accepted diff 86bae1c19d3bd90e22611899f7ea5fe12b5216ce34f3827ee321c2173d3f8e6d; finish/validation complete; no external mutation",
+      "updated": "2026-08-30T14:46:20+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-30T07:34:52+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-30T07:40:58+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — Single-session implementation of the accepted P0/P1 worktree mobile-build optimization; no external queue or coordination boundary is needed. (approval: User explicitly requested: 实现 P0 和 P1.)"
+    },
+    {
+      "at": "2026-08-30T07:43:48+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User-approved local-only P0/P1 delivery source; docs/specs/worktree-mobile-build-optimization.md; docs/tasks/worktree-mobile-build-optimization-tasks.md"
+    },
+    {
+      "at": "2026-08-30T07:43:48+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D1-D6 resolved from repository, Expo fingerprint, and EAS JSON evidence"
+    },
+    {
+      "at": "2026-08-30T07:43:48+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/risk.md; cleared-with-controls, no real cloud/device mutation authorized"
+    },
+    {
+      "at": "2026-08-30T07:43:48+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready; owner=current Root; topology=current-root/current-session serial; capability=current Root judgment plus bounded deterministic implementation; docs/workspace/worktree-mobile-build-optimization/context.md"
+    },
+    {
+      "at": "2026-08-30T07:44:03+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement T1 pnpm and fingerprint configuration"
+    },
+    {
+      "at": "2026-08-30T08:18:43+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "P0/P1 implemented across pnpm workspace config, normalized Expo fingerprinting, conservative iOS/Android planner, shared mobile release/report helpers, Android parity commands, docs, and targeted tests; docs/workspace/worktree-mobile-build-optimization/validation.md"
+    },
+    {
+      "at": "2026-08-30T08:18:43+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run candidate-bound applicable checks and acceptance mapping"
+    },
+    {
+      "at": "2026-08-30T08:20:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: efcbf190-6f96-4584-8209-2ccda054eb37"
+    },
+    {
+      "at": "2026-08-30T09:17:13+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User explicitly accepted the reproducible locked-base gap on 2026-08-30: 15 pre-existing failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; all 8 other applicable commands and all mobile candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T09:24:00+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Address all blocking Spec and Standards findings with focused RED-to-GREEN tests"
+    },
+    {
+      "at": "2026-08-30T09:30:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Initial dual-axis findings remediated: supported-profile preflight, argv-faithful pnpm rendering/execution, strict EAS build JSON failure/reporting, complete report-field assertions, and reconciled support-path scope; all 12 post-remediation command groups passed."
+    },
+    {
+      "at": "2026-08-30T09:30:53+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Pin remediated candidate, refresh accepted-gap check evidence, and run fresh two-axis review"
+    },
+    {
+      "at": "2026-08-30T09:31:41+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 88ebcc91-d820-483f-aeab-4a236e0338b2"
+    },
+    {
+      "at": "2026-08-30T09:31:58+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base gap reconfirmed on remediated candidate a66aa2814838 by full run 88ebcc91-d820-483f-aeab-4a236e0338b2: exactly the same 15 Studio UI failures; the other 8 configured commands and all 12 post-remediation targeted command groups passed."
+    },
+    {
+      "at": "2026-08-30T09:38:50+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD the complete second-review finding set, then rerun checks against a newly staged candidate."
+    },
+    {
+      "at": "2026-08-30T09:52:47+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D1-D8 cover reusable artifact availability, build outcome/dimension binding, and shared native-asset ownership"
+    },
+    {
+      "at": "2026-08-30T09:52:47+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second-review findings remediated with RED-to-GREEN coverage: command exit plus FINISHED and returned dimensions bind success; reusable artifacts require ID/HTTPS URL/unexpired evidence; Expo config/planner share native-assets.cjs; 9 shell smokes, 15 Node tests, frozen lock, config/syntax/diff checks, stable fingerprints, and read-only plans pass."
+    },
+    {
+      "at": "2026-08-30T09:52:47+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact remediated candidate, rerun configured candidate-bound checks, reapply the user-accepted locked-base gap if unchanged, then run fresh two-axis review."
+    },
+    {
+      "at": "2026-08-30T09:53:42+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 0603e569-a814-4e4f-be1b-7ef6eabf17ba"
+    },
+    {
+      "at": "2026-08-30T09:54:00+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate de47379226e1 by full run 0603e569-a814-4e4f-be1b-7ef6eabf17ba: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all second-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T09:59:55+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD staged-only path/digest coverage and durable EAS response digest evidence, then rerun the exact candidate checks."
+    },
+    {
+      "at": "2026-08-30T10:03:26+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D1-D9 include staged/worktree provenance and durable malformed-response identity"
+    },
+    {
+      "at": "2026-08-30T10:03:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Third-review Spec findings remediated with RED-to-GREEN tests: committed/staged/unstaged/untracked states are collected independently and cached/worktree content is hashed separately; every EAS response retains byte count and SHA-256 before temporary deletion. All 9 shell smokes, 16 Node tests, digest parity, frozen lock, syntax/config/diff checks pass."
+    },
+    {
+      "at": "2026-08-30T10:03:26+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the third-review remediation, rerun the configured candidate-bound checks, preserve only the unchanged accepted baseline gap, then run a fresh two-axis review."
+    },
+    {
+      "at": "2026-08-30T10:04:18+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 035b388e-960a-4bfc-84ed-fc93df48662e"
+    },
+    {
+      "at": "2026-08-30T10:04:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate 63b29b1e030e by full run 035b388e-960a-4bfc-84ed-fc93df48662e: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all third-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T10:11:18+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD the complete fourth-review state-model and safety finding set, then rerun exact candidate checks."
+    },
+    {
+      "at": "2026-08-30T10:22:07+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D1-D12 cover exact reuse, dual Git state, raw/effective outcome separation, conservative unknown paths, HTTPS-only hashing, and temporary-response cleanup"
+    },
+    {
+      "at": "2026-08-30T10:22:07+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fourth-review findings remediated with RED-to-GREEN coverage: native index/worktree divergence short-circuits reuse; unknown paths default native-sensitive; raw process, EAS, and effective outcomes remain distinct; partial fields survive; hashing is credential-free HTTPS-only; temporary EAS JSON is trap-cleaned. All 9 shell smokes, 18 Node tests, frozen lock, syntax/config/mode/duplicate/diff checks pass."
+    },
+    {
+      "at": "2026-08-30T10:22:07+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact fourth-review remediation, rerun configured candidate-bound checks, preserve only the unchanged accepted Studio baseline gap, then run a fresh two-axis review."
+    },
+    {
+      "at": "2026-08-30T10:23:04+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: e17ed09b-b679-48cc-af6b-d67e4970b12b"
+    },
+    {
+      "at": "2026-08-30T10:23:36+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate 4fb66ff4dd0a by full run e17ed09b-b679-48cc-af6b-d67e4970b12b: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all fourth-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T10:28:59+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD the fifth-review artifact-match positive control and literal-backslash fail-closed classification, then rerun exact candidate checks."
+    },
+    {
+      "at": "2026-08-30T10:32:09+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D1-D12 now also preserve Git-returned literal separators while unknown filenames remain native-sensitive"
+    },
+    {
+      "at": "2026-08-30T10:32:09+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fifth-review findings remediated: the exact artifact fixture first proves a reusable positive control before isolated status/platform/profile/channel/fingerprint mutations; Git-returned literal backslashes are preserved and fail closed. All 9 shell smokes, 19 Node tests, frozen lock, syntax/config/mode/duplicate/lock/diff checks pass."
+    },
+    {
+      "at": "2026-08-30T10:32:10+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact fifth-review remediation, rerun configured candidate-bound checks, preserve only the unchanged accepted Studio baseline gap, then run a fresh two-axis review."
+    },
+    {
+      "at": "2026-08-30T10:33:02+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 6db91a66-00df-42ee-88ce-b4a199d077a0"
+    },
+    {
+      "at": "2026-08-30T10:33:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate 185aa4b888da by full run 6db91a66-00df-42ee-88ce-b4a199d077a0: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all fifth-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T10:37:39+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD staged-delete/untracked-recreation divergence through real Git state and prove fingerprint/EAS lookup is skipped, then rerun exact candidate checks."
+    },
+    {
+      "at": "2026-08-30T10:40:23+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D10 now binds divergence across staged entries and both tracked/untracked worktree state; D1-D12 remain resolved"
+    },
+    {
+      "at": "2026-08-30T10:40:23+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Sixth-review Standards finding remediated with a real-Git RED-to-GREEN tracer: staged deletion plus untracked same-path recreation is divergent, forces native-rebuild, and skips fingerprint/artifact lookup. All 9 shell smokes, 20 Node tests, frozen lock, syntax/config/mode/duplicate/lock/diff checks pass; sixth Spec review was accepted."
+    },
+    {
+      "at": "2026-08-30T10:40:23+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact sixth-review remediation, rerun configured candidate-bound checks, preserve only the unchanged accepted Studio baseline gap, then run a fresh two-axis review."
+    },
+    {
+      "at": "2026-08-30T10:41:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: d0daacd0-e144-4f42-872d-994653c6f418"
+    },
+    {
+      "at": "2026-08-30T10:41:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate 850e1c0aba3d by full run d0daacd0-e144-4f42-872d-994653c6f418: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all sixth-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T10:46:58+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD explicit mobile configuration-validation failure propagation and prove real EAS invocation is unreachable, then rerun exact candidate checks."
+    },
+    {
+      "at": "2026-08-30T10:50:26+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D1-D13 include explicit real-build prerequisite propagation under Bash conditional semantics"
+    },
+    {
+      "at": "2026-08-30T10:50:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Seventh-review Standards finding remediated with RED-to-GREEN release-gate tests: configuration and clean-tree failures propagate explicitly and cannot reach EAS; branch resolution and auth also return explicitly. All 9 shell smokes, 20 Node tests, frozen lock, syntax/config/mode/duplicate/lock/diff checks pass; seventh Spec review accepted."
+    },
+    {
+      "at": "2026-08-30T10:50:26+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact seventh-review remediation, rerun configured candidate-bound checks, preserve only the unchanged accepted Studio baseline gap, then run a fresh two-axis review."
+    },
+    {
+      "at": "2026-08-30T10:51:22+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 65c4d1ab-c9c4-4981-9419-1a4f295d8b39"
+    },
+    {
+      "at": "2026-08-30T10:51:57+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate 48f8d5adffdf by full run 65c4d1ab-c9c4-4981-9419-1a4f295d8b39: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all seventh-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T10:56:58+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD native-to-unrelated rename provenance for committed, staged, and unstaged Git states; disable rename folding, then rerun exact candidate checks."
+    },
+    {
+      "at": "2026-08-30T10:59:38+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md; D1-D14 include unfolded source/destination provenance for committed, staged, and unstaged renames"
+    },
+    {
+      "at": "2026-08-30T10:59:38+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Eighth-review Spec finding remediated with a real-Git RED-to-GREEN table test: --no-renames preserves native sources and unrelated destinations across committed, staged, and unstaged diffs. All 9 shell smokes, 21 Node tests, frozen lock, syntax/config/mode/duplicate/lock/diff checks pass; eighth Standards review accepted."
+    },
+    {
+      "at": "2026-08-30T10:59:38+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact eighth-review remediation, rerun configured candidate-bound checks, preserve only the unchanged accepted Studio baseline gap, then run a fresh two-axis review."
+    },
+    {
+      "at": "2026-08-30T11:00:31+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: ee8cbfcb-7591-4987-9208-320a8c54d0fa"
+    },
+    {
+      "at": "2026-08-30T11:01:08+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate 169c45dade8f by full run ee8cbfcb-7591-4987-9208-320a8c54d0fa: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all eighth-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T11:06:08+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap reconfirmed on candidate 169c45dade8f by full run ee8cbfcb-7591-4987-9208-320a8c54d0fa: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; the other 8 configured commands and all eighth-review candidate-specific checks passed."
+    },
+    {
+      "at": "2026-08-30T14:17:52+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "Existing D1-D14 remain unchanged; the user-authorized bounded prerequisite permits final review after check=passed or explicitly accepted_gaps, while all other check states remain rejected."
+    },
+    {
+      "at": "2026-08-30T14:17:52+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Existing risk controls remain applicable; this local workflow-policy repair adds no project risk trigger, external mutation, release action, or product behavior."
+    },
+    {
+      "at": "2026-08-30T14:17:53+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready; bounded blocking-prerequisite-defect; owner=current Root; topology=current-root/current-session serial; public seam=scripts/test-happy-workflow-runtime.py CLI integration; preserve mobile outcomes, risk, merge, rollback, and review boundaries."
+    },
+    {
+      "at": "2026-08-30T14:17:53+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD accepted_gaps as a valid final-review prerequisite while rejecting every unapproved check state."
+    },
+    {
+      "at": "2026-08-30T14:23:29+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md D1-D15; D15 admits only passed or explicitly accepted_gaps while all candidate/package/dual-axis guards remain unchanged"
+    },
+    {
+      "at": "2026-08-30T14:23:30+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/risk.md; existing mobile controls plus accepted-gap review guard regression, no new external mutation or protected-path scope"
+    },
+    {
+      "at": "2026-08-30T14:23:30+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready; bounded blocking-prerequisite-defect; owner=current Root; topology=current-root/current-session serial; public CLI seam; accepted mobile outcome, risk, merge, rollback, and review boundaries preserved"
+    },
+    {
+      "at": "2026-08-30T14:23:30+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T6 RED failed at hard-coded check=passed prerequisite; GREEN admits passed/accepted_gaps only; 8 runtime tests, 2 upgrade tests, 9 validator tests, validation, audit, Python syntax, and diff checks pass"
+    },
+    {
+      "at": "2026-08-30T14:23:30+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact expanded candidate, run a fresh applicable candidate-bound check, preserve only the user-accepted Studio baseline gap, then dispatch fresh Spec and Standards review."
+    },
+    {
+      "at": "2026-08-30T14:24:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 2775ac90-f805-404e-aef7-c03262899dd5"
+    },
+    {
+      "at": "2026-08-30T14:26:31+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD structured accepted-gap check binding through review, finish, archive, and staged CI; reject unbound or all-passing gap receipts."
+    },
+    {
+      "at": "2026-08-30T14:30:20+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/decisions.md D1-D15; D15 requires accepted_gaps to bind a complete failed structured run and exact candidate through review, finish, archive, and CI"
+    },
+    {
+      "at": "2026-08-30T14:30:20+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/worktree-mobile-build-optimization/risk.md; generic/unbound and all-passing gap declarations rejected; evidence/config/candidate/package/dual-axis/archive guards retained"
+    },
+    {
+      "at": "2026-08-30T14:30:20+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready; same bounded blocking-prerequisite defect; owner=current Root; serial current session; scripts workflow state/check/CI plus public runtime test; mobile outcome and delivery boundaries unchanged"
+    },
+    {
+      "at": "2026-08-30T14:30:20+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Two RED-to-GREEN tracers cover review predicate and structured failed-run binding through finish/archive/two staged CI checks; 9 runtime, 2 upgrade, 9 validator tests, validation, audit, syntax, and diff checks pass"
+    },
+    {
+      "at": "2026-08-30T14:30:20+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the exact structured accepted-gap candidate, rerun the complete applicable check, bind the exact failed run with the user's named baseline acceptance, then run fresh dual-axis review."
+    },
+    {
+      "at": "2026-08-30T14:31:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: a809e72e-23ee-4e57-80d3-bfa568240f95"
+    },
+    {
+      "at": "2026-08-30T14:31:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap on candidate 08b83a091964: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; all other 8 configured commands passed.; structured run: a809e72e-23ee-4e57-80d3-bfa568240f95"
+    },
+    {
+      "at": "2026-08-30T14:35:34+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec accepted; Standards binding-authority violation: accepted_gaps must require a real nonzero exit and canonical result/exit consistency across receipt, finish, and archive CI"
+    },
+    {
+      "at": "2026-08-30T14:35:35+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD canonical check result/exit consistency and real nonzero accepted-gap evidence through receipt, finish, and archive CI."
+    },
+    {
+      "at": "2026-08-30T14:39:14+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D15; D15 now requires canonical result/exit/reuse consistency and exact failed-run candidate binding across receipt, review, finish, archive, and CI"
+    },
+    {
+      "at": "2026-08-30T14:39:14+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Risk controls reject failed(0), mismatched failed(N), invalid reuse provenance, generic gaps, stale evidence/config/candidate, and tampering at receipt/finish/archive CI"
+    },
+    {
+      "at": "2026-08-30T14:39:14+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready; tenth-review binding-authority violation is an in-scope bounded prerequisite remediation; current Root serial; mobile outcome and protected paths unchanged"
+    },
+    {
+      "at": "2026-08-30T14:39:14+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Tenth-review failed(0) relabel RED-to-GREEN; adversarial receipt, finish, archive staged-CI coverage; 10 runtime, 2 upgrade, 9 validator tests, validation, audit, syntax, and diff checks pass"
+    },
+    {
+      "at": "2026-08-30T14:39:14+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage canonical result evidence candidate, rerun complete applicable check, bind only the exact real nonzero Studio baseline run, then dispatch fresh Spec and Standards review."
+    },
+    {
+      "at": "2026-08-30T14:40:27+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: ae105c11-8cca-4c26-b47b-50e9042ce4a8"
+    },
+    {
+      "at": "2026-08-30T14:40:39+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "User-accepted locked-base Studio gap on canonical candidate 6af592e188aa: exactly 15 failures in ToolViewStudioPresentation, StudioMarkdownOptions, and studioRichTextWiring; all other 8 configured commands and 10 runtime tests passed.; structured run: ae105c11-8cca-4c26-b47b-50e9042ce4a8"
+    },
+    {
+      "at": "2026-08-30T14:43:55+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Eleventh independent Spec and Standards reviews accepted exact candidate 6af592e188aa / diff 86bae1c19d3b with no findings; accepted 15-test Studio baseline excluded"
+    },
+    {
+      "at": "2026-08-30T14:44:13+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize exact validation, rollback, operational notes, run pre-archive staged CI, then archive the reviewed candidate without committing."
+    },
+    {
+      "at": "2026-08-30T14:46:20+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Candidate 6af592e188aa086f48798085f0ac17a722ca21ef49ed086efb76f6e3ad2f2bc9; run ae105c11-8cca-4c26-b47b-50e9042ce4a8 accepted gap; eleventh Spec/Standards accepted diff 86bae1c19d3bd90e22611899f7ea5fe12b5216ce34f3827ee321c2173d3f8e6d; finish/validation complete; no external mutation"
+    },
+    {
+      "at": "2026-08-30T14:46:59+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented and verified worktree-aware iOS/Android mobile build planning, artifact reuse, guarded release parity, auditable reporting, and structured accepted-gap lifecycle closure.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-30T14:46:59+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Single-session implementation of the accepted P0/P1 worktree mobile-build optimization; no external queue or coordination boundary is needed.",
+    "approval": "User explicitly requested: 实现 P0 和 P1."
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "ae105c11-8cca-4c26-b47b-50e9042ce4a8",
+  "checkRunFingerprint": "9a3c7df04e5c8c7421edc170adc77eb1a44e4d76535e45586f134bc817072068",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "f97b5d73800b45a37a3fc9a008867757b7a19fe2",
+    "candidateFingerprint": "6af592e188aa086f48798085f0ac17a722ca21ef49ed086efb76f6e3ad2f2bc9"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "f97b5d73800b45a37a3fc9a008867757b7a19fe2",
+      "candidateFingerprint": "6af592e188aa086f48798085f0ac17a722ca21ef49ed086efb76f6e3ad2f2bc9"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "spec_review_11 accepted candidate 6af592e188aa / diff 86bae1c19d3b; no requirement or scope findings; D1-D15 and T1-T6 satisfied"
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "standards_review_11 accepted candidate 6af592e188aa / diff 86bae1c19d3b; canonical result/exit/reuse, structured gap binding, finish/archive CI, and adversarial tests verified"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Finalize exact validation, rollback, operational notes, run pre-archive staged CI, then archive the reviewed candidate without committing.",
+    "prearchiveUpdated": "2026-08-30T14:46:20+00:00",
+    "prearchiveActive": {
+      "feature": "worktree-mobile-build-optimization",
+      "phase": "finish",
+      "updated": "2026-08-30",
+      "next": "Finalize exact validation, rollback, operational notes, run pre-archive staged CI, then archive the reviewed candidate without committing.",
+      "branch / worktree": "swift-cloud"
+    },
+    "prearchiveArchiveObject": "0c2e7fea513429597c588733830e335502265e40",
+    "fingerprint": "ffc4b9267cefaa569088ecedf72e27cee08a97c6b3739016c323f8ef651c191e"
+  },
+  "archivedAt": "2026-08-30T14:46:59+00:00",
+  "archiveDate": "2026-08-30",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Implemented and verified worktree-aware iOS/Android mobile build planning, artifact reuse, guarded release parity, auditable reporting, and structured accepted-gap lifecycle closure.",
+  "archiveFollowUp": "None"
+}

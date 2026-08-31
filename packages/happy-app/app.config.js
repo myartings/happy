@@ -1,4 +1,5 @@
 const { execFileSync } = require('node:child_process');
+const nativeAssets = require('./native-assets.cjs');
 
 const variant = process.env.APP_ENV || 'development';
 const isPersonal = variant === 'personal';
@@ -77,7 +78,7 @@ export default {
         version: "1.7.0",
         runtimeVersion: isPersonal ? { policy: "appVersion" } : "21",
         orientation: "default",
-        icon: "./sources/assets/images/icon.png",
+        icon: nativeAssets.icon,
         scheme,
         userInterfaceStyle: "automatic",
         ios: {
@@ -108,8 +109,8 @@ export default {
         },
         android: {
             adaptiveIcon: {
-                foregroundImage: "./sources/assets/images/icon-adaptive.png",
-                monochromeImage: "./sources/assets/images/icon-monochrome.png",
+                foregroundImage: nativeAssets.androidAdaptiveForeground,
+                monochromeImage: nativeAssets.androidAdaptiveMonochrome,
                 backgroundColor: "#000000"
             },
             permissions: [
@@ -199,7 +200,7 @@ export default {
                 "expo-notifications",
                 {
                     "enableBackgroundRemoteNotifications": true,
-                    "icon": "./sources/assets/images/icon-notification.png"
+                    "icon": nativeAssets.notificationIcon
                 }
             ],
             [
@@ -212,10 +213,10 @@ export default {
                         }
                     },
                     android: {
-                        image: "./sources/assets/images/splash-android-light.png",
+                        image: nativeAssets.androidSplashLight,
                         backgroundColor: "#F5F5F5",
                         dark: {
-                            image: "./sources/assets/images/splash-android-dark.png",
+                            image: nativeAssets.androidSplashDark,
                             backgroundColor: "#000000",
                         }
                     }

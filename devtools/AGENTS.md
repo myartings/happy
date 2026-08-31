@@ -2,7 +2,7 @@
 
 ## Scope
 
-This directory owns personal Happy operations: update, build, install, backup, rollback, official-baseline comparison, scheduled refresh, and iOS release orchestration. Product business code belongs under `packages/`, not here.
+This directory owns personal Happy operations: update, build, install, backup, rollback, official-baseline comparison, scheduled refresh, and iOS/Android release orchestration. Product business code belongs under `packages/`, not here.
 
 ## Branch invariants
 
@@ -30,6 +30,8 @@ devtools/happyctl install-git-guards
 devtools/happyctl sync-dev --dry-run
 devtools/happyctl refresh-desktop --dry-run
 devtools/happyctl refresh-official-baseline --dry-run
+devtools/happyctl mobile-plan --platform ios
+devtools/happyctl android-build-internal --dry-run
 ```
 
 ```powershell
@@ -42,5 +44,22 @@ devtools/happyctl refresh-official-baseline --dry-run
 ```
 
 Commands that install, replace, roll back, publish, submit, or register scheduled tasks require explicit user authorization. A general request to update Happy Desktop authorizes the complete `refresh-desktop` workflow described by the `happy-desktop-update` skill. A request to release the local official macOS client from `main` authorizes `refresh-official-baseline` as described by the `happy-desktop-official-release` skill; it does not authorize public distribution.
+
+The mobile planner may report `reuse-artifact` only for a matching finished EAS
+build with an ID, an HTTPS artifact URL, and no elapsed reported expiry. Keep
+Expo native image references in `packages/happy-app/native-assets.cjs`; the app
+config and planner must consume the same manifest.
+Unknown build paths fail closed, and native index/worktree divergence must not
+reach fingerprint lookup, including staged deletion followed by an untracked
+recreation at the same path. Preserve Git-returned path separators: a literal
+backslash in a POSIX filename must remain an unknown, native-sensitive path.
+Disable Git rename folding when collecting planner paths so both native sources
+and unrelated destinations remain classifiable in every Git state.
+Artifact hashing accepts only credential-free HTTPS
+and must restrict redirects to HTTPS; temporary EAS responses require guaranteed
+exit/signal cleanup.
+Real mobile readiness functions must explicitly propagate each failed
+configuration, clean-tree, branch, and authentication check; do not rely on
+`set -e` inside a function called from a conditional or OR-list.
 
 Before committing changes, run syntax checks, the devtools smoke tests, relevant dry-runs, and inspect `git diff --check` plus the complete diff.
