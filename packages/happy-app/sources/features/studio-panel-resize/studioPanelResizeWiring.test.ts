@@ -28,7 +28,8 @@ describe('Studio panel resize host wiring', () => {
         expect(session).toContain('const visible = studioPanelResizeEnabled && showSidebar;');
         expect(session).toContain('setStudioRightPanelVisible(visible);');
         expect(session).toContain('runningInTauri');
-        expect(session).toContain("requestedStyle: requestedVisualStyle");
+        expect(session).toContain('resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle)');
+        expect(session).toContain('codexFirstContract.presentation.usesStudioPrimitives');
         expect(session).toContain('side="right"');
         expect(session).toContain('projectStudioPanelWidths({');
         expect(session).toContain('renderedWidth={panelWidths.rightWidth}');

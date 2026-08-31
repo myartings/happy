@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 3,
+  "slug": "codex-first-happy-client-latest-dev-refresh",
+  "intensity": "feature",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/specs/codex-first-happy-client-latest-dev-refresh.md; docs/tasks/codex-first-happy-client-latest-dev-refresh-tasks.md; docs/workspace/codex-first-happy-client-latest-dev-refresh/task-links.md",
+      "updated": "2026-08-31T08:53:56+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client-latest-dev-refresh/decisions.md; pinned parent diffs; PR #76 and Issue #70 read-only source inspection",
+      "updated": "2026-08-31T08:53:56+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client-latest-dev-refresh/scoping.md: current Root, serial current-root, existing parent tests as RED/GREEN authority",
+      "updated": "2026-08-31T08:53:57+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "docs/workspace/codex-first-happy-client-latest-dev-refresh/scoping.md: App-only navigation/presentation merge; no auth, protocol, protected path, install, release, or destructive behavior",
+      "updated": "2026-08-31T08:53:57+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Windows LF fixture RED repaired with tracked-only baseline staging; focused GREEN 1/1",
+      "updated": "2026-08-31T10:19:39+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Final repaired staged candidate run daffb852-c2d3-460b-9830-82e0aec37ca7: App 223/1784, both typechecks, workflow runtime 21/21 including repaired Windows LF fixture, validator 9/9, and strict audit pass; accept command index 3 only because Server 110/112 has attachment blob 4d567bbe61ce9c174b65c9a0dcc72deb374b3b85 and project blob f02800d1d147d93ac210cad7fee33e13d4b0c23d identical in index/ddb3034e/87b5385e with no Server delta versus target",
+      "updated": "2026-08-31T10:34:00+00:00"
+    },
+    "review": {
+      "status": "accepted_gaps",
+      "evidence": "Both independent capable reviewers accepted frozen package ff7eeadab2c5602f; only the already accepted LR-007 Server fixture gap remains; two Standards quality suggestions are non-blocking follow-up candidates",
+      "updated": "2026-08-31T10:45:15+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "68cfb6f915fb25f5ecd444df2aefafeccae92fa8",
+        "candidateFingerprint": "6671e4736561d0529905586083dc3a21a1a38167ce7ea4dc35983645b259ec39"
+      }
+    },
+    "finish": {
+      "status": "accepted_gaps",
+      "evidence": "Finish report complete; LR-001 through LR-008 verified except the explicitly accepted LR-007 Server fixture gap; LR-009 remote equality and PR state are transparently accepted as necessarily post-archive delivery checks; rollback and non-blocking follow-ups recorded",
+      "updated": "2026-08-31T10:54:31+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-31T08:38:54+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-31T08:44:32+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — PR #78 latest-dev compatibility refresh after origin/dev advanced to merged PR #76 (approval: User authorized the dev integration workflow, conflict resolution, complete validation, local commit, normal push, and PR update on 2026-08-31)"
+    },
+    {
+      "at": "2026-08-31T08:53:56+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/codex-first-happy-client-latest-dev-refresh.md; docs/tasks/codex-first-happy-client-latest-dev-refresh-tasks.md; docs/workspace/codex-first-happy-client-latest-dev-refresh/task-links.md"
+    },
+    {
+      "at": "2026-08-31T08:53:56+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client-latest-dev-refresh/decisions.md; pinned parent diffs; PR #76 and Issue #70 read-only source inspection"
+    },
+    {
+      "at": "2026-08-31T08:53:57+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "docs/workspace/codex-first-happy-client-latest-dev-refresh/scoping.md: App-only navigation/presentation merge; no auth, protocol, protected path, install, release, or destructive behavior"
+    },
+    {
+      "at": "2026-08-31T08:53:57+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client-latest-dev-refresh/scoping.md: current Root, serial current-root, existing parent tests as RED/GREEN authority"
+    },
+    {
+      "at": "2026-08-31T08:55:43+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Merge pinned dev, resolve exact unions, and run existing-test RED to minimal GREEN"
+    },
+    {
+      "at": "2026-08-31T09:15:27+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Exact four-conflict resolution; visible-list RED→GREEN 1/1 and 24/24; focus RED→GREEN 1/1 and shared 34/34; PR #76 family 94/94; Codex-first 80/80; App typecheck passed; docs/workspace/codex-first-happy-client-latest-dev-refresh/validation.md"
+    },
+    {
+      "at": "2026-08-31T09:15:27+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run fresh staged full-profile candidate check and classify every failure"
+    },
+    {
+      "at": "2026-08-31T09:28:37+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 4322b610-e8ee-46fd-8525-e72eef42820b"
+    },
+    {
+      "at": "2026-08-31T09:30:34+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Structured run 4322b610-e8ee-46fd-8525-e72eef42820b command index 3 only; App 223/1784, both typechecks, workflow runtime 21/21, validator 9/9, strict audit pass; Server 110/112 with attachment blob 4d567bbe61ce9c174b65c9a0dcc72deb374b3b85 and project blob f02800d1d147d93ac210cad7fee33e13d4b0c23d identical in index/ddb3034e/87b5385e and no Server delta versus target; structured run: 4322b610-e8ee-46fd-8525-e72eef42820b; accepted command indexes: 3; approval: User accepted this same unchanged native-Windows POSIX /tmp Server fixture gap for the dev-integration risk boundary on 2026-08-31; this fresh run reproduces only those two failures with zero Server delta and identical test blobs across index, first parent, and target parent"
+    },
+    {
+      "at": "2026-08-31T10:00:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: db97be9f-6f11-4b2c-8a9c-375495f20dcb"
+    },
+    {
+      "at": "2026-08-31T10:02:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "Fresh final run reproduced only the accepted Server fixture failure, but its final strict audit correctly rejected the stale prior candidate binding; clear the stale binding before one clean rerun; structured run: db97be9f-6f11-4b2c-8a9c-375495f20dcb"
+    },
+    {
+      "at": "2026-08-31T10:13:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 01081b26-6c1e-4778-b379-cee8e31bc280"
+    },
+    {
+      "at": "2026-08-31T10:16:55+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Repair Windows LF fixture baseline staging, then prove targeted GREEN"
+    },
+    {
+      "at": "2026-08-31T10:19:39+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Windows LF fixture RED repaired with tracked-only baseline staging; focused GREEN 1/1"
+    },
+    {
+      "at": "2026-08-31T10:19:39+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run one fresh complete staged check for the repaired final candidate"
+    },
+    {
+      "at": "2026-08-31T10:32:55+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: daffb852-c2d3-460b-9830-82e0aec37ca7"
+    },
+    {
+      "at": "2026-08-31T10:34:00+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Final repaired staged candidate run daffb852-c2d3-460b-9830-82e0aec37ca7: App 223/1784, both typechecks, workflow runtime 21/21 including repaired Windows LF fixture, validator 9/9, and strict audit pass; accept command index 3 only because Server 110/112 has attachment blob 4d567bbe61ce9c174b65c9a0dcc72deb374b3b85 and project blob f02800d1d147d93ac210cad7fee33e13d4b0c23d identical in index/ddb3034e/87b5385e with no Server delta versus target; structured run: daffb852-c2d3-460b-9830-82e0aec37ca7; accepted command indexes: 3; approval: User accepted this same unchanged native-Windows POSIX /tmp Server fixture gap for the dev-integration risk boundary on 2026-08-31; final repaired candidate reproduces only those two failures with zero Server delta and identical test blobs across index, first parent, and target parent"
+    },
+    {
+      "at": "2026-08-31T10:45:15+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "accepted_gaps",
+      "evidence": "Both independent capable reviewers accepted frozen package ff7eeadab2c5602f; only the already accepted LR-007 Server fixture gap remains; two Standards quality suggestions are non-blocking follow-up candidates"
+    },
+    {
+      "at": "2026-08-31T10:46:51+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, staged CI, canonical archive, and authorized merge commit"
+    },
+    {
+      "at": "2026-08-31T10:54:31+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "accepted_gaps",
+      "evidence": "Finish report complete; LR-001 through LR-008 verified except the explicitly accepted LR-007 Server fixture gap; LR-009 remote equality and PR state are transparently accepted as necessarily post-archive delivery checks; rollback and non-blocking follow-ups recorded"
+    },
+    {
+      "at": "2026-08-31T12:18:01+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Integrated pinned dev 87b5385e into the Codex-first branch, preserved both feature families, repaired Windows integration regressions and LF workflow fixture under TDD, passed native Windows build and full candidate validation with only the accepted parent-reproduced Server fixture gap, and completed independent capable review; commit pending; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-08-31T12:18:01+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "PR #78 latest-dev compatibility refresh after origin/dev advanced to merged PR #76",
+    "approval": "User authorized the dev integration workflow, conflict resolution, complete validation, local commit, normal push, and PR update on 2026-08-31"
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "daffb852-c2d3-460b-9830-82e0aec37ca7",
+  "checkRunFingerprint": "9421e2bc439f0da327e80e329ddd7b618b16e432fb6669ddd08414ff8af8e1ad",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "68cfb6f915fb25f5ecd444df2aefafeccae92fa8",
+    "candidateFingerprint": "6671e4736561d0529905586083dc3a21a1a38167ce7ea4dc35983645b259ec39"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      3
+    ],
+    "approval": "User accepted this same unchanged native-Windows POSIX /tmp Server fixture gap for the dev-integration risk boundary on 2026-08-31; final repaired candidate reproduces only those two failures with zero Server delta and identical test blobs across index, first parent, and target parent"
+  },
+  "checkAcceptedFailuresFingerprint": "5c63bdb5f160e2cb206e917f435fe2244a98d02a8b337027040b00a51e289e25",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "68cfb6f915fb25f5ecd444df2aefafeccae92fa8",
+      "candidateFingerprint": "6671e4736561d0529905586083dc3a21a1a38167ce7ea4dc35983645b259ec39"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted_gaps",
+        "evidence": "Frozen package ff7eeadab2c5602f direct spec_review_capable: accepted_gaps; no blocking Spec findings or unauthorized scope growth; LR-005/LR-006 repairs are in-contract; only LR-007 parent-reproduced native-Windows /tmp Server fixture gap remains"
+      },
+      "standards-review": {
+        "status": "accepted_gaps",
+        "evidence": "Frozen package ff7eeadab2c5602f direct standards_review_capable: accepted_gaps; no regression, security/operations, rollback, or binding-authority violation; low non-blocking follow-ups are behavior-level replacements for selected wiring source-string tests and later extraction of the oversized CommandPaletteProvider projection"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish evidence, staged CI, canonical archive, and authorized merge commit",
+    "prearchiveUpdated": "2026-08-31T10:54:31+00:00",
+    "prearchiveActive": {
+      "feature": "codex-first-happy-client-latest-dev-refresh",
+      "phase": "finish",
+      "updated": "2026-08-31",
+      "next": "Complete finish evidence, staged CI, canonical archive, and authorized merge commit",
+      "branch / worktree": "codex-first-happy-client-windows"
+    },
+    "prearchiveArchiveObject": "9f17e89d5915d259351ada23c69d6f72ab82d8b4",
+    "fingerprint": "30973cc8b7743d8a9e8967ca000ec467ba92c215fe91ef53d0e00fda30858a83"
+  },
+  "archivedAt": "2026-08-31T12:18:01+00:00",
+  "archiveDate": "2026-08-31",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Integrated pinned dev 87b5385e into the Codex-first branch, preserved both feature families, repaired Windows integration regressions and LF workflow fixture under TDD, passed native Windows build and full candidate validation with only the accepted parent-reproduced Server fixture gap, and completed independent capable review; commit pending",
+  "archiveFollowUp": "None"
+}

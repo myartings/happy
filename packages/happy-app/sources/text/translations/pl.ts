@@ -1156,6 +1156,8 @@ export const pl: TranslationStructure = {
         notSupportedMessage: 'Ten agent nie obsługuje załączników obrazów. Obrazy nie zostały wysłane.',
     },
 
+    codexFirst: en.codexFirst,
+
     githubIssues: en.githubIssues,
 
     projectTodos: {

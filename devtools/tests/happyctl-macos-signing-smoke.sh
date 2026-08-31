@@ -163,4 +163,23 @@ if verify_desktop >/dev/null 2>&1; then
   exit 1
 fi
 
+# A real codesign process can emit enough detail after Identifier for an
+# early-exiting awk reader to close the pipe and turn a valid check into rc 141
+# under happyctl's pipefail. The verifier must consume the complete stream.
+codesign() {
+  if [[ "${1:-}" == "-dv" ]]; then
+    printf 'Identifier=com.slopus.happy.dev\n' >&2
+    for index in $(seq 1 4000); do
+      printf 'Detail-%04d=sealed\n' "$index" >&2
+    done
+    printf 'Signature size=4789\nTeamIdentifier=TEAMDEV123\n' >&2
+    return 0
+  fi
+  if [[ "${1:-}" == "--verify" ]]; then
+    return 0
+  fi
+  return 1
+}
+verify_desktop >/dev/null
+
 echo "Happyctl macOS stable-signing smoke tests passed"

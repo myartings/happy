@@ -21,9 +21,9 @@ import {
     MOBILE_STRONG_HEADER_SCRIM_UNDERLAP_OPACITY,
 } from './navigation/MobileHeaderScrim';
 import { useLocalSetting } from '@/sync/storage';
-import { isTauri } from '@/utils/isTauri';
-import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { resolveStudioConversationLayout } from '@/features/studio-conversation-layout/studioConversationLayout';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
+import { t } from '@/text';
 
 interface ChatHeaderViewProps {
     title: string;
@@ -61,20 +61,21 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
     const insets = useSafeAreaInsets();
     const headerHeight = useHeaderHeight();
     const requestedVisualStyle = useLocalSetting('visualStyle');
-    const desktopVisualStyle = resolveDesktopVisualStyle({
-        isTauriRuntime: isTauri(),
-        requestedStyle: requestedVisualStyle,
-        previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-    });
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
     const conversationLayout = resolveStudioConversationLayout({
-        isTauriRuntime: isTauri(),
-        visualStyle: desktopVisualStyle,
+        codexFirstEnabled: codexFirstContract.enabled,
+        isTauriRuntime: codexFirstContract.presentation.usesStudioPrimitives,
+        visualStyle: codexFirstContract.presentation.visualStyle,
     });
     const webHeaderHeight = conversationLayout.headerHeight ?? headerHeight;
     const isTablet = useIsTablet();
-    const showBackButton = !isTablet && !!onBackPress;
+    const desktopLayout = isTablet || codexFirstContract.enabled;
+    const showBackButton = !desktopLayout && !!onBackPress;
     const hasExtra = !!extraPathSegment;
-    const glassEnabled = !isTablet && Platform.OS === 'ios' && !isRunningOnMac();
+    const glassEnabled = !desktopLayout && Platform.OS === 'ios' && !isRunningOnMac();
     const contentHeight = glassEnabled ? Math.max(headerHeight, MOBILE_GLASS_HEADER_HEIGHT) : headerHeight;
     const showFolderSubtitle = !!folderName && folderName !== title;
     const folderNameColor = glassEnabled
@@ -110,7 +111,11 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
 
     if (Platform.OS === 'web') {
         return (
-            <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.colors.header.background }]}>
+            <View style={[
+                styles.container,
+                codexFirstContract.enabled && styles.codexFirstWebContainer,
+                { paddingTop: insets.top, backgroundColor: theme.colors.header.background },
+            ]}>
                 <View style={styles.contentWrapper}>
                     <View style={[
                         styles.webContent,
@@ -120,7 +125,13 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
                         },
                     ]}>
                         {showBackButton && (
-                            <Pressable onPress={onBackPress} hitSlop={15} style={styles.webBackButton}>
+                            <Pressable
+                                accessibilityLabel={t('common.back')}
+                                accessibilityRole="button"
+                                onPress={onBackPress}
+                                hitSlop={15}
+                                style={styles.webBackButton}
+                            >
                                 <Ionicons
                                     name="arrow-back"
                                     size={24}
@@ -129,12 +140,17 @@ export const ChatHeaderView: React.FC<ChatHeaderViewProps> = ({
                             </Pressable>
                         )}
                         <Pressable
+                            accessibilityLabel={onTitlePress ? (title || folderName) : undefined}
+                            accessibilityRole={onTitlePress ? 'button' : undefined}
                             style={styles.titleContainer}
                             onPress={onTitlePress}
                             disabled={!onTitlePress}
                         >
                             {folderName ? (
                                 <View style={styles.webTitleRow}>
+                                    {codexFirstContract.enabled ? (
+                                        <Ionicons name="folder-outline" size={15} color={theme.colors.textSecondary} />
+                                    ) : null}
                                     <Text
                                         numberOfLines={1}
                                         style={[styles.webFolderName, { color: theme.colors.textSecondary, ...Typography.default() }]}
@@ -362,6 +378,10 @@ const styles = StyleSheet.create((theme) => ({
     container: {
         position: 'relative',
         zIndex: 100,
+    },
+    codexFirstWebContainer: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: theme.colors.divider,
     },
     headerBackdrop: {
         position: 'absolute',

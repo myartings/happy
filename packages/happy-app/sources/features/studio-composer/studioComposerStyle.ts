@@ -53,6 +53,8 @@ export type StudioComposerStatePresentation = {
 };
 
 type ResolveStudioComposerStatePresentationInput = {
+    codexFirstEnabled?: boolean;
+    isDark?: boolean;
     isStudio: boolean;
     hasText: boolean;
     hasAttachments: boolean;
@@ -65,12 +67,16 @@ type ResolveStudioComposerStatePresentationInput = {
 };
 
 type ResolveDesktopComposerStyleInput = {
+    codexFirstEnabled?: boolean;
+    isDark?: boolean;
     isTauriRuntime: boolean;
     requestedStyle: VisualStyle;
     previewStyle?: string;
 };
 
 export function resolveDesktopComposerStyle({
+    codexFirstEnabled = false,
+    isDark = false,
     isTauriRuntime,
     requestedStyle,
     previewStyle,
@@ -82,13 +88,14 @@ export function resolveDesktopComposerStyle({
     });
 
     if (visualStyle === 'studio') {
+        const dark = codexFirstEnabled && isDark;
         return {
             visualStyle,
-            maxWidth: 800,
-            shellMinHeight: 110,
+            maxWidth: codexFirstEnabled ? 750 : 800,
+            shellMinHeight: codexFirstEnabled ? 108 : 110,
             shellRadius: 20,
-            shellBackground: '#FFFFFF',
-            shellBorder: '#DDDDDE',
+            shellBackground: dark ? '#292A2D' : '#FFFFFF',
+            shellBorder: dark ? 'rgba(255, 255, 255, 0.14)' : '#DDDDDE',
             shellBorderWidth: 1,
             shellHorizontalPadding: 12,
             shellTopPadding: 8,
@@ -125,6 +132,8 @@ export function resolveDesktopComposerStyle({
 }
 
 export function resolveStudioComposerStatePresentation({
+    codexFirstEnabled = false,
+    isDark = false,
     isStudio,
     hasText,
     hasAttachments,
@@ -136,6 +145,7 @@ export function resolveStudioComposerStatePresentation({
     isSendBlocked,
 }: ResolveStudioComposerStatePresentationInput): StudioComposerStatePresentation | null {
     if (!isStudio) return null;
+    const dark = codexFirstEnabled && isDark;
 
     let state: StudioComposerInteractionState = 'empty';
     if (hasText) state = 'ready';
@@ -153,25 +163,35 @@ export function resolveStudioComposerStatePresentation({
 
     return {
         state,
-        shellBorder: shellIsEngaged ? '#D2D2D4' : '#E1E1E2',
-        shellBackground: '#FFFFFF',
-        shellShadowOpacity: shellIsEngaged ? 0.11 : 0.08,
-        shellShadowRadius: shellIsEngaged ? 24 : 20,
+        shellBorder: dark
+            ? shellIsEngaged ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.14)'
+            : shellIsEngaged ? '#D2D2D4' : '#E1E1E2',
+        shellBackground: dark ? '#292A2D' : '#FFFFFF',
+        shellShadowOpacity: dark
+            ? shellIsEngaged ? 0.30 : 0.26
+            : shellIsEngaged ? 0.11 : 0.08,
+        shellShadowRadius: dark
+            ? shellIsEngaged ? 28 : 24
+            : shellIsEngaged ? 24 : 20,
         primaryActionBackground: isSending
-            ? '#4C4C50'
+            ? dark ? '#D7D7D9' : '#4C4C50'
             : isSendBlocked && hasReadyContent
-                ? '#F0F0F1'
+                ? dark ? '#303134' : '#F0F0F1'
                 : readyPrimaryAction
-                    ? '#242426'
-                    : '#E7E7E8',
-        primaryActionForeground: readyPrimaryAction || isSending ? '#FFFFFF' : '#858589',
-        primaryActionBorder: isSendBlocked && hasReadyContent ? '#D7D7D9' : 'transparent',
-        secondaryActiveBackground: '#EEEEEF',
-        attachmentBackground: '#F6F6F6',
-        attachmentBorder: '#E4E4E5',
-        autocompleteSelectedBackground: '#ECEDEE',
-        autocompletePressedBackground: '#E5E6E7',
-        abortActionBackground: '#F2ECEB',
-        abortActionForeground: '#8E3F37',
+                    ? dark ? '#F5F5F5' : '#242426'
+                    : dark ? '#3B3D40' : '#E7E7E8',
+        primaryActionForeground: readyPrimaryAction || isSending
+            ? dark ? '#232426' : '#FFFFFF'
+            : dark ? '#A4A7AC' : '#858589',
+        primaryActionBorder: isSendBlocked && hasReadyContent
+            ? dark ? 'rgba(255, 255, 255, 0.18)' : '#D7D7D9'
+            : 'transparent',
+        secondaryActiveBackground: dark ? 'rgba(255, 255, 255, 0.10)' : '#EEEEEF',
+        attachmentBackground: dark ? '#232426' : '#F6F6F6',
+        attachmentBorder: dark ? 'rgba(255, 255, 255, 0.14)' : '#E4E4E5',
+        autocompleteSelectedBackground: dark ? 'rgba(255, 255, 255, 0.10)' : '#ECEDEE',
+        autocompletePressedBackground: dark ? 'rgba(255, 255, 255, 0.12)' : '#E5E6E7',
+        abortActionBackground: dark ? '#3A2D2D' : '#F2ECEB',
+        abortActionForeground: dark ? '#E29A93' : '#8E3F37',
     };
 }

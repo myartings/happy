@@ -21,6 +21,9 @@ import {
     MOBILE_GLASS_CONTROL_SIZE,
     MOBILE_GLASS_HEADER_HEIGHT,
 } from './headerMetrics';
+import { useLocalSetting } from '@/sync/storage';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
+import { resolveCodexFirstHeaderOwnership } from '@/features/codex-first-shell/codexFirstHeaderOwnership';
 
 interface HeaderProps {
     title?: React.ReactNode;
@@ -307,9 +310,19 @@ const NavigationHeaderComponent: React.FC<NavigationHeaderComponentProps> = Reac
     const extendedOptions = options as ExtendedNavigationOptions;
     const isTablet = useIsTablet();
     const isDesktop = Platform.OS === 'web' || isRunningOnMac();
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
+    const headerOwnership = React.useMemo(() => resolveCodexFirstHeaderOwnership({
+        codexFirstEnabled: codexFirstContract.enabled,
+        legacyTabletLayout: isTablet,
+    }), [codexFirstContract.enabled, isTablet]);
 
-    // Hide back button on tablet — navigation is handled via sidebar and persistent header
-    const shouldHideBackButton = isTablet;
+    // The persistent desktop shell owns back navigation for legacy tablet and
+    // packaged Codex-first layouts, including the 720pt desktop minimum.
+    const shouldHideBackButton = headerOwnership.hideRouteBackButton;
 
     // Extract title - handle both string and function types
     let title: React.ReactNode | null = null;

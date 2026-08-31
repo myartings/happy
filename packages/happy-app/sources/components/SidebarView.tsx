@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Platform, Text, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useHeaderHeight } from '@/utils/responsive';
 import { VoiceAssistantStatusBar } from './VoiceAssistantStatusBar';
 import { useLocalSetting, useRealtimeStatus, useSetting, useSettingMutable } from '@/sync/storage';
@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/constants/Typography';
 import { ShortcutHintBadge, useShortcutHints } from './ShortcutHints';
 import { ProjectTodoButton } from './ProjectTodoButton';
-import { useHasArchivedSessions } from '@/hooks/useVisibleSessionListViewData';
+import { useHasArchivedSessions, useVisibleSessionListViewData } from '@/hooks/useVisibleSessionListViewData';
 import {
     resolveDesktopTodoRowStyle,
     resolveDesktopSidebarFooterStyle,
@@ -21,6 +21,15 @@ import {
 } from '@/features/studio-visual-style/studioVisualStyle';
 import { resolveStudioSidebarInteractionPresentation } from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
+import { CodexFirstSidebarShell } from '@/features/codex-first-shell/CodexFirstSidebarShell';
+import type { CodexFirstDesktopContract } from '@/features/codex-first-shell/codexFirstDesktopContract';
+import type { CodexFirstSidebarDestination } from '@/features/codex-first-shell/codexFirstSidebarNavigation';
+import { useCommandPaletteLauncher } from './CommandPalette/CommandPaletteProvider';
+import {
+    countCodexFirstAttentionSessions,
+    resolveCodexFirstNotificationTarget,
+} from '@/features/codex-first-shell/codexFirstAttention';
+import { useNavigateToSession } from '@/hooks/useNavigateToSession';
 
 const stylesheet = StyleSheet.create((theme) => ({
     container: {
@@ -118,15 +127,32 @@ const stylesheet = StyleSheet.create((theme) => ({
     },
 }));
 
-export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: DesktopSidebarFrame }) => {
+type SidebarViewProps = {
+    codexFirstContract: CodexFirstDesktopContract;
+    sidebarFrame?: DesktopSidebarFrame;
+};
+
+export const SidebarView = React.memo(({ codexFirstContract, sidebarFrame }: SidebarViewProps) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const safeArea = useSafeAreaInsets();
     const router = useRouter();
+    const navigateToSession = useNavigateToSession();
+    const pathname = usePathname();
     const headerHeight = useHeaderHeight();
     const realtimeStatus = useRealtimeStatus();
     const hasArchivedSessions = useHasArchivedSessions();
+    const sessionListViewData = useVisibleSessionListViewData();
+    const attentionCount = React.useMemo(
+        () => countCodexFirstAttentionSessions(sessionListViewData),
+        [sessionListViewData],
+    );
+    const notificationTarget = React.useMemo(
+        () => resolveCodexFirstNotificationTarget(sessionListViewData),
+        [sessionListViewData],
+    );
     const projectTodosEnabled = useLocalSetting('devProjectTodosEnabled');
+    const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
     const projectTodos = useSetting('projectTodos');
     const pendingProjectTodos = React.useMemo(
         () => Object.values(projectTodos).flat().filter((todo) => !todo.completed).length,
@@ -136,6 +162,7 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
     // have no rename migration — but it hides archived sessions only.
     const [hideArchivedSessions, setHideArchivedSessions] = useSettingMutable('hideInactiveSessions');
     const { visible: shortcutHintsVisible } = useShortcutHints();
+    const commandPaletteLauncher = useCommandPaletteLauncher();
     const topControlsStyle = React.useMemo(() => resolveDesktopTopControlsStyle({
         isTauriRuntime: sidebarFrame?.visualStyle === 'studio',
         requestedStyle: sidebarFrame?.visualStyle ?? 'default',
@@ -168,6 +195,19 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
     const handleProjectTodos = React.useCallback(() => {
         router.push('/project-todos' as any);
     }, [router]);
+    const handleCodexFirstDestination = React.useCallback((destination: CodexFirstSidebarDestination) => {
+        router.push(destination.route as any);
+    }, [router]);
+    const handleOpenProduct = React.useCallback(() => {
+        router.push('/settings');
+    }, [router]);
+    const handleOpenNotifications = React.useCallback(() => {
+        if (notificationTarget.kind === 'session') {
+            navigateToSession(notificationTarget.sessionId);
+            return;
+        }
+        router.push('/inbox' as any);
+    }, [navigateToSession, notificationTarget, router]);
     return (
         <View style={[
             styles.container,
@@ -186,10 +226,29 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                     : {}),
             },
         ]}>
-            <View style={[
-                styles.topControls,
-                isStudio && { gap: topControlsStyle.groupGap! },
-            ]}>
+            {codexFirstContract.enabled ? (
+                <CodexFirstSidebarShell
+                    attentionCount={attentionCount}
+                    contract={codexFirstContract}
+                    githubIssuesEnabled={githubIssuesEnabled}
+                    hasArchivedSessions={hasArchivedSessions}
+                    hideArchivedSessions={hideArchivedSessions}
+                    onNavigate={handleCodexFirstDestination}
+                    onOpenNotifications={handleOpenNotifications}
+                    onOpenProduct={handleOpenProduct}
+                    onOpenSearch={commandPaletteLauncher.open}
+                    onToggleArchive={handleArchiveVisibility}
+                    pathname={pathname}
+                    pendingProjectTodos={pendingProjectTodos}
+                    projectTodosEnabled={projectTodosEnabled}
+                    searchAvailable={commandPaletteLauncher.available}
+                />
+            ) : (
+                <>
+                    <View style={[
+                        styles.topControls,
+                        isStudio && { gap: topControlsStyle.groupGap! },
+                    ]}>
                 <Pressable
                     onPress={handleNewSession}
                     {...newSessionState.interactionProps}
@@ -284,10 +343,10 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                         />
                     </Pressable>
                 )}
-            </View>
+                    </View>
 
-            {isStudio ? (
-                projectTodosEnabled && (
+                    {isStudio ? (
+                        projectTodosEnabled && (
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={t('projectTodos.title')}
@@ -328,13 +387,15 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
                             </Text>
                         )}
                     </Pressable>
-                )
-            ) : (
-                <ProjectTodoButton
-                    showLabel
-                    presentationStyle={todoRowStyle}
-                    style={styles.projectTodosButton}
-                />
+                        )
+                    ) : (
+                        <ProjectTodoButton
+                            showLabel
+                            presentationStyle={todoRowStyle}
+                            style={styles.projectTodosButton}
+                        />
+                    )}
+                </>
             )}
 
             {realtimeStatus !== 'disconnected' && (
@@ -342,7 +403,11 @@ export const SidebarView = React.memo(({ sidebarFrame }: { sidebarFrame?: Deskto
             )}
 
             {/* Sessions list */}
-            <MainView variant="sidebar" sidebarVisualStyle={sidebarFrame?.visualStyle} />
+            <MainView
+                variant="sidebar"
+                codexFirstEnabled={codexFirstContract.enabled}
+                sidebarVisualStyle={sidebarFrame?.visualStyle}
+            />
 
             {/* Settings at bottom */}
             <Pressable

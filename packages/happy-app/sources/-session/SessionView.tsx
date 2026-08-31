@@ -96,9 +96,11 @@ import {
 import { GithubIssuesWorkspacePanel } from '@/features/github-issues/GithubIssuesWorkspacePanel';
 import { StudioPanelResizeHandle } from '@/features/studio-panel-resize/StudioPanelResizeHandle';
 import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioPanelResizePolicy';
-import { resolveDesktopVisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { setStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 import { AnimatedFade } from '@/components/AnimatedOverlay';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
+import { resolveCodexFirstWorkspaceChrome } from '@/features/codex-first-shell/codexFirstWorkspaceChrome';
+import { resolveCodexFirstDesktopLayout } from '@/features/codex-first-shell/codexFirstDesktopHardening';
 import {
     resolveCurrentRequestAttentionFocus,
     resolveCurrentRequestAttentionMessageId,
@@ -135,11 +137,15 @@ export const SessionView = React.memo((props: {
     const realtimeStatus = useRealtimeStatus();
     const isTablet = useIsTablet();
     const { width: windowWidth } = useWindowDimensions();
-    const fileDiffsSidebarEnabled = useSetting('fileDiffsSidebar');
-    const sideChatQuickPanelEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
+    const fileDiffsSidebarSettingEnabled = useSetting('fileDiffsSidebar');
+    const sideChatQuickPanelSettingEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
     const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
     const zenMode = useLocalSetting('zenMode');
     const requestedVisualStyle = useLocalSetting('visualStyle');
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
     const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
     const persistedRightPanelWidth = useLocalSetting('studioRightPanelWidth');
     const lastResizedPanel = useLocalSetting('studioLastResizedPanel');
@@ -160,10 +166,6 @@ export const SessionView = React.memo((props: {
         setQuickPanelPickerOpen(false);
     }, [sessionId]);
 
-    React.useEffect(() => {
-        if (!sideChatQuickPanelEnabled) setQuickPanelPickerOpen(false);
-    }, [sideChatQuickPanelEnabled]);
-
     // Sidebar panels are user-managed and persisted in local settings so the
     // layout (which panels are open + which is active) survives reloads and
     // long absences. State is device-local, shared across sessions.
@@ -180,41 +182,59 @@ export const SessionView = React.memo((props: {
         : persistedSidebarPanelActive;
     // Guard against an inconsistent persisted value: the active panel must be
     // one of the open panels, otherwise fall back to the last opened (or none).
-    const sidebarPanelActive = React.useMemo<SidebarMode | null>(() => {
-        return resolveSideChatQuickPanelActivePanel({
-            featureEnabled: sideChatQuickPanelEnabled,
-            openPanels: sidebarPanelsOpen,
-            storedActivePanel: sidebarPanelActiveRaw,
-        });
-    }, [sideChatQuickPanelEnabled, sidebarPanelActiveRaw, sidebarPanelsOpen]);
-
     const canUseFiles = !!session
         && rigCanBrowseFiles(session.metadata)
         && rigCanUseShell(session.metadata);
+    const workspaceChrome = resolveCodexFirstWorkspaceChrome({
+        canUseFiles,
+        canUseSideChat: !!sideChatForkSource,
+        codexFirstEnabled: codexFirstContract.enabled,
+        fileDiffsSidebarEnabled: fileDiffsSidebarSettingEnabled,
+        githubIssuesEnabled,
+        sideChatQuickPanelEnabled: sideChatQuickPanelSettingEnabled,
+    });
+
+    React.useEffect(() => {
+        if (!workspaceChrome.quickPanelEnabled) setQuickPanelPickerOpen(false);
+    }, [workspaceChrome.quickPanelEnabled]);
+
+    const sidebarPanelActive = React.useMemo<SidebarMode | null>(() => {
+        return resolveSideChatQuickPanelActivePanel({
+            featureEnabled: workspaceChrome.quickPanelEnabled,
+            openPanels: sidebarPanelsOpen,
+            storedActivePanel: sidebarPanelActiveRaw,
+        });
+    }, [sidebarPanelActiveRaw, sidebarPanelsOpen, workspaceChrome.quickPanelEnabled]);
+
     const sidebarLayout = getSideChatQuickPanelLayout({
         activePanel: sidebarPanelActive,
         canUseFiles,
         canUseGithubIssues: githubIssuesEnabled,
         canUseSideChat: !!sideChatForkSource,
-        featureEnabled: sideChatQuickPanelEnabled,
-        fileDiffsSidebarEnabled,
+        codexFirstEnabled: codexFirstContract.enabled,
+        featureEnabled: workspaceChrome.quickPanelEnabled,
+        fileDiffsSidebarEnabled: workspaceChrome.fileDiffsSidebarEnabled,
         pickerOpen: quickPanelPickerOpen,
         platformSupported: isRunningOnMac() || Platform.OS === 'web',
         windowWidth,
         zenMode,
     });
+    const responsiveLayout = React.useMemo(() => resolveCodexFirstDesktopLayout({
+        codexFirstEnabled: codexFirstContract.enabled,
+        legacyDesktopLayout: isTablet,
+        rightWorkspaceRequested: sidebarPanelActive !== null || quickPanelPickerOpen,
+        windowWidth,
+        zenMode,
+    }), [codexFirstContract.enabled, isTablet, quickPanelPickerOpen, sidebarPanelActive, windowWidth, zenMode]);
     const canShowSidebar = sidebarLayout.canShowSidebar && isDataReady && !!session;
     const showSidebar = sidebarLayout.showSidebar && isDataReady && !!session;
     const showQuickPanelControls = sidebarLayout.showQuickControls && isDataReady && !!session;
     const showQuickPanelFileActions = sidebarLayout.showFileActions && isDataReady && !!session;
+    const showQuickPanelSideChatAction = !codexFirstContract.enabled
+        || workspaceChrome.actions.some(action => action.id === 'side-chat');
 
-    const studioPanelResizeEnabled = isTablet
-        && runningInTauri
-        && resolveDesktopVisualStyle({
-            isTauriRuntime: runningInTauri,
-            requestedStyle: requestedVisualStyle,
-            previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-        }) === 'studio';
+    const studioPanelResizeEnabled = responsiveLayout.desktopShell
+        && codexFirstContract.presentation.usesStudioPrimitives;
     // Preserve the established responsive geometry everywhere except packaged
     // Studio. Studio projects the device-local width through current-window
     // bounds, without overwriting it when the panel is collapsed.
@@ -265,9 +285,12 @@ export const SessionView = React.memo((props: {
     }, [sessionId]);
     const openGithubIssuesWorkspace = React.useCallback((selection: GithubIssuesWorkspaceSelection) => {
         updateGithubIssuesSelection(selection);
-        if (deviceType === 'phone') setMobileGithubIssuesVisible(true);
+        if (
+            (!responsiveLayout.desktopShell && deviceType === 'phone')
+            || (codexFirstContract.enabled && responsiveLayout.rightWorkspace === 'unavailable')
+        ) setMobileGithubIssuesVisible(true);
         else openSidebarPanel('issues');
-    }, [deviceType, openSidebarPanel, updateGithubIssuesSelection]);
+    }, [codexFirstContract.enabled, deviceType, openSidebarPanel, responsiveLayout.desktopShell, responsiveLayout.rightWorkspace, updateGithubIssuesSelection]);
     const collapseSidebar = React.useCallback(() => {
         setQuickPanelPickerOpen(false);
         storage.getState().applyLocalSettings({ sidebarPanelActive: null });
@@ -494,31 +517,38 @@ export const SessionView = React.memo((props: {
         platform: Platform.OS,
         isTauri: runningInTauri,
     });
+    const showGithubIssuesAction = showGithubIssuesSessionEntry
+        && (!codexFirstContract.enabled
+            || workspaceChrome.actions.some(action => action.id === 'issues'));
     const quickPanelHeaderControls = showQuickPanelControls && (!showSidebar || quickPanelPickerOpen)
         ? (
             <SideChatQuickPanelControls
                 activePanel={sidebarPanelActive}
                 changedFilesCount={changedFilesCount}
+                codexFirstEnabled={codexFirstContract.enabled}
                 creating={creatingSideChat}
                 expanded={showSidebar}
                 onOpenAllFiles={() => openSidebarPanel('allFiles')}
                 onOpenChanges={() => openSidebarPanel('changes')}
                 onToggle={toggleQuickSideChatPanel}
                 showFileActions={showQuickPanelFileActions}
+                showSideChatAction={showQuickPanelSideChatAction}
             />
         )
         : null;
-    const headerRight = showGithubIssuesSessionEntry || quickPanelHeaderControls
+    const headerRight = showGithubIssuesAction || quickPanelHeaderControls
         ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <GithubIssuesButton
-                    tintColor={theme.colors.header.tint}
-                    sessionId={sessionId}
-                    cwd={session?.metadata?.path}
-                    onOpenIssue={openGithubIssuesWorkspace}
-                    onNewIssue={openGithubIssuesWorkspace}
-                    onViewAll={openGithubIssuesWorkspace}
-                />
+                {showGithubIssuesAction ? (
+                    <GithubIssuesButton
+                        tintColor={theme.colors.header.tint}
+                        sessionId={sessionId}
+                        cwd={session?.metadata?.path}
+                        onOpenIssue={openGithubIssuesWorkspace}
+                        onNewIssue={openGithubIssuesWorkspace}
+                        onViewAll={openGithubIssuesWorkspace}
+                    />
+                ) : null}
                 {session && deviceType === 'phone' && Platform.OS !== 'web' ? (
                     <Pressable
                         onPress={() => router.push(`/session/${sessionId}/info`)}
@@ -570,7 +600,7 @@ export const SessionView = React.memo((props: {
                     paddingTop: !(isLandscape && deviceType === 'phone' && Platform.OS !== 'web')
                         ? contentRunsUnderHeader
                             ? 0
-                            : safeArea.top + mobileHeaderHeight + (!isTablet && realtimeStatus !== 'disconnected' ? VOICE_PILL_TOTAL_HEIGHT : 0)
+                            : safeArea.top + mobileHeaderHeight + (!responsiveLayout.desktopShell && realtimeStatus !== 'disconnected' ? VOICE_PILL_TOTAL_HEIGHT : 0)
                         : 0,
                 }}
             >
@@ -628,12 +658,15 @@ export const SessionView = React.memo((props: {
                         onBackPress={() => router.back()}
                     />
                     {/* Voice status bar below header - not on tablet (shown in sidebar) */}
-                    {!isTablet && realtimeStatus !== 'disconnected' && (
+                    {!responsiveLayout.desktopShell && realtimeStatus !== 'disconnected' && (
                         <VoiceAssistantStatusBar variant="full" />
                     )}
                 </View>
             )}
-            {deviceType === 'phone' && githubIssuesSelection ? (
+            {(
+                (!responsiveLayout.desktopShell && deviceType === 'phone')
+                || (codexFirstContract.enabled && responsiveLayout.rightWorkspace === 'unavailable')
+            ) && githubIssuesSelection ? (
                 <NativeModal
                     visible={mobileGithubIssuesVisible}
                     animationType="slide"
@@ -725,7 +758,7 @@ export const SessionView = React.memo((props: {
                         windowWidth={windowWidth}
                         oppositeWidth={panelWidths.leftWidth}
                         oppositeVisible={!zenMode}
-                        label="Resize workspace panel"
+                        label={t('codexFirst.resizeWorkspacePanel')}
                         onWidthChange={(width) => storage.getState().applyLocalSettings({
                             studioRightPanelWidth: width,
                             studioLastResizedPanel: 'right',
@@ -743,6 +776,7 @@ export const SessionView = React.memo((props: {
             <Animated.View style={[{ minWidth: 0, alignSelf: 'stretch' }, animatedSidebarStyle]}>
                 <View style={{ width: sidebarWidth, flex: 1 }}>
                     <FilesSidebar
+                        codexFirstEnabled={codexFirstContract.enabled}
                         sessionId={sessionId}
                         selectedPath={sidebarPanelActive === 'changes' ? scrollToFile : sidebarPanelActive === 'allFiles' ? fileViewPath : null}
                         onFilePress={handleSidebarFilePress}
@@ -759,10 +793,11 @@ export const SessionView = React.memo((props: {
                         onCreateSideChat={createSideChat}
                         canCreateSideChat={!!sideChatForkSource}
                         creatingSideChat={creatingSideChat}
-                        quickPanelEnabled={sideChatQuickPanelEnabled}
+                        quickPanelEnabled={workspaceChrome.quickPanelEnabled}
                         quickPanelExpanded={showSidebar}
                         quickPanelChangedFilesCount={changedFilesCount}
                         quickPanelShowFileActions={showQuickPanelFileActions}
+                        quickPanelShowSideChatAction={showQuickPanelSideChatAction}
                         onCollapseQuickPanel={collapseSidebar}
                         githubIssuesSelection={githubIssuesSelection}
                         onGithubIssuesSelectionChange={updateGithubIssuesSelection}

@@ -14,6 +14,8 @@ import { trackAccountCreated, trackAccountRestored } from '@/track';
 import { HomeHeaderNotAuth } from "@/components/HomeHeader";
 import { MainView } from "@/components/MainView";
 import { t } from '@/text';
+import { useLocalSetting } from '@/sync/storage';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
 
 export default function Home() {
     const auth = useAuth();
@@ -26,7 +28,13 @@ export default function Home() {
 }
 
 function Authenticated() {
-    return <MainView variant="phone" />;
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
+
+    return <MainView variant="phone" codexFirstEnabled={codexFirstContract.enabled} />;
 }
 
 function NotAuthenticated() {

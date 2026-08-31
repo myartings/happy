@@ -5,6 +5,7 @@ import {
     Text,
     Pressable,
     Platform,
+    useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -35,9 +36,12 @@ import { useStartSessionFromDraft } from '@/hooks/useStartSessionFromDraft';
 import { ProjectTodoButton } from './ProjectTodoButton';
 import type { VisualStyle } from '@/features/studio-visual-style/studioVisualStyle';
 import { shouldShowHomeConnectionStatus } from './homeConnectionStatus';
+import { CodexFirstHomeCanvas } from '@/features/codex-first-shell/CodexFirstHomeCanvas';
+import { resolveCodexFirstDesktopLayout } from '@/features/codex-first-shell/codexFirstDesktopHardening';
 
 interface MainViewProps {
     variant: 'phone' | 'sidebar';
+    codexFirstEnabled?: boolean;
     sidebarVisualStyle?: VisualStyle;
 }
 
@@ -342,14 +346,22 @@ const HeaderRight = React.memo(({ activeTab }: { activeTab: ActiveTabType }) => 
     return null;
 });
 
-export const MainView = React.memo(({ variant, sidebarVisualStyle }: MainViewProps) => {
+export const MainView = React.memo(({ variant, codexFirstEnabled = false, sidebarVisualStyle }: MainViewProps) => {
     const { theme } = useUnistyles();
     const sessionListViewData = useVisibleSessionListViewData();
     const isTablet = useIsTablet();
+    const { width: windowWidth } = useWindowDimensions();
     const router = useRouter();
     const friendRequests = useFriendRequests();
     const realtimeStatus = useRealtimeStatus();
     const safeArea = useSafeAreaInsets();
+    const responsiveLayout = React.useMemo(() => resolveCodexFirstDesktopLayout({
+        codexFirstEnabled,
+        legacyDesktopLayout: isTablet,
+        rightWorkspaceRequested: false,
+        windowWidth,
+        zenMode: false,
+    }), [codexFirstEnabled, isTablet, windowWidth]);
     const {
         isStarting: isStartingHomeSession,
         phase: homeSessionPhase,
@@ -411,9 +423,13 @@ export const MainView = React.memo(({ variant, sidebarVisualStyle }: MainViewPro
         if (sessionListViewData === null) {
             return (
                 <View style={styles.sidebarContentContainer}>
-                    <View style={styles.tabletLoadingContainer}>
-                        <ActivityIndicator size="small" color={theme.colors.textSecondary} />
-                    </View>
+                    {codexFirstEnabled ? (
+                        <CodexFirstHomeCanvas compact />
+                    ) : (
+                        <View style={styles.tabletLoadingContainer}>
+                            <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+                        </View>
+                    )}
                 </View>
             );
         }
@@ -423,7 +439,7 @@ export const MainView = React.memo(({ variant, sidebarVisualStyle }: MainViewPro
             return (
                 <View style={styles.sidebarContentContainer}>
                     <View style={styles.emptyStateContainer}>
-                        <EmptySessionsTablet />
+                        {codexFirstEnabled ? <CodexFirstHomeCanvas compact /> : <EmptySessionsTablet />}
                     </View>
                 </View>
             );
@@ -432,17 +448,24 @@ export const MainView = React.memo(({ variant, sidebarVisualStyle }: MainViewPro
         // Sessions list
         return (
             <View style={styles.sidebarContentContainer}>
-                <SessionsList sidebarVisualStyle={sidebarVisualStyle} />
+                <SessionsList
+                    codexFirstEnabled={codexFirstEnabled}
+                    sidebarVisualStyle={sidebarVisualStyle}
+                />
             </View>
         );
     }
 
     // Phone variant
     // Tablet in phone mode - special case (when showing index view on tablets, show empty view)
-    if (isTablet) {
-        // Just show an empty view on tablets for the index view
-        // The sessions list is shown in the sidebar, so the main area should be blank
-        return <View style={styles.emptyStateContentContainer} />;
+    if (responsiveLayout.desktopShell) {
+        return codexFirstEnabled ? (
+            <CodexFirstHomeCanvas />
+        ) : (
+            // The legacy tablet keeps the historical blank main area because
+            // its Sessions list already lives in the drawer.
+            <View style={styles.emptyStateContentContainer} />
+        );
     }
 
     // Regular phone mode with tabs

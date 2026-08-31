@@ -1,0 +1,504 @@
+{
+  "schemaVersion": 1,
+  "slug": "codex-first-happy-client",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Await explicit authorization for any commit/push; handle native macOS adaptation and the optional Windows Server fixture repair as separate scoped workflows.",
+  "riskRequired": false,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/PRD.md Codex-first Happy Desktop; user persistent Goal 2026-08-30; decision D11 makes packaged Windows the complete current acceptance target",
+      "updated": "2026-08-30T15:48:45+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "decisions.md D1-D11; D11 supersedes prior macOS-first/read-only-Windows constraints and defers native macOS adaptation",
+      "updated": "2026-08-30T15:48:47+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "scoping.md Windows owning final-acceptance continuation: serial reference capture, matched comparison, TDD repair, rebuild/install, daily-loop, accessibility, and review",
+      "updated": "2026-08-30T15:48:48+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "risk-assessment.md Windows owning final-acceptance gate cleared with privacy, stale-UI, isolated-loop, exact-build, recovery, and protected-boundary controls",
+      "updated": "2026-08-30T15:48:50+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Packaged Home false-offline TDD tracer: intended 1/1 RED; socket-state GREEN; focused 11/11, Codex-first 76/76, Happy App 218 files/1748 tests, typecheck and protected/diff checks pass",
+      "updated": "2026-08-30T16:00:44+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Final configured check: 7/8 commands pass; App/Server typechecks, Happy App 220 files/1761 tests, workflow validator, 14 core tests, 14 CI tests, and strict audit pass. Only Happy Server 105/107 remains from two unchanged native-Windows POSIX /tmp fixture mismatches; packages/happy-server diff is empty. Final unsigned package/install/hash/recovery/UIA acceptance receipts are in validation.md.",
+      "updated": "2026-08-30T18:08:42+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Final whole-diff review: 65 tracked and 72 untracked paths, empty index, no protected auth/sync operation/protocol/Server/CLI/mobile diff, tracked/installed guard hash equality, no dependency/binary/secret-marker drift, all prior 3 P1 and 1 P2 findings plus final packaged workspace-label/New-Session-placeholder findings closed by RED-GREEN tests, App 220 files/1761 tests; no remaining actionable source finding. See validation.md.",
+      "updated": "2026-08-30T18:15:10+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md complete: Windows owning package/UI acceptance, final 7/8 accepted-gap check, passed whole-diff review, AC-001–AC-032 classification, exact hashes, nine-backup rollback inputs, limitations, no-commit boundary, Mac handoff, and exact-path final cleanup are recorded.",
+      "updated": "2026-08-30T18:19:07+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T18:29:17+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T18:31:07+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md#codex-first-happy-desktop; user decisions 2026-08-30"
+    },
+    {
+      "at": "2026-08-29T18:31:07+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/decisions.md"
+    },
+    {
+      "at": "2026-08-29T18:31:31+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Capture current macOS Codex and Happy runtime evidence and build the daily-loop gap matrix"
+    },
+    {
+      "at": "2026-08-29T19:09:50+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/risk-assessment.md; cleared-with-controls for client presentation only"
+    },
+    {
+      "at": "2026-08-29T19:12:33+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/scoping.md; ready for serial T01 implementation"
+    },
+    {
+      "at": "2026-08-29T19:12:50+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T01: establish the packaged-desktop Codex-first contract and rollback seam"
+    },
+    {
+      "at": "2026-08-29T21:07:49+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "8 configured commands; 0 failures"
+    },
+    {
+      "at": "2026-08-30T09:16:29+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md#codex-first-happy-desktop; decisions.md D8; 20260830 Windows ownership-transfer session handoff"
+    },
+    {
+      "at": "2026-08-30T09:16:36+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/decisions.md D1-D8; D8 authorizes bounded Windows ownership transfer"
+    },
+    {
+      "at": "2026-08-30T09:16:43+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/risk-assessment.md Windows RED-only ownership addendum; existing client-presentation controls apply"
+    },
+    {
+      "at": "2026-08-30T09:16:52+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/scoping.md Windows ownership addendum; ready for one RED-only public contract test"
+    },
+    {
+      "at": "2026-08-30T09:26:46+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md#codex-first-happy-desktop; decisions.md D8; recorded Windows RED and user continuation for minimal GREEN"
+    },
+    {
+      "at": "2026-08-30T09:26:52+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/decisions.md D1-D8; D8 authorizes the tested Windows adaptation"
+    },
+    {
+      "at": "2026-08-30T09:26:58+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/risk-assessment.md Windows minimal GREEN addendum; pure client eligibility with existing rollback and stop controls"
+    },
+    {
+      "at": "2026-08-30T09:27:05+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/scoping.md Windows minimal GREEN continuation; ready for one predicate change and focused verification"
+    },
+    {
+      "at": "2026-08-30T09:42:14+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/codex-first-happy-client.md remains the accepted AC-001 through AC-032 contract; decision D8 authorizes additive native Windows package validation"
+    },
+    {
+      "at": "2026-08-30T09:42:15+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-first-happy-client/decisions.md D1-D8 remain decided; D8 bounds Windows package work and forbids commit, push, publication, or weakening Happy features"
+    },
+    {
+      "at": "2026-08-30T09:42:16+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "scoping.md Windows native package-validation continuation binds happyctl to the exact owning worktree and permits only doctor, build-desktop, and update-desktop -DryRun"
+    },
+    {
+      "at": "2026-08-30T09:42:17+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "risk-assessment.md Windows native package-validation addendum controls exact-source binding, generated writes, tracked-state comparison, unsigned package evidence, and no install or launch"
+    },
+    {
+      "at": "2026-08-30T10:11:58+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/specs/codex-first-happy-client.md Windows additive validation and user authorization on 2026-08-30 retain the accepted macOS-first AC-001 through AC-032 contract"
+    },
+    {
+      "at": "2026-08-30T10:11:59+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md D1-D9; D9 authorizes only the exact recoverable local Windows Happy (dev) replacement and bounded launch verification"
+    },
+    {
+      "at": "2026-08-30T10:12:00+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "risk-assessment.md Windows authorized installation gate cleared-with-controls: exact target, KeepBackups=4, registry snapshot, hash equality, automatic rollback, and no signing/release"
+    },
+    {
+      "at": "2026-08-30T10:12:01+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "scoping.md Windows authorized install continuation is ready for exact-worktree doctor, matching dry-run/update with KeepBackups=4, and verify-desktop only"
+    },
+    {
+      "at": "2026-08-30T10:18:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "Windows contract 7/7, exact NSIS install, built/installed hash equality, four retained backups with registry snapshot, verify-desktop exact-path launch, and postinstall integrity checks passed"
+    },
+    {
+      "at": "2026-08-30T10:58:13+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "scoping.md whole-diff verification continuation: full 59 tracked / 64 untracked scope, deterministic checks, protected boundaries, and explicit macOS runtime gaps"
+    },
+    {
+      "at": "2026-08-30T10:58:14+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T01-T08 and Windows eligibility source are complete; focused/full App checks, typecheck, native package/install/hash/launch, diff, and protected-path evidence pass"
+    },
+    {
+      "at": "2026-08-30T10:58:15+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Inspect the complete diff, rerun the applicable deterministic family, map AC-001 through AC-032, and record review findings plus unavailable macOS runtime gaps"
+    },
+    {
+      "at": "2026-08-30T11:24:14+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "validation.md Whole-diff acceptance review: 3 P1 blockers (notification target, New Session width budget, narrow Header ownership) and 1 P2 Machine-collision ambiguity; no product fixes made"
+    },
+    {
+      "at": "2026-08-30T11:24:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "Happy App 1738/1738 and typechecks/workflow/package integrity pass, but AC-009 and AC-024 fail semantic review; Windows Server retains 2 unchanged POSIX-path fixture failures"
+    },
+    {
+      "at": "2026-08-30T11:50:59+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User instruction on 2026-08-30 authorizes TDD repair of all four validation.md findings within the accepted AC-009/AC-024 and Machine-disambiguation contract"
+    },
+    {
+      "at": "2026-08-30T11:51:00+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "risk-assessment.md Whole-diff remediation risk addendum: client-only projections, no new trigger, package/release operations excluded"
+    },
+    {
+      "at": "2026-08-30T11:51:01+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "scoping.md Whole-diff remediation continuation: four serial RED-GREEN tracer bullets, exact host seams, local-only tracker exception"
+    },
+    {
+      "at": "2026-08-30T11:51:02+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Four accepted review findings reopened for serial TDD remediation; no remediation product edit has begun"
+    },
+    {
+      "at": "2026-08-30T11:51:03+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Reopened after blocked whole-diff check; rerun after four remediation tracer bullets"
+    },
+    {
+      "at": "2026-08-30T11:51:04+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Reopened after blocked whole-diff review; repeat semantic review after remediation verification"
+    },
+    {
+      "at": "2026-08-30T11:51:06+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD-fix notification targeting, composed New Session width, narrow Header ownership, and duplicate Recent Project identity"
+    },
+    {
+      "at": "2026-08-30T12:03:31+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Four validation.md findings repaired via serial RED-GREEN tracer bullets; focused 7 files/30 tests, Happy App 216 files/1743 tests, and App/Server typechecks pass"
+    },
+    {
+      "at": "2026-08-30T12:03:33+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run workflow checks, protected-path and diff audits, then repeat whole-diff semantic review of all four remediated findings"
+    },
+    {
+      "at": "2026-08-30T12:08:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-30T12:11:30+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "validation.md TDD remediation repeat whole-diff review: all 3 P1 and 1 P2 findings closed; no remaining actionable source finding"
+    },
+    {
+      "at": "2026-08-30T12:11:31+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "7/8 configured commands pass: Happy App 217 files/1747 tests and both typechecks pass; Server retains 2 unchanged Windows path-fixture failures, and remediated source lacks current packaged Windows/macOS runtime evidence"
+    },
+    {
+      "at": "2026-08-30T12:27:30+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md D1-D10; D10 explicitly authorizes the current remediated Windows rebuild, recoverable Happy (dev) replacement, bounded launch, and read-only packaged inspection"
+    },
+    {
+      "at": "2026-08-30T12:27:31+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "scoping.md Current remediated Windows package continuation: serial focused/full checks, exact-worktree doctor/build, hash-bound dry-run/install with five retained backups, launch and non-destructive smoke"
+    },
+    {
+      "at": "2026-08-30T12:27:31+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "risk-assessment.md Current remediated Windows candidate gate cleared-with-controls: exact source/target, KeepBackups=5, registry snapshot, automatic failure restoration, byte equality, no signing/release/protected mutation"
+    },
+    {
+      "at": "2026-08-30T12:27:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Reopened for the user-authorized current Windows rebuild/install/launch and packaged smoke; prior candidate remains historical until fresh evidence is recorded"
+    },
+    {
+      "at": "2026-08-30T12:47:27+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-30T12:52:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "Current remediated Windows build/install/launch/responsive smoke passed; the configured check still has two unchanged native-Windows Server path-fixture failures and final macOS daily-loop/rollback evidence remains unavailable. See validation.md."
+    },
+    {
+      "at": "2026-08-30T15:48:45+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md Codex-first Happy Desktop; user persistent Goal 2026-08-30; decision D11 makes packaged Windows the complete current acceptance target"
+    },
+    {
+      "at": "2026-08-30T15:48:47+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "decisions.md D1-D11; D11 supersedes prior macOS-first/read-only-Windows constraints and defers native macOS adaptation"
+    },
+    {
+      "at": "2026-08-30T15:48:48+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "scoping.md Windows owning final-acceptance continuation: serial reference capture, matched comparison, TDD repair, rebuild/install, daily-loop, accessibility, and review"
+    },
+    {
+      "at": "2026-08-30T15:48:50+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "risk-assessment.md Windows owning final-acceptance gate cleared with privacy, stale-UI, isolated-loop, exact-build, recovery, and protected-boundary controls"
+    },
+    {
+      "at": "2026-08-30T15:48:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Reopened for fresh same-size/theme/state Windows Codex/Happy evidence, complete surface inventory, keyboard/UIA inspection, bounded real daily-use loop, and final package receipts"
+    },
+    {
+      "at": "2026-08-30T15:48:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Reopened because D11 changes the owning delivery target and requires a fresh whole-diff and evidence review after Windows acceptance checks"
+    },
+    {
+      "at": "2026-08-30T15:48:55+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "pending",
+      "evidence": "Pending complete Windows acceptance, deviations/limits/rollback documentation, review, and final user handoff; macOS is deferred"
+    },
+    {
+      "at": "2026-08-30T15:53:36+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Runtime RED target: packaged Home Canvas reads voice realtimeStatus instead of primary socketStatus, producing a false connection-error while synced Sessions show connected"
+    },
+    {
+      "at": "2026-08-30T15:53:38+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD-fix the false offline Home Canvas by binding its public state to the existing sync socket status, then reverify packaged Windows"
+    },
+    {
+      "at": "2026-08-30T16:00:44+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Packaged Home false-offline TDD tracer: intended 1/1 RED; socket-state GREEN; focused 11/11, Codex-first 76/76, Happy App 218 files/1748 tests, typecheck and protected/diff checks pass"
+    },
+    {
+      "at": "2026-08-30T16:00:46+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Build the exact fixed Windows source, dry-run and recoverably replace Happy (dev), then rerun Home, full-surface, keyboard/UIA, and bounded daily-loop acceptance"
+    },
+    {
+      "at": "2026-08-30T18:07:44+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "8 configured commands; 1 failures"
+    },
+    {
+      "at": "2026-08-30T18:08:42+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Final configured check: 7/8 commands pass; App/Server typechecks, Happy App 220 files/1761 tests, workflow validator, 14 core tests, 14 CI tests, and strict audit pass. Only Happy Server 105/107 remains from two unchanged native-Windows POSIX /tmp fixture mismatches; packages/happy-server diff is empty. Final unsigned package/install/hash/recovery/UIA acceptance receipts are in validation.md."
+    },
+    {
+      "at": "2026-08-30T18:15:10+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Final whole-diff review: 65 tracked and 72 untracked paths, empty index, no protected auth/sync operation/protocol/Server/CLI/mobile diff, tracked/installed guard hash equality, no dependency/binary/secret-marker drift, all prior 3 P1 and 1 P2 findings plus final packaged workspace-label/New-Session-placeholder findings closed by RED-GREEN tests, App 220 files/1761 tests; no remaining actionable source finding. See validation.md."
+    },
+    {
+      "at": "2026-08-30T18:15:11+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record the completed Windows acceptance, named accepted gaps, recovery inputs, no-commit boundary, and archive with commit pending; then normalize workflow evidence and perform final cleanup/audit."
+    },
+    {
+      "at": "2026-08-30T18:19:07+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md complete: Windows owning package/UI acceptance, final 7/8 accepted-gap check, passed whole-diff review, AC-001–AC-032 classification, exact hashes, nine-backup rollback inputs, limitations, no-commit boundary, Mac handoff, and exact-path final cleanup are recorded."
+    },
+    {
+      "at": "2026-08-30T18:19:37+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Completed and installed the Windows-owning Codex-first Happy client with TDD-closed product findings, 220-file/1761-test App regression, accepted unchanged Server fixture gap, nine-backup recovery, packaged UIA/daily-loop evidence, and passed whole-diff review.; commit: pending; follow-up: Await explicit authorization for any commit/push; handle native macOS adaptation and the optional Windows Server fixture repair as separate scoped workflows."
+    }
+  ],
+  "updated": "2026-08-30T18:19:37+00:00",
+  "archivedAt": "2026-08-30T18:19:37+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Completed and installed the Windows-owning Codex-first Happy client with TDD-closed product findings, 220-file/1761-test App regression, accepted unchanged Server fixture gap, nine-backup recovery, packaged UIA/daily-loop evidence, and passed whole-diff review.",
+  "archiveFollowUp": "Await explicit authorization for any commit/push; handle native macOS adaptation and the optional Windows Server fixture repair as separate scoped workflows."
+}

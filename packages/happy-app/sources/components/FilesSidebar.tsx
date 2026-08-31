@@ -35,6 +35,7 @@ import { SideChatQuickPanelControls } from './SideChatQuickPanelControls';
 import { GithubIssuesWorkspacePanel } from '@/features/github-issues/GithubIssuesWorkspacePanel';
 import type { GithubIssuesWorkspaceSelection } from '@/features/github-issues/githubIssuesWorkspace';
 import { getRightWorkspaceTabs } from '@/utils/sideChatQuickPanel';
+import { resolveCodexFirstWorkspacePanelPresentation } from '@/features/codex-first-shell/codexFirstWorkspaceChrome';
 
 export type SidebarMode = 'changes' | 'allFiles' | 'sideChat' | 'issues';
 type PickableSidebarMode = Exclude<SidebarMode, 'sideChat' | 'issues'>;
@@ -69,6 +70,7 @@ function panelLabel(panel: SidebarMode): string {
 }
 
 interface FilesSidebarProps {
+    codexFirstEnabled?: boolean;
     sessionId: string;
     selectedPath?: string | null;
     onFilePress?: (file: GitFileStatus) => void;
@@ -92,6 +94,7 @@ interface FilesSidebarProps {
     quickPanelExpanded: boolean;
     quickPanelChangedFilesCount: number;
     quickPanelShowFileActions: boolean;
+    quickPanelShowSideChatAction: boolean;
     onCollapseQuickPanel: () => void;
     githubIssuesSelection: GithubIssuesWorkspaceSelection | null;
     onGithubIssuesSelectionChange: (selection: GithubIssuesWorkspaceSelection) => void;
@@ -216,6 +219,7 @@ function collectDirPaths<T>(nodes: AnyTreeNode<T>[], acc: string[] = []): string
 }
 
 export const FilesSidebar = React.memo<FilesSidebarProps>(({
+    codexFirstEnabled = false,
     sessionId,
     selectedPath,
     onFilePress,
@@ -236,12 +240,24 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
     quickPanelExpanded,
     quickPanelChangedFilesCount,
     quickPanelShowFileActions,
+    quickPanelShowSideChatAction,
     onCollapseQuickPanel,
     githubIssuesSelection,
     onGithubIssuesSelectionChange,
 }) => {
     const router = useRouter();
     const { theme } = useUnistyles();
+    const codexFirstPresentation = resolveCodexFirstWorkspacePanelPresentation({
+        dark: theme.dark,
+        enabled: codexFirstEnabled,
+    });
+    const codexFirstHeaderStyle = codexFirstPresentation ? {
+        backgroundColor: codexFirstPresentation.surfaceColor,
+        borderBottomColor: codexFirstPresentation.borderColor,
+        borderBottomWidth: 1,
+        minHeight: codexFirstPresentation.headerHeight,
+        paddingHorizontal: codexFirstPresentation.headerPaddingHorizontal,
+    } : null;
     const preferredModifier = React.useMemo(() => getPreferredShortcutModifier(
         typeof navigator === 'undefined' ? undefined : navigator
     ), []);
@@ -354,11 +370,20 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
     // Empty sidebar: vertically-centered picker of panels to open (no header).
     if (activePanel === null) {
         return (
-            <View style={[styles.container, styles.pickerContainer]}>
+            <View style={[
+                styles.container,
+                styles.pickerContainer,
+                codexFirstPresentation && {
+                    backgroundColor: codexFirstPresentation.backgroundColor,
+                    borderLeftColor: codexFirstPresentation.borderColor,
+                },
+            ]}>
                 <View style={styles.pickerWrap}>
                     {PICKABLE_PANELS.map((p) => (
                         <Pressable
                             key={p.key}
+                            accessibilityLabel={panelLabel(p.key)}
+                            accessibilityRole="button"
                             onPress={() => onOpenPanel(p.key)}
                             style={({ pressed, hovered }: any) => [styles.pickerCard, (pressed || hovered) && styles.pickerCardPressed]}
                         >
@@ -370,6 +395,9 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                         </Pressable>
                     ))}
                     <Pressable
+                        accessibilityLabel={t('sideChat.newChat')}
+                        accessibilityRole="button"
+                        accessibilityState={{ busy: creatingSideChat, disabled: creatingSideChat || !canCreateSideChat }}
                         onPress={onCreateSideChat}
                         disabled={creatingSideChat || !canCreateSideChat}
                         style={({ pressed, hovered }: any) => [
@@ -396,6 +424,8 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
             {availablePanels.map((p) => (
                 <Pressable
                     key={p.key}
+                    accessibilityLabel={panelLabel(p.key)}
+                    accessibilityRole="menuitem"
                     onPress={() => {
                         setAddMenuOpen(false);
                         onOpenPanel(p.key);
@@ -410,6 +440,9 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                 </Pressable>
             ))}
             <Pressable
+                accessibilityLabel={t('sideChat.newChat')}
+                accessibilityRole="menuitem"
+                accessibilityState={{ busy: creatingSideChat, disabled: creatingSideChat || !canCreateSideChat }}
                 disabled={creatingSideChat || !canCreateSideChat}
                 onPress={() => {
                     setAddMenuOpen(false);
@@ -433,9 +466,15 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            codexFirstPresentation && {
+                backgroundColor: codexFirstPresentation.backgroundColor,
+                borderLeftColor: codexFirstPresentation.borderColor,
+            },
+        ]}>
             {quickPanelEnabled && activePanel && openPanels.includes('issues') ? (
-                <View style={styles.header}>
+                <View style={[styles.header, codexFirstHeaderStyle]}>
                     <View style={styles.chipRow}>
                         {workspaceTabs.map((key) => (
                             <PanelChip
@@ -450,16 +489,18 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                     <SideChatQuickPanelControls
                         activePanel={activePanel}
                         changedFilesCount={quickPanelChangedFilesCount}
+                        codexFirstEnabled={codexFirstEnabled}
                         creating={creatingSideChat}
                         expanded={quickPanelExpanded}
                         onOpenAllFiles={() => onOpenPanel('allFiles')}
                         onOpenChanges={() => onOpenPanel('changes')}
                         onToggle={onCollapseQuickPanel}
                         showFileActions={quickPanelShowFileActions}
+                        showSideChatAction={quickPanelShowSideChatAction}
                     />
                 </View>
             ) : quickPanelEnabled && activePanel && activePanel !== 'sideChat' ? (
-                <View style={styles.quickHeader}>
+                <View style={[styles.quickHeader, codexFirstHeaderStyle]}>
                     <View style={styles.quickHeaderTitle}>
                         <Octicons name={panelIcon(activePanel)} size={14} color={theme.colors.textSecondary} />
                         <Text style={styles.quickHeaderTitleText} numberOfLines={1}>{panelLabel(activePanel)}</Text>
@@ -467,16 +508,18 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                     <SideChatQuickPanelControls
                         activePanel={activePanel}
                         changedFilesCount={quickPanelChangedFilesCount}
+                        codexFirstEnabled={codexFirstEnabled}
                         creating={creatingSideChat}
                         expanded={quickPanelExpanded}
                         onOpenAllFiles={() => onOpenPanel('allFiles')}
                         onOpenChanges={() => onOpenPanel('changes')}
                         onToggle={onCollapseQuickPanel}
                         showFileActions={quickPanelShowFileActions}
+                        showSideChatAction={quickPanelShowSideChatAction}
                     />
                 </View>
             ) : !quickPanelEnabled ? (
-                <View style={styles.header}>
+                <View style={[styles.header, codexFirstHeaderStyle]}>
                     <View style={styles.chipRow}>
                         {openPanels.map((key) => (
                             <PanelChip
@@ -502,6 +545,8 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                         <Pressable
                             onPress={() => setAddMenuOpen((v) => !v)}
                             accessibilityLabel={t('files.addPanel')}
+                            accessibilityRole="button"
+                            accessibilityState={{ expanded: addMenuOpen }}
                             style={({ pressed, hovered }: any) => [
                                 styles.iconButton,
                                 (pressed || hovered || addMenuOpen) && { backgroundColor: theme.colors.surface },
@@ -536,9 +581,11 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                     canCreateSideChat={canCreateSideChat}
                     creatingSideChat={creatingSideChat}
                     quickPanelEnabled={quickPanelEnabled}
+                    codexFirstEnabled={codexFirstEnabled}
                     quickPanelExpanded={quickPanelExpanded}
                     quickPanelChangedFilesCount={quickPanelChangedFilesCount}
                     quickPanelShowFileActions={quickPanelShowFileActions}
+                    quickPanelShowSideChatAction={quickPanelShowSideChatAction}
                     onCollapseQuickPanel={onCollapseQuickPanel}
                     onOpenAllFiles={() => onOpenPanel('allFiles')}
                     onOpenChanges={() => onOpenPanel('changes')}
@@ -581,7 +628,7 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                 Platform.OS === 'web' ? (
                     <>
                         <Pressable style={styles.menuBackdrop} onPress={() => setAddMenuOpen(false)} />
-                        <View style={[styles.menuCard, styles.webMenuCard]}>{addMenuContent}</View>
+                        <View accessibilityRole="menu" style={[styles.menuCard, styles.webMenuCard]}>{addMenuContent}</View>
                     </>
                 ) : (
                     <>
@@ -599,7 +646,7 @@ export const FilesSidebar = React.memo<FilesSidebarProps>(({
                                 tintColor={theme.colors.glass.overlayTint}
                                 style={styles.menuSurface}
                             >
-                                {addMenuContent}
+                                <View accessibilityRole="menu">{addMenuContent}</View>
                             </MobileGlassSurface>
                         </AnimatedPopup>
                     </>
@@ -623,12 +670,24 @@ const PanelChip = React.memo(function PanelChip({
 }) {
     const { theme } = useUnistyles();
     const [hovered, setHovered] = React.useState(false);
+    const [focused, setFocused] = React.useState(false);
     const iconColor = active ? theme.colors.text : theme.colors.textSecondary;
     // Fade colour matches the chip background so the close (x) reads as an
     // overlay at the chip's end instead of resizing it.
     const fadeColor = theme.colors.surface;
     return (
         <Pressable
+            accessibilityLabel={panelLabel(panel)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            onBlur={(event: any) => {
+                const currentTarget = event?.currentTarget;
+                const relatedTarget = event?.relatedTarget ?? event?.nativeEvent?.relatedTarget;
+                if (typeof currentTarget?.contains !== 'function' || !currentTarget.contains(relatedTarget)) {
+                    setFocused(false);
+                }
+            }}
+            onFocus={() => setFocused(true)}
             onPress={onSelect}
             // Pointer enter/leave (not hover in/out): leave only fires when the
             // cursor exits the chip *and its descendants*, so moving onto the
@@ -640,13 +699,22 @@ const PanelChip = React.memo(function PanelChip({
                 styles.chip,
                 active && styles.chipActive,
                 hovered && !active && styles.chipHovered,
+                focused && (Platform.OS === 'web' ? ({
+                    outlineColor: theme.colors.textLink,
+                    outlineOffset: 1,
+                    outlineStyle: 'solid',
+                    outlineWidth: 2,
+                } as any) : {
+                    borderColor: theme.colors.textLink,
+                    borderWidth: 2,
+                }),
             ]}
         >
             <Octicons name={panelIcon(panel)} size={13} color={iconColor} />
             <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
                 {panelLabel(panel)}
             </Text>
-            {hovered && (
+            {(hovered || focused) && (
                 <View style={styles.chipCloseOverlay} pointerEvents="box-none">
                     <LinearGradient
                         colors={['transparent', fadeColor, fadeColor]}
@@ -661,6 +729,7 @@ const PanelChip = React.memo(function PanelChip({
                             onClose();
                         }}
                         accessibilityLabel={t('files.closePanel')}
+                        accessibilityRole="button"
                         hitSlop={6}
                         style={styles.chipClose}
                     >

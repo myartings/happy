@@ -5,6 +5,20 @@ import {
 } from './studioComposerStyle';
 
 describe('Studio desktop composer style', () => {
+    it('aligns the packaged Codex-first composer to the measured 750 by 108pt surface', () => {
+        expect(resolveDesktopComposerStyle({
+            codexFirstEnabled: true,
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+        })).toMatchObject({
+            visualStyle: 'studio',
+            maxWidth: 750,
+            shellMinHeight: 108,
+            shellRadius: 20,
+            showElevation: true,
+        });
+    });
+
     it('resolves the accepted elevated composer geometry in packaged Studio', () => {
         expect(resolveDesktopComposerStyle({
             isTauriRuntime: true,
@@ -27,6 +41,67 @@ describe('Studio desktop composer style', () => {
             autocompleteRowHeight: 40,
             autocompleteRadius: 12,
             showElevation: true,
+        });
+    });
+
+    it('uses a coherent dark surface instead of retaining the light composer shell', () => {
+        expect(resolveDesktopComposerStyle({
+            codexFirstEnabled: true,
+            isDark: true,
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+        })).toMatchObject({
+            shellBackground: '#292A2D',
+            shellBorder: 'rgba(255, 255, 255, 0.14)',
+        });
+
+        expect(resolveStudioComposerStatePresentation({
+            codexFirstEnabled: true,
+            isDark: true,
+            hasText: true,
+            isStudio: true,
+            hasAttachments: false,
+            hasSuggestions: false,
+            pickerOpen: false,
+            isSending: false,
+            showAbortButton: false,
+            isAborting: false,
+            isSendBlocked: false,
+        })).toMatchObject({
+            shellBackground: '#292A2D',
+            shellBorder: 'rgba(255, 255, 255, 0.22)',
+            primaryActionBackground: '#F5F5F5',
+            primaryActionForeground: '#232426',
+        });
+    });
+
+    it('keeps legacy packaged Studio on its established light tokens', () => {
+        expect(resolveDesktopComposerStyle({
+            codexFirstEnabled: false,
+            isDark: true,
+            isTauriRuntime: true,
+            requestedStyle: 'studio',
+        })).toMatchObject({
+            shellBackground: '#FFFFFF',
+            shellBorder: '#DDDDDE',
+        });
+        expect(resolveStudioComposerStatePresentation({
+            codexFirstEnabled: false,
+            isDark: true,
+            hasText: true,
+            isStudio: true,
+            hasAttachments: false,
+            hasSuggestions: false,
+            pickerOpen: false,
+            isSending: false,
+            showAbortButton: false,
+            isAborting: false,
+            isSendBlocked: false,
+        })).toMatchObject({
+            shellBackground: '#FFFFFF',
+            shellBorder: '#D2D2D4',
+            primaryActionBackground: '#242426',
+            primaryActionForeground: '#FFFFFF',
         });
     });
 

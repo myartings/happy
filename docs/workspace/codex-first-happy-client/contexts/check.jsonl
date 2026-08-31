@@ -1,0 +1,8 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/codex-first-happy-client/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/codex-first-happy-client.md","reason":"Acceptance criteria to verify"}
+{"path":"docs/tasks/codex-first-happy-client-tasks.md","reason":"Planned deterministic proof by slice"}
+{"path":"docs/workspace/codex-first-happy-client/risk-assessment.md","reason":"Risk controls and protected stop conditions to audit"}
+{"path":"docs/workspace/codex-first-happy-client/deviation-ledger.md","reason":"Feature-preservation exceptions requiring closure evidence"}
+{"path":"packages/happy-app/sources","reason":"App presentation, state projections, routes, and focused tests"}

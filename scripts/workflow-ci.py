@@ -179,6 +179,33 @@ def staged_entry(path: str) -> tuple[str, str] | None:
     return mode, object_id
 
 
+def staged_paths() -> set[str]:
+    listed = subprocess.run(
+        ["git", "ls-files", "--cached", "-z"], cwd=ROOT,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+    )
+    if listed.returncode:
+        raise RuntimeError("cannot enumerate staged candidate paths")
+    return {
+        record.decode("utf-8", errors="surrogateescape")
+        for record in listed.stdout.split(b"\0") if record
+    }
+
+
+def staged_blob_entry(path: str) -> tuple[str, bytes] | None:
+    entry = staged_entry(path)
+    if entry is None:
+        return None
+    mode, object_id = entry
+    blob = subprocess.run(
+        ["git", "cat-file", "blob", object_id], cwd=ROOT,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+    )
+    if blob.returncode:
+        raise RuntimeError(f"cannot inspect staged blob: {path}")
+    return mode, blob.stdout
+
+
 def revision_entry(revision: str, path: str) -> tuple[str, bytes] | None:
     listed = subprocess.run(
         ["git", "ls-tree", "-z", revision, "--", literal_pathspec(path)], cwd=ROOT,
@@ -214,6 +241,10 @@ def candidate_entry(path: Path) -> tuple[str, bytes] | None:
         return None
     mode = "100755" if path.stat().st_mode & 0o111 else "100644"
     return mode, path.read_bytes()
+
+
+def canonical_text_bytes(data: bytes) -> bytes:
+    return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
 
 
 def canonical_lifecycle_entry_errors(
@@ -300,38 +331,15 @@ def archive_data_rows(value: bytes | None) -> list[str]:
     ]
 
 
-def lifecycle_merge_errors(
-    staged: bool, evidence_root: Path, ours: str, theirs: str, revision: str,
-) -> list[str]:
+def merge_archive_overlay(
+    staged: bool, ours: str, theirs: str, revision: str,
+) -> tuple[list[str], list[str], str]:
     errors: list[str] = []
-    paths = revision_lifecycle_paths(ours) | revision_lifecycle_paths(theirs)
-    if staged:
-        workspace_root = evidence_root / "docs" / "workspace"
-        candidate_paths = {
-            path.relative_to(evidence_root).as_posix()
-            for path in workspace_root.rglob("*")
-            if path.is_file() or path.is_symlink()
-        } if workspace_root.exists() else set()
-    else:
-        candidate_paths = lifecycle_paths(revision_paths(revision))
-
-    def merged_entry(path: str) -> tuple[str, bytes] | None:
-        if staged:
-            return candidate_entry(evidence_root / path)
-        return revision_entry(revision, path)
-
-    for path in sorted(candidate_paths - paths):
-        errors.append(f"merge integration added new lifecycle evidence: {path}")
     archive_path = ARCHIVE_ID
-    for path in sorted(paths - {archive_path}):
-        candidate_value = merged_entry(path)
-        ours_value = revision_entry(ours, path)
-        theirs_value = revision_entry(theirs, path)
-        expected = {value for value in (ours_value, theirs_value) if value is not None}
-        if candidate_value not in expected:
-            errors.append(f"merge integration rewrote inherited lifecycle evidence: {path}")
-
-    candidate_archive_entry = merged_entry(archive_path)
+    candidate_archive_entry = (
+        staged_blob_entry(archive_path)
+        if staged else revision_entry(revision, archive_path)
+    )
     ours_archive_entry = revision_entry(ours, archive_path)
     theirs_archive_entry = revision_entry(theirs, archive_path)
     parent_archive_modes = {
@@ -357,14 +365,73 @@ def lifecycle_merge_errors(
     ours_rows = archive_data_rows(ours_archive)
     theirs_rows = archive_data_rows(theirs_archive)
     expected_rows = theirs_rows + [row for row in ours_rows if row not in theirs_rows]
-    if archive_data_rows(candidate_archive) != expected_rows:
-        errors.append("merge integration archive is not the exact parent-row union")
     header = lambda value: [
         line for line in (value or b"").decode(errors="replace").splitlines()
         if line not in archive_data_rows(value)
     ]
     if header(candidate_archive) != header(theirs_archive):
         errors.append("merge integration changed archive structure outside data rows")
+    candidate_rows = archive_data_rows(candidate_archive)
+    local_line = ""
+    if candidate_rows == expected_rows:
+        pass
+    elif (
+        len(candidate_rows) == len(expected_rows) + 1
+        and candidate_rows[:-1] == expected_rows
+    ):
+        local_line = candidate_rows[-1]
+    else:
+        errors.append(
+            "merge integration archive must be the exact parent-row union "
+            "plus at most one local terminal row"
+        )
+    return errors, [*header(theirs_archive), *expected_rows], local_line
+
+
+def lifecycle_merge_errors(
+    staged: bool, ours: str, theirs: str, revision: str,
+    *, local_slug: str = "",
+) -> list[str]:
+    errors: list[str] = []
+    parent_paths = revision_lifecycle_paths(ours) | revision_lifecycle_paths(theirs)
+    candidate_paths = (
+        lifecycle_paths(staged_paths())
+        if staged else lifecycle_paths(revision_paths(revision))
+    )
+    local_root = f"docs/workspace/{local_slug}/" if local_slug else ""
+
+    def is_local(path: str) -> bool:
+        return bool(local_root and path.startswith(local_root))
+
+    inherited_local = sorted(path for path in parent_paths if is_local(path))
+    if inherited_local:
+        errors.append(
+            "merge-local workflow collides with inherited lifecycle evidence: "
+            + ", ".join(inherited_local)
+        )
+    for path in sorted(candidate_paths - parent_paths):
+        if not is_local(path):
+            errors.append(f"merge integration added new lifecycle evidence: {path}")
+
+    skipped = {ARCHIVE_ID}
+    if local_slug:
+        skipped.add(ACTIVE_ID)
+    for path in sorted(parent_paths - skipped):
+        if is_local(path):
+            continue
+        candidate_value = (
+            staged_blob_entry(path)
+            if staged else revision_entry(revision, path)
+        )
+        ours_value = revision_entry(ours, path)
+        theirs_value = revision_entry(theirs, path)
+        expected = {
+            value for value in (ours_value, theirs_value) if value is not None
+        }
+        if candidate_value not in expected:
+            errors.append(
+                f"merge integration rewrote inherited lifecycle evidence: {path}"
+            )
     return errors
 
 
@@ -374,11 +441,7 @@ def novel_non_lifecycle_merge_paths(
     expected_tree = deterministic_merge_tree(ours, theirs)
     expected_paths = revision_paths(expected_tree)
     if staged:
-        candidate_paths = {
-            path.relative_to(evidence_root).as_posix()
-            for path in evidence_root.rglob("*")
-            if path.is_file() or path.is_symlink()
-        }
+        candidate_paths = staged_paths()
     else:
         candidate_paths = revision_paths(revision)
     novel: list[str] = []
@@ -386,8 +449,7 @@ def novel_non_lifecycle_merge_paths(
         expected_paths | candidate_paths
     )):
         candidate_value = (
-            candidate_entry(evidence_root / path)
-            if staged else revision_entry(revision, path)
+            staged_blob_entry(path) if staged else revision_entry(revision, path)
         )
         if candidate_value != revision_entry(expected_tree, path):
             novel.append(path)
@@ -444,24 +506,81 @@ def load_review_module(evidence_root: Path):
 
 def merge_integration_errors(
     staged: bool, base: str, evidence_root: Path, ours: str, theirs: str,
-    revision: str,
+    revision: str, *, novel_paths: list[str] | None = None,
 ) -> list[str]:
-    # This path protects inherited task evidence only. Novel non-lifecycle merge
-    # bytes remain an ordinary engineering diff and require their own applicable
-    # checks and fresh Matt review.
+    # Protect inherited task evidence while permitting one fresh, fully checked
+    # workflow to describe and archive the merge integration itself. Novel
+    # non-lifecycle bytes still require that workflow's applicable checks and
+    # fresh Matt review.
     errors: list[str] = []
     paths = changed_paths(staged, theirs if staged else base)
     if not paths:
         errors.append("submitted Git diff is empty")
     active = active_slug(evidence_root)
-    if active:
-        errors.append(
-            f"active Trellis task must be finished and archived before "
-            f"merge submission: {active}"
-        )
-    errors.extend(
-        lifecycle_merge_errors(staged, evidence_root, ours, theirs, revision)
+    archive_errors, archive_base_lines, local_line = merge_archive_overlay(
+        staged, ours, theirs, revision,
     )
+    errors.extend(archive_errors)
+
+    local_slug = active
+    if active and local_line:
+        errors.append(
+            "merge-local workflow cannot be active and archived simultaneously"
+        )
+    elif local_line:
+        cells = archive_cells(local_line)
+        if (
+            len(cells) != 5
+            or not re.fullmatch(r"[A-Za-z0-9._-]+", cells[1])
+            or cells[2] != "archive-introducing-commit"
+        ):
+            errors.append(
+                "merge-local terminal row must contain a valid workflow slug "
+                "and archive-introducing-commit identity"
+            )
+            local_slug = ""
+        else:
+            local_slug = cells[1]
+
+    if novel_paths and not (active or (local_line and local_slug)):
+        errors.append(
+            "novel non-lifecycle merge bytes require one checked and reviewed "
+            "merge-local workflow"
+        )
+
+    errors.extend(
+        lifecycle_merge_errors(
+            staged, ours, theirs, revision, local_slug=local_slug,
+        )
+    )
+    candidate_lifecycle = (
+        lifecycle_paths(staged_paths())
+        if staged else lifecycle_paths(revision_paths(revision))
+    )
+    if active:
+        workflow_root = f"docs/workspace/{active}/"
+        local_paths = {
+            path for path in candidate_lifecycle
+            if path == ACTIVE_ID or path.startswith(workflow_root)
+        }
+        errors.extend(
+            prearchive_candidate_errors(
+                staged, evidence_root, local_paths, active, merge_mode=True,
+            )
+        )
+    elif local_line and local_slug:
+        workflow_root = f"docs/workspace/{local_slug}/"
+        local_paths = {
+            path for path in candidate_lifecycle
+            if path in {ACTIVE_ID, ARCHIVE_ID} or path.startswith(workflow_root)
+        }
+        errors.extend(
+            archived_delivery_errors(
+                staged, base, evidence_root, local_paths, local_slug, local_line,
+                merge_archive_base_lines=archive_base_lines,
+                merge_parents=(ours, theirs),
+            )
+        )
     errors.extend(source_delivery_errors(ours, theirs))
     return errors
 
@@ -477,6 +596,7 @@ def lifecycle_paths(paths: set[str]) -> set[str]:
 
 def prearchive_candidate_errors(
     staged: bool, evidence_root: Path, paths: set[str], slug: str,
+    *, merge_mode: bool = False,
 ) -> list[str]:
     errors: list[str] = []
     errors.extend(canonical_lifecycle_entry_errors(staged, evidence_root, slug))
@@ -488,7 +608,7 @@ def prearchive_candidate_errors(
             f"submission: {slug}"
         ]
     workflow_root = f"docs/workspace/{slug}"
-    if archive_path in paths:
+    if archive_path in paths and not merge_mode:
         errors.append("pre-archive work candidate cannot mutate workflow archive")
     foreign_lifecycle = sorted(
         path for path in lifecycle_paths(paths)
@@ -529,8 +649,11 @@ def prearchive_candidate_errors(
         state_module = load_state_module(evidence_root)
         expected_active = state_module.render_active_data(
             state_module.active_data()
-        ).replace("\n", os.linesep).encode("utf-8")
-        if (evidence_root / ACTIVE).read_bytes() != expected_active:
+        ).encode("utf-8")
+        actual_active = canonical_text_bytes(
+            (evidence_root / ACTIVE).read_bytes()
+        )
+        if actual_active != expected_active:
             errors.append(
                 "pre-archive ACTIVE projection is not canonical and unique"
             )
@@ -551,7 +674,12 @@ def prearchive_candidate_errors(
             candidate = load_candidate_module().inspect_candidate(
                 ROOT, str(reviewed.get("baseCommit", "")), slug,
             )
-            if archive_path in changed_paths(True, str(reviewed.get("baseCommit", ""))):
+            if (
+                not merge_mode
+                and archive_path in changed_paths(
+                    True, str(reviewed.get("baseCommit", ""))
+                )
+            ):
                 errors.append(
                     "pre-archive work candidate cannot mutate workflow archive"
                 )
@@ -608,6 +736,8 @@ def prearchive_candidate_errors(
 def archived_delivery_errors(
     staged: bool, base: str, evidence_root: Path, paths: set[str], slug: str,
     line: str, *, zero_base: bool = False,
+    merge_archive_base_lines: list[str] | None = None,
+    merge_parents: tuple[str, str] | None = None,
 ) -> list[str]:
     errors: list[str] = []
     errors.extend(canonical_lifecycle_entry_errors(staged, evidence_root, slug))
@@ -639,7 +769,17 @@ def archived_delivery_errors(
             "archived delivery lacks completed terminal evidence: "
             + ", ".join(missing_changed)
         )
-    if not staged and not zero_base:
+    if not staged and merge_parents is not None:
+        for parent in merge_parents:
+            parent_entry = revision_entry(parent, archive_path)
+            parent_rows = archive_data_rows(
+                parent_entry[1] if parent_entry is not None else None
+            )
+            if line in parent_rows:
+                errors.append(
+                    "merge-local archive row must be absent from both parents"
+                )
+    elif not staged and not zero_base:
         head_rows = added_archive_lines(
             git(
                 "diff", "--unified=0", "--no-ext-diff",
@@ -781,7 +921,11 @@ def archived_delivery_errors(
                 errors.append(f"archived delivery {gate_name} gate is not passed")
 
         archive_base = "HEAD" if staged else base
-        base_archive = git_blob(archive_base, ARCHIVE).decode("utf-8").splitlines()
+        base_archive = (
+            merge_archive_base_lines
+            if merge_archive_base_lines is not None
+            else git_blob(archive_base, ARCHIVE).decode("utf-8").splitlines()
+        )
         candidate_archive = (evidence_root / ARCHIVE).read_text(
             encoding="utf-8"
         ).splitlines()
@@ -819,8 +963,11 @@ def archived_delivery_errors(
             }
         expected_active = state_module.render_active_data(
             expected_active_data
-        ).replace("\n", os.linesep).encode("utf-8")
-        if (evidence_root / ACTIVE).read_bytes() != expected_active:
+        ).encode("utf-8")
+        actual_active = canonical_text_bytes(
+            (evidence_root / ACTIVE).read_bytes()
+        )
+        if actual_active != expected_active:
             errors.append("archived delivery ACTIVE projection is invalid")
     except (
         RuntimeError, SystemExit, OSError, json.JSONDecodeError, KeyError, TypeError,
@@ -925,6 +1072,7 @@ def main() -> int:
                         )
                     errors = merge_integration_errors(
                         True, base, snapshot, ours, merge_head, revision,
+                        novel_paths=novel,
                     )
                 else:
                     errors = enforcement_errors(True, base, snapshot)
@@ -982,6 +1130,7 @@ def main() -> int:
                         )
                     errors = merge_integration_errors(
                         False, base, ROOT, source, target, "HEAD",
+                        novel_paths=novel,
                     )
                 else:
                     errors = enforcement_errors(False, base, zero_base=zero_base)

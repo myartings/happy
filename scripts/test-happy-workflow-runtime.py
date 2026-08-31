@@ -893,6 +893,138 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         self.git("commit", "-m", "archived fixture")
         self.run_script("workflow-ci.py", "--base", self.base)
 
+    def test_pending_merge_can_archive_fresh_reviewed_integration_task(self) -> None:
+        slug = "merge-local-integration"
+        self.git("config", "core.autocrlf", "true")
+
+        self.git("switch", "-c", "merge-local-source")
+        (self.project / "source.txt").write_text("source\n", encoding="utf-8")
+        self.git("add", "source.txt")
+        self.git("commit", "-m", "source delivery")
+
+        self.git("switch", "-c", "merge-local-target", self.base)
+        (self.project / "target.txt").write_text("target\n", encoding="utf-8")
+        self.git("add", "target.txt")
+        self.git("commit", "-m", "target delivery")
+        target = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "merge-local-source")
+        self.git("merge", "--no-commit", "--no-ff", target)
+        self.prepare_reviewed_finish(slug)
+
+        foreign = self.project / "docs" / "workspace" / "template" / "context.md"
+        inherited = foreign.read_bytes()
+        foreign.write_bytes(inherited + b"\nforeign merge-local rewrite\n")
+        self.git("add", str(foreign.relative_to(self.project)))
+        rejected = self.run_script("workflow-ci.py", "--staged", ok=False)
+        self.assertIn(
+            "merge integration rewrote inherited lifecycle evidence",
+            rejected.stderr + rejected.stdout,
+        )
+        foreign.write_bytes(inherited)
+        self.git("add", str(foreign.relative_to(self.project)))
+
+        self.run_script("workflow-ci.py", "--staged")
+        self.state("archive", slug, "--summary", "merge-local fixture complete")
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.git("commit", "-m", "merge target with local workflow evidence")
+        self.run_script("workflow-ci.py", "--base", target)
+
+    def test_pending_merge_accepts_lf_active_with_autocrlf_disabled(self) -> None:
+        slug = "merge-local-lf-active"
+        self.git("config", "core.autocrlf", "false")
+
+        active = self.project / "docs" / "workspace" / "ACTIVE.md"
+        archive = self.project / "docs" / "workspace" / "archive.md"
+        config = self.project / ".ai" / "project.json"
+
+        def normalize_lf(*paths: Path) -> None:
+            for path in paths:
+                path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
+
+        normalize_lf(active, archive, config)
+        self.git("add", str(active.relative_to(self.project)))
+        self.git("add", str(archive.relative_to(self.project)))
+        self.git("add", str(config.relative_to(self.project)))
+        if self.git("status", "--porcelain").stdout.strip():
+            # Disabling autocrlf can expose line-ending changes in other tracked
+            # fixture files. Include the complete tracked normalization baseline
+            # so the setup commit never depends on checkout line-ending state.
+            self.git("add", "-u")
+            self.git("commit", "-m", "normalize LF fixture baseline")
+            self.base = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "-c", "merge-local-lf-source")
+        (self.project / "source.txt").write_text("source\n", encoding="utf-8")
+        self.git("add", "source.txt")
+        self.git("commit", "-m", "source delivery")
+
+        self.git("switch", "-c", "merge-local-lf-target", self.base)
+        (self.project / "target.txt").write_text("target\n", encoding="utf-8")
+        self.git("add", "target.txt")
+        self.git("commit", "-m", "target delivery")
+        target = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "merge-local-lf-source")
+        self.git("merge", "--no-commit", "--no-ff", target)
+        self.prepare_checked_candidate(slug)
+        self.run_script(
+            "workflow-review.py", "package", slug,
+            "--base", self.base, "--staged",
+        )
+        for axis in ("spec-review", "standards-review"):
+            self.state(
+                "review-conclusion", slug, "--axis", axis,
+                "--status", "accepted", "--evidence", f"{axis} fixture accepted",
+            )
+        self.gate(slug, "review")
+        self.write_completion_docs(slug)
+        self.state("transition", slug, "finish", "Finish LF fixture")
+        normalize_lf(active, archive)
+        self.git("add", str(active.relative_to(self.project)))
+        self.git("add", str(archive.relative_to(self.project)))
+        self.gate(slug, "finish")
+        normalize_lf(active, archive)
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+
+        self.state("archive", slug, "--summary", "LF ACTIVE fixture complete")
+        normalize_lf(active, archive)
+        self.git("add", ".")
+        self.run_script("workflow-ci.py", "--staged")
+        self.git("commit", "-m", "merge target with LF workflow evidence")
+        self.run_script("workflow-ci.py", "--base", target)
+
+    def test_pending_merge_rejects_unreviewed_novel_non_lifecycle_bytes(
+        self,
+    ) -> None:
+        self.git("config", "core.autocrlf", "true")
+
+        self.git("switch", "-c", "unreviewed-novel-source")
+        source_path = self.project / "source.txt"
+        source_path.write_text("source\n", encoding="utf-8")
+        self.git("add", "source.txt")
+        self.git("commit", "-m", "source delivery")
+
+        self.git("switch", "-c", "unreviewed-novel-target", self.base)
+        (self.project / "target.txt").write_text("target\n", encoding="utf-8")
+        self.git("add", "target.txt")
+        self.git("commit", "-m", "target delivery")
+        target = self.git("rev-parse", "HEAD").stdout.strip()
+
+        self.git("switch", "unreviewed-novel-source")
+        self.git("merge", "--no-commit", "--no-ff", target)
+        source_path.write_text("unreviewed merge edit\n", encoding="utf-8")
+        self.git("add", "source.txt")
+
+        rejected = self.run_script("workflow-ci.py", "--staged", ok=False)
+        self.assertIn(
+            "novel non-lifecycle merge bytes require one checked and reviewed "
+            "merge-local workflow",
+            rejected.stderr + rejected.stdout,
+        )
+
     def test_committed_merge_auto_detects_second_parent_as_source(self) -> None:
         slug = "merge-source-selection"
         self.git("config", "core.autocrlf", "true")

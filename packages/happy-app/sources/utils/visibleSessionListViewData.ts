@@ -179,6 +179,7 @@ function needsAttention(session: SessionRowData): boolean {
     return !session.archived && (
         session.attention != null
         || session.state === 'permission_required'
+        || session.state === 'input_required'
         || session.hasUnread
     );
 }
@@ -188,6 +189,7 @@ function attentionPriority(session: SessionRowData): number {
     if (kind === 'permission_required') return 0;
     if (kind === 'answer_required') return 1;
     if (session.state === 'permission_required') return 0;
+    if (session.state === 'input_required') return 1;
     return 2;
 }
 

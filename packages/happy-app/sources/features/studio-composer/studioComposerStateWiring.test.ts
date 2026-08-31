@@ -10,6 +10,8 @@ describe('Studio composer state wiring', () => {
         const input = readSource('../../components/AgentInput.tsx');
 
         expect(input).toContain('resolveStudioComposerStatePresentation({');
+        expect(input).toContain('codexFirstEnabled: codexFirstContract.enabled,');
+        expect(input).toContain('isDark: theme.dark,');
         expect(input).toContain('hasSuggestions: suggestions.length > 0,');
         expect(input).toContain('borderColor: composerStatePresentation.shellBorder');
         expect(input).toContain('backgroundColor: composerStatePresentation.primaryActionBackground');

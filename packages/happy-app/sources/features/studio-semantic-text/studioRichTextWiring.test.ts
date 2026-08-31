@@ -21,7 +21,7 @@ describe('Studio rich-text renderer wiring', () => {
     });
 
     it('retains selection, trusted-link, copy, scrolling, Mermaid, options, and images', () => {
-        expect(markdownView).toContain("const selectable = Platform.OS === 'web' || !markdownCopyV2;");
+        expect(markdownView).toContain("const selectable = Platform.OS === 'web' || !(markdownCopyV2 || props.externalCopyHandler);");
         expect(markdownView).toContain('isHttpMarkdownLink(url)');
         expect(markdownView).toContain('Clipboard.setStringAsync(props.content)');
         expect(markdownView.match(/<HorizontalScrollView/g)).toHaveLength(2);

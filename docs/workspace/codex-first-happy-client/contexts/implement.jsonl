@@ -1,0 +1,72 @@
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":"docs/specs/codex-first-happy-client.md","reason":"Accepted macOS packaged-desktop behavior and acceptance contract"}
+{"path":"docs/tasks/codex-first-happy-client-tasks.md","reason":"Dependency-ordered implementation and validation slices"}
+{"path":"docs/workspace/codex-first-happy-client/scoping.md","reason":"Approved code, test, and execution boundary"}
+{"path":"docs/workspace/codex-first-happy-client/risk-assessment.md","reason":"Mandatory controls and stop conditions"}
+{"path":"docs/workspace/codex-first-happy-client/deviation-ledger.md","reason":"Happy capabilities that constrain direct Codex parity"}
+{"path":"packages/happy-app/sources/features/codex-first-shell","reason":"Accepted packaged-macOS runtime, identity, navigation, region, and rollback contract"}
+{"path":"packages/happy-app/sources/features/studio-visual-style","reason":"Existing packaged-desktop presentation activation and visual projections"}
+{"path":"packages/happy-app/sources/features/studio-overlays","reason":"Existing desktop build activation evidence used by T01"}
+{"path":"packages/happy-app/sources/sync/localSettings.ts","reason":"Existing appearance settings compatibility and possible rollback seam"}
+{"path":"packages/happy-app/sources/utils/isTauri.ts","reason":"Authoritative packaged-desktop runtime detection"}
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/workspace/codex-first-happy-client/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"T02 packaged-desktop host seam for one Codex-first runtime contract"}
+{"path":"packages/happy-app/sources/components/SidebarView.tsx","reason":"T02 authenticated sidebar composition and legacy rollback branch"}
+{"path":"packages/happy-app/sources/components/CommandPalette","reason":"T02 existing search command surface and explicit launcher seam"}
+{"path":"packages/happy-app/sources/app","reason":"T02 read-only route targets for New Session, inbox, Tasks, Issues, Artifacts, Machines/Agents, and Settings"}
+{"path":"packages/happy-app/sources/components/SessionsList.tsx","reason":"T03 grouped/flat Session presentation and search filtering host seam"}
+{"path":"packages/happy-app/sources/components/ProjectGroup.tsx","reason":"T03 compact project identity and conditional Machine disambiguation"}
+{"path":"packages/happy-app/sources/components/MainView.tsx","reason":"T03 carries the packaged-desktop navigation projection into SessionsList"}
+{"path":"packages/happy-app/sources/hooks/useVisibleSessionListViewData.ts","reason":"T03 existing archive, grouping, attention, pin, and favorite projection hook"}
+{"path":"packages/happy-app/sources/utils/visibleSessionListViewData.ts","reason":"T03 existing attention and lifecycle ordering oracle"}
+{"path":"packages/happy-app/sources/app/(app)/index.tsx","reason":"T04 authenticated packaged-desktop home-canvas host seam"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"T04 prompt-first New Session presentation around unchanged spawn semantics"}
+{"path":"packages/happy-app/sources/components/EmptyMainScreen.tsx","reason":"T04 legacy/mobile empty-state compatibility oracle"}
+{"path":"packages/happy-app/sources/components/EmptySessionsTablet.tsx","reason":"T04 legacy sidebar empty-state compatibility oracle"}
+{"path":"packages/happy-app/sources/utils/newSessionSidebarLayout.ts","reason":"T04 responsive contextual-configuration projection"}
+{"path":"packages/happy-app/sources/hooks/useNewSessionDraft.ts","reason":"T04 persisted draft compatibility oracle"}
+{"path":"packages/happy-app/sources/hooks/useStartSessionFromDraft.ts","reason":"T04 start, duplicate prevention, failure preservation, and navigation compatibility oracle"}
+{"path":"packages/happy-app/sources/features/studio-conversation-layout","reason":"T05 evidence-backed packaged conversation header and reading-measure projection"}
+{"path":"packages/happy-app/sources/features/studio-semantic-text","reason":"T05 existing unboxed prose, Markdown, CJK/Unicode, code, and semantic-role presentation oracle"}
+{"path":"packages/happy-app/sources/features/studio-composer","reason":"T05 existing floating Composer geometry and backend-control presentation oracle"}
+{"path":"packages/happy-app/sources/components/ChatHeaderView.tsx","reason":"T05 compact packaged conversation header host seam"}
+{"path":"packages/happy-app/sources/components/ChatList.tsx","reason":"T05 centered reading column and scroll-preservation host seam"}
+{"path":"packages/happy-app/sources/components/MessageView.tsx","reason":"T05 unboxed assistant and compact user-message presentation seam"}
+{"path":"packages/happy-app/sources/components/AgentInput.tsx","reason":"T05 globally active packaged floating Composer host seam"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"T05 Session composition compatibility oracle for header, transcript, Composer, and backend-independent behavior"}
+{"path":"packages/happy-app/sources/features/studio-execution-transcript","reason":"T06 terminal command, ANSI output, duration, failure, and truncation presentation oracle"}
+{"path":"packages/happy-app/sources/features/studio-tool-presentation","reason":"T06 globally active packaged tool hierarchy and semantic activity colors"}
+{"path":"packages/happy-app/sources/features/studio-tool-output-disclosure","reason":"T06 running/failure preview, collapsed success, expansion, full transcript, and copy behavior"}
+{"path":"packages/happy-app/sources/features/studio-composer","reason":"T06 Composer lifecycle projection and existing attachments/autocomplete/send/stop compatibility"}
+{"path":"packages/happy-app/sources/components/ToolGroupView.tsx","reason":"T06 grouped running/completed/error activity presentation seam"}
+{"path":"packages/happy-app/sources/components/tools/ToolView.tsx","reason":"T06 tool transcript, disclosure, diff, permission, and legacy-result composition seam"}
+{"path":"packages/happy-app/sources/components/tools/PermissionFooter.tsx","reason":"T06 provider-specific approval lifecycle and exact-once client submission gate"}
+{"path":"packages/happy-app/sources/components/tools/views/InlineQuestionForm.tsx","reason":"T06 shared choice-form pending/submitting/resolved interaction lifecycle"}
+{"path":"packages/happy-app/sources/components/tools/views/AskUserQuestionView.tsx","reason":"T06 Claude question payload compatibility wrapper"}
+{"path":"packages/happy-app/sources/components/tools/views/RequestUserInputView.tsx","reason":"T06 Codex/Happy communication payload compatibility wrapper"}
+{"path":"packages/happy-app/sources/components/AgentQuestionBanner.tsx","reason":"T06 fallback question and unsupported-communication lifecycle seam"}
+{"path":"packages/happy-app/sources/components/AgentQuestionModal.tsx","reason":"T06 text/custom-answer exact-once submission and retry seam"}
+{"path":"packages/happy-app/sources/sync/agentCommunications.ts","reason":"T06 read-only answer-shape and completed/pending communication oracle"}
+{"path":"packages/happy-app/sources/sync/ops.ts","reason":"T06 read-only authoritative permission and communication RPC payload oracle"}
+{"path":"packages/happy-app/sources/features/studio-overlays","reason":"T07 shared floating/modal surface, theme, clamping, dismissal, and focus grammar"}
+{"path":"packages/happy-app/sources/features/studio-panel-resize","reason":"T07 existing persistent right-workspace width and collapse behavior oracle"}
+{"path":"packages/happy-app/sources/components/FilesSidebar.tsx","reason":"T07 Changes/files/Issues/side-chat shared right-workspace surface"}
+{"path":"packages/happy-app/sources/components/SideChatPanel.tsx","reason":"T07 side-chat tab and embedded Session behavior compatibility oracle"}
+{"path":"packages/happy-app/sources/components/SideChatQuickPanelControls.tsx","reason":"T07 quiet workspace action and clamped keyboard-capable selector seam"}
+{"path":"packages/happy-app/sources/components/SessionActionsPopover.tsx","reason":"T07 existing clamped overlay and destructive-confirmation compatibility oracle"}
+{"path":"packages/happy-app/sources/components/CommandPalette","reason":"T07 complete daily-loop, Settings, account, connection, and system command inventory"}
+{"path":"packages/happy-app/sources/components/SettingsView.tsx","reason":"T07 daily-use Settings identity and packaged desktop grammar seam"}
+{"path":"packages/happy-app/sources/app/(app)/settings","reason":"T07 existing account, agents, appearance, language, personal-feature, usage, voice, and connection route inventory"}
+{"path":"packages/happy-app/sources/features/github-issues","reason":"T07 read-only Issues capability, context, and action preservation oracle"}
+{"path":"packages/happy-app/sources/components/SidebarNavigator.tsx","reason":"T08 packaged minimum-width desktop-shell and title-bar safe-area host seam"}
+{"path":"packages/happy-app/sources/components/MainView.tsx","reason":"T08 narrow packaged home-canvas versus standalone mobile presentation gate"}
+{"path":"packages/happy-app/sources/-session/SessionView.tsx","reason":"T08 right-workspace collapse priority, zen restoration, and resize activation seam"}
+{"path":"packages/happy-app/sources/components/ChatHeaderView.tsx","reason":"T08 packaged desktop header focus and accessible-control semantics"}
+{"path":"packages/happy-app/sources/components/FilesSidebar.tsx","reason":"T08 right-workspace keyboard, focus, role, name, and selected-state hardening"}
+{"path":"packages/happy-app/sources/components/CommandPalette","reason":"T08 keyboard-only, focus, dismissal, and reduced-motion hardening"}
+{"path":"packages/happy-app/sources/features/studio-panel-resize","reason":"T08 width bounds, collapse/restoration, keyboard adjustment, and accessibility oracle"}
+{"path":"packages/happy-app/sources/features/studio-overlays","reason":"T08 light/dark, clamping, focus-ring, and reduced-motion oracle"}
+{"path":"packages/happy-app/sources/features/studio-visual-style","reason":"T08 standalone presentation gate and light/dark interaction-state oracle"}
+{"path":"packages/happy-app/sources/keyboard","reason":"T08 global shortcut and hardware-keyboard compatibility oracle"}
+{"path":"packages/happy-app/sources/sync/localSettings.test.ts","reason":"T08 old/default/current settings parsing and no-migration oracle"}

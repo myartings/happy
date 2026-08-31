@@ -6,13 +6,18 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { Typography } from '@/constants/Typography';
 import { t } from '@/text';
-import { useSessionPendingCommunications } from '@/sync/storage';
+import { useSession, useSessionPendingCommunications } from '@/sync/storage';
 import {
     shouldUseAgentQuestionFallback,
     type PendingAgentCommunication,
 } from '@/sync/agentCommunications';
 import { sessionCancelCommunication } from '@/sync/ops';
 import { AgentQuestionModal } from './AgentQuestionModal';
+import {
+    createCodexFirstDecisionSubmissionGate,
+    resolveCodexFirstDecisionPresentation,
+    submitCodexFirstDecisionOnce,
+} from '@/features/codex-first-shell/codexFirstDecisionLifecycle';
 
 /**
  * Fallback UI above the composer when a request cannot render in the transcript
@@ -28,7 +33,11 @@ export function AgentQuestionBanner({ sessionId, focusCommunicationId }: {
     focusCommunicationId?: string;
 }) {
     const pendingCommunications = useSessionPendingCommunications(sessionId);
+    const session = useSession(sessionId);
     const [openId, setOpenId] = React.useState<string | null>(null);
+    const [dismissingId, setDismissingId] = React.useState<string | null>(null);
+    const [dismissedId, setDismissedId] = React.useState<string | null>(null);
+    const dismissalGate = React.useRef(createCodexFirstDecisionSubmissionGate());
 
     // Choice forms belong exclusively to the transcript renderer. Communication
     // state can arrive one render before its request_user_input tool message; if
@@ -41,6 +50,13 @@ export function AgentQuestionBanner({ sessionId, focusCommunicationId }: {
     const pending = fallbackCommunications.find(communication => communication.id === focusCommunicationId)
         ?? fallbackCommunications[0];
     const open = pending?.kind === 'form' && openId === pending.id;
+    const isConnected = session?.presence === 'online';
+
+    React.useEffect(() => {
+        dismissalGate.current = createCodexFirstDecisionSubmissionGate();
+        setDismissingId(null);
+        setDismissedId(null);
+    }, [pending?.id]);
 
     // Drop the modal as soon as its request is gone, so an answer from another
     // device closes the form here too.
@@ -57,12 +73,21 @@ export function AgentQuestionBanner({ sessionId, focusCommunicationId }: {
     }, [focusCommunicationId, pending]);
 
     const handleDismissUnsupported = React.useCallback(async (id: string, rawKind: string) => {
+        if (!isConnected || dismissalGate.current.inFlight || dismissalGate.current.completedAction !== null) return;
+        setDismissingId(id);
         try {
-            await sessionCancelCommunication(sessionId, id, rawKind);
+            const result = await submitCodexFirstDecisionOnce(dismissalGate.current, {
+                action: 'cancel',
+                requestId: id,
+                submit: () => sessionCancelCommunication(sessionId, id, rawKind),
+            });
+            if (result === 'submitted') setDismissedId(id);
         } catch {
             // The agent re-asks if the dismissal never lands; nothing to show here.
+        } finally {
+            setDismissingId(null);
         }
-    }, [sessionId]);
+    }, [isConnected, sessionId]);
 
     if (!pending) return null;
 
@@ -71,18 +96,26 @@ export function AgentQuestionBanner({ sessionId, focusCommunicationId }: {
             <AgentQuestionBannerView
                 pending={pending}
                 onDismiss={() => handleDismissUnsupported(pending.id, pending.rawKind)}
+                connected={isConnected}
+                submitted={dismissedId === pending.id}
+                submitting={dismissingId === pending.id}
             />
         );
     }
 
     return (
         <>
-            <AgentQuestionBannerView pending={pending} onPress={() => setOpenId(pending.id)} />
+            <AgentQuestionBannerView
+                pending={pending}
+                onPress={() => setOpenId(pending.id)}
+                connected={isConnected}
+            />
             <AgentQuestionModal
                 pending={pending}
                 sessionId={sessionId}
                 visible={open}
                 onClose={() => setOpenId(null)}
+                connected={isConnected}
             />
         </>
     );
@@ -92,13 +125,30 @@ export function AgentQuestionBanner({ sessionId, focusCommunicationId }: {
  * The banner itself, with no store or network of its own, so it can be rendered
  * from the dev previews as well as from a live session.
  */
-export function AgentQuestionBannerView({ pending, onPress, onDismiss }: {
+export function AgentQuestionBannerView({
+    pending,
+    onPress,
+    onDismiss,
+    connected = true,
+    submitted = false,
+    submitting = false,
+}: {
     pending: PendingAgentCommunication;
     onPress?: () => void;
     onDismiss?: () => void;
+    connected?: boolean;
+    submitted?: boolean;
+    submitting?: boolean;
 }) {
     const styles = stylesheet;
     const { theme } = useUnistyles();
+
+    const decisionPresentation = resolveCodexFirstDecisionPresentation({
+        connected,
+        requestStatus: 'pending',
+        submitted,
+        submitting,
+    });
 
     if (pending.kind === 'unsupported') {
         return (
@@ -111,10 +161,19 @@ export function AgentQuestionBannerView({ pending, onPress, onDismiss }: {
                         {pending.title ?? t('agentQuestion.unsupportedTitle')}
                     </Text>
                     <Text style={styles.subtitle} numberOfLines={2}>
-                        {t('agentQuestion.unsupportedDescription', { kind: pending.rawKind })}
+                        {decisionPresentation.state === 'disconnected'
+                            ? t('codexFirst.decisionDisconnected')
+                            : t('agentQuestion.unsupportedDescription', { kind: pending.rawKind })}
                     </Text>
                 </View>
-                <Pressable onPress={onDismiss} hitSlop={10}>
+                <Pressable
+                    onPress={onDismiss}
+                    hitSlop={10}
+                    disabled={!decisionPresentation.canInteract}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('agentQuestion.dismiss')}
+                    accessibilityState={decisionPresentation.accessibilityState}
+                >
                     <Text style={styles.dismiss}>{t('agentQuestion.dismiss')}</Text>
                 </Pressable>
             </View>
@@ -125,7 +184,14 @@ export function AgentQuestionBannerView({ pending, onPress, onDismiss }: {
     const remaining = pending.questions.length - 1;
 
     return (
-        <Pressable style={styles.container} onPress={onPress}>
+        <Pressable
+            style={styles.container}
+            onPress={onPress}
+            disabled={!decisionPresentation.canInteract}
+            accessibilityRole="button"
+            accessibilityLabel={first?.question ?? t('agentQuestion.title')}
+            accessibilityState={decisionPresentation.accessibilityState}
+        >
             <View style={styles.icon}>
                 <Ionicons name="help-circle-outline" size={20} color={theme.colors.textLink} />
             </View>
@@ -134,7 +200,9 @@ export function AgentQuestionBannerView({ pending, onPress, onDismiss }: {
                     {first?.header ?? t('agentQuestion.title')}
                 </Text>
                 <Text style={styles.subtitle} numberOfLines={2}>
-                    {remaining > 0
+                    {decisionPresentation.state === 'disconnected'
+                        ? t('codexFirst.decisionDisconnected')
+                        : remaining > 0
                         ? t('agentQuestion.moreQuestions', { count: remaining })
                         : (first?.question ?? '')}
                 </Text>

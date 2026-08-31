@@ -1125,6 +1125,8 @@ export const it: TranslationStructure = {
         notSupportedMessage: 'Questo agente non supporta gli allegati immagine. Le immagini non sono state inviate.',
     },
 
+    codexFirst: en.codexFirst,
+
     githubIssues: en.githubIssues,
 
     projectTodos: {

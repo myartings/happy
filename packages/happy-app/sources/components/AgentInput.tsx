@@ -46,7 +46,6 @@ import {
     resolveMobileComposerMenuGeometry,
 } from './agentInputLayout';
 import { shouldUseExpoNativeSettingsMenu } from './glassInteractionPolicy';
-import { isTauri } from '@/utils/isTauri';
 import {
     resolveDesktopComposerStyle,
     resolveStudioComposerStatePresentation,
@@ -54,6 +53,7 @@ import {
 import { HardwareKeyboardCommandBoundary } from '@/keyboard/HardwareKeyboardCommandBoundary';
 import { resolveHardwareReturnAction } from '@/keyboard/hardwareKeyboardSubmitPolicy';
 import { DesktopComposerModeChips } from '@/features/studio-composer/desktopComposerModeChips';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
 
 interface AgentInputProps {
     // `initialValue` seeds the uncontrolled textarea once; keystrokes never
@@ -857,11 +857,17 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
     const runningOnMac = isRunningOnMac();
     const compactMobileComposer = Platform.OS !== 'web' && !runningOnMac && screenWidth <= 700;
     const requestedVisualStyle = useLocalSetting('visualStyle');
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
     const composerStyle = React.useMemo(() => resolveDesktopComposerStyle({
-        isTauriRuntime: isTauri(),
+        codexFirstEnabled: codexFirstContract.enabled,
+        isDark: theme.dark,
+        isTauriRuntime: codexFirstContract.presentation.usesStudioPrimitives,
         requestedStyle: requestedVisualStyle,
         previewStyle: process.env.EXPO_PUBLIC_HAPPY_VISUAL_STYLE,
-    }), [requestedVisualStyle]);
+    }), [codexFirstContract.enabled, codexFirstContract.presentation.usesStudioPrimitives, requestedVisualStyle, theme.dark]);
     const isStudioComposer = composerStyle.visualStyle === 'studio';
     // iOS only. On Android the settings/model/effort triggers are React Native
     // subtrees hosted inside a Jetpack Compose DropdownMenu, and expo-modules-core
@@ -1481,6 +1487,8 @@ export const AgentInput = React.memo(React.forwardRef<MultiTextInputHandle, Agen
     }, [suggestions, moveUp, moveDown, selected, handleSuggestionSelect, props.showAbortButton, props.onAbort, isAborting, handleAbortPress, agentInputEnterToSend, props.onSend, props.onPermissionModeChange, availableModes, permissionModeKey, isSendBlocked, handleBlockedSendAttempt, props.isSendDisabled]);
 
     const composerStatePresentation = resolveStudioComposerStatePresentation({
+        codexFirstEnabled: codexFirstContract.enabled,
+        isDark: theme.dark,
         isStudio: isStudioComposer,
         hasText,
         hasAttachments: hasImages,

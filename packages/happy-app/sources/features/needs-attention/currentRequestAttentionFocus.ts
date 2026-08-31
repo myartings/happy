@@ -69,6 +69,14 @@ export function resolveCurrentRequestAttentionFocus(
     if (!communication) return { kind: 'general' };
     const toolUseId = communication.toolUseId?.trim();
     if (toolUseId) return { kind: 'tool', toolUseId };
+    const legacyInlineToolUseId = communication.kind === 'form'
+        && communication.questions.length > 0
+        && communication.questions.every((question) => (
+            question.options.length > 0 && question.allowCustom == null
+        ))
+        ? communication.id.trim()
+        : '';
+    if (legacyInlineToolUseId) return { kind: 'tool', toolUseId: legacyInlineToolUseId };
     if (shouldUseAgentQuestionFallback(communication)) {
         return { kind: 'communication', sourceId: communication.id };
     }
