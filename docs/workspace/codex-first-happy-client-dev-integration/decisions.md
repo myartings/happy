@@ -1,0 +1,12 @@
+# Decisions: `codex-first-happy-client-dev-integration`
+
+| ID | Question | Status | Decision/evidence |
+| --- | --- | --- | --- |
+| D1 | How is current `dev` integrated into the already-published feature branch? | decided | Use a normal merge commit. Repository rules prohibit history rewriting; rebase/amend/force push would invalidate the published reviewed commit. |
+| D2 | What wins in the two textual conflicts? | decided | Preserve both intents as a lossless union. `docs/PRD.md` keeps the complete Codex-first section followed by the complete target Session Transport section exactly once; `archive.md` keeps all target rows plus the Codex-first row exactly once and chronologically ordered. |
+| D3 | May conflict resolution change product behavior? | decided | Only when a focused check proves a candidate-only integration regression. Any product change follows one public-seam RED -> GREEN tracer; unrelated parent failures remain out of scope. |
+| D4 | What constitutes complete integration validation? | decided | Compare both parents, run focused overlapping seams, the merged repository's full applicable candidate-bound profile, relevant CLI/wire tests, Windows doctor/smoke, and a native build without installation; then verify PR mergeability. |
+| D5 | Which external mutations are authorized? | decided | Non-force push the completed merge commit and update PR #78. Do not merge/close the PR, install/replace the client, sign, publish, or release. |
+| D6 | How is pre-merge workflow-schema drift handled? | decided | Create the workflow with the current guarded helper; after merging the newer workflow core, use its documented state-upgrade helper if required. Never edit generated `workflow.json` or `state.md` directly. |
+| D7 | Can historical accepted gaps be copied forward? | decided | No. A gap is accepted only if the merged candidate reproduces it, binds it to the exact structured check receipt, and the existing user acceptance still covers the same unchanged cause. |
+| D8 | How should the lifecycle contradiction discovered at pre-archive CI be handled? | decided | Treat it as an in-scope binding-authority defect required to complete the user-authorized formal merge. Add one pending-merge RED fixture and the narrowest merge-aware overlay rule: admit only one fully checked/reviewed local workflow and its terminal archive row; compare staged index blobs directly; continue rejecting foreign lifecycle rewrites, extra archive rows, octopus merges, stale candidates, and unreviewed novel bytes. |

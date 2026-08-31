@@ -35,7 +35,10 @@ import {
     inspectWorktreeSnapshot,
     type CreatedWorktreeSnapshot,
 } from '@/git/worktreeSnapshot';
-import { listWorkspaceProjects } from '@/workspace/workspaceProjectScanner';
+import {
+    MAX_WORKSPACE_PROJECT_QUERY_LENGTH,
+    listWorkspaceProjects,
+} from '@/workspace/workspaceProjectScanner';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
@@ -112,6 +115,12 @@ function requireNonEmptyString(value: unknown, name: string): string {
     return value;
 }
 
+function normalizeWorkspaceProjectQuery(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const query = value.trim().slice(0, MAX_WORKSPACE_PROJECT_QUERY_LENGTH);
+    return query.length > 0 ? query : undefined;
+}
+
 async function withCodexAppServerClient<T>(handler: (client: CodexAppServerClient) => Promise<T>): Promise<T> {
     const client = new CodexAppServerClient();
     await client.connect();
@@ -182,9 +191,13 @@ export class ApiMachineClient {
             }
         });
 
-        this.rpcHandlerManager.registerHandler('list-workspace-projects', async () => (
-            listWorkspaceProjects({ root: join(homedir(), 'workspace') })
-        ));
+        this.rpcHandlerManager.registerHandler('list-workspace-projects', async (params: any) => {
+            const query = normalizeWorkspaceProjectQuery(params?.query);
+            return listWorkspaceProjects({
+                root: join(homedir(), 'workspace'),
+                ...(query ? { query } : {}),
+            });
+        });
 
         this.syncResumeSessionRpcRegistration();
 

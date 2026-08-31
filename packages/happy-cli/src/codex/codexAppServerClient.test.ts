@@ -139,60 +139,102 @@ describe('CodexAppServerClient sandbox integration', () => {
     });
 
     it('wraps transport when sandbox is enabled', async () => {
+        const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin');
         // Dynamic import to ensure mocks are applied
-        const { CodexAppServerClient } = await import('./codexAppServerClient');
-        const client = new CodexAppServerClient(sandboxConfig);
+        try {
+            const { CodexAppServerClient } = await import('./codexAppServerClient');
+            const client = new CodexAppServerClient(sandboxConfig);
 
-        await client.connect();
+            await client.connect();
 
-        expect(mockInitializeSandbox).toHaveBeenCalledWith(sandboxConfig, process.cwd());
-        expect(mockWrapForMcpTransport).toHaveBeenCalledWith('codex', ['app-server', '--listen', 'stdio://']);
-        expect(mockSpawn).toHaveBeenCalledWith(
-            'sh',
-            ['-c', 'wrapped codex app-server'],
-            expect.objectContaining({
-                env: expect.objectContaining({
-                    CODEX_SANDBOX: 'seatbelt',
-                    RUST_LOG: expect.stringContaining('codex_core::rollout::list=off'),
+            expect(mockInitializeSandbox).toHaveBeenCalledWith(sandboxConfig, process.cwd());
+            expect(mockWrapForMcpTransport).toHaveBeenCalledWith('codex', ['app-server', '--listen', 'stdio://']);
+            expect(mockSpawn).toHaveBeenCalledWith(
+                'sh',
+                ['-c', 'wrapped codex app-server'],
+                expect.objectContaining({
+                    env: expect.objectContaining({
+                        CODEX_SANDBOX: 'seatbelt',
+                        RUST_LOG: expect.stringContaining('codex_core::rollout::list=off'),
+                    }),
                 }),
-            }),
-        );
-        expect(client.sandboxEnabled).toBe(true);
+            );
+            expect(client.sandboxEnabled).toBe(true);
 
-        await client.disconnect();
+            await client.disconnect();
+        } finally {
+            platform.mockRestore();
+        }
     });
 
     it('falls back to non-sandbox transport when sandbox initialization fails', async () => {
-        mockInitializeSandbox.mockRejectedValue(new Error('sandbox init failed'));
-        const { CodexAppServerClient } = await import('./codexAppServerClient');
-        const client = new CodexAppServerClient(sandboxConfig);
+        const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin');
+        try {
+            mockInitializeSandbox.mockRejectedValue(new Error('sandbox init failed'));
+            const { CodexAppServerClient } = await import('./codexAppServerClient');
+            const client = new CodexAppServerClient(sandboxConfig);
 
-        await client.connect();
+            await client.connect();
 
-        expect(mockWrapForMcpTransport).not.toHaveBeenCalled();
-        expect(mockSpawn).toHaveBeenCalledWith(
-            'codex',
-            ['app-server', '--listen', 'stdio://'],
-            expect.objectContaining({
-                env: expect.objectContaining({
-                    RUST_LOG: expect.stringContaining('codex_core::rollout::list=off'),
+            expect(mockInitializeSandbox).toHaveBeenCalledWith(sandboxConfig, process.cwd());
+            expect(mockWrapForMcpTransport).not.toHaveBeenCalled();
+            expect(mockSpawn).toHaveBeenCalledWith(
+                'codex',
+                ['app-server', '--listen', 'stdio://'],
+                expect.objectContaining({
+                    env: expect.objectContaining({
+                        RUST_LOG: expect.stringContaining('codex_core::rollout::list=off'),
+                    }),
                 }),
-            }),
-        );
-        expect(client.sandboxEnabled).toBe(false);
+            );
+            expect(client.sandboxEnabled).toBe(false);
 
-        await client.disconnect();
+            await client.disconnect();
+        } finally {
+            platform.mockRestore();
+        }
+    });
+
+    it('skips managed sandbox transport on Windows', async () => {
+        const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+        try {
+            const { CodexAppServerClient } = await import('./codexAppServerClient');
+            const client = new CodexAppServerClient(sandboxConfig);
+
+            await client.connect();
+
+            expect(mockInitializeSandbox).not.toHaveBeenCalled();
+            expect(mockWrapForMcpTransport).not.toHaveBeenCalled();
+            expect(mockSpawn).toHaveBeenCalledWith(
+                'codex',
+                ['app-server', '--listen', 'stdio://'],
+                expect.objectContaining({
+                    env: expect.not.objectContaining({ CODEX_SANDBOX: expect.anything() }),
+                }),
+            );
+            expect(client.sandboxEnabled).toBe(false);
+
+            await client.disconnect();
+            expect(mockSandboxCleanup).not.toHaveBeenCalled();
+        } finally {
+            platform.mockRestore();
+        }
     });
 
     it('resets sandbox on disconnect', async () => {
-        const { CodexAppServerClient } = await import('./codexAppServerClient');
-        const client = new CodexAppServerClient(sandboxConfig);
+        const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin');
+        try {
+            const { CodexAppServerClient } = await import('./codexAppServerClient');
+            const client = new CodexAppServerClient(sandboxConfig);
 
-        await client.connect();
-        await client.disconnect();
+            await client.connect();
+            await client.disconnect();
 
-        expect(mockSandboxCleanup).toHaveBeenCalledTimes(1);
-        expect(client.sandboxEnabled).toBe(false);
+            expect(mockSandboxCleanup).toHaveBeenCalledTimes(1);
+            expect(client.sandboxEnabled).toBe(false);
+        } finally {
+            platform.mockRestore();
+        }
     });
 
     it('appends rollout log filter to existing RUST_LOG', async () => {

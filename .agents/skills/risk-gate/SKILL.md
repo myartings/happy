@@ -19,7 +19,7 @@ description: Assess high-consequence coding work and define controls before impl
 Return `cleared`, `cleared-with-controls`, or `blocked`. Never treat a warning in
 chat as an adequate control for destructive or irreversible behavior.
 
-For every formal workflow, persist the assessment with:
+For every accepted High-risk Trellis task, persist the assessment with:
 `python3 scripts/workflow-state.py gate <slug> risk <status> --evidence "<evidence>"`.
 Use `passed` for cleared outcomes and `blocked` for unresolved risk. A required
 risk gate cannot be marked `not_required`; otherwise evidenced non-applicability

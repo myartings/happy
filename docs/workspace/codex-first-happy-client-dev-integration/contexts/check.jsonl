@@ -1,0 +1,7 @@
+{"path":".ai/project.json","reason":"Authoritative deterministic verification commands"}
+{"path":"docs/specs/codex-first-happy-client-dev-integration.md","reason":"Acceptance criteria DI-001 through DI-010"}
+{"path":"docs/tasks/codex-first-happy-client-dev-integration-tasks.md","reason":"Required targeted, full, native, review, and publication signals"}
+{"path":"docs/workspace/codex-first-happy-client-dev-integration/risk-assessment.md","reason":"Stop conditions, baseline classification, and rollback controls"}
+{"path":"docs/workspace/codex-first-happy-client-dev-integration/validation.md","reason":"Evidence ledger for exact check outcomes"}
+{"path":"docs/workspace/codex-first-happy-client/validation.md","reason":"Historical feature evidence used only as a comparison baseline"}
+{"path":"docs/workspace/archive.md","reason":"Candidate archive and exact row-union evidence"}

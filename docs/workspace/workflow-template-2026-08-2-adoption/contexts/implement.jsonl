@@ -1,0 +1,9 @@
+{"path":"AGENTS.md","reason":"Happy-owned workflow, branch, devtools, release, and adoption authority"}
+{"path":"CONTEXT.md","reason":"Shared project language and selective workflow boundary"}
+{"path":".ai/project.json","reason":"Happy commands, tracker, protected paths, and risk configuration"}
+{"path":".ai/template-adoption.json","reason":"Dry-run-first selective source and artifact boundary"}
+{"path":"docs/specs/workflow-template-2026-08-2-adoption.md","reason":"Accepted observable migration contract"}
+{"path":"docs/tasks/workflow-template-2026-08-2-adoption-tasks.md","reason":"Serial dependency and validation boundaries"}
+{"path":"docs/workspace/workflow-template-2026-08-2-adoption/decisions.md","reason":"Resolved source, preservation, compatibility, and topology decisions"}
+{"path":"docs/workspace/workflow-template-2026-08-2-adoption/adoption-plan.md","reason":"Pinned dry-run classifications and manual translation boundary"}
+{"path":"scripts/validate-happy-workflow.py","reason":"Happy-specific adoption and preservation validator"}

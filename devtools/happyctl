@@ -81,6 +81,16 @@ HAPPY_IOS_STORE_PROFILE="${HAPPY_IOS_STORE_PROFILE:-personal-store}"
 HAPPY_IOS_CHANNEL="${HAPPY_IOS_CHANNEL:-personal}"
 HAPPY_IOS_EAS_ENVIRONMENT="${HAPPY_IOS_EAS_ENVIRONMENT:-preview}"
 
+# Shared personal mobile defaults preserve the original HAPPY_IOS_* overrides
+# while allowing Android and the worktree planner to use the same EAS project.
+HAPPY_MOBILE_APP_DIR="${HAPPY_MOBILE_APP_DIR:-$HAPPY_IOS_APP_DIR}"
+HAPPY_MOBILE_EAS_CLI_VERSION="${HAPPY_MOBILE_EAS_CLI_VERSION:-$HAPPY_IOS_EAS_CLI_VERSION}"
+HAPPY_MOBILE_APP_ENV="${HAPPY_MOBILE_APP_ENV:-$HAPPY_IOS_APP_ENV}"
+HAPPY_MOBILE_INTERNAL_PROFILE="${HAPPY_MOBILE_INTERNAL_PROFILE:-$HAPPY_IOS_INTERNAL_PROFILE}"
+HAPPY_MOBILE_STORE_PROFILE="${HAPPY_MOBILE_STORE_PROFILE:-$HAPPY_IOS_STORE_PROFILE}"
+HAPPY_MOBILE_CHANNEL="${HAPPY_MOBILE_CHANNEL:-$HAPPY_IOS_CHANNEL}"
+HAPPY_MOBILE_EAS_ENVIRONMENT="${HAPPY_MOBILE_EAS_ENVIRONMENT:-$HAPPY_IOS_EAS_ENVIRONMENT}"
+
 HAPPY_DESKTOP_PROFILE="personal"
 
 refresh_desktop_paths() {
@@ -187,12 +197,18 @@ Usage:
   devtools/happyctl install-refresh-task [HH:MM]
   devtools/happyctl refresh-task-status
   devtools/happyctl uninstall-refresh-task
+  devtools/happyctl mobile-plan --platform ios|android [--profile PROFILE] [--base REF] [--json]
   devtools/happyctl ios-doctor
-  devtools/happyctl ios-build-internal [--dry-run]
-  devtools/happyctl ios-build-testflight [--dry-run]
+  devtools/happyctl ios-build-internal [--dry-run] [--hash-artifact]
+  devtools/happyctl ios-build-testflight [--dry-run] [--hash-artifact]
   devtools/happyctl ios-submit-testflight --build-id ID [--dry-run]
   devtools/happyctl ios-publish-update --message TEXT [--dry-run]
   devtools/happyctl ios-release-status
+  devtools/happyctl android-doctor
+  devtools/happyctl android-build-internal [--dry-run] [--hash-artifact]
+  devtools/happyctl android-build-store [--dry-run] [--hash-artifact]
+  devtools/happyctl android-publish-update --message TEXT [--dry-run]
+  devtools/happyctl android-release-status
 
 Environment/config:
   Copy config.example.env to config.env for local overrides.
@@ -231,170 +247,21 @@ run_pnpm() {
   $HAPPY_PNPM_CMD "$@"
 }
 
-ios_require_macos() {
-  if [[ "$OS_NAME" != "Darwin" ]]; then
-    echo "Happy iOS release commands require macOS with Xcode." >&2
-    return 1
-  fi
+mobile_plan() {
+  require_cmd node
+  HAPPY_REPO="$HAPPY_REPO" \
+    HAPPY_MOBILE_APP_DIR="$HAPPY_MOBILE_APP_DIR" \
+    HAPPY_MOBILE_APP_ENV="$HAPPY_MOBILE_APP_ENV" \
+    HAPPY_MOBILE_EAS_CLI_VERSION="$HAPPY_MOBILE_EAS_CLI_VERSION" \
+    HAPPY_MOBILE_PNPM_CMD="$HAPPY_PNPM_CMD" \
+    HAPPY_MOBILE_DEFAULT_PROFILE="$HAPPY_MOBILE_INTERNAL_PROFILE" \
+    HAPPY_MOBILE_ALLOWED_PROFILES="$HAPPY_MOBILE_INTERNAL_PROFILE,$HAPPY_MOBILE_STORE_PROFILE" \
+    HAPPY_MOBILE_CHANNEL="$HAPPY_MOBILE_CHANNEL" \
+    EXPO_OWNER="${EXPO_OWNER:-}" \
+    EXPO_PUBLIC_EAS_PROJECT_ID="${EXPO_PUBLIC_EAS_PROJECT_ID:-}" \
+    node "$SCRIPT_DIR/mobile-plan.mjs" "$@"
 }
 
-ios_eas_display_command() {
-  printf 'cd %q && APP_ENV=%q NODE_ENV=production EXPO_NO_METRO_WORKSPACE_ROOT=1' "$HAPPY_IOS_APP_DIR" "$HAPPY_IOS_APP_ENV"
-  if [[ -n "${EXPO_OWNER:-}" ]]; then
-    printf ' EXPO_OWNER=<configured>'
-  else
-    printf ' EXPO_OWNER=<missing>'
-  fi
-  if [[ -n "${EXPO_PUBLIC_EAS_PROJECT_ID:-}" ]]; then
-    printf ' EXPO_PUBLIC_EAS_PROJECT_ID=<configured>'
-  else
-    printf ' EXPO_PUBLIC_EAS_PROJECT_ID=<missing>'
-  fi
-  printf ' %q dlx %q' "$HAPPY_PNPM_CMD" "eas-cli@$HAPPY_IOS_EAS_CLI_VERSION"
-  printf ' %q' "$@"
-  printf '\n'
-}
-
-ios_run_eas() {
-  log "+ $(ios_eas_display_command "$@")"
-  (
-    cd "$HAPPY_IOS_APP_DIR"
-    APP_ENV="$HAPPY_IOS_APP_ENV" \
-      NODE_ENV=production \
-      EXPO_NO_METRO_WORKSPACE_ROOT=1 \
-      EXPO_OWNER="${EXPO_OWNER:-}" \
-      EXPO_PUBLIC_EAS_PROJECT_ID="${EXPO_PUBLIC_EAS_PROJECT_ID:-}" \
-      APP_STORE_CONNECT_API_KEY_PATH="${APP_STORE_CONNECT_API_KEY_PATH:-}" \
-      APP_STORE_CONNECT_API_KEY_ID="${APP_STORE_CONNECT_API_KEY_ID:-}" \
-      APP_STORE_CONNECT_API_ISSUER_ID="${APP_STORE_CONNECT_API_ISSUER_ID:-}" \
-      APP_STORE_CONNECT_APP_ID="${APP_STORE_CONNECT_APP_ID:-}" \
-      APPLE_DEVELOPMENT_TEAM="${APPLE_DEVELOPMENT_TEAM:-}" \
-      $HAPPY_PNPM_CMD dlx "eas-cli@$HAPPY_IOS_EAS_CLI_VERSION" "$@"
-  )
-}
-
-ios_validate_eas_profiles() {
-  node - "$HAPPY_IOS_APP_DIR/eas.json" "$HAPPY_IOS_INTERNAL_PROFILE" "$HAPPY_IOS_STORE_PROFILE" "$HAPPY_IOS_CHANNEL" <<'NODE'
-const fs = require('node:fs');
-const [path, internalName, storeName, channel] = process.argv.slice(2);
-const value = JSON.parse(fs.readFileSync(path, 'utf8'));
-const internal = value.build?.[internalName];
-const store = value.build?.[storeName];
-const submit = value.submit?.[storeName];
-const failures = [];
-if (!internal || internal.distribution !== 'internal' || internal.channel !== channel || internal.env?.APP_ENV !== 'personal') failures.push(`build.${internalName}`);
-if (!store || store.distribution !== 'store' || store.channel !== channel || store.env?.APP_ENV !== 'personal') failures.push(`build.${storeName}`);
-const expectedSubmit = {
-  ascApiKeyPath: '$APP_STORE_CONNECT_API_KEY_PATH',
-  ascApiKeyId: '$APP_STORE_CONNECT_API_KEY_ID',
-  ascApiKeyIssuerId: '$APP_STORE_CONNECT_API_ISSUER_ID',
-  ascAppId: '6806555472',
-  appleTeamId: 'MJS6V7A44A',
-};
-if (!submit || !submit.ios) failures.push(`submit.${storeName}`);
-for (const [key, expected] of Object.entries(expectedSubmit)) {
-  if (submit?.ios?.[key] !== expected) failures.push(`submit.${storeName}.ios.${key} must use ${expected}`);
-}
-if (failures.length) {
-  console.error(`Invalid personal EAS profiles: ${failures.join(', ')}`);
-  process.exit(1);
-}
-NODE
-}
-
-ios_validate_expo_identity() {
-  local owner project_id config_json
-  owner="${EXPO_OWNER:-validation-owner}"
-  project_id="${EXPO_PUBLIC_EAS_PROJECT_ID:-00000000-0000-4000-8000-000000000000}"
-  config_json="$(
-    APP_ENV="$HAPPY_IOS_APP_ENV" \
-      NODE_ENV=production \
-      EXPO_NO_METRO_WORKSPACE_ROOT=1 \
-      EXPO_OWNER="$owner" \
-      EXPO_PUBLIC_EAS_PROJECT_ID="$project_id" \
-      $HAPPY_PNPM_CMD -C "$HAPPY_IOS_APP_DIR" exec expo config --type public --json
-  )"
-  PERSONAL_CONFIG_JSON="$config_json" node - "$project_id" <<'NODE'
-const expectedProjectId = process.argv[2];
-const config = JSON.parse(process.env.PERSONAL_CONFIG_JSON);
-const ats = config.ios?.infoPlist?.NSAppTransportSecurity;
-const checks = [
-  ['name', config.name, 'Happy Personal'],
-  ['slug', config.slug, 'happy-personal'],
-  ['scheme', config.scheme, 'happy-personal'],
-  ['ios.bundleIdentifier', config.ios?.bundleIdentifier, 'com.myartings.happy'],
-  ['runtimeVersion.policy', config.runtimeVersion?.policy, 'appVersion'],
-  ['extra.eas.projectId', config.extra?.eas?.projectId, expectedProjectId],
-  ['ATS.NSAllowsLocalNetworking', ats?.NSAllowsLocalNetworking, true],
-  ['ATS.NSAllowsArbitraryLoads', ats?.NSAllowsArbitraryLoads, undefined],
-];
-const failures = checks.filter(([, actual, expected]) => actual !== expected);
-if (failures.length) {
-  for (const [name, actual, expected] of failures) console.error(`${name}: expected ${String(expected)}, got ${String(actual)}`);
-  process.exit(1);
-}
-NODE
-}
-
-ios_validate_local_configuration() {
-  local failed=0
-  ios_require_macos || failed=1
-  ensure_repo
-  if [[ -d "$HAPPY_IOS_APP_DIR" ]]; then
-    printf 'ok   %-24s %s\n' "Happy iOS app" "$HAPPY_IOS_APP_DIR"
-  else
-    printf 'miss %-24s %s\n' "Happy iOS app" "$HAPPY_IOS_APP_DIR"
-    failed=1
-  fi
-  check_cmd node || failed=1
-  if ! $HAPPY_PNPM_CMD --version >/dev/null 2>&1; then
-    printf 'miss %-24s %s\n' "pnpm" "$HAPPY_PNPM_CMD failed"
-    failed=1
-  else
-    printf 'ok   %-24s %s\n' "pnpm" "$($HAPPY_PNPM_CMD --version 2>/dev/null | head -n 1)"
-  fi
-  check_cmd xcodebuild || failed=1
-  if ios_validate_eas_profiles; then
-    printf 'ok   %-24s %s\n' "EAS profiles" "$HAPPY_IOS_INTERNAL_PROFILE / $HAPPY_IOS_STORE_PROFILE"
-  else
-    failed=1
-  fi
-  if ios_validate_expo_identity; then
-    printf 'ok   %-24s %s\n' "Personal identity" "Happy Personal / com.myartings.happy"
-  else
-    failed=1
-  fi
-  if [[ -n "${EXPO_OWNER:-}" ]]; then
-    printf 'ok   %-24s %s\n' "EXPO_OWNER" "configured"
-  else
-    printf 'miss %-24s %s\n' "EXPO_OWNER" "set it in config.env"
-    failed=1
-  fi
-  if [[ -n "${EXPO_PUBLIC_EAS_PROJECT_ID:-}" ]]; then
-    printf 'ok   %-24s %s\n' "EAS project ID" "configured"
-  else
-    printf 'miss %-24s %s\n' "EAS project ID" "set EXPO_PUBLIC_EAS_PROJECT_ID in config.env"
-    failed=1
-  fi
-  if [[ -n "${APP_STORE_CONNECT_APP_ID:-}" && -n "${APPLE_DEVELOPMENT_TEAM:-}" && -f "${APP_STORE_CONNECT_API_KEY_PATH:-}" ]]; then
-    printf 'ok   %-24s %s\n' "TestFlight config" "configured"
-  else
-    printf 'info %-24s %s\n' "TestFlight config" "optional until first TestFlight submission"
-  fi
-  return "$failed"
-}
-
-ios_require_release_ready() {
-  ios_validate_local_configuration
-  ensure_clean_repo
-  local branch
-  branch="$(git -C "$HAPPY_REPO" branch --show-current)"
-  if [[ "$branch" != "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
-    echo "Happy iOS releases must run from $HAPPY_DEVTOOLS_FINAL_BRANCH; current branch is $branch." >&2
-    return 1
-  fi
-  ios_run_eas whoami >/dev/null
-}
 
 ios_require_submit_configuration() {
   local name
@@ -411,76 +278,6 @@ ios_require_submit_configuration() {
   fi
 }
 
-ios_doctor() {
-  local failed=0 branch dirty
-  echo "Checking Happy Personal iOS release prerequisites..."
-  ios_validate_local_configuration || failed=1
-  branch="$(git -C "$HAPPY_REPO" branch --show-current 2>/dev/null || true)"
-  dirty="$(git -C "$HAPPY_REPO" status --porcelain 2>/dev/null || true)"
-  if [[ "$branch" == "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
-    printf 'ok   %-24s %s\n' "Release branch" "$branch"
-  else
-    printf 'warn %-24s %s\n' "Release branch" "current=$branch; release requires $HAPPY_DEVTOOLS_FINAL_BRANCH"
-  fi
-  if [[ -z "$dirty" ]]; then
-    printf 'ok   %-24s %s\n' "Happy worktree" "clean"
-  else
-    printf 'warn %-24s %s\n' "Happy worktree" "dirty; release will refuse"
-  fi
-  if ios_run_eas whoami >/dev/null 2>&1; then
-    printf 'ok   %-24s %s\n' "EAS login" "authenticated"
-  else
-    printf 'miss %-24s %s\n' "EAS login" "run eas login for the personal Expo account"
-    failed=1
-  fi
-  return "$failed"
-}
-
-ios_parse_dry_run() {
-  case "${1:-}" in
-    "") echo 0 ;;
-    --dry-run|-n) echo 1 ;;
-    *) echo "Unknown option: $1" >&2; return 1 ;;
-  esac
-}
-
-ios_release_action() {
-  local kind="$1" profile="$2" dry_run="$3"
-  shift 3
-  if [[ "$dry_run" -eq 1 ]]; then
-    echo "Happy Personal iOS $kind dry run"
-    echo "Happy repo: $HAPPY_REPO"
-    echo "Current branch: $(git -C "$HAPPY_REPO" branch --show-current 2>/dev/null || echo unknown)"
-    echo "Required release branch: $HAPPY_DEVTOOLS_FINAL_BRANCH"
-    echo "Profile: $profile"
-    ios_validate_eas_profiles
-    ios_validate_expo_identity
-    ios_eas_display_command "$@"
-    echo "No cloud build, submission, update, or report was created."
-    return
-  fi
-  ios_require_release_ready
-  ios_run_eas "$@"
-  write_update_report "ios-$kind" \
-    "Happy commit" "$(git -C "$HAPPY_REPO" rev-parse HEAD)" \
-    "EAS profile" "$profile" \
-    "iOS channel" "$HAPPY_IOS_CHANNEL" \
-    "Status" "command completed"
-}
-
-ios_build_internal() {
-  local dry_run
-  dry_run="$(ios_parse_dry_run "${1:-}")"
-  ios_release_action "build-internal" "$HAPPY_IOS_INTERNAL_PROFILE" "$dry_run" \
-    build --profile "$HAPPY_IOS_INTERNAL_PROFILE" --platform ios
-}
-
-ios_build_testflight() {
-  local dry_run
-  dry_run="$(ios_parse_dry_run "${1:-}")"
-  ios_release_action "build-testflight" "$HAPPY_IOS_STORE_PROFILE" "$dry_run" \
-    build --profile "$HAPPY_IOS_STORE_PROFILE" --platform ios
-}
 
 ios_submit_testflight() {
   local dry_run=0 build_id=""
@@ -506,8 +303,8 @@ ios_submit_testflight() {
   if [[ "$dry_run" -eq 0 ]]; then
     ios_require_submit_configuration
   fi
-  ios_release_action "submit-testflight" "$HAPPY_IOS_STORE_PROFILE" "$dry_run" \
-    submit --profile "$HAPPY_IOS_STORE_PROFILE" --platform ios --id "$build_id"
+  ios_release_action "submit-testflight" "$HAPPY_MOBILE_STORE_PROFILE" "$dry_run" \
+    submit --profile "$HAPPY_MOBILE_STORE_PROFILE" --platform ios --id "$build_id"
 }
 
 ios_publish_update() {
@@ -527,8 +324,8 @@ ios_publish_update() {
     echo "ios-publish-update requires --message TEXT." >&2
     return 1
   fi
-  ios_release_action "publish-update" "$HAPPY_IOS_CHANNEL" "$dry_run" \
-    update --channel "$HAPPY_IOS_CHANNEL" --environment "$HAPPY_IOS_EAS_ENVIRONMENT" \
+  ios_release_action "publish-update" "$HAPPY_MOBILE_CHANNEL" "$dry_run" \
+    update --channel "$HAPPY_MOBILE_CHANNEL" --environment "$HAPPY_MOBILE_EAS_ENVIRONMENT" \
     --platform ios --message "$message"
 }
 
@@ -537,10 +334,653 @@ ios_release_status() {
   ios_validate_local_configuration
   ios_run_eas whoami >/dev/null
   echo "Recent Happy Personal iOS builds"
-  ios_run_eas build:list --platform ios --channel "$HAPPY_IOS_CHANNEL" --limit 10
+  ios_run_eas build:list --platform ios --channel "$HAPPY_MOBILE_CHANNEL" --limit 10
   echo
   echo "Recent Happy Personal iOS submissions"
   ios_run_eas submit:list --platform ios --limit 10
+}
+
+# Shared mobile release implementation. Compatibility wrappers retain the
+# existing public iOS helper and command names.
+MOBILE_PNPM_ARGV=()
+
+mobile_parse_pnpm_command() {
+  local part
+  MOBILE_PNPM_ARGV=()
+  read -r -a MOBILE_PNPM_ARGV <<<"$HAPPY_PNPM_CMD"
+  if [[ "${#MOBILE_PNPM_ARGV[@]}" -eq 0 ]]; then
+    echo "HAPPY_PNPM_CMD must name an executable command." >&2
+    return 1
+  fi
+  for part in "${MOBILE_PNPM_ARGV[@]}"; do
+    if [[ ! "$part" =~ ^[A-Za-z0-9_./@:+-]+$ ]]; then
+      echo "HAPPY_PNPM_CMD contains an unsupported command token: $part" >&2
+      return 1
+    fi
+  done
+}
+
+mobile_require_platform() {
+  case "$1" in
+    ios|android) ;;
+    *) echo "Unsupported mobile platform: $1" >&2; return 1 ;;
+  esac
+}
+
+mobile_platform_label() {
+  case "$1" in
+    ios) printf 'iOS' ;;
+    android) printf 'Android' ;;
+  esac
+}
+
+mobile_require_host() {
+  mobile_require_platform "$1"
+  if [[ "$1" == "ios" && "$OS_NAME" != "Darwin" ]]; then
+    echo "Happy iOS release commands require macOS with Xcode." >&2
+    return 1
+  fi
+}
+
+mobile_eas_display_command() {
+  local platform="$1" part
+  shift
+  mobile_require_platform "$platform"
+  mobile_parse_pnpm_command
+  printf 'cd %q && APP_ENV=%q NODE_ENV=production EXPO_NO_METRO_WORKSPACE_ROOT=1' "$HAPPY_MOBILE_APP_DIR" "$HAPPY_MOBILE_APP_ENV"
+  if [[ -n "${EXPO_OWNER:-}" ]]; then
+    printf ' EXPO_OWNER=<configured>'
+  else
+    printf ' EXPO_OWNER=<missing>'
+  fi
+  if [[ -n "${EXPO_PUBLIC_EAS_PROJECT_ID:-}" ]]; then
+    printf ' EXPO_PUBLIC_EAS_PROJECT_ID=<configured>'
+  else
+    printf ' EXPO_PUBLIC_EAS_PROJECT_ID=<missing>'
+  fi
+  for part in "${MOBILE_PNPM_ARGV[@]}"; do
+    printf ' %q' "$part"
+  done
+  printf ' %q %q' dlx "eas-cli@$HAPPY_MOBILE_EAS_CLI_VERSION"
+  printf ' %q' "$@"
+  printf '\n'
+}
+
+mobile_run_eas() {
+  local platform="$1"
+  shift
+  mobile_parse_pnpm_command
+  log "+ $(mobile_eas_display_command "$platform" "$@")" >/dev/null
+  (
+    cd "$HAPPY_MOBILE_APP_DIR"
+    APP_ENV="$HAPPY_MOBILE_APP_ENV" \
+      NODE_ENV=production \
+      EXPO_NO_METRO_WORKSPACE_ROOT=1 \
+      EXPO_OWNER="${EXPO_OWNER:-}" \
+      EXPO_PUBLIC_EAS_PROJECT_ID="${EXPO_PUBLIC_EAS_PROJECT_ID:-}" \
+      APP_STORE_CONNECT_API_KEY_PATH="${APP_STORE_CONNECT_API_KEY_PATH:-}" \
+      APP_STORE_CONNECT_API_KEY_ID="${APP_STORE_CONNECT_API_KEY_ID:-}" \
+      APP_STORE_CONNECT_API_ISSUER_ID="${APP_STORE_CONNECT_API_ISSUER_ID:-}" \
+      APP_STORE_CONNECT_APP_ID="${APP_STORE_CONNECT_APP_ID:-}" \
+      APPLE_DEVELOPMENT_TEAM="${APPLE_DEVELOPMENT_TEAM:-}" \
+      "${MOBILE_PNPM_ARGV[@]}" dlx "eas-cli@$HAPPY_MOBILE_EAS_CLI_VERSION" "$@"
+  )
+}
+
+mobile_validate_eas_profiles() {
+  local platform="$1"
+  mobile_require_platform "$platform"
+  node - "$HAPPY_MOBILE_APP_DIR/eas.json" "$HAPPY_MOBILE_INTERNAL_PROFILE" "$HAPPY_MOBILE_STORE_PROFILE" "$HAPPY_MOBILE_CHANNEL" "$platform" <<'NODE'
+const fs = require('node:fs');
+const [path, internalName, storeName, channel, platform] = process.argv.slice(2);
+const value = JSON.parse(fs.readFileSync(path, 'utf8'));
+const internal = value.build?.[internalName];
+const store = value.build?.[storeName];
+const failures = [];
+if (!internal || internal.distribution !== 'internal' || internal.channel !== channel || internal.env?.APP_ENV !== 'personal') failures.push(`build.${internalName}`);
+if (!store || store.distribution !== 'store' || store.channel !== channel || store.env?.APP_ENV !== 'personal') failures.push(`build.${storeName}`);
+if (platform === 'android' && internal?.android?.buildType !== 'apk') failures.push(`build.${internalName}.android.buildType`);
+if (platform === 'ios') {
+  const submit = value.submit?.[storeName];
+  const expectedSubmit = {
+    ascApiKeyPath: '$APP_STORE_CONNECT_API_KEY_PATH',
+    ascApiKeyId: '$APP_STORE_CONNECT_API_KEY_ID',
+    ascApiKeyIssuerId: '$APP_STORE_CONNECT_API_ISSUER_ID',
+    ascAppId: '6806555472',
+    appleTeamId: 'MJS6V7A44A',
+  };
+  if (!submit?.ios) failures.push(`submit.${storeName}`);
+  for (const [key, expected] of Object.entries(expectedSubmit)) {
+    if (submit?.ios?.[key] !== expected) failures.push(`submit.${storeName}.ios.${key} must use ${expected}`);
+  }
+}
+if (failures.length) {
+  console.error(`Invalid personal EAS profiles: ${failures.join(', ')}`);
+  process.exit(1);
+}
+NODE
+}
+
+mobile_validate_expo_identity() {
+  local platform="$1" owner project_id config_json
+  mobile_require_platform "$platform"
+  owner="${EXPO_OWNER:-validation-owner}"
+  project_id="${EXPO_PUBLIC_EAS_PROJECT_ID:-00000000-0000-4000-8000-000000000000}"
+  config_json="$(
+    APP_ENV="$HAPPY_MOBILE_APP_ENV" \
+      NODE_ENV=production \
+      EXPO_NO_METRO_WORKSPACE_ROOT=1 \
+      EXPO_OWNER="$owner" \
+      EXPO_PUBLIC_EAS_PROJECT_ID="$project_id" \
+      $HAPPY_PNPM_CMD -C "$HAPPY_MOBILE_APP_DIR" exec expo config --type public --json
+  )"
+  PERSONAL_CONFIG_JSON="$config_json" node - "$project_id" "$platform" <<'NODE'
+const [expectedProjectId, platform] = process.argv.slice(2);
+const config = JSON.parse(process.env.PERSONAL_CONFIG_JSON);
+const checks = [
+  ['name', config.name, 'Happy Personal'],
+  ['slug', config.slug, 'happy-personal'],
+  ['scheme', config.scheme, 'happy-personal'],
+  ['runtimeVersion.policy', config.runtimeVersion?.policy, 'appVersion'],
+  ['extra.eas.projectId', config.extra?.eas?.projectId, expectedProjectId],
+];
+if (platform === 'ios') {
+  const ats = config.ios?.infoPlist?.NSAppTransportSecurity;
+  checks.push(['ios.bundleIdentifier', config.ios?.bundleIdentifier, 'com.myartings.happy']);
+  checks.push(['ATS.NSAllowsLocalNetworking', ats?.NSAllowsLocalNetworking, true]);
+  checks.push(['ATS.NSAllowsArbitraryLoads', ats?.NSAllowsArbitraryLoads, undefined]);
+} else {
+  checks.push(['android.package', config.android?.package, 'com.myartings.happy']);
+}
+const failures = checks.filter(([, actual, expected]) => actual !== expected);
+if (failures.length) {
+  for (const [name, actual, expected] of failures) console.error(`${name}: expected ${String(expected)}, got ${String(actual)}`);
+  process.exit(1);
+}
+NODE
+}
+
+mobile_validate_local_configuration() {
+  local platform="$1" failed=0 label
+  label="$(mobile_platform_label "$platform")"
+  mobile_require_host "$platform" || failed=1
+  ensure_repo
+  if [[ -d "$HAPPY_MOBILE_APP_DIR" ]]; then
+    printf 'ok   %-24s %s\n' "Happy $label app" "$HAPPY_MOBILE_APP_DIR"
+  else
+    printf 'miss %-24s %s\n' "Happy $label app" "$HAPPY_MOBILE_APP_DIR"
+    failed=1
+  fi
+  check_cmd node || failed=1
+  if ! $HAPPY_PNPM_CMD --version >/dev/null 2>&1; then
+    printf 'miss %-24s %s\n' "pnpm" "$HAPPY_PNPM_CMD failed"
+    failed=1
+  else
+    printf 'ok   %-24s %s\n' "pnpm" "$($HAPPY_PNPM_CMD --version 2>/dev/null | head -n 1)"
+  fi
+  if [[ "$platform" == "ios" ]]; then
+    check_cmd xcodebuild || failed=1
+  elif command -v java >/dev/null 2>&1; then
+    printf 'ok   %-24s %s\n' "Java (local builds)" "$(command -v java)"
+  else
+    printf 'info %-24s %s\n' "Java (local builds)" "optional for cloud EAS builds"
+  fi
+  if mobile_validate_eas_profiles "$platform"; then
+    printf 'ok   %-24s %s\n' "EAS profiles" "$HAPPY_MOBILE_INTERNAL_PROFILE / $HAPPY_MOBILE_STORE_PROFILE"
+  else
+    failed=1
+  fi
+  if mobile_validate_expo_identity "$platform"; then
+    printf 'ok   %-24s %s\n' "Personal identity" "Happy Personal / com.myartings.happy"
+  else
+    failed=1
+  fi
+  if [[ -n "${EXPO_OWNER:-}" ]]; then
+    printf 'ok   %-24s %s\n' "EXPO_OWNER" "configured"
+  else
+    printf 'miss %-24s %s\n' "EXPO_OWNER" "set it in config.env"
+    failed=1
+  fi
+  if [[ -n "${EXPO_PUBLIC_EAS_PROJECT_ID:-}" ]]; then
+    printf 'ok   %-24s %s\n' "EAS project ID" "configured"
+  else
+    printf 'miss %-24s %s\n' "EAS project ID" "set EXPO_PUBLIC_EAS_PROJECT_ID in config.env"
+    failed=1
+  fi
+  if [[ "$platform" == "ios" ]]; then
+    if [[ -n "${APP_STORE_CONNECT_APP_ID:-}" && -n "${APPLE_DEVELOPMENT_TEAM:-}" && -f "${APP_STORE_CONNECT_API_KEY_PATH:-}" ]]; then
+      printf 'ok   %-24s %s\n' "TestFlight config" "configured"
+    else
+      printf 'info %-24s %s\n' "TestFlight config" "optional until first TestFlight submission"
+    fi
+  fi
+  return "$failed"
+}
+
+mobile_require_release_ready() {
+  local platform="$1" label branch
+  label="$(mobile_platform_label "$platform")"
+  mobile_validate_local_configuration "$platform" || return 1
+  ensure_clean_repo || return 1
+  branch="$(git -C "$HAPPY_REPO" branch --show-current)" || return 1
+  if [[ "$branch" != "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
+    echo "Happy $label releases must run from $HAPPY_DEVTOOLS_FINAL_BRANCH; current branch is $branch." >&2
+    return 1
+  fi
+  mobile_run_eas "$platform" whoami >/dev/null || return 1
+}
+
+mobile_doctor() {
+  local platform="$1" failed=0 branch dirty label
+  label="$(mobile_platform_label "$platform")"
+  echo "Checking Happy Personal $label release prerequisites..."
+  mobile_validate_local_configuration "$platform" || failed=1
+  branch="$(git -C "$HAPPY_REPO" branch --show-current 2>/dev/null || true)"
+  dirty="$(git -C "$HAPPY_REPO" status --porcelain 2>/dev/null || true)"
+  if [[ "$branch" == "$HAPPY_DEVTOOLS_FINAL_BRANCH" ]]; then
+    printf 'ok   %-24s %s\n' "Release branch" "$branch"
+  else
+    printf 'warn %-24s %s\n' "Release branch" "current=$branch; release requires $HAPPY_DEVTOOLS_FINAL_BRANCH"
+  fi
+  if [[ -z "$dirty" ]]; then
+    printf 'ok   %-24s %s\n' "Happy worktree" "clean"
+  else
+    printf 'warn %-24s %s\n' "Happy worktree" "dirty; release will refuse"
+  fi
+  if mobile_run_eas "$platform" whoami >/dev/null 2>&1; then
+    printf 'ok   %-24s %s\n' "EAS login" "authenticated"
+  else
+    printf 'miss %-24s %s\n' "EAS login" "run eas login for the personal Expo account"
+    failed=1
+  fi
+  return "$failed"
+}
+
+mobile_parse_dry_run() {
+  case "${1:-}" in
+    "") echo 0 ;;
+    --dry-run|-n) echo 1 ;;
+    *) echo "Unknown option: $1" >&2; return 1 ;;
+  esac
+}
+
+mobile_release_action() {
+  local platform="$1" kind="$2" profile="$3" dry_run="$4" label
+  shift 4
+  label="$(mobile_platform_label "$platform")"
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "Happy Personal $label $kind dry run"
+    echo "Happy repo: $HAPPY_REPO"
+    echo "Current branch: $(git -C "$HAPPY_REPO" branch --show-current 2>/dev/null || echo unknown)"
+    echo "Required release branch: $HAPPY_DEVTOOLS_FINAL_BRANCH"
+    echo "Profile: $profile"
+    mobile_validate_eas_profiles "$platform"
+    mobile_validate_expo_identity "$platform"
+    mobile_eas_display_command "$platform" "$@"
+    echo "No cloud build, submission, update, or report was created."
+    echo "No artifact was downloaded."
+    return
+  fi
+  mobile_require_release_ready "$platform"
+  mobile_run_eas "$platform" "$@"
+  write_update_report "$platform-$kind" \
+    "Platform" "$platform" \
+    "Happy commit" "$(git -C "$HAPPY_REPO" rev-parse HEAD)" \
+    "EAS profile" "$profile" \
+    "EAS channel" "$HAPPY_MOBILE_CHANNEL" \
+    "Status" "command completed"
+}
+
+# Existing iOS helper names remain source-compatible for smoke tests and skills.
+ios_require_macos() { mobile_require_host ios; }
+ios_eas_display_command() { mobile_eas_display_command ios "$@"; }
+ios_run_eas() { mobile_run_eas ios "$@"; }
+ios_validate_eas_profiles() { mobile_validate_eas_profiles ios; }
+ios_validate_expo_identity() { mobile_validate_expo_identity ios; }
+ios_validate_local_configuration() { mobile_validate_local_configuration ios; }
+ios_require_release_ready() { mobile_require_release_ready ios; }
+ios_doctor() { mobile_doctor ios; }
+ios_parse_dry_run() { mobile_parse_dry_run "${1:-}"; }
+ios_release_action() {
+  local kind="$1" profile="$2" dry_run="$3"
+  shift 3
+  mobile_release_action ios "$kind" "$profile" "$dry_run" "$@"
+}
+
+android_doctor() { mobile_doctor android; }
+
+
+android_publish_update() {
+  local dry_run=0 message=""
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --message|-m)
+        shift
+        message="${1:-}"
+        ;;
+      *) echo "Unknown android-publish-update option: $1" >&2; return 1 ;;
+    esac
+    shift
+  done
+  if [[ -z "$message" ]]; then
+    echo "android-publish-update requires --message TEXT." >&2
+    return 1
+  fi
+  mobile_release_action android "publish-update" "$HAPPY_MOBILE_CHANNEL" "$dry_run" \
+    update --channel "$HAPPY_MOBILE_CHANNEL" --environment "$HAPPY_MOBILE_EAS_ENVIRONMENT" \
+    --platform android --message "$message"
+}
+
+android_release_status() {
+  mobile_validate_local_configuration android
+  mobile_run_eas android whoami >/dev/null
+  echo "Recent Happy Personal Android builds"
+  mobile_run_eas android build:list --platform android --channel "$HAPPY_MOBILE_CHANNEL" --limit 10
+}
+
+mobile_parse_build_options() {
+  local dry_run=0 hash_artifact=0
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --dry-run|-n) dry_run=1 ;;
+      --hash-artifact) hash_artifact=1 ;;
+      *) echo "Unknown mobile build option: $1" >&2; return 1 ;;
+    esac
+    shift
+  done
+  printf '%s %s\n' "$dry_run" "$hash_artifact"
+}
+
+mobile_sha256_stdin() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | awk '{print $1}'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | awk '{print $1}'
+  else
+    echo "Missing SHA-256 tool: install shasum or sha256sum." >&2
+    return 1
+  fi
+}
+
+mobile_dirty_source_digest() {
+  if [[ -z "$(git -C "$HAPPY_REPO" status --porcelain --untracked-files=all)" ]]; then
+    printf 'clean\n'
+    return
+  fi
+  {
+    git -C "$HAPPY_REPO" status --porcelain=v1 -z --untracked-files=all
+    git -C "$HAPPY_REPO" diff --cached --binary HEAD --
+    git -C "$HAPPY_REPO" diff --binary --
+    while IFS= read -r -d '' path; do
+      printf '\0%s\0' "$path"
+      git -C "$HAPPY_REPO" hash-object --no-filters -- "$path"
+    done < <(git -C "$HAPPY_REPO" ls-files --others --exclude-standard -z)
+  } | mobile_sha256_stdin | sed 's/^/sha256:/'
+}
+
+mobile_build_metadata_line() {
+  local json_path="$1" mode="${2:-}"
+  node - "$json_path" "$mode" <<'NODE'
+const fs = require('node:fs');
+const allowMissing = process.argv[3] === '--allow-missing';
+let build = null;
+let parseError = null;
+try {
+  const value = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+  build = Array.isArray(value) ? value[0] : (Array.isArray(value?.builds) ? value.builds[0] : value);
+} catch (error) {
+  parseError = error;
+}
+const invalidShape = (
+  !build
+  || typeof build !== 'object'
+  || Array.isArray(build)
+);
+if (parseError || invalidShape) {
+  if (!allowMissing) {
+    const detail = parseError ? 'malformed JSON' : 'unrecognized build shape';
+    console.error(`Invalid EAS build JSON: ${detail}.`);
+    process.exit(1);
+  }
+  build = null;
+}
+const stringField = (value) => (
+  typeof value === 'string' && value.trim() !== '' ? value.trim() : 'n/a'
+);
+const created = stringField(build?.createdAt);
+const completed = stringField(build?.completedAt);
+const startMs = Date.parse(created);
+const endMs = Date.parse(completed);
+const duration = Number.isFinite(startMs) && Number.isFinite(endMs)
+  ? String(Math.max(0, Math.round((endMs - startMs) / 1000)))
+  : 'n/a';
+const values = [
+  stringField(build?.status),
+  stringField(build?.id),
+  stringField(build?.platform),
+  stringField(build?.buildProfile),
+  stringField(build?.channel),
+  stringField(typeof build?.fingerprint === 'string' ? build.fingerprint : build?.fingerprint?.hash),
+  created,
+  completed,
+  duration,
+  stringField(build?.artifacts?.buildUrl ?? build?.artifacts?.applicationArchiveUrl),
+];
+console.log(values.map((value) => String(value).replace(/[\t\r\n]+/g, ' ')).join('\t'));
+NODE
+}
+
+mobile_build_artifact_url_from_json() {
+  local metadata status build_id build_platform build_profile build_channel
+  local fingerprint created completed eas_duration artifact_url
+  metadata="$(mobile_build_metadata_line "$1" "${2:-}")"
+  IFS=$'\t' read -r status build_id build_platform build_profile build_channel \
+    fingerprint created completed eas_duration artifact_url <<<"$metadata"
+  printf '%s\n' "$artifact_url"
+}
+
+mobile_write_build_report_from_json() {
+  local platform="$1" kind="$2" profile="$3" source_commit="$4" dirty_digest="$5"
+  local started_epoch="$6" ended_epoch="$7" process_exit="$8" effective_status="$9"
+  local json_path="${10}" artifact_sha256="${11}"
+  local metadata status build_id build_platform build_profile build_channel fingerprint
+  local created completed eas_duration artifact_url duration process_outcome response_bytes response_sha256
+  metadata="$(mobile_build_metadata_line "$json_path" --allow-missing)" || return
+  IFS=$'\t' read -r status build_id build_platform build_profile build_channel \
+    fingerprint created completed eas_duration artifact_url <<<"$metadata"
+  response_bytes="$(wc -c <"$json_path" | tr -d '[:space:]')" || return
+  response_sha256="$(mobile_sha256_stdin <"$json_path")" || return
+  duration=$((ended_epoch - started_epoch))
+  if [[ "$duration" -lt 0 ]]; then
+    duration=0
+  fi
+  if [[ "$process_exit" -eq 0 ]]; then
+    process_outcome="exited 0"
+  else
+    process_outcome="command failed (exit $process_exit)"
+  fi
+  write_update_report "$platform-$kind" \
+    "Platform" "$platform" \
+    "EAS profile" "$profile" \
+    "EAS channel" "$HAPPY_MOBILE_CHANNEL" \
+    "Returned EAS platform" "$build_platform" \
+    "Returned EAS profile" "$build_profile" \
+    "Returned EAS channel" "$build_channel" \
+    "Source commit" "$source_commit" \
+    "Dirty source digest" "$dirty_digest" \
+    "Native fingerprint" "$fingerprint" \
+    "EAS build ID" "$build_id" \
+    "Duration seconds" "$duration" \
+    "EAS created" "$created" \
+    "EAS completed" "$completed" \
+    "EAS duration seconds" "$eas_duration" \
+    "Artifact URL" "$artifact_url" \
+    "Artifact SHA-256" "$artifact_sha256" \
+    "EAS response bytes" "$response_bytes" \
+    "EAS response SHA-256" "$response_sha256" \
+    "EAS process exit" "$process_exit" \
+    "Command outcome" "$process_outcome" \
+    "EAS status" "$status" \
+    "Status" "$effective_status"
+}
+
+mobile_require_https_url() {
+  node - "$1" <<'NODE'
+try {
+  const url = new URL(process.argv[2]);
+  if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
+    throw new Error('unsupported URL');
+  }
+} catch {
+  console.error('Artifact URL must be an HTTPS URL without embedded credentials.');
+  process.exit(1);
+}
+NODE
+}
+
+mobile_stream_artifact_sha256() {
+  mobile_require_https_url "$1" || return
+  require_cmd curl || return
+  curl --fail --location --silent --show-error \
+    --proto '=https' --proto-redir '=https' -- "$1" | mobile_sha256_stdin
+}
+
+mobile_build_action() {
+  local platform="$1" kind="$2" profile="$3" dry_run="$4" hash_artifact="$5"
+  shift 5
+  if [[ "$dry_run" -eq 1 ]]; then
+    mobile_release_action "$platform" "$kind" "$profile" 1 "$@" --wait --json || return
+    if [[ "$hash_artifact" -eq 1 ]]; then
+      echo "Artifact SHA-256: requested only after a future successful build; no artifact was downloaded."
+    else
+      echo "Artifact SHA-256: not requested."
+    fi
+    return
+  fi
+
+  (
+    mobile_require_release_ready "$platform" || exit
+    local source_commit dirty_digest started_epoch ended_epoch json_path process_exit
+    local effective_exit effective_status report_exit
+    local metadata build_status build_id build_platform build_profile build_channel fingerprint
+    local created completed eas_duration artifact_url artifact_sha256 hash_exit report_output
+    local expected_eas_platform
+    source_commit="$(git -C "$HAPPY_REPO" rev-parse HEAD)" || exit
+    dirty_digest="$(mobile_dirty_source_digest)" || exit
+    started_epoch="$(date '+%s')" || exit
+    json_path="$(mktemp -t happy-mobile-build-XXXXXX.json)" || exit
+    trap "rm -f -- $(printf '%q' "$json_path")" EXIT
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+
+    process_exit=0
+    if mobile_run_eas "$platform" "$@" --wait --json >"$json_path"; then
+      :
+    else
+      process_exit=$?
+    fi
+    effective_exit="$process_exit"
+    ended_epoch="$(date '+%s')" || exit
+
+    case "$platform" in
+      ios) expected_eas_platform="IOS" ;;
+      android) expected_eas_platform="ANDROID" ;;
+    esac
+    if [[ "$process_exit" -ne 0 ]]; then
+      effective_status="command failed (exit $process_exit)"
+    elif metadata="$(mobile_build_metadata_line "$json_path")"; then
+      IFS=$'\t' read -r build_status build_id build_platform build_profile build_channel \
+        fingerprint created completed eas_duration artifact_url <<<"$metadata"
+      if [[ "$build_status" == "n/a" ]]; then
+        effective_status="command failed (invalid EAS build JSON)"
+        effective_exit=1
+      elif [[ "$build_status" != "FINISHED" ]]; then
+        effective_status="build failed (EAS status: $build_status)"
+        effective_exit=1
+      elif [[ "$build_id" == "n/a" || "$build_platform" == "n/a" \
+        || "$build_profile" == "n/a" || "$build_channel" == "n/a" ]]; then
+        effective_status="command failed (invalid EAS build JSON)"
+        effective_exit=1
+      elif [[ "$build_platform" != "$expected_eas_platform" \
+        || "$build_profile" != "$profile" \
+        || "$build_channel" != "$HAPPY_MOBILE_CHANNEL" ]]; then
+        effective_status="build failed (EAS build dimensions do not match request)"
+        effective_exit=1
+      else
+        effective_status="FINISHED"
+      fi
+    else
+      effective_status="command failed (invalid EAS build JSON)"
+      effective_exit=1
+    fi
+
+    artifact_url="$(mobile_build_artifact_url_from_json "$json_path" --allow-missing)" || exit
+    artifact_sha256="not computed (use --hash-artifact to stream the remote artifact)"
+    hash_exit=0
+    if [[ "$hash_artifact" -eq 1 ]]; then
+      if [[ "$effective_exit" -ne 0 || "$artifact_url" == "n/a" ]]; then
+        artifact_sha256="unavailable (the build did not return an artifact URL)"
+        hash_exit=1
+      elif artifact_sha256="$(mobile_stream_artifact_sha256 "$artifact_url")"; then
+        :
+      else
+        artifact_sha256="failed to compute"
+        hash_exit=1
+      fi
+    fi
+
+    if report_output="$(mobile_write_build_report_from_json \
+      "$platform" "$kind" "$profile" "$source_commit" "$dirty_digest" \
+      "$started_epoch" "$ended_epoch" "$process_exit" "$effective_status" \
+      "$json_path" "$artifact_sha256")"; then
+      echo "$report_output"
+    else
+      report_exit=$?
+      exit "$report_exit"
+    fi
+    if [[ "$effective_exit" -ne 0 ]]; then
+      exit "$effective_exit"
+    fi
+    if [[ "$hash_exit" -ne 0 ]]; then
+      exit "$hash_exit"
+    fi
+    exit 0
+  )
+}
+
+# Build wrappers use structured EAS output so reports can bind to one exact build.
+ios_build_internal() {
+  local options dry_run hash_artifact
+  options="$(mobile_parse_build_options "$@")"
+  read -r dry_run hash_artifact <<<"$options"
+  mobile_build_action ios "build-internal" "$HAPPY_MOBILE_INTERNAL_PROFILE" "$dry_run" "$hash_artifact" \
+    build --profile "$HAPPY_MOBILE_INTERNAL_PROFILE" --platform ios
+}
+
+ios_build_testflight() {
+  local options dry_run hash_artifact
+  options="$(mobile_parse_build_options "$@")"
+  read -r dry_run hash_artifact <<<"$options"
+  mobile_build_action ios "build-testflight" "$HAPPY_MOBILE_STORE_PROFILE" "$dry_run" "$hash_artifact" \
+    build --profile "$HAPPY_MOBILE_STORE_PROFILE" --platform ios
+}
+
+android_build_internal() {
+  local options dry_run hash_artifact
+  options="$(mobile_parse_build_options "$@")"
+  read -r dry_run hash_artifact <<<"$options"
+  mobile_build_action android "build-internal" "$HAPPY_MOBILE_INTERNAL_PROFILE" "$dry_run" "$hash_artifact" \
+    build --profile "$HAPPY_MOBILE_INTERNAL_PROFILE" --platform android
+}
+
+android_build_store() {
+  local options dry_run hash_artifact
+  options="$(mobile_parse_build_options "$@")"
+  read -r dry_run hash_artifact <<<"$options"
+  mobile_build_action android "build-store" "$HAPPY_MOBILE_STORE_PROFILE" "$dry_run" "$hash_artifact" \
+    build --profile "$HAPPY_MOBILE_STORE_PROFILE" --platform android
 }
 
 happy_cli_path() {
@@ -2416,12 +2856,18 @@ case "$cmd" in
   install-refresh-task) shift; install_refresh_task "${1:-}" ;;
   refresh-task-status) refresh_task_status ;;
   uninstall-refresh-task) uninstall_refresh_task ;;
+  mobile-plan) shift; mobile_plan "$@" ;;
   ios-doctor) ios_doctor ;;
-  ios-build-internal) shift; ios_build_internal "${1:-}" ;;
-  ios-build-testflight) shift; ios_build_testflight "${1:-}" ;;
+  ios-build-internal) shift; ios_build_internal "$@" ;;
+  ios-build-testflight) shift; ios_build_testflight "$@" ;;
   ios-submit-testflight) shift; ios_submit_testflight "$@" ;;
   ios-publish-update) shift; ios_publish_update "$@" ;;
   ios-release-status) ios_release_status ;;
+  android-doctor) android_doctor ;;
+  android-build-internal) shift; android_build_internal "$@" ;;
+  android-build-store) shift; android_build_store "$@" ;;
+  android-publish-update) shift; android_publish_update "$@" ;;
+  android-release-status) android_release_status ;;
   ""|-h|--help|help) usage ;;
   *)
     usage

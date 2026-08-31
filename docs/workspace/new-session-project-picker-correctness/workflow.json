@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "slug": "new-session-project-picker-correctness",
+  "intensity": "feature",
+  "phase": "archived",
+  "nextAction": "Optionally repair the four unrelated pre-existing App test files as a separate scoped task",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "legacyImport": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/new-session-project-picker-correctness.md",
+      "updated": "2026-08-29T17:57:22+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/decisions.md",
+      "updated": "2026-08-29T17:57:22+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "docs/specs/new-session-project-picker-correctness.md; docs/tasks/new-session-project-picker-correctness-tasks.md; docs/workspace/new-session-project-picker-correctness/context.md; docs/workspace/new-session-project-picker-correctness/task-links.md",
+      "updated": "2026-08-29T17:57:22+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/context.md; docs/workspace/new-session-project-picker-correctness/decisions.md; docs/specs/new-session-project-picker-correctness.md",
+      "updated": "2026-08-29T17:57:22+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "packages/happy-app/sources/app/(app)/new/index.tsx; packages/happy-app/sources/utils/workspaceProjectDiscovery.ts; packages/happy-app/sources/sync/ops.ts; packages/happy-cli/src/workspace/workspaceProjectScanner.ts; packages/happy-cli/src/api/apiMachine.ts; focused RED/GREEN tests",
+      "updated": "2026-08-29T18:09:13+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/validation.md; user explicitly accepted the 15 unrelated pre-existing App test failures on 2026-08-30",
+      "updated": "2026-08-29T18:29:58+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "whole-diff semantic review; docs/workspace/new-session-project-picker-correctness/validation.md; final focused App tests and typecheck",
+      "updated": "2026-08-29T18:17:09+00:00"
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/finish.md; docs/workspace/new-session-project-picker-correctness/validation.md; docs/tasks/new-session-project-picker-correctness-tasks.md; whole-diff review passed",
+      "updated": "2026-08-29T18:30:43+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T17:52:10+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-29T17:57:22+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "docs/PRD.md; docs/specs/new-session-project-picker-correctness.md"
+    },
+    {
+      "at": "2026-08-29T17:57:22+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/decisions.md"
+    },
+    {
+      "at": "2026-08-29T17:57:22+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/context.md; docs/workspace/new-session-project-picker-correctness/decisions.md; docs/specs/new-session-project-picker-correctness.md"
+    },
+    {
+      "at": "2026-08-29T17:57:22+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "docs/specs/new-session-project-picker-correctness.md; docs/tasks/new-session-project-picker-correctness-tasks.md; docs/workspace/new-session-project-picker-correctness/context.md; docs/workspace/new-session-project-picker-correctness/task-links.md"
+    },
+    {
+      "at": "2026-08-29T17:57:42+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write RED tests for unified search, scanner roots, query RPC, and picker layout"
+    },
+    {
+      "at": "2026-08-29T18:09:13+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "packages/happy-app/sources/app/(app)/new/index.tsx; packages/happy-app/sources/utils/workspaceProjectDiscovery.ts; packages/happy-app/sources/sync/ops.ts; packages/happy-cli/src/workspace/workspaceProjectScanner.ts; packages/happy-cli/src/api/apiMachine.ts; focused RED/GREEN tests"
+    },
+    {
+      "at": "2026-08-29T18:09:13+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete applicable tests, typechecks, browser smoke, and semantic review"
+    },
+    {
+      "at": "2026-08-29T18:17:09+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "whole-diff semantic review; docs/workspace/new-session-project-picker-correctness/validation.md; final focused App tests and typecheck"
+    },
+    {
+      "at": "2026-08-29T18:29:58+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/validation.md; user explicitly accepted the 15 unrelated pre-existing App test failures on 2026-08-30"
+    },
+    {
+      "at": "2026-08-29T18:29:58+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish review, session summary, archive, and staged workflow CI"
+    },
+    {
+      "at": "2026-08-29T18:30:43+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "docs/workspace/new-session-project-picker-correctness/finish.md; docs/workspace/new-session-project-picker-correctness/validation.md; docs/tasks/new-session-project-picker-correctness-tasks.md; whole-diff review passed"
+    },
+    {
+      "at": "2026-08-29T18:30:43+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Fixed New Session Project picker layout, unified search, outermost-root discovery, and bounded query RPC; verified with accepted unrelated App baseline gaps; commit: pending; follow-up: Optionally repair the four unrelated pre-existing App test files as a separate scoped task"
+    }
+  ],
+  "updated": "2026-08-29T18:30:43+00:00",
+  "archivedAt": "2026-08-29T18:30:43+00:00",
+  "resultCommit": "pending",
+  "archiveSummary": "Fixed New Session Project picker layout, unified search, outermost-root discovery, and bounded query RPC; verified with accepted unrelated App baseline gaps",
+  "archiveFollowUp": "Optionally repair the four unrelated pre-existing App test files as a separate scoped task"
+}

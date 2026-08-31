@@ -7,6 +7,7 @@ const { mockListWorkspaceProjects } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/workspace/workspaceProjectScanner', () => ({
+    MAX_WORKSPACE_PROJECT_QUERY_LENGTH: 256,
     listWorkspaceProjects: mockListWorkspaceProjects,
 }));
 
@@ -45,11 +46,12 @@ describe('ApiMachineClient workspace project discovery RPC', () => {
         });
 
         const handler = handlersFrom(client).get('machine-1:list-workspace-projects');
-        const result = await handler?.({ root: 'C:\\untrusted' });
+        const result = await handler?.({ root: 'C:\\untrusted', query: '  happy  ' });
 
         expect(result).toBe(expected);
         expect(mockListWorkspaceProjects).toHaveBeenCalledWith({
             root: join(homedir(), 'workspace'),
+            query: 'happy',
         });
     }, 15_000);
 });
