@@ -51,6 +51,7 @@ import {
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 import { buildSessionProjectDisplayGroups } from '@/utils/sessionDisplayOrder';
 import { resolveCodexFirstSessionNavigation } from '@/features/codex-first-shell/codexFirstSessionNavigation';
+import { resolveCurrentRequestRowAttention } from '@/features/needs-attention/currentRequestAttention';
 
 type SessionListDisplayItem = SessionListViewItem | {
     type: 'machine-header';
@@ -842,32 +843,49 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
     const navigateToSession = useNavigateToSession();
     const [actionsAnchor, setActionsAnchor] = React.useState<SessionActionsAnchor | null>(null);
     const baseStatus = STATUS_CONFIG[session.state];
+    const currentRequest = resolveCurrentRequestRowAttention(session, needsAttentionSessionsEnabled);
+    const currentRequestKind = currentRequest.kind;
     const showUnreadAttentionState = needsAttentionSessionsEnabled && session.hasUnread;
-    const needsUserAction = session.state === 'permission_required' || session.state === 'input_required';
+    const needsUserAction = currentRequestKind !== null
+        || session.state === 'permission_required'
+        || session.state === 'input_required';
+    const requestStatus = currentRequestKind
+        ? STATUS_CONFIG[currentRequestKind === 'answer_required' ? 'input_required' : currentRequestKind]
+        : baseStatus;
     // User action stays orange and pulsing even when the request also marked the session unread.
     const status = showUnreadAttentionState && !needsUserAction
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
-        : baseStatus;
+        : { ...requestStatus, isConnected: baseStatus.isConnected };
 
     const vibingMessage = React.useMemo(() => {
         return vibingMessages[Math.floor(Math.random() * vibingMessages.length)].toLowerCase() + '…';
     }, [session.state]);
 
-    const statusText = session.state === 'input_required'
-        ? t('status.inputRequired')
-        : session.state === 'permission_required'
-            ? t('status.permissionRequired')
-            : showUnreadAttentionState
-                ? t('status.unread')
-                : session.state === 'thinking'
-                    ? vibingMessage
-                    : session.state === 'disconnected'
-                        ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
-                        : t('status.online');
+    const requestReasonText = currentRequest.reasonTextKey
+        ? t(currentRequest.reasonTextKey)
+        : null;
+    const requestActionText = currentRequest.actionTextKey
+        ? t(currentRequest.actionTextKey)
+        : null;
+    const currentRequestStatusText = requestReasonText
+        ? [requestReasonText, requestActionText].filter(Boolean).join(' · ')
+        : null;
+    const statusText = currentRequestStatusText
+        ?? (session.state === 'input_required'
+            ? t('status.inputRequired')
+            : session.state === 'permission_required'
+                ? t('status.permissionRequired')
+                : showUnreadAttentionState
+                    ? t('status.unread')
+                    : session.state === 'thinking'
+                        ? vibingMessage
+                        : session.state === 'disconnected'
+                            ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
+                            : t('status.online'));
 
     const handlePress = React.useCallback(() => {
-        navigateToSession(session.id);
-    }, [navigateToSession, session.id]);
+        navigateToSession(session.id, currentRequest.focusHint ?? undefined);
+    }, [currentRequest.focusHint, navigateToSession, session.id]);
 
     const handleContextMenu = React.useCallback((event: any) => {
         event.preventDefault?.();
@@ -907,6 +925,7 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
         ]}>
         <Pressable
             accessibilityRole="button"
+            accessibilityLabel={`${session.name}, ${statusText}`}
             accessibilityState={{ selected: !!selected }}
             {...interactionState.interactionProps}
             style={({ pressed }) => [

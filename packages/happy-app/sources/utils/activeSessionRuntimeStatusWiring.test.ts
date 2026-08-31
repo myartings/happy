@@ -9,6 +9,14 @@ const flatRows = readFileSync(
     new URL('../components/FlatSessionRow.tsx', import.meta.url),
     'utf8',
 );
+const groupedRows = readFileSync(
+    new URL('../components/SessionsList.tsx', import.meta.url),
+    'utf8',
+);
+const sessionRoute = readFileSync(
+    new URL('../app/(app)/session/[id].tsx', import.meta.url),
+    'utf8',
+);
 
 describe('active session runtime status wiring', () => {
     it('renders every localized runtime state in the default compact row', () => {
@@ -30,8 +38,9 @@ describe('active session runtime status wiring', () => {
 
     it('keeps the idle label consistent with the existing waiting indicator', () => {
         expect(compactRows).toContain(
-            "const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : baseStatus.color;",
+            "const statusTextColor = currentRequestKind === null && session.state === 'waiting'",
         );
+        expect(compactRows).toContain(': status.color;');
         expect(compactRows).toContain('{ color: statusTextColor }');
     });
 
@@ -40,6 +49,24 @@ describe('active session runtime status wiring', () => {
         expect(flatRows).toContain("t('status.idle')");
         expect(flatRows).toContain("t('status.permissionRequired')");
         expect(flatRows).toContain("t('status.lastSeen'");
-        expect(flatRows).toContain("session.state === 'waiting' ? theme.colors.textSecondary : status.color");
+        expect(flatRows).toContain(
+            "const statusTextColor = currentRequestKind === null && session.state === 'waiting'",
+        );
+    });
+
+    it('gates reason, action, and focus navigation through one setting-aware row policy', () => {
+        for (const source of [compactRows, flatRows, groupedRows]) {
+            expect(source).toContain(
+                'resolveCurrentRequestRowAttention(session, needsAttentionSessionsEnabled)',
+            );
+            expect(source).toContain('t(currentRequest.actionTextKey)');
+            expect(source).toContain('currentRequest.focusHint ?? undefined');
+            expect(source).not.toContain('session.attention?.primaryReason');
+        }
+    });
+
+    it('parses attention versions strictly at the Session route boundary', () => {
+        expect(sessionRoute).toContain('parseCurrentRequestAttentionRouteVersion(');
+        expect(sessionRoute).not.toContain('Number(attentionAgentStateVersion)');
     });
 });

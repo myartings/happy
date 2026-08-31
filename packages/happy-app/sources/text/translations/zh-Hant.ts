@@ -92,6 +92,8 @@ export const zhHant: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `最後活躍時間 ${time}`,
         permissionRequired: '需要權限',
         inputRequired: '等待你的回答',
+        reviewRequest: '查看',
+        answerRequest: '回答',
         activeNow: '目前活躍',
         unknown: '未知',
         unread: '新結果',

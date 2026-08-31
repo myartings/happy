@@ -948,6 +948,10 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         self.git("add", str(archive.relative_to(self.project)))
         self.git("add", str(config.relative_to(self.project)))
         if self.git("status", "--porcelain").stdout.strip():
+            # Disabling autocrlf can expose line-ending changes in other tracked
+            # fixture files. Include the complete tracked normalization baseline
+            # so the setup commit never depends on checkout line-ending state.
+            self.git("add", "-u")
             self.git("commit", "-m", "normalize LF fixture baseline")
             self.base = self.git("rev-parse", "HEAD").stdout.strip()
 

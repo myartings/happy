@@ -432,6 +432,8 @@ export const ru: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `в сети ${time}`,
         permissionRequired: 'требуется разрешение',
         inputRequired: 'ожидает вашего ответа',
+        reviewRequest: 'Проверить',
+        answerRequest: 'Ответить',
         activeNow: 'Активен сейчас',
         unknown: 'неизвестно',
         unread: 'новые результаты',
