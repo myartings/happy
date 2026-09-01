@@ -40,6 +40,12 @@ function handlersFrom(client: any): Map<string, (params: unknown) => Promise<unk
 describe('ApiMachineClient saved-project RPC', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        registry.list.mockResolvedValue({ schemaVersion: 1, revision: 0, projects: [] });
+        registry.importDiscovered.mockResolvedValue({
+            importedCount: 0,
+            skipped: [],
+            registry: { schemaVersion: 1, revision: 0, projects: [] },
+        });
         workspaceScanner.listWorkspaceProjects.mockResolvedValue({
             root: 'C:\\Users\\test\\workspace',
             projects: [],
@@ -94,6 +100,7 @@ describe('ApiMachineClient saved-project RPC', () => {
             skipped: [],
             registry: snapshot,
         });
+        registry.list.mockResolvedValue(snapshot);
         registry.add.mockResolvedValue(added);
         const { ApiMachineClient } = await import('./apiMachine');
         const client = new ApiMachineClient('token', machineClient());
@@ -105,6 +112,8 @@ describe('ApiMachineClient saved-project RPC', () => {
 
         await expect(handlersFrom(client).get('machine-1:list-saved-projects')?.({}))
             .resolves.toBe(snapshot);
+        await expect(handlersFrom(client).get('machine-1:list-saved-projects')?.({}))
+            .resolves.toBe(snapshot);
         await expect(handlersFrom(client).get('machine-1:add-saved-project')?.({
             path: '~/workspace/happy',
             expectedRevision: 1,
@@ -113,6 +122,8 @@ describe('ApiMachineClient saved-project RPC', () => {
         expect(workspaceScanner.listWorkspaceProjects).toHaveBeenCalledWith({
             root: expect.stringMatching(/[\\/]workspace$/),
         });
+        expect(workspaceScanner.listWorkspaceProjects).toHaveBeenCalledTimes(1);
+        expect(registry.importDiscovered).toHaveBeenCalledTimes(1);
         expect(registry.importDiscovered).toHaveBeenCalledWith({
             paths: [
                 'C:\\Users\\test\\workspace\\alpha',
@@ -136,6 +147,7 @@ describe('ApiMachineClient saved-project RPC', () => {
             skipped: [],
             registry: snapshot,
         });
+        registry.list.mockResolvedValue(snapshot);
         const { ApiMachineClient } = await import('./apiMachine');
         const client = new ApiMachineClient('token', machineClient());
         client.setRPCHandlers({
@@ -147,6 +159,28 @@ describe('ApiMachineClient saved-project RPC', () => {
         await expect(handlersFrom(client).get('machine-1:list-saved-projects')?.({}))
             .resolves.toEqual(snapshot);
         expect(registry.importDiscovered).toHaveBeenCalledWith({ paths: [] });
+    });
+
+    it('keeps serving the local registry when the one-time workspace import fails', async () => {
+        const snapshot = {
+            schemaVersion: 1,
+            revision: 4,
+            projects: [{ id: 'existing-id', primaryPath: 'C:\\existing' }],
+        };
+        workspaceScanner.listWorkspaceProjects.mockRejectedValue(new Error('scan failed'));
+        registry.list.mockResolvedValue(snapshot);
+        const { ApiMachineClient } = await import('./apiMachine');
+        const client = new ApiMachineClient('token', machineClient());
+        client.setRPCHandlers({
+            spawnSession: vi.fn(),
+            stopSession: vi.fn(),
+            requestShutdown: vi.fn(),
+        });
+
+        await expect(handlersFrom(client).get('machine-1:list-saved-projects')?.({}))
+            .resolves.toBe(snapshot);
+        expect(workspaceScanner.listWorkspaceProjects).toHaveBeenCalledTimes(1);
+        expect(registry.importDiscovered).not.toHaveBeenCalled();
     });
 
     it('revalidates and resolves a project for capability-gated starts', async () => {
