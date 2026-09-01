@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 3,
+  "slug": "workspace-auto-import",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly requested automatic import of projects beneath workspace on 2026-09-01; contract WAI-01 through WAI-06.",
+      "updated": "2026-09-01T13:58:25+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D6 resolve trusted root, additive merge, worktree canonicalization, partial failure, idempotency, and schema compatibility.",
+      "updated": "2026-09-01T13:58:01+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: current-root serial CLI-only slice; registry and RPC public seams; focused CLI tests and typecheck; no protected paths or delegation.",
+      "updated": "2026-09-01T13:58:02+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared-with-controls: machine-local additive schema-1 writes only; bounded scan, canonical dedupe, lock, validated atomic rename, idempotent retry, no deletion.",
+      "updated": "2026-09-01T13:58:01+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Fallback-race TDD: RED reproduced missing import when first alias disappeared under lock; GREEN retains all prevalidated sources and deduplicates after lock, focused suite 19/19 and CLI typecheck pass.",
+      "updated": "2026-09-01T14:53:16+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Final candidate: only the same three deterministic App/Server baseline failures remain; CLI feature and typecheck pass; workflow runtime 22/22 and repository audit pass.",
+      "updated": "2026-09-01T15:41:35+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Final independent Spec and Standards capable reviews both PASS with no blocking findings on candidate 35da276e66a30871c34182774b8a6ded91bc461d935203f2dbe623fc855ee2bd.",
+      "updated": "2026-09-01T15:44:26+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "5f4404ef6e02239e07e0bbf1511450a0ab75410f",
+        "candidateFingerprint": "35da276e66a30871c34182774b8a6ded91bc461d935203f2dbe623fc855ee2bd"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Acceptance WAI-01 through WAI-06 verified; final check run 904506cd... accepted only named baseline gaps; independent Spec and Standards reviews passed; rollback and follow-up recorded.",
+      "updated": "2026-09-01T15:45:25+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-01T13:55:06+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-01T13:58:01+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly requested automatic import of projects beneath workspace on 2026-09-01; contract WAI-01 through WAI-06."
+    },
+    {
+      "at": "2026-09-01T13:58:01+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D6 resolve trusted root, additive merge, worktree canonicalization, partial failure, idempotency, and schema compatibility."
+    },
+    {
+      "at": "2026-09-01T13:58:01+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared-with-controls: machine-local additive schema-1 writes only; bounded scan, canonical dedupe, lock, validated atomic rename, idempotent retry, no deletion."
+    },
+    {
+      "at": "2026-09-01T13:58:02+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current-root serial CLI-only slice; registry and RPC public seams; focused CLI tests and typecheck; no protected paths or delegation."
+    },
+    {
+      "at": "2026-09-01T13:58:24+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "pending",
+      "evidence": "Reordering receipt so approved local-only source is recorded first."
+    },
+    {
+      "at": "2026-09-01T13:58:24+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — Bounded machine-local follow-up to archived Issue #84; no external coordination queue needed. (approval: User explicitly requested automatic import of workspace projects on 2026-09-01.)"
+    },
+    {
+      "at": "2026-09-01T13:58:25+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly requested automatic import of projects beneath workspace on 2026-09-01; contract WAI-01 through WAI-06."
+    },
+    {
+      "at": "2026-09-01T13:58:25+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write WAI-02 RED registry import test"
+    },
+    {
+      "at": "2026-09-01T14:03:29+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD complete: registry RED->12/12 GREEN, RPC RED->4/4 GREEN; combined 25/25, CLI typecheck pass, real workspace temporary-registry smoke imported 25 unique primaries from 46 discoveries with one safe skip."
+    },
+    {
+      "at": "2026-09-01T14:03:31+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run applicable checks and independent review"
+    },
+    {
+      "at": "2026-09-01T14:21:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 547aafc6-bca8-46b9-ba57-bdd9fb1ac77a"
+    },
+    {
+      "at": "2026-09-01T14:23:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "App and Server test groups fail only three deterministic paths byte-identical to origin/dev; App blob timeout passed focused rerun; CLI acceptance suite 25/25 and typecheck pass.; structured run: 547aafc6-bca8-46b9-ba57-bdd9fb1ac77a; accepted command indexes: 2, 3; approval: User previously instructed 接受无关缺口并继续评审归档 and disabled repeated authorization in YOLO mode."
+    },
+    {
+      "at": "2026-09-01T14:28:00+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec blocked on missing WAI-01/WAI-05 RPC result assertions; Standards blocked on pre-lock normalization TOCTOU without post-lock revalidation."
+    },
+    {
+      "at": "2026-09-01T14:28:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "pending",
+      "evidence": "Remediation required for two blocking independent review findings."
+    },
+    {
+      "at": "2026-09-01T14:28:14+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add post-lock revalidation and complete RPC result assertions"
+    },
+    {
+      "at": "2026-09-01T14:31:09+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation complete: TOCTOU RED reproduced stale write then GREEN post-lock revalidation; RPC result coverage added; four-file CLI suite 27/27 and CLI typecheck pass."
+    },
+    {
+      "at": "2026-09-01T14:31:10+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run fresh candidate-bound check after review remediation"
+    },
+    {
+      "at": "2026-09-01T14:47:17+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: bf6a1d51-43d7-44ab-88a9-7d74212fcf54"
+    },
+    {
+      "at": "2026-09-01T14:48:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Remediated candidate: App and Server test groups retain only three deterministic paths byte-identical to origin/dev; App blob passes; CLI acceptance suite 27/27 and typecheck pass; workflow runtime 22/22 and audit pass.; structured run: bf6a1d51-43d7-44ab-88a9-7d74212fcf54; accepted command indexes: 2, 3; approval: User previously instructed 接受无关缺口并继续评审归档 and disabled repeated authorization in YOLO mode."
+    },
+    {
+      "at": "2026-09-01T14:53:16+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec blocked on same-identity fallback race; Standards passed."
+    },
+    {
+      "at": "2026-09-01T14:53:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fallback-race TDD: RED reproduced missing import when first alias disappeared under lock; GREEN retains all prevalidated sources and deduplicates after lock, focused suite 19/19 and CLI typecheck pass."
+    },
+    {
+      "at": "2026-09-01T14:53:17+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate changed for final same-identity fallback remediation; fresh bound check required."
+    },
+    {
+      "at": "2026-09-01T15:07:42+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Spec race finding remediated; final dual-axis review must run on the new frozen candidate."
+    },
+    {
+      "at": "2026-09-01T15:41:20+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 904506cd-0144-4b41-9fc2-dbcab98d031f"
+    },
+    {
+      "at": "2026-09-01T15:41:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Final candidate: only the same three deterministic App/Server baseline failures remain; CLI feature and typecheck pass; workflow runtime 22/22 and repository audit pass.; structured run: 904506cd-0144-4b41-9fc2-dbcab98d031f; accepted command indexes: 2, 3; approval: User previously instructed 接受无关缺口并继续评审归档 and disabled repeated authorization in YOLO mode."
+    },
+    {
+      "at": "2026-09-01T15:44:26+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Final independent Spec and Standards capable reviews both PASS with no blocking findings on candidate 35da276e66a30871c34182774b8a6ded91bc461d935203f2dbe623fc855ee2bd."
+    },
+    {
+      "at": "2026-09-01T15:45:23+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence and generate terminal archive projection"
+    },
+    {
+      "at": "2026-09-01T15:45:25+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Acceptance WAI-01 through WAI-06 verified; final check run 904506cd... accepted only named baseline gaps; independent Spec and Standards reviews passed; rollback and follow-up recorded."
+    },
+    {
+      "at": "2026-09-01T15:46:24+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Implemented bounded additive auto-import from ~/workspace with canonical Git/worktree dedupe, post-lock revalidation and fallback, atomic registry merge, full checks, and dual-axis review.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-01T15:46:24+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Bounded machine-local follow-up to archived Issue #84; no external coordination queue needed.",
+    "approval": "User explicitly requested automatic import of workspace projects on 2026-09-01."
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "904506cd-0144-4b41-9fc2-dbcab98d031f",
+  "checkRunFingerprint": "49747b84ac8a0b986f9227a9a85a15913c4e148a96fb3cc9475ac1b155c8bd26",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "5f4404ef6e02239e07e0bbf1511450a0ab75410f",
+    "candidateFingerprint": "35da276e66a30871c34182774b8a6ded91bc461d935203f2dbe623fc855ee2bd"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      3
+    ],
+    "approval": "User previously instructed 接受无关缺口并继续评审归档 and disabled repeated authorization in YOLO mode."
+  },
+  "checkAcceptedFailuresFingerprint": "cc15e27809f6c56ce01af515a55222cdeeacbeaf01b9de3be89b8a05cefff144",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "5f4404ef6e02239e07e0bbf1511450a0ab75410f",
+      "candidateFingerprint": "35da276e66a30871c34182774b8a6ded91bc461d935203f2dbe623fc855ee2bd"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Final frozen candidate 35da276e... passed: same-identity fallback, RPC snapshots, additive atomic idempotent behavior verified."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Final frozen candidate 35da276e... passed: all sources retained until post-lock revalidation, concurrent dedupe, atomic single revision, no-op stability."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish evidence and generate terminal archive projection",
+    "prearchiveUpdated": "2026-09-01T15:45:25+00:00",
+    "prearchiveActive": {
+      "feature": "workspace-auto-import",
+      "phase": "finish",
+      "updated": "2026-09-01",
+      "next": "Complete finish evidence and generate terminal archive projection",
+      "branch / worktree": "issue/84-start-new-session-from-machine-saved-main-projec"
+    },
+    "prearchiveArchiveObject": "7df24ba9e01cb5a8de2a1df48eb6aa031193538f",
+    "fingerprint": "76cdd425bf6662460571738ebfc874dd94e934b72755fa585887c41a19669823"
+  },
+  "archivedAt": "2026-09-01T15:46:24+00:00",
+  "archiveDate": "2026-09-01",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Implemented bounded additive auto-import from ~/workspace with canonical Git/worktree dedupe, post-lock revalidation and fallback, atomic registry merge, full checks, and dual-axis review.",
+  "archiveFollowUp": "None"
+}

@@ -201,9 +201,20 @@ export class ApiMachineClient {
             });
         });
 
-        this.rpcHandlerManager.registerHandler('list-saved-projects', async () => (
-            this.savedProjectRegistry.list()
-        ));
+        this.rpcHandlerManager.registerHandler('list-saved-projects', async () => {
+            const discovered = await listWorkspaceProjects({
+                root: join(homedir(), 'workspace'),
+            });
+            const imported = await this.savedProjectRegistry.importDiscovered({
+                paths: discovered.projects.map((project) => project.path),
+            });
+            if (imported.importedCount > 0 || imported.skipped.length > 0) {
+                logger.debug(
+                    `[API MACHINE] Workspace Saved Project import: ${imported.importedCount} imported, ${imported.skipped.length} skipped`,
+                );
+            }
+            return imported.registry;
+        });
 
         this.rpcHandlerManager.registerHandler('resolve-saved-project', async (params: any) => {
             const projectId = requireNonEmptyString(params?.projectId, 'projectId');
