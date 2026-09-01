@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { randomUUID } from 'expo-crypto';
-import { useAllMachines, useSessions, useSetting } from '@/sync/storage';
+import { useAllMachines, useLocalSetting, useSessions, useSetting } from '@/sync/storage';
 import { getCodeAgentDefaults, resolveAgentDefaultConfig } from '@/sync/agentDefaults';
 import {
     machineSpawnNewSession,
@@ -103,6 +103,7 @@ export function useStartSessionFromDraft() {
     const machines = useAllMachines({ includeOffline: true });
     const sessions = useSessions();
     const defaultOverrides = useSetting('agentDefaultOverrides');
+    const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
     const navigateToSession = useNavigateToSession();
     // The composer stays on screen for the whole flow, so what it is waiting on
     // is state rather than a bare boolean: creating a worktree, asking the
@@ -145,14 +146,18 @@ export function useStartSessionFromDraft() {
         if (activeRunRef.current) return false;
 
         const draft = useNewSessionDraft.getState();
-        const bindingIssueLabel = draft.githubIssueBindingIntent?.issueLabel ?? null;
+        const persistedBindingIntent = draft.githubIssueBindingIntent;
+        if (!githubIssuesEnabled && persistedBindingIntent) {
+            draft.setGithubIssueBindingIntent?.(null);
+        }
+        const bindingIntent = githubIssuesEnabled ? persistedBindingIntent : null;
+        const bindingIssueLabel = bindingIntent?.issueLabel ?? null;
         const formatStartError = (message: string) => (
             bindingIssueLabel
                 ? t('githubIssues.bindingStartFailed', { issue: bindingIssueLabel })
                 : message
         );
-        if (draft.githubIssueBindingIntent) {
-            const bindingIntent = draft.githubIssueBindingIntent;
+        if (bindingIntent) {
             let bindingAccountMatches: boolean;
             try {
                 const { validateGithubIssueBindingIntentAccount } = await import('@/features/github-issues/githubIssueBindingIntent');
@@ -472,7 +477,6 @@ export function useStartSessionFromDraft() {
                 return false;
             }
 
-            const bindingIntent = draft.githubIssueBindingIntent;
             let committedBindingRevision: number | null = null;
             if (bindingIntent) {
                 let validateGithubIssueBindingIntentAccount: typeof import('@/features/github-issues/githubIssueBindingIntent')['validateGithubIssueBindingIntentAccount'];
@@ -735,7 +739,7 @@ export function useStartSessionFromDraft() {
                 if (isMountedRef.current) setPhase(null);
             }
         }
-    }, [defaultOverrides, machines, navigateToSession, sessions]);
+    }, [defaultOverrides, githubIssuesEnabled, machines, navigateToSession, sessions]);
 
     return { isStarting: phase !== null, phase, startSession, cancelStart };
 }

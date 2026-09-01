@@ -89,7 +89,7 @@ import { Modal } from '@/modal';
 import { t } from '@/text';
 import { isRigMetadataV1, rigCanUseAttachments, usesControlledSessionUi } from './rig';
 import { fetchProjects as fetchProjectRecords } from './apiProjects';
-import { publishGithubIssueBindingInvalidation } from '@/features/github-issues/githubIssueBindingInvalidation';
+import { publishGithubIssueBindingInvalidationIfEnabled } from '@/features/github-issues/githubIssueBindingInvalidation';
 import { githubIssueBindingIssueKeyFromKvKey } from '@/features/github-issues/githubIssueBindingKvClient';
 import { decryptProjectRecord, loadProjectAvatar, type DecryptedProjectRecord } from './projects';
 import type { Project, ProjectAvatar } from './projectTypes';
@@ -3248,7 +3248,10 @@ export class Sync {
                 .map((change) => githubIssueBindingIssueKeyFromKvKey(change.key))
                 .filter((issueKey): issueKey is string => issueKey !== null);
             if (issueKeys.length > 0) {
-                publishGithubIssueBindingInvalidation({ issueKeys });
+                publishGithubIssueBindingInvalidationIfEnabled(
+                    storage.getState().localSettings.devGithubIssuesEnabled,
+                    { issueKeys },
+                );
             }
         } else if (updateData.body.t === 'update-session') {
             // Session + encryption may not be initialized yet if sessions are

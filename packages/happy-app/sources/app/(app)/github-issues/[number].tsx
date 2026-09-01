@@ -27,7 +27,10 @@ import { getSessionSubtitle } from '@/utils/sessionUtils';
 import { t } from '@/text';
 import { getGithubIssueBindingDispatchActionKey, resolveGithubIssueBindingDispatch, type GithubIssueBindingDispatchResolution } from '@/features/github-issues/githubIssueBindingDispatch';
 import type { GithubIssueBindingIntent } from '@/features/github-issues/githubIssueBindingIdentity';
-import { prepareGithubIssueExceptionalReplacement } from '@/features/github-issues/githubIssueBindingReplacement';
+import {
+    mutateGithubIssueBindingForExistingSession,
+    prepareGithubIssueExceptionalReplacement,
+} from '@/features/github-issues/githubIssueBindingReplacement';
 
 function updatedText(updatedAt: string): string {
     const relative = getGithubIssueRelativeTime(updatedAt);
@@ -307,18 +310,11 @@ export default function GithubIssueDetailScreen() {
                 Modal.alert(t('common.error'), t('githubIssues.bindingAccountChanged', { issue: issueIdentity }));
                 return;
             }
-            const result = bindingIntent.operation === 'replace'
-                ? await githubIssueBindingApi.replace({
-                accountScope: bindingIntent.accountScope,
-                issueKey: bindingIntent.issueKey, encryptedPayload: bindingIntent.encryptedPayload,
-                requestId: bindingIntent.requestId, expectedRevision: bindingIntent.expectedRevision!,
-                replacementSessionId: sessionId,
-            })
-                : await githubIssueBindingApi.claim({
-                accountScope: bindingIntent.accountScope,
-                issueKey: bindingIntent.issueKey, encryptedPayload: bindingIntent.encryptedPayload,
-                requestId: bindingIntent.requestId, candidateSessionId: sessionId,
-            });
+            const result = await mutateGithubIssueBindingForExistingSession(
+                githubIssueBindingApi,
+                bindingIntent,
+                sessionId,
+            );
             if (result.outcome === 'repair-required') {
                 setBindingIntent({
                     ...bindingIntent,

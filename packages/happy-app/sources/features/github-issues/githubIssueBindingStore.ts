@@ -1,7 +1,10 @@
 import { TokenStorage } from '@/auth/tokenStorage';
 import { decodeBase64 } from '@/encryption/base64';
 import { decryptAndValidateGithubIssueBindingPayload, deriveGithubIssueBindingAccountScope, encryptGithubIssueBindingPayload } from './githubIssueBindingIdentity';
-import { subscribeGithubIssueBindingInvalidation } from './githubIssueBindingInvalidation';
+import {
+    getGithubIssueBindingMissedInvalidationEpoch,
+    subscribeGithubIssueBindingInvalidation,
+} from './githubIssueBindingInvalidation';
 import { projectGithubIssueBindings, type GithubIssueSessionProjection } from './githubIssueBindingProjection';
 import { loadGithubIssueBindingProjectionRecords } from './githubIssueBindingProjectionLoad';
 import { clearGithubIssueBindingCache, loadGithubIssueBindingCache, saveGithubIssueBindingCache } from '@/sync/persistence';
@@ -18,6 +21,7 @@ let canonicalIssueKeysBySession = new Map<string, string>();
 let freshness = new Map<string, 'changed' | 'unavailable' | 'identity-conflict'>();
 let projectionAccountToken: string | null = null;
 let projectionBootstrapAccountToken: string | null = null;
+let projectionBootstrapMissedInvalidationEpoch = getGithubIssueBindingMissedInvalidationEpoch();
 let projectionOfflineSessions = new Set<string>();
 const listeners = new Set<() => void>();
 const liveRefreshPromises = new Map<string, Promise<void>>();
@@ -229,13 +233,20 @@ export function refreshGithubIssueSessionProjections(): Promise<void> {
 
 export async function ensureGithubIssueSessionProjectionsLoaded(): Promise<void> {
     const credentials = await TokenStorage.getCredentials();
-    if (credentials && projectionBootstrapAccountToken === credentials.token) return;
+    const missedInvalidationEpoch = getGithubIssueBindingMissedInvalidationEpoch();
+    if (
+        credentials
+        && projectionBootstrapAccountToken === credentials.token
+        && projectionBootstrapMissedInvalidationEpoch === missedInvalidationEpoch
+    ) return;
     await refreshGithubIssueSessionProjections();
     const currentCredentials = await TokenStorage.getCredentials();
-    projectionBootstrapAccountToken = credentials
-        && currentCredentials?.token === credentials.token
-        ? credentials.token
-        : null;
+    if (credentials && currentCredentials?.token === credentials.token) {
+        projectionBootstrapAccountToken = credentials.token;
+        projectionBootstrapMissedInvalidationEpoch = missedInvalidationEpoch;
+    } else {
+        projectionBootstrapAccountToken = null;
+    }
 }
 
 

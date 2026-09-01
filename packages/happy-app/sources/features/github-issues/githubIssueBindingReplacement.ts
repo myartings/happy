@@ -22,3 +22,49 @@ export async function prepareGithubIssueExceptionalReplacement(
         formerSessionId: resolved.binding.sessionId,
     };
 }
+
+/**
+ * Applies an existing-Session claim or replacement with one idempotent replay.
+ * A transport failure can mean the mutation committed but its acknowledgement
+ * was lost, so callers must let the authority receipt decide before touching
+ * the Session draft.
+ */
+export async function mutateGithubIssueBindingForExistingSession(
+    client: GithubIssueBindingClient,
+    intent: GithubIssueBindingIntent,
+    sessionId: string,
+) {
+    const request = () => intent.operation === 'replace'
+        ? client.replace({
+            accountScope: intent.accountScope,
+            issueKey: intent.issueKey,
+            encryptedPayload: intent.encryptedPayload,
+            requestId: intent.requestId,
+            expectedRevision: intent.expectedRevision!,
+            replacementSessionId: sessionId,
+        })
+        : client.claim({
+            accountScope: intent.accountScope,
+            issueKey: intent.issueKey,
+            encryptedPayload: intent.encryptedPayload,
+            requestId: intent.requestId,
+            candidateSessionId: sessionId,
+        });
+    let result: Awaited<ReturnType<typeof request>>;
+    try {
+        result = await request();
+    } catch {
+        result = await request();
+    }
+    if (
+        (result.outcome === 'revision-conflict' || result.outcome === 'session-conflict')
+        && result.binding.issueKey === intent.issueKey
+        && result.binding.sessionId === sessionId
+    ) {
+        return {
+            outcome: intent.operation === 'replace' ? 'replaced' as const : 'resumed' as const,
+            binding: result.binding,
+        };
+    }
+    return result;
+}

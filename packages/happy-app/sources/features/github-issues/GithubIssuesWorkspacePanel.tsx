@@ -29,7 +29,10 @@ import {
 import type { GithubIssuesWorkspaceSelection } from './githubIssuesWorkspace';
 import { getGithubIssueBindingDispatchActionKey, resolveGithubIssueBindingDispatch, type GithubIssueBindingDispatchResolution } from './githubIssueBindingDispatch';
 import type { GithubIssueBindingIntent } from './githubIssueBindingIdentity';
-import { prepareGithubIssueExceptionalReplacement } from './githubIssueBindingReplacement';
+import {
+    mutateGithubIssueBindingForExistingSession,
+    prepareGithubIssueExceptionalReplacement,
+} from './githubIssueBindingReplacement';
 
 export function GithubIssuesWorkspacePanel({
     parentSessionId,
@@ -304,18 +307,11 @@ function IssueDetail({ parentSessionId, selection, onSelectionChange }: {
                 Modal.alert(t('common.error'), t('githubIssues.bindingAccountChanged', { issue: issueIdentity }));
                 return;
             }
-            const result = bindingIntent.operation === 'replace'
-                ? await githubIssueBindingApi.replace({
-                accountScope: bindingIntent.accountScope,
-                issueKey: bindingIntent.issueKey, encryptedPayload: bindingIntent.encryptedPayload,
-                requestId: bindingIntent.requestId, expectedRevision: bindingIntent.expectedRevision!,
-                replacementSessionId: sessionId,
-            })
-                : await githubIssueBindingApi.claim({
-                accountScope: bindingIntent.accountScope,
-                issueKey: bindingIntent.issueKey, encryptedPayload: bindingIntent.encryptedPayload,
-                requestId: bindingIntent.requestId, candidateSessionId: sessionId,
-            });
+            const result = await mutateGithubIssueBindingForExistingSession(
+                githubIssueBindingApi,
+                bindingIntent,
+                sessionId,
+            );
             if (result.outcome === 'repair-required') {
                 setBindingIntent({
                     ...bindingIntent,

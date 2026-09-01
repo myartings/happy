@@ -16,9 +16,13 @@ import { formatGithubIssueSessionBadgeLabel, getGithubIssueSessionBadgeState } f
 export function useGithubIssueSessionProjection(sessionId: string, enabled = true, refreshLive = false) {
     React.useEffect(() => {
         if (!enabled) return;
+        let active = true;
         void ensureGithubIssueSessionProjectionsLoaded().then(() => {
-            if (refreshLive) return refreshGithubIssueSessionLiveContext(sessionId);
+            if (active && refreshLive) return refreshGithubIssueSessionLiveContext(sessionId);
         });
+        return () => {
+            active = false;
+        };
     }, [enabled, refreshLive, sessionId]);
     return React.useSyncExternalStore(
         subscribeGithubIssueSessionProjections,

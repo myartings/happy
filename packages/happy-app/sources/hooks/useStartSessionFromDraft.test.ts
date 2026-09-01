@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
     replaceGithubIssueBinding: vi.fn(),
     abandonGithubIssueBinding: vi.fn(),
     validateBindingIntentAccount: vi.fn(),
+    githubIssuesEnabled: true,
 }));
 
 // Counts up so a test can tell a reused idempotency key from a fresh one.
@@ -42,6 +43,7 @@ vi.mock('@/sync/storage', () => ({
     useAllMachines: () => mocks.machines,
     useSessions: () => mocks.sessions,
     useSetting: () => mocks.defaultOverrides,
+    useLocalSetting: () => mocks.githubIssuesEnabled,
 }));
 
 vi.mock('@/sync/agentDefaults', () => ({
@@ -225,6 +227,7 @@ describe('useStartSessionFromDraft', () => {
         vi.clearAllMocks();
         mocks.uuidCount = 0;
         mocks.validateBindingIntentAccount.mockResolvedValue(true);
+        mocks.githubIssuesEnabled = true;
         completeSpawnRequest();
         mocks.defaultOverrides = {};
         mocks.sessions = [];
@@ -281,6 +284,29 @@ describe('useStartSessionFromDraft', () => {
         );
         expect(mocks.sendMessage.mock.invocationCallOrder[0])
             .toBeLessThan(mocks.navigateToSession.mock.invocationCallOrder[0]);
+    });
+
+    it('drops a restored Issue intent when the feature is disabled without consuming the ordinary draft', async () => {
+        mocks.githubIssuesEnabled = false;
+        mocks.machines = [];
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: '9'.repeat(64),
+                encryptedPayload: 'ciphertext',
+                requestId: 'disabled-feature-request',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(null);
+        expect(mocks.validateBindingIntentAccount).not.toHaveBeenCalled();
+        expect(mocks.claimGithubIssueBinding).not.toHaveBeenCalled();
+        expect(mocks.replaceGithubIssueBinding).not.toHaveBeenCalled();
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
+        expect(mocks.alert).toHaveBeenCalledWith('common.error', 'Please select a machine');
     });
 
     it('claims a structured Issue binding before sending the first task', async () => {

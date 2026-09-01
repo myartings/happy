@@ -143,8 +143,6 @@ export const SessionView = React.memo((props: {
     const fileDiffsSidebarSettingEnabled = useSetting('fileDiffsSidebar');
     const sideChatQuickPanelSettingEnabled = useLocalSetting('devSideChatQuickPanelEnabled');
     const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
-    const githubIssueProjection = useGithubIssueSessionProjection(sessionId, githubIssuesEnabled, true);
-    const githubIssueFreshness = useGithubIssueSessionFreshness(sessionId, githubIssuesEnabled);
     const zenMode = useLocalSetting('zenMode');
     const requestedVisualStyle = useLocalSetting('visualStyle');
     const codexFirstContract = React.useMemo(
@@ -198,6 +196,19 @@ export const SessionView = React.memo((props: {
         githubIssuesEnabled,
         sideChatQuickPanelEnabled: sideChatQuickPanelSettingEnabled,
     });
+    const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
+        enabled: githubIssuesEnabled,
+        hasSession: !!session,
+        deviceType,
+        platform: Platform.OS,
+        isTauri: runningInTauri,
+    });
+    const showGithubIssuesAction = showGithubIssuesSessionEntry
+        && (!codexFirstContract.enabled
+            || workspaceChrome.actions.some(action => action.id === 'issues'));
+    const githubIssueProjection = useGithubIssueSessionProjection(sessionId, showGithubIssuesAction, true);
+    const githubIssueFreshness = useGithubIssueSessionFreshness(sessionId, showGithubIssuesAction);
+    const showGithubIssueSessionContext = showGithubIssuesAction && !!githubIssueProjection;
 
     React.useEffect(() => {
         if (!workspaceChrome.quickPanelEnabled) setQuickPanelPickerOpen(false);
@@ -515,16 +526,6 @@ export const SessionView = React.memo((props: {
             isConnected,
         };
     }, [session, isDataReady]);
-    const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
-        enabled: githubIssuesEnabled,
-        hasSession: !!session,
-        deviceType,
-        platform: Platform.OS,
-        isTauri: runningInTauri,
-    });
-    const showGithubIssuesAction = showGithubIssuesSessionEntry
-        && (!codexFirstContract.enabled
-            || workspaceChrome.actions.some(action => action.id === 'issues'));
     const quickPanelHeaderControls = showQuickPanelControls && (!showSidebar || quickPanelPickerOpen)
         ? (
             <SideChatQuickPanelControls
@@ -541,10 +542,10 @@ export const SessionView = React.memo((props: {
             />
         )
         : null;
-    const headerRight = showGithubIssuesAction || githubIssueProjection || quickPanelHeaderControls
+    const headerRight = showGithubIssuesAction || quickPanelHeaderControls
         ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                {githubIssueProjection ? (
+                {showGithubIssueSessionContext ? (
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={`Open GitHub Issue ${githubIssueProjection.payload.ownerSnapshot}/${githubIssueProjection.payload.repositorySnapshot}#${githubIssueProjection.payload.number}`}
@@ -593,7 +594,7 @@ export const SessionView = React.memo((props: {
                         )}
                     </Pressable>
                 ) : null}
-                {githubIssueProjection?.status === 'bound' && githubIssueFreshness === 'changed' ? (
+                {showGithubIssueSessionContext && githubIssueProjection?.status === 'bound' && githubIssueFreshness === 'changed' ? (
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={t('githubIssues.refreshAgentContext')}

@@ -476,4 +476,44 @@ describe('GitHub Issue detail', () => {
             'myartings/happy#1: The canonical Session authority is unavailable. Your draft is preserved; reconnect and retry.',
         );
     });
+
+    it.each([
+        ['standalone claim', 'claim', renderScreen],
+        ['workspace claim', 'claim', renderWorkspacePanel],
+        ['standalone replacement', 'replace', renderScreen],
+        ['workspace replacement', 'replace', renderWorkspacePanel],
+    ] as const)('replays the same mutation after a lost %s acknowledgement before updating the draft', async (_label, operation, render) => {
+        mocks.confirm.mockResolvedValue(true);
+        const mutation = operation === 'replace' ? mocks.replaceBinding : mocks.claimBinding;
+        const success = operation === 'replace'
+            ? {
+                outcome: 'revision-conflict',
+                binding: { issueKey: 'a'.repeat(64), sessionId: 'session-1', revision: 5 },
+            }
+            : { outcome: 'claimed', binding: { sessionId: 'session-1', revision: 1 } };
+        mutation.mockRejectedValueOnce(new Error('response lost')).mockResolvedValueOnce(success);
+        if (operation === 'replace') {
+            mocks.bindingResolution = { kind: 'continue', sessionId: 'former-session' };
+        }
+        const renderer = await render();
+
+        if (operation === 'replace') {
+            if (_label.startsWith('standalone')) {
+                await act(async () => { mocks.screenOptions.headerRight().props.onPress(); });
+            } else {
+                await act(async () => { renderer.root.findByProps({ accessibilityLabel: 'Issue actions' }).props.onPress(); });
+            }
+            await act(async () => { pressForText(renderer, 'Replace canonical Session…'); });
+        } else {
+            await act(async () => { renderer.root.findByProps({ accessibilityLabel: 'Work on this issue' }).props.onPress(); });
+        }
+        await act(async () => { pressForText(renderer, 'Add to current session'); });
+
+        expect(mutation).toHaveBeenCalledTimes(2);
+        expect(mutation.mock.calls[0]).toEqual(mutation.mock.calls[1]);
+        expect(mocks.updateSessionDraft).toHaveBeenCalledWith(
+            'session-1',
+            'Keep these notes\n\nTriage and implement issue #1.',
+        );
+    });
 });
