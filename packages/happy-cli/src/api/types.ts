@@ -302,6 +302,10 @@ export type Metadata = {
   currentModelCode?: string,
   /** Explicit model currently requested by the running agent session. */
   modelMode?: string | null,
+  /** Display mirror of the explicit live permission mode; never authority. */
+  permissionMode?: string | null,
+  /** Monotonic CLI order for acknowledged live permission-mode changes. */
+  permissionModeRevision?: number,
   operatingModes?: Array<{ code: string; value: string; description?: string | null }>,
   currentOperatingModeCode?: string,
   thoughtLevels?: Array<{ code: string; value: string; description?: string | null }>,

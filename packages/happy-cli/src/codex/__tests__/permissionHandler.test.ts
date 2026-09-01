@@ -64,6 +64,23 @@ describe('CodexPermissionHandler', () => {
         await expect(pending).resolves.toEqual({ decision: 'abort' });
     });
 
+    it('approves exactly the current pending snapshot for an explicit live YOLO change', async () => {
+        const { session, getState } = createSessionMock();
+        const handler = new CodexPermissionHandler(session as any);
+        const first = handler.handleToolCall('call_exec_1', 'Bash', { command: 'pwd' });
+        const second = handler.handleToolCall('call_patch_1', 'CodexPatch', { changes: {} });
+
+        expect(handler.approveAllPending()).toBe(2);
+
+        await expect(first).resolves.toEqual({ decision: 'approved' });
+        await expect(second).resolves.toEqual({ decision: 'approved' });
+        expect(getState().requests).toEqual({});
+        expect(getState().completedRequests).toMatchObject({
+            call_exec_1: { status: 'approved', decision: 'approved' },
+            call_patch_1: { status: 'approved', decision: 'approved' },
+        });
+    });
+
     it('does NOT auto-approve a crafted tool name containing change_title as substring', async () => {
         const { session } = createSessionMock();
         const handler = new CodexPermissionHandler(session as any);
