@@ -20,6 +20,9 @@ import { resolveDesktopSidebarFrame } from '@/features/studio-visual-style/studi
 import { StudioPanelResizeHandle } from '@/features/studio-panel-resize/StudioPanelResizeHandle';
 import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioPanelResizePolicy';
 import { useStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
+import { resolveCodexFirstDesktopLayout } from '@/features/codex-first-shell/codexFirstDesktopHardening';
+import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 
 const TAURI_HEADER_CONTROL_LEFT = Math.ceil(92 / DEFAULT_APP_ZOOM);
 
@@ -27,8 +30,6 @@ export const SidebarNavigator = React.memo(() => {
     const auth = useAuth();
     const isTablet = useIsTablet();
     const zenMode = useLocalSetting('zenMode');
-    const isDesktopLayout = auth.isAuthenticated && isTablet;
-    const showSidebar = isDesktopLayout && !zenMode;
     const { width: windowWidth } = useWindowDimensions();
     const requestedVisualStyle = useLocalSetting('visualStyle');
     const persistedLeftPanelWidth = useLocalSetting('studioLeftPanelWidth');
@@ -36,6 +37,25 @@ export const SidebarNavigator = React.memo(() => {
     const lastResizedPanel = useLocalSetting('studioLastResizedPanel');
     const rightPanelVisible = useStudioRightPanelVisible();
     const inTauri = isTauri();
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
+    const responsiveLayout = React.useMemo(() => resolveCodexFirstDesktopLayout({
+        codexFirstEnabled: codexFirstContract.enabled,
+        legacyDesktopLayout: isTablet,
+        rightWorkspaceRequested: rightPanelVisible,
+        windowWidth,
+        zenMode,
+    }), [codexFirstContract.enabled, isTablet, rightPanelVisible, windowWidth, zenMode]);
+    const isDesktopLayout = auth.isAuthenticated && responsiveLayout.desktopShell;
+    const showSidebar = isDesktopLayout
+        && (codexFirstContract.enabled
+            ? responsiveLayout.leftNavigation === 'persistent'
+            : !zenMode);
+    const effectiveRightPanelVisible = codexFirstContract.enabled
+        ? responsiveLayout.rightWorkspace === 'visible'
+        : rightPanelVisible;
 
     const sidebarFrame = React.useMemo(() => resolveDesktopSidebarFrame({
         windowWidth,
@@ -51,9 +71,9 @@ export const SidebarNavigator = React.memo(() => {
         storedRightWidth: persistedRightPanelWidth,
         windowWidth,
         leftVisible: showSidebar,
-        rightVisible: rightPanelVisible,
+        rightVisible: effectiveRightPanelVisible,
         activeSide: lastResizedPanel,
-    }), [lastResizedPanel, persistedLeftPanelWidth, persistedRightPanelWidth, rightPanelVisible, showSidebar, windowWidth]);
+    }), [effectiveRightPanelVisible, lastResizedPanel, persistedLeftPanelWidth, persistedRightPanelWidth, showSidebar, windowWidth]);
     const fullDrawerWidth = isDesktopLayout
         ? studioPanelResizeEnabled
             ? panelWidths.leftWidth
@@ -103,8 +123,8 @@ export const SidebarNavigator = React.memo(() => {
     }, [isDesktopLayout, drawerWidth, sidebarFrame]);
 
     const drawerContent = React.useCallback(
-        () => <SidebarView sidebarFrame={sidebarFrame} />,
-        [sidebarFrame]
+        () => <SidebarView sidebarFrame={sidebarFrame} codexFirstContract={codexFirstContract} />,
+        [codexFirstContract, sidebarFrame]
     );
 
     return (
@@ -120,8 +140,8 @@ export const SidebarNavigator = React.memo(() => {
                     renderedWidth={panelWidths.leftWidth}
                     windowWidth={windowWidth}
                     oppositeWidth={panelWidths.rightWidth}
-                    oppositeVisible={rightPanelVisible}
-                    label="Resize navigation panel"
+                    oppositeVisible={effectiveRightPanelVisible}
+                    label={t('codexFirst.resizeNavigationPanel')}
                     onWidthChange={(width) => storage.getState().applyLocalSettings({
                         studioLeftPanelWidth: width,
                         studioLastResizedPanel: 'left',
@@ -137,14 +157,71 @@ export const SidebarNavigator = React.memo(() => {
             )}
             {/* Persistent header overlay — always visible on desktop, same position regardless of zen mode */}
             {isDesktopLayout && (
-                <PersistentHeader />
+                <PersistentHeader codexFirstEnabled={codexFirstContract.enabled} />
             )}
         </View>
     );
 });
 
+function DesktopHeaderAction({
+    accessibilityLabel,
+    children,
+    codexFirstEnabled,
+    disabled = false,
+    onPress,
+    selected,
+}: {
+    accessibilityLabel: string;
+    children: React.ReactNode;
+    codexFirstEnabled: boolean;
+    disabled?: boolean;
+    onPress: () => void;
+    selected?: boolean;
+}) {
+    const { theme } = useUnistyles();
+    const interaction = useStudioInteractionState(codexFirstEnabled && Platform.OS === 'web');
+    const accessibilityState = selected === undefined
+        ? { disabled }
+        : { disabled, selected };
+
+    return (
+        <Pressable
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            accessibilityState={accessibilityState}
+            disabled={disabled}
+            hitSlop={10}
+            onPress={onPress}
+            {...interaction.interactionProps}
+            style={({ pressed }) => [
+                {
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: disabled ? 0.3 : 1,
+                },
+                codexFirstEnabled ? {
+                    borderRadius: 7,
+                    backgroundColor: pressed || interaction.hovered || selected === true
+                        ? theme.colors.surfaceSelected
+                        : 'transparent',
+                } : null,
+                codexFirstEnabled && Platform.OS === 'web' && interaction.focused ? ({
+                    outlineColor: theme.colors.textLink,
+                    outlineOffset: 1,
+                    outlineStyle: 'solid',
+                    outlineWidth: 2,
+                } as any) : null,
+            ]}
+        >
+            {children}
+        </Pressable>
+    );
+}
+
 // Header block that stays in the same position whether zen mode is on or off
-const PersistentHeader = React.memo(() => {
+const PersistentHeader = React.memo(({ codexFirstEnabled }: { codexFirstEnabled: boolean }) => {
     const { theme } = useUnistyles();
     const safeArea = useSafeAreaInsets();
     const headerHeight = useHeaderHeight();
@@ -212,11 +289,11 @@ const PersistentHeader = React.memo(() => {
                 pointerEvents="auto"
                 {...(inTauri ? { dataSet: { tauriDragRegion: 'false' } } : {})}
             >
-                <Pressable
-                    onPress={handleZenToggle}
-                    hitSlop={10}
-                    style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center' }}
+                <DesktopHeaderAction
                     accessibilityLabel={t('zen.toggle')}
+                    codexFirstEnabled={codexFirstEnabled}
+                    onPress={handleZenToggle}
+                    selected={zenMode}
                 >
                     <Image
                         source={require('@/assets/images/zen-icon.png')}
@@ -224,14 +301,24 @@ const PersistentHeader = React.memo(() => {
                         style={{ width: 18, height: 18 }}
                         tintColor={zenMode ? theme.colors.textLink : theme.colors.header.tint}
                     />
-                </Pressable>
-                <Pressable onPress={handleBack} disabled={!canGoBackEffective} hitSlop={10} style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center', opacity: canGoBackEffective ? 1 : 0.3 }}>
+                </DesktopHeaderAction>
+                <DesktopHeaderAction
+                    accessibilityLabel={t('common.back')}
+                    codexFirstEnabled={codexFirstEnabled}
+                    disabled={!canGoBackEffective}
+                    onPress={handleBack}
+                >
                     <Ionicons name="chevron-back" size={20} color={theme.colors.header.tint} />
-                </Pressable>
+                </DesktopHeaderAction>
                 {Platform.OS === 'web' && (
-                    <Pressable onPress={handleForward} disabled={!canGoForwardEffective} hitSlop={10} style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center', opacity: canGoForwardEffective ? 1 : 0.3 }}>
+                    <DesktopHeaderAction
+                        accessibilityLabel={t('codexFirst.forward')}
+                        codexFirstEnabled={codexFirstEnabled}
+                        disabled={!canGoForwardEffective}
+                        onPress={handleForward}
+                    >
                         <Ionicons name="chevron-forward" size={20} color={theme.colors.header.tint} />
-                    </Pressable>
+                    </DesktopHeaderAction>
                 )}
             </View>
         </View>

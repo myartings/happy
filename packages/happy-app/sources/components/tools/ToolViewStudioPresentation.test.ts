@@ -135,7 +135,7 @@ describe('actual ToolView Studio wiring', () => {
         state.compact = true;
         const renderer = render(React.createElement(ToolView, { metadata: null, tool: tool('Read') }));
         const root = renderer.root.findAllByType('View' as any)[0];
-        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 2 });
         const views = renderer.root.findAllByType('View' as any);
         expect(views.some((node: { props: { style?: unknown } }) => flattenStyle(node.props.style).minHeight === 26)).toBe(true);
         expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
@@ -153,7 +153,7 @@ describe('actual ToolView Studio wiring', () => {
         expect(text).not.toContain('success output sentinel');
         const root = renderer.root.findAllByType('View' as any)[0];
         expect(flattenStyle(root.props.style)).toMatchObject({
-            backgroundColor: 'transparent', marginVertical: 1,
+            backgroundColor: 'transparent', marginVertical: 2,
         });
     });
 
@@ -547,7 +547,7 @@ describe('actual ToolView Studio wiring', () => {
 
         expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
         const root = renderer.root.findAllByType('View' as any)[0];
-        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 2 });
     });
 
     it('retains the existing shell when Studio is inactive', () => {
@@ -575,7 +575,7 @@ describe('actual ToolView Studio wiring', () => {
         const renderer = render(React.createElement(ToolView, { metadata: null, tool: terminal }));
         expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
         const root = renderer.root.findAllByType('View' as any)[0];
-        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 2 });
     });
 
     it('keeps non-Studio Codex patches on the existing compact path', () => {
@@ -595,6 +595,6 @@ describe('actual ToolView Studio wiring', () => {
 
         expect(renderer.root.findAllByType('SpecificToolView' as any)).toHaveLength(0);
         const root = renderer.root.findAllByType('View' as any)[0];
-        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 1 });
+        expect(flattenStyle(root.props.style)).toMatchObject({ backgroundColor: 'transparent', marginVertical: 2 });
     });
 });

@@ -102,6 +102,8 @@ export const pl: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `ostatnio widziano ${time}`,
         permissionRequired: 'wymagane uprawnienie',
         inputRequired: 'oczekuje na Twoją odpowiedź',
+        reviewRequest: 'Sprawdź',
+        answerRequest: 'Odpowiedz',
         activeNow: 'Aktywny teraz',
         unknown: 'nieznane',
         unread: 'nowe wyniki',
@@ -1153,6 +1155,8 @@ export const pl: TranslationStructure = {
         notSupportedTitle: 'Obrazy nieobsługiwane',
         notSupportedMessage: 'Ten agent nie obsługuje załączników obrazów. Obrazy nie zostały wysłane.',
     },
+
+    codexFirst: en.codexFirst,
 
     githubIssues: en.githubIssues,
 

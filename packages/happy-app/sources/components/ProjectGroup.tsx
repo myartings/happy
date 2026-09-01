@@ -23,13 +23,19 @@ interface ProjectGroupProps {
     project: ProjectGroupData;
     selectedSessionId?: string;
     sessionRowStyle: DesktopSessionRowStyle;
+    showMachineName?: boolean;
 }
 
 /**
  * One project and its sessions. Rig supplies native workspace identity; Happy
  * CLI sessions derive primary/worktree workspaces from their managed paths.
  */
-export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRowStyle }: ProjectGroupProps) => {
+export const ProjectGroup = React.memo(({
+    project,
+    selectedSessionId,
+    sessionRowStyle,
+    showMachineName = true,
+}: ProjectGroupProps) => {
     const styles = stylesheet;
     const { theme } = useUnistyles();
     const machines = useAllMachines();
@@ -116,7 +122,7 @@ export const ProjectGroup = React.memo(({ project, selectedSessionId, sessionRow
                     ]} numberOfLines={1}>
                         {project.name}
                     </Text>
-                    {machineName && (
+                    {showMachineName && machineName && (
                         <Text style={[styles.subtitle, isStudio && { fontSize: 11, marginTop: 0 }]} numberOfLines={1}>
                             {machineName}
                         </Text>

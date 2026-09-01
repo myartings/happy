@@ -5,6 +5,12 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { t } from '@/text';
 import { ToolSectionView } from '../ToolSectionView';
+import {
+    createCodexFirstDecisionSubmissionGate,
+    resolveCodexFirstDecisionPresentation,
+    submitCodexFirstDecisionOnce,
+    type CodexFirstDecisionRequestStatus,
+} from '@/features/codex-first-shell/codexFirstDecisionLifecycle';
 
 export interface InlineQuestionOption {
     label: string;
@@ -25,6 +31,9 @@ export type InlineQuestionAnswers = Record<string, string[]>;
 interface InlineQuestionFormProps {
     questions: InlineQuestion[];
     canInteract: boolean;
+    connected?: boolean;
+    requestId?: string;
+    requestStatus?: CodexFirstDecisionRequestStatus;
     submittedAnswers?: InlineQuestionAnswers | null;
     onSubmit: (answers: InlineQuestionAnswers) => Promise<void>;
 }
@@ -38,16 +47,28 @@ export const InlineQuestionForm = React.memo<InlineQuestionFormProps>((props) =>
     const [selections, setSelections] = React.useState<Map<string, Set<number>>>(new Map());
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [locallySubmittedAnswers, setLocallySubmittedAnswers] = React.useState<InlineQuestionAnswers | null>(null);
-    const questionKey = questions.map(question => question.id).join('\u0000');
+    const submissionGate = React.useRef(createCodexFirstDecisionSubmissionGate());
+    const questionKey = `${props.requestId ?? ''}\u0000${questions.map(question => question.id).join('\u0000')}`;
 
     React.useEffect(() => {
         setSelections(new Map());
         setLocallySubmittedAnswers(null);
         setIsSubmitting(false);
+        submissionGate.current = createCodexFirstDecisionSubmissionGate();
     }, [questionKey]);
 
     const submittedAnswers = props.submittedAnswers ?? locallySubmittedAnswers;
-    const canInteract = props.canInteract && submittedAnswers === null;
+    const requestStatus = props.requestStatus
+        ?? (submittedAnswers !== null ? 'resolved' : props.canInteract ? 'pending' : 'expired');
+    const decisionPresentation = resolveCodexFirstDecisionPresentation({
+        connected: props.connected ?? true,
+        requestStatus,
+        submitted: locallySubmittedAnswers !== null,
+        submitting: isSubmitting,
+    });
+    const canOfferActions = props.canInteract && submittedAnswers === null;
+    const canInteract = canOfferActions
+        && decisionPresentation.canInteract;
     const allQuestionsAnswered = questions.every((question) => {
         if (question.required === false) return true;
         return (selections.get(question.id)?.size ?? 0) > 0;
@@ -75,7 +96,7 @@ export const InlineQuestionForm = React.memo<InlineQuestionFormProps>((props) =>
     }, [canInteract]);
 
     const handleSubmit = React.useCallback(async () => {
-        if (!allQuestionsAnswered || isSubmitting) return;
+        if (!allQuestionsAnswered || !canInteract || submissionGate.current.inFlight || submissionGate.current.completedAction !== null) return;
 
         const answers: InlineQuestionAnswers = {};
         for (const question of questions) {
@@ -87,16 +108,19 @@ export const InlineQuestionForm = React.memo<InlineQuestionFormProps>((props) =>
         }
 
         setIsSubmitting(true);
-        setLocallySubmittedAnswers(answers);
         try {
-            await onSubmit(answers);
+            const result = await submitCodexFirstDecisionOnce(submissionGate.current, {
+                action: 'answer',
+                requestId: questionKey,
+                submit: () => onSubmit(answers),
+            });
+            if (result === 'submitted') setLocallySubmittedAnswers(answers);
         } catch (error) {
-            setLocallySubmittedAnswers(null);
             console.error('Failed to submit question answer:', error);
         } finally {
             setIsSubmitting(false);
         }
-    }, [allQuestionsAnswered, isSubmitting, onSubmit, questions, selections]);
+    }, [allQuestionsAnswered, canInteract, onSubmit, questionKey, questions, selections]);
 
     if (submittedAnswers) {
         return (
@@ -118,6 +142,11 @@ export const InlineQuestionForm = React.memo<InlineQuestionFormProps>((props) =>
     return (
         <ToolSectionView>
             <View style={styles.container}>
+                {decisionPresentation.state === 'disconnected' ? (
+                    <Text style={styles.lifecycleText}>{t('codexFirst.decisionDisconnected')}</Text>
+                ) : decisionPresentation.state === 'expired' ? (
+                    <Text style={styles.lifecycleText}>{t('codexFirst.decisionExpired')}</Text>
+                ) : null}
                 {questions.map(question => {
                     const selectedOptions = selections.get(question.id) ?? new Set<number>();
                     return (
@@ -140,6 +169,10 @@ export const InlineQuestionForm = React.memo<InlineQuestionFormProps>((props) =>
                                             onPress={() => handleOptionToggle(question, optionIndex)}
                                             disabled={!canInteract}
                                             activeOpacity={0.7}
+                                            accessibilityRole={question.multiSelect ? 'checkbox' : 'radio'}
+                                            accessibilityLabel={option.label}
+                                            accessibilityHint={option.description ?? undefined}
+                                            accessibilityState={{ checked: isSelected, disabled: !canInteract }}
                                         >
                                             {question.multiSelect ? (
                                                 <View style={[
@@ -170,7 +203,7 @@ export const InlineQuestionForm = React.memo<InlineQuestionFormProps>((props) =>
                     );
                 })}
 
-                {canInteract && (
+                {canOfferActions && (
                     <View style={styles.actionsContainer}>
                         <TouchableOpacity
                             style={[
@@ -179,8 +212,14 @@ export const InlineQuestionForm = React.memo<InlineQuestionFormProps>((props) =>
                                 (!allQuestionsAnswered || isSubmitting) && styles.submitButtonDisabled,
                             ]}
                             onPress={handleSubmit}
-                            disabled={!allQuestionsAnswered || isSubmitting}
+                            disabled={!allQuestionsAnswered || !canInteract || isSubmitting}
                             activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('tools.askUserQuestion.submit')}
+                            accessibilityState={{
+                                busy: isSubmitting,
+                                disabled: !allQuestionsAnswered || !canInteract || isSubmitting,
+                            }}
                         >
                             {isSubmitting ? (
                                 <ActivityIndicator
@@ -340,5 +379,9 @@ const styles = StyleSheet.create((theme) => ({
         fontSize: 13,
         color: theme.colors.text,
         flex: 1,
+    },
+    lifecycleText: {
+        color: theme.colors.textSecondary,
+        fontSize: 13,
     },
 }));

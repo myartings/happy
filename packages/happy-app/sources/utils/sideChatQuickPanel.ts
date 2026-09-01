@@ -24,6 +24,7 @@ export type SideChatQuickPanelLayoutInput = {
     canUseFiles: boolean;
     canUseGithubIssues: boolean;
     canUseSideChat: boolean;
+    codexFirstEnabled: boolean;
     featureEnabled: boolean;
     fileDiffsSidebarEnabled: boolean;
     pickerOpen: boolean;
@@ -55,7 +56,9 @@ export function getSideChatQuickPanelLayout(input: SideChatQuickPanelLayoutInput
     return {
         canShowSidebar,
         showFileActions: wideDesktop && input.canUseFiles,
-        showQuickControls: wideDesktop && input.canUseSideChat && !input.zenMode,
+        showQuickControls: wideDesktop
+            && (input.canUseSideChat || (input.codexFirstEnabled && input.canUseFiles))
+            && !input.zenMode,
         showSidebar: canShowSidebar
             && !input.zenMode
             && (input.activePanel !== null || input.pickerOpen),

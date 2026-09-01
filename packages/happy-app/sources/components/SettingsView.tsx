@@ -12,7 +12,7 @@ import { Item } from '@/components/Item';
 import { ItemGroup } from '@/components/ItemGroup';
 import { ItemList } from '@/components/ItemList';
 import { useConnectTerminal } from '@/hooks/useConnectTerminal';
-import { useEntitlement, useLocalSettingMutable, useSetting } from '@/sync/storage';
+import { useEntitlement, useLocalSetting, useLocalSettingMutable, useSetting } from '@/sync/storage';
 import { sync } from '@/sync/sync';
 import { isUsingCustomServer } from '@/sync/serverConfig';
 import { trackPaywallButtonClicked, trackWhatsNewClicked } from '@/track';
@@ -27,6 +27,8 @@ import { useProfile } from '@/sync/storage';
 import { getDisplayName, getAvatarUrl, getBio } from '@/sync/profile';
 import { Avatar } from '@/components/Avatar';
 import { t } from '@/text';
+import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
+import { resolveCodexFirstSettingsPresentation } from '@/features/codex-first-shell/codexFirstWorkspaceChrome';
 
 type BuildConfig = {
     buildCommitSha?: unknown;
@@ -80,6 +82,15 @@ export const SettingsView = React.memo(function SettingsView({
 }) {
     const { theme } = useUnistyles();
     const router = useRouter();
+    const requestedVisualStyle = useLocalSetting('visualStyle');
+    const codexFirstContract = React.useMemo(
+        () => resolveCurrentCodexFirstDesktopRuntime(requestedVisualStyle),
+        [requestedVisualStyle],
+    );
+    const codexFirstPresentation = resolveCodexFirstSettingsPresentation({
+        dark: theme.dark,
+        enabled: codexFirstContract.enabled,
+    });
     const appVersion = Constants.expoConfig?.version || '1.0.0';
     const runtimeVersion = typeof Constants.expoConfig?.runtimeVersion === 'string'
         ? Constants.expoConfig.runtimeVersion
@@ -177,25 +188,68 @@ export const SettingsView = React.memo(function SettingsView({
     return (
 
         <ItemList
-            style={{ paddingTop: 0 }}
+            style={{
+                paddingTop: 0,
+                ...(codexFirstPresentation ? { backgroundColor: codexFirstPresentation.backgroundColor } : {}),
+            }}
             containerStyle={{ paddingTop: topContentInset, paddingBottom: bottomContentInset }}
             onScroll={onScroll}
             scrollEventThrottle={16}
         >
+            <View style={codexFirstPresentation ? {
+                alignSelf: 'center',
+                maxWidth: codexFirstPresentation.contentMaxWidth,
+                width: '100%',
+            } : { width: '100%' }}>
             {/* App Info Header */}
             <View style={{ maxWidth: layout.maxWidth, alignSelf: 'center', width: '100%' }}>
                 <View
                     style={{
-                    alignItems: 'center',
-                    paddingVertical: 24,
-                    backgroundColor: theme.colors.surface,
+                    alignItems: codexFirstPresentation ? 'center' : 'center',
+                    flexDirection: codexFirstPresentation ? 'row' : 'column',
+                    gap: codexFirstPresentation ? 12 : 0,
+                    paddingHorizontal: codexFirstPresentation ? 16 : 0,
+                    paddingVertical: codexFirstPresentation ? 14 : 24,
+                    backgroundColor: codexFirstPresentation?.surfaceColor ?? theme.colors.surface,
                     marginTop: 16,
-                    borderRadius: Platform.select({ web: 12, default: 16 }),
+                    borderRadius: codexFirstPresentation?.identityCardRadius ?? Platform.select({ web: 12, default: 16 }),
                     marginHorizontal: 16,
-                    borderWidth: Platform.OS === 'web' ? 0 : 0.5,
+                    borderWidth: codexFirstPresentation ? 1 : Platform.OS === 'web' ? 0 : 0.5,
                     borderColor: theme.colors.divider,
                 }}>
-                    {profile.firstName ? (
+                    {codexFirstPresentation ? (
+                        <>
+                            {profile.firstName ? (
+                                <Avatar
+                                    id={profile.id}
+                                    size={42}
+                                    imageUrl={avatarUrl}
+                                    thumbhash={profile.avatar?.thumbhash}
+                                />
+                            ) : (
+                                <View style={{
+                                    width: 42,
+                                    height: 42,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 11,
+                                    backgroundColor: theme.colors.surfaceHighest,
+                                }}>
+                                    <Ionicons name="terminal-outline" size={22} color={theme.colors.text} />
+                                </View>
+                            )}
+                            <View style={{ flex: 1, minWidth: 0 }}>
+                                <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text }}>
+                                    {codexFirstContract.product.name}
+                                </Text>
+                                <Text style={{ fontSize: 13, color: theme.colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
+                                    {profile.firstName
+                                        ? `${displayName} · ${t('codexFirst.settingsIdentity')}`
+                                        : t('codexFirst.settingsIdentity')}
+                                </Text>
+                            </View>
+                        </>
+                    ) : profile.firstName ? (
                         // Profile view: Avatar + name + version
                         <>
                             <View style={{ marginBottom: 12 }}>
@@ -371,7 +425,12 @@ export const SettingsView = React.memo(function SettingsView({
             )}
 
             {/* About */}
-            <ItemGroup title={t('settings.about')} footer={t('settings.aboutFooter')}>
+            <ItemGroup
+                title={t('settings.about')}
+                footer={codexFirstPresentation
+                    ? t('codexFirst.settingsAboutFooter')
+                    : t('settings.aboutFooter')}
+            >
                 <Item
                     title={t('settings.whatsNew')}
                     subtitle={t('settings.whatsNewSubtitle')}
@@ -419,7 +478,7 @@ export const SettingsView = React.memo(function SettingsView({
                     showChevron={false}
                 />
             </ItemGroup>
-
+            </View>
         </ItemList>
     );
 });

@@ -432,6 +432,8 @@ export const ru: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `в сети ${time}`,
         permissionRequired: 'требуется разрешение',
         inputRequired: 'ожидает вашего ответа',
+        reviewRequest: 'Проверить',
+        answerRequest: 'Ответить',
         activeNow: 'Активен сейчас',
         unknown: 'неизвестно',
         unread: 'новые результаты',
@@ -1152,6 +1154,8 @@ export const ru: TranslationStructure = {
         notSupportedTitle: 'Изображения не поддерживаются',
         notSupportedMessage: 'Этот агент не поддерживает вложения изображений. Изображения не были отправлены.',
     },
+
+    codexFirst: en.codexFirst,
 
     githubIssues: en.githubIssues,
 

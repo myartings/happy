@@ -52,7 +52,7 @@ export const SettingsSchema = z.object({
     sortSessionsByActivity: z.boolean().describe('Legacy session sort preference (no longer used)'),
     sortActiveSessionsGlobally: z.boolean().describe('Show active sessions in one global list ordered by recent activity'),
     groupActiveSessionsByDate: z.boolean().describe('Split globally sorted active sessions into today and earlier groups'),
-    needsAttentionSessionsEnabled: z.boolean().describe('Collect unread and permission-blocked sessions at the top'),
+    needsAttentionSessionsEnabled: z.boolean().describe('Collect current-request and unread sessions at the top'),
     sessionListSettingsMigrated: z.boolean().describe('Whether device-local session list choices were migrated to synced settings'),
     sessionAttentionMarkers: SessionAttentionMarkersSchema.describe('Cross-device unread/read sequence markers by session'),
     pinnedSessionIds: z.array(z.string()).describe('Session IDs pinned ahead of ordinary sessions'),

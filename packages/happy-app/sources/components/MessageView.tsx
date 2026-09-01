@@ -18,9 +18,11 @@ import { resolveUserMessageBubbleColor } from '@/utils/userMessageBubbleColor';
 import { getMessageTargetNativeId } from '@/utils/messageTarget';
 import { useStudioSemanticTextPresentation } from '@/features/studio-semantic-text/useStudioSemanticTextPresentation';
 import { LongPressCopyable } from './LongPressCopyable';
+import { resolveCodexFirstUserMessagePresentation } from '@/features/codex-first-shell/codexFirstConversationPresentation';
 
 
 export const MessageView = React.memo((props: {
+  codexFirstEnabled?: boolean;
   message: Message;
   metadata: Metadata | null;
   sessionId: string;
@@ -36,6 +38,7 @@ export const MessageView = React.memo((props: {
     >
       <View style={styles.messageContent}>
         <RenderBlock
+          codexFirstEnabled={props.codexFirstEnabled ?? false}
           message={props.message}
           metadata={props.metadata}
           sessionId={props.sessionId}
@@ -49,6 +52,7 @@ export const MessageView = React.memo((props: {
 
 // RenderBlock function that dispatches to the correct component based on message kind
 function RenderBlock(props: {
+  codexFirstEnabled: boolean;
   message: Message;
   metadata: Metadata | null;
   sessionId: string;
@@ -59,6 +63,7 @@ function RenderBlock(props: {
     case 'user-text':
       return (
         <UserTextBlock
+          codexFirstEnabled={props.codexFirstEnabled}
           message={props.message}
           metadata={props.metadata}
           sessionId={props.sessionId}
@@ -88,6 +93,7 @@ function RenderBlock(props: {
 }
 
 function UserTextBlock(props: {
+  codexFirstEnabled: boolean;
   message: UserTextMessage;
   metadata: Metadata | null;
   sessionId: string;
@@ -100,10 +106,25 @@ function UserTextBlock(props: {
   const { theme } = useUnistyles();
   const studioPresentation = useStudioSemanticTextPresentation();
   const bubblePalette = resolveUserMessageBubbleColor(userMessageBubbleColor, theme.dark);
+  const codexFirstPresentation = resolveCodexFirstUserMessagePresentation({
+    enabled: props.codexFirstEnabled,
+    isDark: theme.dark,
+    selectedColor: userMessageBubbleColor,
+  });
   const bubbleStyle = {
-    backgroundColor: bubblePalette.background,
-    borderColor: bubblePalette.border,
+    backgroundColor: codexFirstPresentation?.backgroundColor ?? bubblePalette.background,
+    borderColor: codexFirstPresentation?.borderColor ?? bubblePalette.border,
+    ...(codexFirstPresentation ? {
+      borderRadius: codexFirstPresentation.borderRadius,
+      marginBottom: codexFirstPresentation.marginBottom,
+      paddingHorizontal: codexFirstPresentation.paddingHorizontal,
+      paddingVertical: codexFirstPresentation.paddingVertical,
+    } : {}),
   };
+  const copyTargetStyle = [
+    styles.userCopyTarget,
+    codexFirstPresentation && { maxWidth: codexFirstPresentation.contentMaxWidth },
+  ];
   // Claude Agent SDK emits synthetic user messages wrapped in tags like
   // <local-command-caveat>…</local-command-caveat> and
   // <command-message>…</command-message><command-name>/foo</command-name>
@@ -131,7 +152,7 @@ function UserTextBlock(props: {
   if (parsed.kind === 'goal-run') {
     return (
       <View style={styles.userMessageContainer}>
-        <LongPressCopyable style={styles.userCopyTarget} text={parsed.goal}>
+        <LongPressCopyable style={copyTargetStyle} text={parsed.goal}>
           <View style={[styles.userMessageBubble, styles.userMessageBubbleSolid, bubbleStyle, styles.goalMessageBubble]}>
             <MarkdownView externalCopyHandler markdown={parsed.goal} onOptionPress={handleOptionPress} sessionId={props.sessionId} />
           </View>
@@ -147,7 +168,7 @@ function UserTextBlock(props: {
     const commandText = parsed.args ? `/${parsed.commandName} ${parsed.args}` : `/${parsed.commandName}`;
     return (
       <View style={styles.userMessageContainer}>
-        <LongPressCopyable style={styles.userCopyTarget} text={commandText}>
+        <LongPressCopyable style={copyTargetStyle} text={commandText}>
           {parsed.args ? (
             <View style={[styles.userMessageBubble, styles.userMessageBubbleSolid, bubbleStyle, styles.commandMessageBubble]}>
               <MarkdownView externalCopyHandler markdown={parsed.args} onOptionPress={handleOptionPress} sessionId={props.sessionId} />
@@ -165,7 +186,7 @@ function UserTextBlock(props: {
     <View style={styles.userMessageContainer}>
       {/* Long-press copies the whole message through our own menu rather than the
           OS selection callout. Rewind remains in session actions. */}
-      <LongPressCopyable style={styles.userCopyTarget} text={parsed.text}>
+      <LongPressCopyable style={copyTargetStyle} text={parsed.text}>
         <View style={[styles.userMessageBubble, styles.userMessageBubbleSolid, bubbleStyle]}>
           <MarkdownView externalCopyHandler markdown={parsed.text} onOptionPress={handleOptionPress} sessionId={props.sessionId} />
         </View>

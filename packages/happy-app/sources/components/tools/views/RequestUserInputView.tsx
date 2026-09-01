@@ -1,8 +1,9 @@
 import * as React from 'react';
 
 import { sessionAnswerQuestion } from '@/sync/ops';
-import { useSessionAgentFormCommunication } from '@/sync/storage';
+import { useSession, useSessionAgentFormCommunication } from '@/sync/storage';
 import type { AgentQuestionAnswer } from '@/sync/storageTypes';
+import { canRenderAgentFormInline } from '@/sync/agentCommunications';
 import { ToolViewProps } from './_all';
 import {
     InlineQuestionForm,
@@ -12,6 +13,7 @@ import {
 /** Inline renderer for Happy/Codex request_user_input communications. */
 export const RequestUserInputView = React.memo<ToolViewProps>(({ tool, sessionId }) => {
     const communication = useSessionAgentFormCommunication(sessionId ?? '', tool.callId ?? '');
+    const session = useSession(sessionId ?? '');
 
     const submittedAnswers = React.useMemo<InlineQuestionAnswers | null>(() => {
         if (!communication || communication.status === 'pending') return null;
@@ -41,7 +43,7 @@ export const RequestUserInputView = React.memo<ToolViewProps>(({ tool, sessionId
         await sessionAnswerQuestion(sessionId, communication.id, communicationAnswers, communication.kind);
     }, [communication, sessionId]);
 
-    if (!communication || communication.questions.some(question => question.options.length === 0)) {
+    if (!communication || !canRenderAgentFormInline(communication)) {
         return null;
     }
 
@@ -49,6 +51,13 @@ export const RequestUserInputView = React.memo<ToolViewProps>(({ tool, sessionId
         <InlineQuestionForm
             questions={communication.questions}
             canInteract={tool.state === 'running' && communication.status === 'pending'}
+            connected={session?.presence === 'online'}
+            requestId={communication.id}
+            requestStatus={communication.status === 'pending' && tool.state === 'running'
+                ? 'pending'
+                : communication.status === 'answered'
+                    ? 'resolved'
+                    : 'expired'}
             submittedAnswers={submittedAnswers}
             onSubmit={handleSubmit}
         />

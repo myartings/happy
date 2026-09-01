@@ -106,6 +106,8 @@ export const en: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `last seen ${time}`,
         permissionRequired: 'permission required',
         inputRequired: 'waiting for your answer',
+        reviewRequest: 'Review',
+        answerRequest: 'Answer',
         activeNow: 'Active now',
         unknown: 'unknown',
         unread: 'new results',
@@ -1137,6 +1139,8 @@ export const en: TranslationStructure = {
         notSupportedTitle: 'Images Not Supported',
         notSupportedMessage: 'This agent does not support image attachments. Images were not sent.',
     },
+
+    codexFirst: defaultEn.codexFirst,
 
     githubIssues: defaultEn.githubIssues,
 

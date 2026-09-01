@@ -43,6 +43,7 @@ function row(
         lastMessageSentAt?: number;
         state?: SessionRowData['state'];
         hasUnread?: boolean;
+        attention?: SessionRowData['attention'];
     } = {},
 ): SessionRowData {
     return {
@@ -57,6 +58,7 @@ function row(
             ?? 0,
         lastMessageSentAt: options.lastMessageSentAt,
         state: options.state ?? 'waiting',
+        attention: options.attention ?? null,
         hasUnread: options.hasUnread ?? false,
     } as SessionRowData;
 }
@@ -311,6 +313,26 @@ describe('buildVisibleSessionListViewData', () => {
         expect(flatSessionIds(result)).toEqual(['ordinary-flat']);
     });
 
+    it('promotes Agent input requests alongside permission requests', () => {
+        const result = buildVisibleSessionListViewData([
+            {
+                type: 'active-sessions',
+                sessions: [
+                    row('input', { active: true, state: 'input_required' }),
+                    row('ordinary', { active: true }),
+                ],
+            },
+        ], {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+        })!;
+
+        expect(result[0]).toMatchObject({
+            type: 'attention-sessions',
+            sessions: [{ id: 'input' }],
+        });
+    });
+
     it('does not promote archived sessions with unread results', () => {
         const archived = row('archived-unread', { archived: true, hasUnread: true });
         const result = buildVisibleSessionListViewData([
@@ -332,6 +354,152 @@ describe('buildVisibleSessionListViewData', () => {
             { type: 'active-sessions', sessions: [row('permission', { active: true, state: 'permission_required' })] },
             { type: 'session', session: row('unread', { hasUnread: true }) },
         ];
+
+        expect(buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            needsAttentionSessionsEnabled: false,
+        })).toEqual(data);
+    });
+
+    it('promotes an offline answer-required session once across duplicate list inputs', () => {
+        const answer = row('offline-answer', {
+            state: 'disconnected',
+            attention: {
+                primaryReason: {
+                    kind: 'answer_required',
+                    sourceId: 'question-1',
+                    observedAgentStateVersion: 4,
+                    detailKind: 'form',
+                },
+                reasons: [{
+                    kind: 'answer_required',
+                    sourceId: 'question-1',
+                    observedAgentStateVersion: 4,
+                    detailKind: 'form',
+                }],
+            },
+        });
+        const data: SessionListViewItem[] = [
+            { type: 'active-sessions', sessions: [answer] },
+            project('project-1', [answer]),
+        ];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            needsAttentionSessionsEnabled: true,
+        })!;
+
+        expect(result[0]).toMatchObject({
+            type: 'attention-sessions',
+            sessions: [{ id: 'offline-answer' }],
+        });
+        expect(result.flatMap((item) => item.type === 'attention-sessions'
+            ? item.sessions.map((session) => session.id)
+            : [])).toEqual(['offline-answer']);
+        expect(projectSessionIds(result)).not.toContain('offline-answer');
+    });
+
+    it('orders permission, answer, and legacy unread without pinning changing severity', () => {
+        const permissionReason = {
+            kind: 'permission_required' as const,
+            sourceId: 'permission-1',
+            observedAgentStateVersion: 1,
+        };
+        const answerReason = {
+            kind: 'answer_required' as const,
+            sourceId: 'answer-1',
+            observedAgentStateVersion: 1,
+            detailKind: 'form' as const,
+        };
+        const data: SessionListViewItem[] = [{
+            type: 'active-sessions',
+            sessions: [
+                row('pinned-unread', { hasUnread: true, lastActivityAt: 300 }),
+                row('answer', {
+                    state: 'disconnected',
+                    lastActivityAt: 200,
+                    attention: { primaryReason: answerReason, reasons: [answerReason] },
+                }),
+                row('permission', {
+                    state: 'disconnected',
+                    lastActivityAt: 100,
+                    attention: { primaryReason: permissionReason, reasons: [permissionReason] },
+                }),
+            ],
+        }];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            needsAttentionSessionsEnabled: true,
+            pinnedSessionIds: ['pinned-unread'],
+        })!;
+
+        expect(result[0]).toMatchObject({
+            type: 'attention-sessions',
+            sessions: [{ id: 'permission' }, { id: 'answer' }, { id: 'pinned-unread' }],
+        });
+    });
+
+    it('does not let legacy permission state override an answer-only projection', () => {
+        const answerReason = {
+            kind: 'answer_required' as const,
+            sourceId: 'answer-after-completed-permission',
+            observedAgentStateVersion: 2,
+            detailKind: 'form' as const,
+        };
+        const permissionReason = {
+            kind: 'permission_required' as const,
+            sourceId: 'pending-permission',
+            observedAgentStateVersion: 3,
+        };
+        const data: SessionListViewItem[] = [{
+            type: 'active-sessions',
+            sessions: [
+                row('answer-with-stale-permission-state', {
+                    state: 'permission_required',
+                    lastActivityAt: 300,
+                    attention: { primaryReason: answerReason, reasons: [answerReason] },
+                }),
+                row('current-permission', {
+                    state: 'disconnected',
+                    lastActivityAt: 100,
+                    attention: { primaryReason: permissionReason, reasons: [permissionReason] },
+                }),
+            ],
+        }];
+
+        const result = buildVisibleSessionListViewData(data, {
+            hideArchivedSessions: false,
+            sortActiveSessionsGlobally: false,
+            needsAttentionSessionsEnabled: true,
+        })!;
+
+        expect(result[0]).toMatchObject({
+            type: 'attention-sessions',
+            sessions: [
+                { id: 'current-permission' },
+                { id: 'answer-with-stale-permission-state' },
+            ],
+        });
+    });
+
+    it('leaves an answer-required row in its ordinary position when the feature is disabled', () => {
+        const answerReason = {
+            kind: 'answer_required' as const,
+            sourceId: 'answer-1',
+            observedAgentStateVersion: 1,
+            detailKind: 'unsupported' as const,
+        };
+        const data: SessionListViewItem[] = [{
+            type: 'session',
+            session: row('answer', {
+                state: 'disconnected',
+                attention: { primaryReason: answerReason, reasons: [answerReason] },
+            }),
+        }];
 
         expect(buildVisibleSessionListViewData(data, {
             hideArchivedSessions: false,

@@ -23,6 +23,8 @@ import { RigGitLineChanges } from './RigGitLineChanges';
 import { ShimmerText } from './ShimmerText';
 import { resolveFlatSessionRowPresentation } from '@/utils/flatSessionRowPresentation';
 import { GithubIssueSessionBadge } from '@/features/github-issues/GithubIssueSessionBadge';
+import { resolveCurrentRequestRowAttention } from '@/features/needs-attention/currentRequestAttention';
+import { useSetting } from '@/sync/storage';
 
 // Roughly three quarters of the row, the proportion a chat list uses: the row
 // is 10 + 61 + 10, so 60 leaves an even 10 either side of the avatar.
@@ -67,6 +69,7 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
     const { session, projectName, workspaceName } = row;
     const styles = stylesheet;
     const { theme } = useUnistyles();
+    const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
     const navigateToSession = useNavigateToSession();
     const swipeableRef = React.useRef<Swipeable | null>(null);
     const swipeEnabled = Platform.OS !== 'web';
@@ -100,15 +103,33 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
         hasUnread: showUnreadDot,
         faded,
     });
+    const currentRequest = resolveCurrentRequestRowAttention(session, needsAttentionSessionsEnabled);
+    const currentRequestKind = currentRequest.kind;
+    const requestReasonText = currentRequest.reasonTextKey
+        ? t(currentRequest.reasonTextKey)
+        : null;
+    const requestActionText = currentRequest.actionTextKey
+        ? t(currentRequest.actionTextKey)
+        : null;
+    const currentRequestStatusText = requestReasonText
+        ? [requestReasonText, requestActionText].filter(Boolean).join(' · ')
+        : null;
     const topRightAccessibilityLabel = presentation.topRight.type === 'dot'
-        ? session.state === 'input_required'
-            ? t('status.inputRequired')
-            : session.state === 'permission_required'
-                ? t('status.permissionRequired')
-                : t('status.unread')
+        ? currentRequestStatusText
+            ?? (session.state === 'input_required'
+                ? t('status.inputRequired')
+                : session.state === 'permission_required'
+                    ? t('status.permissionRequired')
+                    : t('status.unread'))
         : undefined;
-    const baseStatus = faded ? STATUS_CONFIG.disconnected : STATUS_CONFIG[session.state];
-    const needsUserAction = session.state === 'permission_required' || session.state === 'input_required';
+    const baseStatus = currentRequestKind
+        ? STATUS_CONFIG[currentRequestKind === 'answer_required' ? 'input_required' : currentRequestKind]
+        : faded
+            ? STATUS_CONFIG.disconnected
+            : STATUS_CONFIG[session.state];
+    const needsUserAction = currentRequestKind !== null
+        || session.state === 'permission_required'
+        || session.state === 'input_required';
     const status = session.hasUnread && !faded && !needsUserAction
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false }
         : baseStatus;
@@ -127,18 +148,21 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
     // actually doing. Fading follows the machine's presence, while a dropped
     // session socket still reports its own last-seen state without making the
     // whole row look retired.
-    const statusText = faded || session.state === 'disconnected'
-        ? lastSeenText
-        : session.state === 'input_required'
-            ? t('status.inputRequired')
-            : session.state === 'permission_required'
-                ? t('status.permissionRequired')
-                : session.hasUnread
-                    ? t('status.unread')
-                    : session.state === 'thinking'
-                        ? t('status.running')
-                        : t('status.idle');
-    const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : status.color;
+    const statusText = currentRequestStatusText
+        ?? (faded || session.state === 'disconnected'
+            ? lastSeenText
+            : session.state === 'input_required'
+                ? t('status.inputRequired')
+                : session.state === 'permission_required'
+                    ? t('status.permissionRequired')
+                    : session.hasUnread
+                        ? t('status.unread')
+                        : session.state === 'thinking'
+                            ? t('status.running')
+                            : t('status.idle'));
+    const statusTextColor = currentRequestKind === null && session.state === 'waiting'
+        ? theme.colors.textSecondary
+        : status.color;
 
     const statusLine = [statusText, session.activitySummary].filter(Boolean).join(' · ');
 
@@ -155,8 +179,8 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
     }, [performArchive]);
 
     const handlePress = React.useCallback(() => {
-        navigateToSession(session.id);
-    }, [navigateToSession, session.id]);
+        navigateToSession(session.id, currentRequest.focusHint ?? undefined);
+    }, [currentRequest.focusHint, navigateToSession, session.id]);
 
     const handleContextMenu = React.useCallback((event: any) => {
         event.preventDefault?.();
@@ -177,6 +201,8 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
 
     const content = (
         <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${session.name}, ${statusText}`}
             style={[styles.row, selected && styles.rowSelected]}
             onPress={handlePress}
             {...menuProps}

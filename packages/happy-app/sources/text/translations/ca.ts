@@ -91,6 +91,8 @@ export const ca: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `vist per última vegada ${time}`,
         permissionRequired: 'permís requerit',
         inputRequired: 'esperant la teva resposta',
+        reviewRequest: 'Revisa',
+        answerRequest: 'Respon',
         activeNow: 'Actiu ara',
         unknown: 'desconegut',
         unread: 'nous resultats',
@@ -1123,6 +1125,8 @@ export const ca: TranslationStructure = {
         notSupportedTitle: 'Imatges no compatibles',
         notSupportedMessage: 'Aquest agent no admet fitxers adjunts d\'imatge. Les imatges no s\'han enviat.',
     },
+
+    codexFirst: en.codexFirst,
 
     githubIssues: en.githubIssues,
 

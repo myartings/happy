@@ -91,6 +91,8 @@ export const pt: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `visto por último ${time}`,
         permissionRequired: 'permissão necessária',
         inputRequired: 'aguardando sua resposta',
+        reviewRequest: 'Revisar',
+        answerRequest: 'Responder',
         activeNow: 'Ativo agora',
         unknown: 'desconhecido',
         unread: 'novos resultados',
@@ -1122,6 +1124,8 @@ export const pt: TranslationStructure = {
         notSupportedTitle: 'Imagens não suportadas',
         notSupportedMessage: 'Este agente não suporta anexos de imagem. As imagens não foram enviadas.',
     },
+
+    codexFirst: en.codexFirst,
 
     githubIssues: en.githubIssues,
 

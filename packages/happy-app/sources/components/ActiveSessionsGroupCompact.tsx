@@ -40,6 +40,7 @@ import {
 } from '@/features/studio-visual-style/studioSidebarInteractionPresentation';
 import { useStudioInteractionState } from '@/features/studio-visual-style/useStudioInteractionState';
 import { RigGitLineChanges } from './RigGitLineChanges';
+import { resolveCurrentRequestRowAttention } from '@/features/needs-attention/currentRequestAttention';
 
 const STATUS_CONFIG: Record<SessionState, { color: string; dotColor: string; isPulsing: boolean; isConnected: boolean }> = {
     disconnected: { color: '#999', dotColor: '#999', isPulsing: false, isConnected: false },
@@ -325,6 +326,8 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const environmentLabelsEnabled = useLocalSetting('devSessionEnvironmentLabelsEnabled');
     const enhancedStatusDotsEnabled = useLocalSetting('devEnhancedStatusDotsEnabled');
     const needsAttentionSessionsEnabled = useSetting('needsAttentionSessionsEnabled');
+    const currentRequest = resolveCurrentRequestRowAttention(session, needsAttentionSessionsEnabled);
+    const currentRequestKind = currentRequest.kind;
     const pinnedSessionIds = useSetting('pinnedSessionIds');
     const isPinned = pinnedSessionIds.includes(session.id);
     const displayPolicy = resolveSessionRowDisplayPolicy({
@@ -333,23 +336,40 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
         needsAttentionSessionsEnabled,
     });
     // Unread blue is part of the personal needs-attention treatment.
-    const needsUserAction = session.state === 'permission_required' || session.state === 'input_required';
+    const needsUserAction = currentRequestKind !== null
+        || session.state === 'permission_required'
+        || session.state === 'input_required';
+    const requestStatus = currentRequestKind
+        ? STATUS_CONFIG[currentRequestKind === 'answer_required' ? 'input_required' : currentRequestKind]
+        : baseStatus;
     // User action stays orange and pulsing even when the request also marked the session unread.
     const status = displayPolicy.showUnreadAttentionState && session.hasUnread && !needsUserAction
         ? { ...baseStatus, color: '#007AFF', dotColor: '#007AFF', isPulsing: false, isConnected: baseStatus.isConnected }
-        : baseStatus;
-    const statusText = session.state === 'input_required'
-        ? t('status.inputRequired')
-        : session.state === 'permission_required'
-            ? t('status.permissionRequired')
-            : displayPolicy.showUnreadAttentionState && session.hasUnread
-                ? t('status.unread')
-                : session.state === 'thinking'
-                    ? t('status.running')
-                    : session.state === 'disconnected'
-                        ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
-                        : t('status.idle');
-    const statusTextColor = session.state === 'waiting' ? theme.colors.textSecondary : baseStatus.color;
+        : { ...requestStatus, isConnected: baseStatus.isConnected };
+    const requestReasonText = currentRequest.reasonTextKey
+        ? t(currentRequest.reasonTextKey)
+        : null;
+    const requestActionText = currentRequest.actionTextKey
+        ? t(currentRequest.actionTextKey)
+        : null;
+    const currentRequestStatusText = requestReasonText
+        ? [requestReasonText, requestActionText].filter(Boolean).join(' · ')
+        : null;
+    const statusText = currentRequestStatusText
+        ?? (session.state === 'input_required'
+            ? t('status.inputRequired')
+            : session.state === 'permission_required'
+                ? t('status.permissionRequired')
+                : displayPolicy.showUnreadAttentionState && session.hasUnread
+                    ? t('status.unread')
+                    : session.state === 'thinking'
+                        ? t('status.running')
+                        : session.state === 'disconnected'
+                            ? t('status.lastSeen', { time: formatLastSeen(session.activeAt!, false) })
+                            : t('status.idle'));
+    const statusTextColor = currentRequestKind === null && session.state === 'waiting'
+        ? theme.colors.textSecondary
+        : status.color;
     const machine = useMachine(session.machineId ?? '');
     const runtimePlatformKind = session.platformKind === 'unknown'
         ? getSessionPlatformKind(machine?.metadata?.platform)
@@ -377,8 +397,8 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     }, [performArchive]);
 
     const handlePress = React.useCallback(() => {
-        navigateToSession(session.id);
-    }, [navigateToSession, session.id]);
+        navigateToSession(session.id, currentRequest.focusHint ?? undefined);
+    }, [currentRequest.focusHint, navigateToSession, session.id]);
 
     const handleContextMenu = React.useCallback((event: any) => {
         event.preventDefault?.();
@@ -438,6 +458,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
     const itemContent = (
         <Pressable
             accessibilityRole="button"
+            accessibilityLabel={`${session.name}, ${statusText}`}
             accessibilityState={{ selected: !!selected }}
             {...interactionState.interactionProps}
             style={({ pressed }) => [

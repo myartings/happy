@@ -93,6 +93,8 @@ export const ja: TranslationStructure = {
         lastSeen: ({ time }: { time: string }) => `最終アクセス: ${time}`,
         permissionRequired: '権限が必要です',
         inputRequired: '回答を待っています',
+        reviewRequest: '確認',
+        answerRequest: '回答',
         activeNow: 'アクティブ',
         unknown: '不明',
         unread: '新しい結果',
@@ -1125,6 +1127,8 @@ export const ja: TranslationStructure = {
         notSupportedTitle: '画像はサポートされていません',
         notSupportedMessage: 'このエージェントは画像の添付に対応していません。画像は送信されませんでした。',
     },
+
+    codexFirst: en.codexFirst,
 
     githubIssues: en.githubIssues,
 

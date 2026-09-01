@@ -1,0 +1,13 @@
+{"path":"AGENTS.md","reason":"Repository lifecycle, branch, commit, and synchronization constraints"}
+{"path":"CONTEXT.md","reason":"Shared project language and repository boundaries"}
+{"path":".ai/project.json","reason":"Protected paths, risk triggers, and deterministic commands"}
+{"path":"docs/specs/codex-first-happy-client-dev-integration.md","reason":"Accepted integration behavior and evidence contract"}
+{"path":"docs/specs/codex-first-happy-client.md","reason":"Preserved Codex-first product behavior"}
+{"path":"docs/tasks/codex-first-happy-client-dev-integration-tasks.md","reason":"Serial integration slices and stop boundaries"}
+{"path":"docs/workspace/codex-first-happy-client-dev-integration/decisions.md","reason":"Accepted merge, conflict, repair, and publication choices"}
+{"path":"docs/workspace/codex-first-happy-client-dev-integration/risk-assessment.md","reason":"Mandatory controls and rollback"}
+{"path":"docs/workspace/codex-first-happy-client-dev-integration/scoping.md","reason":"Exact files, semantic overlaps, and TDD boundary"}
+{"path":"docs/PRD.md","reason":"Known conflict requiring lossless feature and target union"}
+{"path":"docs/workspace/archive.md","reason":"Known conflict requiring exact chronological row union"}
+{"path":"packages/happy-app/sources/app/(app)/new/index.tsx","reason":"Highest-risk auto-merged New Session overlap"}
+{"path":"packages/happy-app/sources/features/codex-first-shell","reason":"Preserved public behavior and focused tests"}
