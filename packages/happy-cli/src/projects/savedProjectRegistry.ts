@@ -40,6 +40,12 @@ export type AddSavedProjectResult = {
     registry: SavedProjectRegistrySnapshot;
 };
 
+export type ImportDiscoveredSavedProjectsResult = {
+    importedCount: number;
+    skipped: Array<{ path: string; reason: string }>;
+    registry: SavedProjectRegistrySnapshot;
+};
+
 const EMPTY_REGISTRY: SavedProjectRegistrySnapshot = {
     schemaVersion: SAVED_PROJECT_SCHEMA_VERSION,
     revision: 0,
@@ -270,6 +276,90 @@ export class SavedProjectRegistry {
         }
     }
 
+    async importDiscovered({
+        paths,
+    }: {
+        paths: readonly string[];
+    }): Promise<ImportDiscoveredSavedProjectsResult> {
+        const baseline = await this.list();
+        const knownIdentities = new Set(
+            baseline.projects.map((project) => canonicalIdentity(project.canonicalPath)),
+        );
+        const candidates: Array<{ sourcePath: string }> = [];
+        const skipped: Array<{ path: string; reason: string }> = [];
+
+        for (const path of paths) {
+            try {
+                const canonical = await this.resolveDirectory(path);
+                const canonicalInputIdentity = canonicalIdentity(canonical);
+                if (knownIdentities.has(canonicalInputIdentity)) continue;
+
+                const normalized = await normalizeProjectDirectory(canonical);
+                const identity = canonicalIdentity(normalized.path);
+                if (knownIdentities.has(identity)) continue;
+                candidates.push({ sourcePath: path });
+            } catch (error) {
+                skipped.push({
+                    path,
+                    reason: error instanceof Error ? error.message : String(error),
+                });
+            }
+        }
+
+        if (candidates.length === 0) {
+            return { importedCount: 0, skipped, registry: baseline };
+        }
+
+        const lock = await this.acquireLock();
+        try {
+            const registry = await this.list();
+            const currentIdentities = new Set(
+                registry.projects.map((project) => canonicalIdentity(project.canonicalPath)),
+            );
+            const imported: SavedProject[] = [];
+
+            for (const candidate of candidates) {
+                try {
+                    const canonical = await this.resolveDirectory(candidate.sourcePath);
+                    const revalidated = await normalizeProjectDirectory(canonical);
+                    const identity = canonicalIdentity(revalidated.path);
+                    if (currentIdentities.has(identity)) continue;
+                    currentIdentities.add(identity);
+                    const timestamp = this.now().toISOString();
+                    imported.push({
+                        id: this.createId(),
+                        name: basename(revalidated.path),
+                        primaryPath: revalidated.path,
+                        canonicalPath: revalidated.path,
+                        kind: revalidated.kind,
+                        createdAt: timestamp,
+                        updatedAt: timestamp,
+                    });
+                } catch (error) {
+                    skipped.push({
+                        path: candidate.sourcePath,
+                        reason: error instanceof Error ? error.message : String(error),
+                    });
+                }
+            }
+
+            if (imported.length === 0) {
+                return { importedCount: 0, skipped, registry };
+            }
+
+            const updated = validateRegistry({
+                schemaVersion: SAVED_PROJECT_SCHEMA_VERSION,
+                revision: registry.revision + 1,
+                projects: [...registry.projects, ...imported],
+            }, this.registryFile);
+            await this.atomicWrite(updated);
+            return { importedCount: imported.length, skipped, registry: updated };
+        } finally {
+            await lock.close();
+            await unlink(`${this.registryFile}.lock`).catch(() => undefined);
+        }
+    }
+
     async resolveProjectPath(projectId: string): Promise<string> {
         const registry = await this.list();
         const project = registry.projects.find((candidate) => candidate.id === projectId);
@@ -292,6 +382,10 @@ export class SavedProjectRegistry {
     }
 
     private async normalizeDirectory(input: string): Promise<{ path: string; kind: SavedProjectKind }> {
+        return normalizeProjectDirectory(await this.resolveDirectory(input));
+    }
+
+    private async resolveDirectory(input: string): Promise<string> {
         const trimmed = input.trim();
         if (!trimmed) throw new Error('Saved project path is required');
         const expanded = trimmed === '~'
@@ -304,7 +398,7 @@ export class SavedProjectRegistry {
         const canonical = await realpath(expanded);
         const info = await stat(canonical);
         if (!info.isDirectory()) throw new Error(`Saved project path is not a directory: ${input}`);
-        return normalizeProjectDirectory(canonical);
+        return canonical;
     }
 
     private async acquireLock() {

@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, open, readFile, readdir, realpath, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -73,6 +73,112 @@ describe('SavedProjectRegistry', () => {
         expect(JSON.parse(await readFile(registryFile, 'utf8'))).toEqual(first.registry);
     });
 
+    it('atomically imports valid discoveries, skips invalid paths, and is idempotent', async () => {
+        const { root, registryFile } = await fixture();
+        const existing = join(root, 'existing');
+        const alpha = join(root, 'alpha');
+        const bravo = join(root, 'bravo');
+        const missing = join(root, 'missing');
+        await Promise.all([existing, alpha, bravo].map((path) => mkdir(path)));
+        const ids = [
+            '10000000-0000-4000-8000-000000000001',
+            '10000000-0000-4000-8000-000000000002',
+            '10000000-0000-4000-8000-000000000003',
+        ];
+        const registry = new SavedProjectRegistry({
+            registryFile,
+            homeDir: root,
+            createId: () => ids.shift()!,
+            now: () => new Date('2026-09-01T02:00:00.000Z'),
+        });
+        const manuallyAdded = await registry.add({ path: existing });
+
+        const imported = await registry.importDiscovered({
+            paths: [existing, alpha, missing, bravo, alpha],
+        });
+
+        expect(imported).toMatchObject({
+            importedCount: 2,
+            skipped: [{ path: missing }],
+            registry: {
+                schemaVersion: 1,
+                revision: 2,
+                projects: [
+                    manuallyAdded.project,
+                    { id: '10000000-0000-4000-8000-000000000002', name: 'alpha' },
+                    { id: '10000000-0000-4000-8000-000000000003', name: 'bravo' },
+                ],
+            },
+        });
+        const afterFirstImport = await readFile(registryFile, 'utf8');
+
+        await expect(registry.importDiscovered({ paths: [bravo, existing, alpha] }))
+            .resolves.toMatchObject({ importedCount: 0, skipped: [], registry: { revision: 2 } });
+        expect(await readFile(registryFile, 'utf8')).toBe(afterFirstImport);
+    });
+
+    it('revalidates a discovery after waiting for the registry lock', async () => {
+        const { root, registryFile, registry } = await fixture();
+        const project = join(root, 'project');
+        await mkdir(project);
+        await mkdir(dirname(registryFile), { recursive: true });
+        const lockFile = `${registryFile}.lock`;
+        const blocker = await open(lockFile, 'wx');
+        const importPromise = registry.importDiscovered({ paths: [project] });
+
+        try {
+            const state = await Promise.race([
+                importPromise.then(() => 'settled'),
+                new Promise<'waiting'>((resolveWaiting) => setTimeout(() => resolveWaiting('waiting'), 500)),
+            ]);
+            expect(state).toBe('waiting');
+            await rm(project, { recursive: true });
+        } finally {
+            await blocker.close();
+            await unlink(lockFile).catch(() => undefined);
+        }
+
+        await expect(importPromise).resolves.toMatchObject({
+            importedCount: 0,
+            skipped: [{ path: project }],
+            registry: { revision: 0, projects: [] },
+        });
+        await expect(readFile(registryFile, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+    });
+
+    it('falls back to another discovery of the same project when the first disappears while waiting for the lock', async () => {
+        const { root, registryFile, registry } = await fixture();
+        const project = join(root, 'project');
+        const alias = join(root, 'project-alias');
+        await mkdir(project);
+        await symlink(project, alias, process.platform === 'win32' ? 'junction' : 'dir');
+        await mkdir(dirname(registryFile), { recursive: true });
+        const lockFile = `${registryFile}.lock`;
+        const blocker = await open(lockFile, 'wx');
+        const importPromise = registry.importDiscovered({ paths: [alias, project] });
+
+        try {
+            const state = await Promise.race([
+                importPromise.then(() => 'settled'),
+                new Promise<'waiting'>((resolveWaiting) => setTimeout(() => resolveWaiting('waiting'), 500)),
+            ]);
+            expect(state).toBe('waiting');
+            await rm(alias, { recursive: true });
+        } finally {
+            await blocker.close();
+            await unlink(lockFile).catch(() => undefined);
+        }
+
+        await expect(importPromise).resolves.toMatchObject({
+            importedCount: 1,
+            skipped: [{ path: alias }],
+            registry: {
+                revision: 1,
+                projects: [{ primaryPath: await realpath(project), canonicalPath: await realpath(project) }],
+            },
+        });
+    });
+
     it('collapses a Git child and linked worktree onto the primary repository identity', async () => {
         const { root, registryFile } = await fixture();
         const primary = join(root, 'primary');
@@ -96,14 +202,18 @@ describe('SavedProjectRegistry', () => {
         });
 
         const fromChild = await registry.add({ path: child });
-        const fromLinked = await registry.add({ path: join(linked, 'nested') });
+        const fromLinked = await registry.importDiscovered({ paths: [join(linked, 'nested')] });
 
         expect(fromChild.project).toMatchObject({
             kind: 'git',
             primaryPath: canonicalPrimary,
             canonicalPath: canonicalPrimary,
         });
-        expect(fromLinked).toEqual({ ...fromChild, created: false });
+        expect(fromLinked).toEqual({
+            importedCount: 0,
+            skipped: [],
+            registry: fromChild.registry,
+        });
     });
 
     it('resolves a symbolic-link input to the same canonical directory identity', async () => {
