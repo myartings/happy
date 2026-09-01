@@ -26,6 +26,7 @@ export type SpawnRequestSignatureInput = {
     agent: string;
     /** Directory as the user picked it, before any worktree resolution. */
     directory: string;
+    projectId?: string | null;
     worktree: string | null;
     modelKey: string | null;
     permissionMode: string | null;
@@ -40,6 +41,7 @@ export function buildSpawnRequestSignature(input: SpawnRequestSignatureInput): s
         input.machineId ?? '',
         input.agent,
         input.directory,
+        input.projectId ?? '',
         input.worktree ?? '',
         input.modelKey ?? '',
         input.permissionMode ?? '',

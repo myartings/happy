@@ -67,7 +67,7 @@ export function AgentQuestionBanner({ sessionId, focusCommunicationId }: {
     }, [openId, pendingCommunications]);
 
     React.useEffect(() => {
-        if (pending?.id === focusCommunicationId && pending.kind === 'form') {
+        if (pending && pending.id === focusCommunicationId && pending.kind === 'form') {
             setOpenId(pending.id);
         }
     }, [focusCommunicationId, pending]);

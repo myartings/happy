@@ -1,0 +1,479 @@
+{
+  "schemaVersion": 3,
+  "slug": "saved-main-projects",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "After an authorized delivery commit, post the verification summary to GitHub Issue #84 and close it; future Rig Saved Project support requires Rig-owned authoritative resolution.",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User accepted Issue #84 one-Slice contract on 2026-09-01; docs/specs/codex-aligned-new-session-projects.md SP-01-SP-10; docs/tasks/saved-main-projects-tasks.md",
+      "updated": "2026-09-01T06:30:06+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/saved-main-projects/decisions.md D1-D8 resolved from repository evidence; no open material decision",
+      "updated": "2026-09-01T06:30:38+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current-root serial topology; fresh-session route current-root on exact registered Issue #84 worktree/base; SP-01-SP-10 frozen; T1-T5 serial due shared identity/spawn/UI contracts; protected/auth/server/native/deploy/tracker paths excluded; risk cleared-with-controls; targeted CLI/App Vitest then affected typechecks and applicable check",
+      "updated": "2026-09-01T06:37:26+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/saved-main-projects/decisions.md risk table; lock/revision/atomic write, corrupt-byte preservation, Git fixtures, project-ID restat, no fallback, inert-file rollback",
+      "updated": "2026-09-01T06:30:38+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Final-review unified boundary remediation implemented: machine-keyed App registry state, current CLI resolve capability gate for restored main-project drafts, and Rig fail-closed behavior; CLI 15/15, App 69/69, both typechecks pass.",
+      "updated": "2026-09-01T09:51:45+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "7/9 configured commands pass for staged candidate 3d08b0febdad; all final-remediation focused tests pass (CLI 15/15, App 69/69), both typechecks and all five workflow checks pass; accepted commands contain only the documented unrelated App/Server baseline patterns.",
+      "updated": "2026-09-01T10:11:58+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards axes both accepted exact staged candidate 3d08b0febdad with no blocking findings.",
+      "updated": "2026-09-01T10:17:14+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+        "candidateFingerprint": "3d08b0febdad5fe247a3dbf6625cec55b9a7f40e805a7912128d2042f17e69d7"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review completed in finish.md: acceptance coverage, verification, whole-diff, rollback, lessons, and follow-up recorded; exact candidate 3d08b0febdad passed accepted-gaps check and fresh dual-axis review; tracker mutation not authorized.",
+      "updated": "2026-09-01T10:26:14+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-01T06:22:53+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-01T06:23:13+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/84"
+    },
+    {
+      "at": "2026-09-01T06:30:06+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted Issue #84 one-Slice contract on 2026-09-01; docs/specs/codex-aligned-new-session-projects.md SP-01-SP-10; docs/tasks/saved-main-projects-tasks.md"
+    },
+    {
+      "at": "2026-09-01T06:30:38+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/saved-main-projects/decisions.md D1-D8 resolved from repository evidence; no open material decision"
+    },
+    {
+      "at": "2026-09-01T06:30:38+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/saved-main-projects/decisions.md risk table; lock/revision/atomic write, corrupt-byte preservation, Git fixtures, project-ID restat, no fallback, inert-file rollback"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-01T06:30:38+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Explicitly saved machine-local main project identities drive New Session while linked worktrees never gain project identity",
+      "acceptanceSeam": "SP-01-SP-10: temp Git/filesystem fixtures, Machine RPC handler tests, App presenter/draft/shared-start tests, typechecks, applicable workflow checks",
+      "dependencies": "Consumes existing Machine RPC and useStartSessionFromDraft; outputs SavedProject schema, list/add RPC, and project-ID primary-path spawn contract; no external blocker",
+      "reviewBoundary": "Registry, path identity, RPC, registry-only selection, and shared start must accept or reject together because partial delivery is unusable",
+      "rollbackBoundary": "Remove additive App/RPC/module seams and leave projects.json inert; no user directory or migrated data requires cleanup",
+      "contextBoundary": "One dedicated Issue #84 current-root session and one Workspace; serial internal tasks T1-T5",
+      "consequence": "High-risk local persistence and wrong-directory session-start boundary; controls in decisions.md limit blast radius to one machine registry and fail before spawn",
+      "evidence": "Live Issue #84 re-read at 2026-09-01T06:15:12Z; accepted spec docs/specs/codex-aligned-new-session-projects.md; current code scanner/mixed Recent/direct spawn evidence in context.md",
+      "contractFingerprint": "c8e83d6387d07dc016ab46579e9846905bebe56abc8fc40b432180fd9a168d71",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-01T06:37:26+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current-root serial topology; fresh-session route current-root on exact registered Issue #84 worktree/base; SP-01-SP-10 frozen; T1-T5 serial due shared identity/spawn/UI contracts; protected/auth/server/native/deploy/tracker paths excluded; risk cleared-with-controls; targeted CLI/App Vitest then affected typechecks and applicable check"
+    },
+    {
+      "at": "2026-09-01T06:37:49+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T1 RED: empty registry and path identity through public SavedProjectRegistry API"
+    },
+    {
+      "at": "2026-09-01T07:05:50+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Registry, machine RPC, App picker/draft, and shared start integration implemented; focused CLI 13/13 and App 60/60 tests plus both typechecks pass."
+    },
+    {
+      "at": "2026-09-01T07:05:51+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run candidate-bound applicable check against the accepted staged Slice."
+    },
+    {
+      "at": "2026-09-01T07:22:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 3 failures; structured run: 999721c1-e276-4292-ad07-2370ae0f9f72"
+    },
+    {
+      "at": "2026-09-01T07:39:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 8996c2c5-b87c-4176-bf24-61cb36ab5946"
+    },
+    {
+      "at": "2026-09-01T07:54:33+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "7/9 configured commands pass; command 2 has only the unmodified Studio static assertion (1910/1911 App tests), command 3 has only two unmodified Windows local-file route failures (110/112 Server tests); all Slice-focused tests and configured typechecks/workflow checks pass.; structured run: 8996c2c5-b87c-4176-bf24-61cb36ab5946; accepted command indexes: 2, 3; approval: User explicitly accepted the named unrelated App and Server baseline test gaps on 2026-09-01 and requested review/archive continuation."
+    },
+    {
+      "at": "2026-09-01T08:02:24+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Independent Spec and Standards axes both blocked the exact candidate e2fb57727458 on five in-contract fail-closed findings; return to implementation for remediation."
+    },
+    {
+      "at": "2026-09-01T08:02:40+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate blocked review findings: enforce identity through Rig, distinguish Git metadata failure, harden registry validation and pre-spawn canonical recheck, and machine-scope Add completion."
+    },
+    {
+      "at": "2026-09-01T08:09:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "All five blocking review findings remediated; focused CLI 16/16 and App 67/67 tests plus both affected typechecks pass."
+    },
+    {
+      "at": "2026-09-01T08:09:25+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage remediated candidate and rerun candidate-bound applicable check before fresh dual-axis review."
+    },
+    {
+      "at": "2026-09-01T08:26:58+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: e622260d-71ab-47fb-8117-c581f690fca6"
+    },
+    {
+      "at": "2026-09-01T08:27:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "7/9 configured commands pass for candidate e104e8780733; command 2 has only the unmodified Studio static assertion (1914/1915 App tests), command 3 has only two unmodified Windows local-file route failures (110/112 Server tests); all remediation-focused tests, configured typechecks, and workflow checks pass.; structured run: e622260d-71ab-47fb-8117-c581f690fca6; accepted command indexes: 2, 3; approval: User explicitly accepted the named unrelated App and Server baseline test gaps on 2026-09-01 and requested review/archive continuation; the same unchanged failures recurred on the remediated candidate."
+    },
+    {
+      "at": "2026-09-01T08:32:49+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec accepted; Standards blocked on one in-contract App network-boundary validation gap. Return to implementation."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-01T08:34:04+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "diagnose",
+      "outcome": "The repeated review boundary shares one root: fail-closed Saved Project identity validation must be enforced independently at both CLI storage and App RPC boundaries; retain the accepted Slice and remediate the App boundary.",
+      "acceptanceSeam": "App validator rejects relative, primary/canonical mismatch, duplicate UUID, and Windows case/separator-equivalent canonical identities; focused tests, typechecks, candidate check, and fresh dual review.",
+      "dependencies": "Consumes the existing SavedProject App model and RPC payloads; no new external dependency or product outcome.",
+      "reviewBoundary": "One localized App validation helper and tests remain inseparable from SP-07/SP-08 fail-closed behavior; no independent remainder exists.",
+      "rollbackBoundary": "Remove the App validation predicates/tests with no persistence or server migration; CLI registry remains unchanged.",
+      "contextBoundary": "Continue in the current Issue #84 root session and worktree; no handoff or parallel implementation needed.",
+      "consequence": "Without the App boundary check, malformed machine responses can contaminate draft/worktree path behavior before daemon-side spawn revalidation.",
+      "evidence": "Spec candidate e104e878 accepted; Standards candidate e104e878 blocked only on App cross-platform path/identity validation after confirming all five prior blockers fixed.",
+      "contractFingerprint": "d24743eb5a449fa8e4798a482b94fd284b48e94d87d7be64d47acd09b8559603",
+      "trigger": "same-root-failure",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-01T08:37:05+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue the accepted Slice with one localized App boundary validator remediation; this is a narrowed correction, not another broad implementation attempt.",
+      "acceptanceSeam": "App rejects relative paths, primary/canonical identity mismatch, duplicate UUIDs, and Windows case/separator-equivalent canonical identities; focused tests and typecheck then full candidate check and fresh dual review.",
+      "dependencies": "Only the existing SavedProject model and RPC payload validators; no new dependency or product surface.",
+      "reviewBoundary": "The localized validator and its tests are inseparable from SP-07/SP-08 fail-closed behavior.",
+      "rollbackBoundary": "Remove the validator predicates and tests; no persistence migration or external cleanup.",
+      "contextBoundary": "Current Issue #84 root session and worktree; serial implementation.",
+      "consequence": "Malformed machine responses otherwise enter App draft/worktree behavior before daemon-side spawn revalidation.",
+      "evidence": "Second Spec review accepted candidate e104e878; second Standards review blocked only this App network-boundary validation gap and confirmed prior findings fixed.",
+      "contractFingerprint": "d24743eb5a449fa8e4798a482b94fd284b48e94d87d7be64d47acd09b8559603",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-01T08:37:17+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Implement the continuation-scoped App RPC boundary validator and focused tests identified by the second Standards review."
+    },
+    {
+      "at": "2026-09-01T08:39:30+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second-review App boundary remediation implemented: cross-platform absolute paths, identity equality, duplicate UUID and canonical identity rejection; 66 focused App tests and App typecheck pass."
+    },
+    {
+      "at": "2026-09-01T08:39:31+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the narrowed remediated candidate and rerun candidate-bound applicable check before fresh dual-axis review."
+    },
+    {
+      "at": "2026-09-01T09:20:29+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 094066aa-b705-4260-92eb-3f283e0f719f"
+    },
+    {
+      "at": "2026-09-01T09:38:53+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 397c5b28-646d-40ff-a153-91c2c6a41159"
+    },
+    {
+      "at": "2026-09-01T09:39:13+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "7/9 configured commands pass for staged candidate 5f385a68ad05; command 2 is 1915/1917 with all Saved Projects tests passing and blob.test.ts isolated 9/9; command 3 is the same 110/112 unmodified Windows local-file route baseline; both typechecks and all five workflow checks pass.; structured run: 397c5b28-646d-40ff-a153-91c2c6a41159; accepted command indexes: 2, 3; approval: User explicitly accepted unrelated baseline gaps on 2026-09-01, requested uninterrupted YOLO continuation, and twice said continue; App command has only the unchanged Studio static assertion plus a full-suite-only 1MB encryption timeout that passed isolated 9/9 in 2.59s, while Server retains the same two unchanged Windows local-file route failures."
+    },
+    {
+      "at": "2026-09-01T09:44:44+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh Spec and Standards axes blocked candidate 5f385a68ad05 on three in-contract machine/capability identity boundaries; return to implementation."
+    },
+    {
+      "at": "2026-09-01T09:45:05+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate the unified machine/capability project identity boundary and add focused regression tests."
+    },
+    {
+      "at": "2026-09-01T09:51:45+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final-review unified boundary remediation implemented: machine-keyed App registry state, current CLI resolve capability gate for restored main-project drafts, and Rig fail-closed behavior; CLI 15/15, App 69/69, both typechecks pass."
+    },
+    {
+      "at": "2026-09-01T09:51:46+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the final-remediated candidate and run candidate-bound applicable check before fresh dual-axis review."
+    },
+    {
+      "at": "2026-09-01T10:11:26+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 296a578a-d666-43bd-bf02-57ba1e1b72ec"
+    },
+    {
+      "at": "2026-09-01T10:11:58+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "7/9 configured commands pass for staged candidate 3d08b0febdad; all final-remediation focused tests pass (CLI 15/15, App 69/69), both typechecks and all five workflow checks pass; accepted commands contain only the documented unrelated App/Server baseline patterns.; structured run: 296a578a-d666-43bd-bf02-57ba1e1b72ec; accepted command indexes: 2, 3; approval: User explicitly accepted unrelated baseline gaps on 2026-09-01, requested uninterrupted YOLO continuation, and repeatedly said continue; App full-suite failures remain confined to the unchanged Studio static assertion/full-suite-only encryption timeout with isolated blob 9/9 pass, while Server retains the same two unchanged Windows local-file route failures."
+    },
+    {
+      "at": "2026-09-01T10:17:14+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards axes both accepted exact staged candidate 3d08b0febdad with no blocking findings."
+    },
+    {
+      "at": "2026-09-01T10:18:40+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish review, verify the complete staged delivery candidate, and create the canonical archive projection."
+    },
+    {
+      "at": "2026-09-01T10:26:14+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review completed in finish.md: acceptance coverage, verification, whole-diff, rollback, lessons, and follow-up recorded; exact candidate 3d08b0febdad passed accepted-gaps check and fresh dual-axis review; tracker mutation not authorized."
+    },
+    {
+      "at": "2026-09-01T10:27:11+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #84 Saved Projects Slice implemented and verified: atomic machine-local registry, project-ID spawn resolution, registry-only New Session selection, shared start capability gates, machine-bound snapshots, and Rig fail-closed behavior; exact candidate 3d08b0febdad accepted by Spec and Standards.; result identity: archive-introducing-commit; follow-up: After an authorized delivery commit, post the verification summary to GitHub Issue #84 and close it; future Rig Saved Project support requires Rig-owned authoritative resolution."
+    }
+  ],
+  "updated": "2026-09-01T10:27:11+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/84",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-01T06:30:38+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Explicitly saved machine-local main project identities drive New Session while linked worktrees never gain project identity",
+      "acceptanceSeam": "SP-01-SP-10: temp Git/filesystem fixtures, Machine RPC handler tests, App presenter/draft/shared-start tests, typechecks, applicable workflow checks",
+      "dependencies": "Consumes existing Machine RPC and useStartSessionFromDraft; outputs SavedProject schema, list/add RPC, and project-ID primary-path spawn contract; no external blocker",
+      "reviewBoundary": "Registry, path identity, RPC, registry-only selection, and shared start must accept or reject together because partial delivery is unusable",
+      "rollbackBoundary": "Remove additive App/RPC/module seams and leave projects.json inert; no user directory or migrated data requires cleanup",
+      "contextBoundary": "One dedicated Issue #84 current-root session and one Workspace; serial internal tasks T1-T5",
+      "consequence": "High-risk local persistence and wrong-directory session-start boundary; controls in decisions.md limit blast radius to one machine registry and fail before spawn",
+      "evidence": "Live Issue #84 re-read at 2026-09-01T06:15:12Z; accepted spec docs/specs/codex-aligned-new-session-projects.md; current code scanner/mixed Recent/direct spawn evidence in context.md",
+      "contractFingerprint": "c8e83d6387d07dc016ab46579e9846905bebe56abc8fc40b432180fd9a168d71",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-01T08:34:04+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "diagnose",
+      "outcome": "The repeated review boundary shares one root: fail-closed Saved Project identity validation must be enforced independently at both CLI storage and App RPC boundaries; retain the accepted Slice and remediate the App boundary.",
+      "acceptanceSeam": "App validator rejects relative, primary/canonical mismatch, duplicate UUID, and Windows case/separator-equivalent canonical identities; focused tests, typechecks, candidate check, and fresh dual review.",
+      "dependencies": "Consumes the existing SavedProject App model and RPC payloads; no new external dependency or product outcome.",
+      "reviewBoundary": "One localized App validation helper and tests remain inseparable from SP-07/SP-08 fail-closed behavior; no independent remainder exists.",
+      "rollbackBoundary": "Remove the App validation predicates/tests with no persistence or server migration; CLI registry remains unchanged.",
+      "contextBoundary": "Continue in the current Issue #84 root session and worktree; no handoff or parallel implementation needed.",
+      "consequence": "Without the App boundary check, malformed machine responses can contaminate draft/worktree path behavior before daemon-side spawn revalidation.",
+      "evidence": "Spec candidate e104e878 accepted; Standards candidate e104e878 blocked only on App cross-platform path/identity validation after confirming all five prior blockers fixed.",
+      "contractFingerprint": "d24743eb5a449fa8e4798a482b94fd284b48e94d87d7be64d47acd09b8559603",
+      "trigger": "same-root-failure",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-01T08:37:05+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue the accepted Slice with one localized App boundary validator remediation; this is a narrowed correction, not another broad implementation attempt.",
+      "acceptanceSeam": "App rejects relative paths, primary/canonical identity mismatch, duplicate UUIDs, and Windows case/separator-equivalent canonical identities; focused tests and typecheck then full candidate check and fresh dual review.",
+      "dependencies": "Only the existing SavedProject model and RPC payload validators; no new dependency or product surface.",
+      "reviewBoundary": "The localized validator and its tests are inseparable from SP-07/SP-08 fail-closed behavior.",
+      "rollbackBoundary": "Remove the validator predicates and tests; no persistence migration or external cleanup.",
+      "contextBoundary": "Current Issue #84 root session and worktree; serial implementation.",
+      "consequence": "Malformed machine responses otherwise enter App draft/worktree behavior before daemon-side spawn revalidation.",
+      "evidence": "Second Spec review accepted candidate e104e878; second Standards review blocked only this App network-boundary validation gap and confirmed prior findings fixed.",
+      "contractFingerprint": "d24743eb5a449fa8e4798a482b94fd284b48e94d87d7be64d47acd09b8559603",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "296a578a-d666-43bd-bf02-57ba1e1b72ec",
+  "checkRunFingerprint": "ebe4a8233e246e119ed182266261a6d34a23f9c8e5ec9e27f2b8c330a38fe013",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+    "candidateFingerprint": "3d08b0febdad5fe247a3dbf6625cec55b9a7f40e805a7912128d2042f17e69d7"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      3
+    ],
+    "approval": "User explicitly accepted unrelated baseline gaps on 2026-09-01, requested uninterrupted YOLO continuation, and repeatedly said continue; App full-suite failures remain confined to the unchanged Studio static assertion/full-suite-only encryption timeout with isolated blob 9/9 pass, while Server retains the same two unchanged Windows local-file route failures."
+  },
+  "checkAcceptedFailuresFingerprint": "af79021873e56ec252f7aa28907f299b96e1fe60acc49f881dbd1e884c26d609",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+      "candidateFingerprint": "3d08b0febdad5fe247a3dbf6625cec55b9a7f40e805a7912128d2042f17e69d7"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Fresh Spec review accepted staged candidate 3d08b0febdad: SP-01-SP-10 satisfied; machine switch, restored old-CLI draft, and Rig fail-closed blockers closed; no in-contract blocking findings."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Fresh Standards review accepted staged candidate 3d08b0febdad: machine-bound snapshots, current CLI capability resolution, Rig fail-closed, atomic registry, race and corruption controls verified; no blocking findings."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish review, verify the complete staged delivery candidate, and create the canonical archive projection.",
+    "prearchiveUpdated": "2026-09-01T10:26:14+00:00",
+    "prearchiveActive": {
+      "feature": "saved-main-projects",
+      "phase": "finish",
+      "updated": "2026-09-01",
+      "next": "Complete finish review, verify the complete staged delivery candidate, and create the canonical archive projection.",
+      "branch / worktree": "issue/84-start-new-session-from-machine-saved-main-projec"
+    },
+    "prearchiveArchiveObject": "07b674a85e66a1cac5297c40f4a29bb5b5390577",
+    "fingerprint": "ef55dbefddcc34c6934b983f9f97f630b2be4e7f027775f2de846522948a4619"
+  },
+  "archivedAt": "2026-09-01T10:27:11+00:00",
+  "archiveDate": "2026-09-01",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #84 Saved Projects Slice implemented and verified: atomic machine-local registry, project-ID spawn resolution, registry-only New Session selection, shared start capability gates, machine-bound snapshots, and Rig fail-closed behavior; exact candidate 3d08b0febdad accepted by Spec and Standards.",
+  "archiveFollowUp": "After an authorized delivery commit, post the verification summary to GitHub Issue #84 and close it; future Rig Saved Project support requires Rig-owned authoritative resolution."
+}
