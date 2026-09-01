@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     draft: null as any,
     navigateToSession: vi.fn(),
     machineSpawnNewSession: vi.fn(),
+    resolveSavedProject: vi.fn(),
     sessionSetAgentModes: vi.fn(),
     refreshSessions: vi.fn(),
     sendMessage: vi.fn(),
@@ -65,6 +66,7 @@ vi.mock('@/sync/agentDefaults', () => ({
 
 vi.mock('@/sync/ops', () => ({
     machineSpawnNewSession: mocks.machineSpawnNewSession,
+    resolveSavedProject: mocks.resolveSavedProject,
     sessionSetAgentModes: mocks.sessionSetAgentModes,
     machineStopSession: mocks.machineStopSession,
     sessionKill: mocks.sessionKill,
@@ -201,6 +203,7 @@ function createDraft(overrides: Record<string, unknown> = {}) {
         input: ' Start the implementation ',
         attachments: [{ uri: 'file:///image.jpg' }],
         selectedMachineId: 'machine-1',
+        selectedProjectId: null,
         selectedPath: '~/project',
         agentType: 'codex',
         permissionMode: null,
@@ -227,6 +230,10 @@ describe('useStartSessionFromDraft', () => {
         vi.clearAllMocks();
         mocks.uuidCount = 0;
         mocks.validateBindingIntentAccount.mockResolvedValue(true);
+        mocks.resolveSavedProject.mockImplementation(async (_machineId: string, projectId: string) => ({
+            projectId,
+            primaryPath: '/resolved/project',
+        }));
         mocks.githubIssuesEnabled = true;
         completeSpawnRequest();
         mocks.defaultOverrides = {};
@@ -350,6 +357,61 @@ describe('useStartSessionFromDraft', () => {
         expect(mocks.alert).toHaveBeenCalledWith(
             'common.error',
             'githubIssues.bindingAccountChanged:myartings/happy#79',
+        );
+    });
+
+    it('starts a saved main project by identity while retaining its path only as display context', async () => {
+        mocks.draft = createDraft({
+            selectedProjectId: '11111111-1111-4111-8111-111111111111',
+            selectedPath: '/cached/primary',
+        });
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(true);
+
+        expect(mocks.machineSpawnNewSession).toHaveBeenCalledWith(expect.objectContaining({
+            machineId: 'machine-1',
+            directory: '/absolute//cached/primary',
+            projectId: '11111111-1111-4111-8111-111111111111',
+        }));
+        expect(mocks.resolveSavedProject).toHaveBeenCalledWith(
+            'machine-1',
+            '11111111-1111-4111-8111-111111111111',
+        );
+    });
+
+    it('fails closed instead of forwarding a CLI-owned project identity to Rig', async () => {
+        mocks.machines = [createRigMachine()];
+        mocks.draft = createDraft({
+            agentType: 'rig',
+            selectedProjectId: '11111111-1111-4111-8111-111111111111',
+            selectedPath: '/cached/rig-primary',
+        });
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.machineSpawnNewSession).not.toHaveBeenCalled();
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'Saved projects are unavailable for Happy Agent sessions',
+        );
+    });
+
+    it('fails closed when an older CLI cannot prove the restored project identity', async () => {
+        mocks.resolveSavedProject.mockRejectedValue(new Error('RPC method unavailable'));
+        mocks.draft = createDraft({
+            selectedProjectId: '11111111-1111-4111-8111-111111111111',
+            selectedPath: '/cached/primary',
+        });
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.machineSpawnNewSession).not.toHaveBeenCalled();
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'Saved projects are unavailable on this machine',
         );
     });
 

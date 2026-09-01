@@ -19,6 +19,12 @@ import {
 } from './rig';
 import type { ListWorkspaceProjectsResult } from '@/utils/workspaceProjectDiscovery';
 import type { HappyAgentSpawnTarget } from './happyAgentSpawn';
+import type {
+    AddSavedProjectResult,
+    ResolvedSavedProject,
+    SavedProjectRegistrySnapshot,
+} from '@/features/saved-projects/savedProjectModel';
+import { isResolvedSavedProject } from '@/features/saved-projects/savedProjectModel';
 
 export type { SessionAgentModesPatch };
 
@@ -171,6 +177,8 @@ export type SpawnSessionResult =
 export interface SpawnSessionOptions {
     machineId: string;
     directory: string;
+    /** Machine-local Saved Project identity. The daemon resolves it immediately before spawn. */
+    projectId?: string;
     approvedNewDirectoryCreation?: boolean;
     token?: string;
     agent?: 'codex' | 'claude' | 'gemini' | 'openclaw' | 'agy' | 'rig';
@@ -273,6 +281,38 @@ export type CreatedWorktreeSnapshot = WorktreeSnapshotInspection & {
 
 export const MAX_WORKSPACE_PROJECT_QUERY_LENGTH = 256;
 
+export async function listSavedProjects(machineId: string): Promise<SavedProjectRegistrySnapshot> {
+    return apiSocket.machineRPC<SavedProjectRegistrySnapshot, Record<string, never>>(
+        machineId,
+        'list-saved-projects',
+        {},
+    );
+}
+
+export async function addSavedProject(
+    machineId: string,
+    path: string,
+    expectedRevision?: number,
+): Promise<AddSavedProjectResult> {
+    return apiSocket.machineRPC<AddSavedProjectResult, { path: string; expectedRevision?: number }>(
+        machineId,
+        'add-saved-project',
+        { path, ...(expectedRevision === undefined ? {} : { expectedRevision }) },
+    );
+}
+
+export async function resolveSavedProject(machineId: string, projectId: string): Promise<ResolvedSavedProject> {
+    const value: unknown = await apiSocket.machineRPC<unknown, { projectId: string }>(
+        machineId,
+        'resolve-saved-project',
+        { projectId },
+    );
+    if (!isResolvedSavedProject(value) || value.projectId !== projectId) {
+        throw new Error('Saved project resolution response was invalid');
+    }
+    return value;
+}
+
 export async function listWorkspaceProjects(machineId: string, query = ''): Promise<ListWorkspaceProjectsResult> {
     const normalizedQuery = query.trim().slice(0, MAX_WORKSPACE_PROJECT_QUERY_LENGTH);
     return apiSocket.machineRPC<ListWorkspaceProjectsResult, { query?: string }>(
@@ -318,7 +358,7 @@ export interface ResumeSessionOptions {
  */
 export async function machineSpawnNewSession(options: SpawnSessionOptions): Promise<SpawnSessionResult> {
 
-    const { machineId, directory, approvedNewDirectoryCreation = false, token, agent, permissionMode, modelMode, effortLevel, clientRequestId, providerId, modelId, effort, happyAgentTarget, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat } = options;
+    const { machineId, directory, projectId, approvedNewDirectoryCreation = false, token, agent, permissionMode, modelMode, effortLevel, clientRequestId, providerId, modelId, effort, happyAgentTarget, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat } = options;
 
     try {
         if (agent === 'rig' && !clientRequestId) {
@@ -330,6 +370,7 @@ export async function machineSpawnNewSession(options: SpawnSessionOptions): Prom
         type DirectorySpawnRequest = {
             type: 'spawn-in-directory'
             directory: string
+            projectId?: string
             approvedNewDirectoryCreation?: boolean,
             token?: string,
             agent?: 'codex' | 'claude' | 'gemini' | 'openclaw' | 'agy' | 'rig',
@@ -377,6 +418,7 @@ export async function machineSpawnNewSession(options: SpawnSessionOptions): Prom
                 type: 'spawn-in-directory',
                 agent: 'rig',
                 directory,
+                ...(projectId ? { projectId } : {}),
                 approvedNewDirectoryCreation,
                 ...(clientRequestId ? { clientRequestId } : {}),
                 ...(permissionMode ? { permissionMode } : {}),
@@ -384,7 +426,7 @@ export async function machineSpawnNewSession(options: SpawnSessionOptions): Prom
                 ...(modelId ? { modelId } : {}),
                 ...((effort ?? effortLevel) ? { effort: effort ?? effortLevel } : {}),
             }
-            : { type: 'spawn-in-directory', directory, approvedNewDirectoryCreation, token, agent, permissionMode, modelMode, effortLevel, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat };
+            : { type: 'spawn-in-directory', directory, projectId, approvedNewDirectoryCreation, token, agent, permissionMode, modelMode, effortLevel, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat };
         const result = await apiSocket.machineRPC<SpawnSessionResult, SpawnRequest>(
             machineId,
             'spawn-happy-session',

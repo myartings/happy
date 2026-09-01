@@ -38,20 +38,15 @@ import type { NewSessionAgentType } from '@/sync/persistence';
 import { sync } from '@/sync/sync';
 import { isMachineOnline } from '@/utils/machineUtils';
 import {
-    MAX_WORKSPACE_PROJECT_QUERY_LENGTH,
-    listWorkspaceProjects as requestWorkspaceProjects,
-    machineSpawnNewSession,
-    machineStopSession,
-    sessionArchive,
-    sessionKill,
-    sessionSetAgentModes,
-    type SessionAgentModesPatch,
+    addSavedProject,
+    listSavedProjects,
 } from '@/sync/ops';
 import { createWorktree, listWorktrees } from '@/utils/worktree';
 import { resolveAbsolutePath } from '@/utils/pathUtils';
 import { formatPathRelativeToHome, formatLastSeen } from '@/utils/sessionUtils';
 import { useNavigateToSession } from '@/hooks/useNavigateToSession';
 import { useNewSessionDraft } from '@/hooks/useNewSessionDraft';
+import { useStartSessionFromDraft } from '@/hooks/useStartSessionFromDraft';
 import { useShallow } from 'zustand/react/shallow';
 import type { MultiTextInputHandle } from '@/components/MultiTextInput';
 import { Modal } from '@/modal';
@@ -87,17 +82,7 @@ import {
     resolvePickerToggleAction,
 } from '@/utils/newSessionPickerInteraction';
 import { getCodeAgentDefaults, resolveAgentDefaultConfig } from '@/sync/agentDefaults';
-import { delay } from '@/utils/time';
-import {
-    buildRigSpawnConfiguration,
-    getRigMachineSessionCreation,
-    resolveRigPendingRetryDelayMs,
-} from '@/sync/rigSessionCreation';
-import {
-    buildSpawnRequestSignature,
-    completeSpawnRequest,
-    resolveSpawnRequestId,
-} from '@/sync/spawnRequestId';
+import { getRigMachineSessionCreation } from '@/sync/rigSessionCreation';
 import { resolvePermissionStyle, resolveSelectedOption } from '@/utils/newSessionModeSelection';
 import { resolveHappyAgentSpawnTarget } from '@/sync/happyAgentSpawn';
 import { MobileGlassSurface } from '@/components/MobileGlass';
@@ -111,12 +96,12 @@ import {
     LocalBlurHalo,
 } from '@/components/AnimatedOverlay';
 import {
-    RECENT_PROJECT_PREVIEW_LIMIT,
-    WorkspaceProjectDiscoveryLoader,
-    buildRecentProjectPreview,
-    buildWorkspaceProjectSections,
-    type ListWorkspaceProjectsResult,
-} from '@/utils/workspaceProjectDiscovery';
+    SavedProjectAddGuard,
+    SavedProjectRegistryLoader,
+    filterSavedProjects,
+    registryForMachine,
+    type SavedProjectRegistryBinding,
+} from '@/features/saved-projects/savedProjectModel';
 import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
 import { projectPanelWidth } from '@/features/studio-panel-resize/studioPanelResizePolicy';
 import { resolveCodexFirstHeaderOwnership } from '@/features/codex-first-shell/codexFirstHeaderOwnership';
@@ -162,7 +147,6 @@ const NATIVE_PICKER_TOP: Record<PickerType, number> = {
     worktree: 144,
 };
 const NATIVE_PICKER_ESTIMATED_HEIGHT = 264;
-const MAX_RIG_PENDING_RESULTS = 3;
 const NATIVE_COMPOSER_RESERVED_HEIGHT = 98;
 
 function findPreferredModeIndex<T extends { key: string }>(
@@ -188,7 +172,8 @@ const COMPOSER_INPUT_MAX_HEIGHT = Platform.OS === 'web' ? 480 : 240;
 const COMPACT_COMPOSER_INPUT_MAX_HEIGHT = 120;
 const COMPOSER_SEND_BUTTON_SIZE = 32;
 const WORKTREE_PATH_DEBOUNCE_MS = 300;
-const WORKSPACE_PROJECT_SEARCH_DEBOUNCE_MS = 250;
+const SAVED_PROJECT_SEARCH_DEBOUNCE_MS = 250;
+const MAX_SAVED_PROJECT_QUERY_LENGTH = 256;
 
 function trimPathInput(path: string | null | undefined): string {
     return path?.trim() ?? '';
@@ -520,28 +505,30 @@ function ComposerSettingsPickerContent({
 
 function PathPickerContent({
     title,
-    recentItems,
     workspaceItems,
     discoveryStatus,
-    discoveryTruncated,
     searchQuery,
     onChangeSearchQuery,
     value,
     homeDir,
     onChangeValue,
+    onSelectItem,
+    onAddPath,
+    isAddingPath,
     onDone,
     embedded = false,
 }: {
     title: string;
-    recentItems: PickerItem[];
     workspaceItems: PickerItem[];
     discoveryStatus: 'idle' | 'loading' | 'ready' | 'unavailable';
-    discoveryTruncated: boolean;
     searchQuery: string;
     onChangeSearchQuery: (value: string) => void;
     value: string | null;
     homeDir?: string;
     onChangeValue: (value: string) => void;
+    onSelectItem?: (item: PickerItem) => void;
+    onAddPath?: (path: string) => void | Promise<void>;
+    isAddingPath?: boolean;
     onDone?: () => void;
     embedded?: boolean;
 }) {
@@ -549,12 +536,7 @@ function PathPickerContent({
     const inputRef = React.useRef<TextInput>(null);
     const currentValue = value ?? '';
     const [selection, setSelection] = React.useState<{ start: number; end: number } | undefined>(undefined);
-    const [showAllRecent, setShowAllRecent] = React.useState(false);
     const hasSearchQuery = searchQuery.trim().length > 0;
-    const recentPreview = React.useMemo(
-        () => buildRecentProjectPreview(recentItems, showAllRecent),
-        [recentItems, showAllRecent],
-    );
 
     React.useEffect(() => {
         // Embedded mobile pickers are positioned next to their trigger. Opening
@@ -577,24 +559,25 @@ function PathPickerContent({
             return null;
         }
 
-        const match = [...recentItems, ...workspaceItems].find((item) =>
-            normalizePathForComparison(item.key, homeDir) === normalizedValue,
+        const match = workspaceItems.find((item) =>
+            normalizePathForComparison(item.selectionValue ?? item.key, homeDir) === normalizedValue,
         );
 
         return match?.key ?? null;
-    }, [currentValue, homeDir, recentItems, workspaceItems]);
+    }, [currentValue, homeDir, workspaceItems]);
 
     const handleSuggestionPress = React.useCallback((item: PickerItem) => {
         const nextValue = item.selectionValue ?? item.label;
         const nextSelection = { start: nextValue.length, end: nextValue.length };
 
         onChangeValue(nextValue);
+        onSelectItem?.(item);
         setSelection(nextSelection);
 
         setTimeout(() => {
             inputRef.current?.focus();
         }, 0);
-    }, [onChangeValue]);
+    }, [onChangeValue, onSelectItem]);
 
     const isCustomPath = currentValue.trim().length > 0 && matchedItemKey === null;
     const handleSelectionChange = React.useCallback((event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
@@ -671,16 +654,32 @@ function PathPickerContent({
                         onSubmitEditing={onDone}
                     />
                 </View>
+                {isCustomPath && onAddPath && (
+                    <BubblePressable
+                        onPress={() => { void onAddPath(currentValue.trim()); }}
+                        disabled={isAddingPath}
+                        accessibilityRole="button"
+                        accessibilityLabel="Add saved project"
+                        style={(pressedState) => [
+                            pickerStyles.doneButtonPressable,
+                            { opacity: isAddingPath ? 0.5 : pressedState.pressed ? 0.82 : 1 },
+                        ]}
+                    >
+                        {isAddingPath
+                            ? <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+                            : <Text style={{ color: theme.colors.header.tint, fontWeight: '600' }}>Add</Text>}
+                    </BubblePressable>
+                )}
             </View>
 
             {isCustomPath && (
                 <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
-                    using custom path above
+                    confirm Add to save this existing directory
                 </Text>
             )}
 
             <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Projects
+                Saved Projects
             </Text>
 
             <View style={[pickerStyles.pathInputRow, { borderColor: theme.colors.divider }]}>
@@ -694,7 +693,7 @@ function PathPickerContent({
                         style={[pickerStyles.pathTextInput, { color: theme.colors.text }]}
                         autoCapitalize="none"
                         autoCorrect={false}
-                        maxLength={MAX_WORKSPACE_PROJECT_QUERY_LENGTH}
+                        maxLength={MAX_SAVED_PROJECT_QUERY_LENGTH}
                     />
                 </View>
             </View>
@@ -703,14 +702,14 @@ function PathPickerContent({
                 <View style={pickerStyles.discoveryStatusRow}>
                     <ActivityIndicator size="small" color={theme.colors.textSecondary} />
                     <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
-                        scanning workspace projects…
+                        loading saved projects…
                     </Text>
                 </View>
             )}
 
             {discoveryStatus === 'unavailable' && (
                 <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
-                    workspace projects unavailable; recent and custom paths still work
+                    saved projects unavailable on this machine
                 </Text>
             )}
 
@@ -720,80 +719,6 @@ function PathPickerContent({
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator
             >
-                <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                    Recent
-                </Text>
-
-                {recentPreview.visibleItems.map((item) => {
-                    const isSelected = item.key === matchedItemKey;
-
-                    return (
-                        <BubblePressable
-                            key={item.key}
-                            scaleFeedback={false}
-                            style={(p) => [
-                                pickerStyles.option,
-                                embedded && pickerStyles.embeddedOption,
-                                p.pressed && pickerStyles.optionPressed,
-                            ]}
-                            onPress={() => handleSuggestionPress(item)}
-                        >
-                            <Ionicons
-                                name="folder-outline"
-                                size={16}
-                                color={theme.colors.textSecondary}
-                            />
-                            <View style={{ flex: 1, minWidth: 0 }}>
-                                <Text style={[pickerStyles.optionText, { color: theme.colors.text }]} numberOfLines={1}>
-                                    {item.label}
-                                </Text>
-                            </View>
-                            {isSelected && (
-                                <Ionicons
-                                    name="checkmark-circle"
-                                    size={18}
-                                    color={theme.colors.text}
-                                />
-                            )}
-                        </BubblePressable>
-                    );
-                })}
-
-                {!hasSearchQuery && recentItems.length === 0 && (
-                    <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
-                        no recent projects yet
-                    </Text>
-                )}
-
-                {(recentPreview.hiddenCount > 0 || showAllRecent)
-                    && recentItems.length > RECENT_PROJECT_PREVIEW_LIMIT && (
-                    <BubblePressable
-                        scaleFeedback={false}
-                        style={(p) => [
-                            pickerStyles.recentDisclosure,
-                            p.pressed && pickerStyles.optionPressed,
-                        ]}
-                        onPress={() => setShowAllRecent((value) => !value)}
-                    >
-                        <Text style={[pickerStyles.recentDisclosureText, { color: theme.colors.textSecondary }]}>
-                            {showAllRecent
-                                ? 'Show fewer recent projects'
-                                : `View all recent projects (${recentItems.length})`}
-                        </Text>
-                        <Ionicons
-                            name={showAllRecent ? 'chevron-up' : 'chevron-down'}
-                            size={15}
-                            color={theme.colors.textSecondary}
-                        />
-                    </BubblePressable>
-                )}
-
-                {discoveryStatus === 'ready' && (
-                    <Text style={[pickerStyles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                        Workspace Results
-                    </Text>
-                )}
-
                 {discoveryStatus === 'ready' && workspaceItems.map((item) => {
                     const isSelected = item.key === matchedItemKey;
                     return (
@@ -825,17 +750,12 @@ function PathPickerContent({
 
                 {discoveryStatus === 'ready'
                     && workspaceItems.length === 0
-                    && (!hasSearchQuery || recentItems.length === 0) && (
+                    && (
                     <Text style={[pickerStyles.emptyText, { color: theme.colors.textSecondary }]}>
-                        {hasSearchQuery ? 'no matching projects' : 'no workspace projects found'}
+                        {hasSearchQuery ? 'no matching saved projects' : 'no saved projects yet'}
                     </Text>
                 )}
 
-                {discoveryStatus === 'ready' && discoveryTruncated && (
-                    <Text style={[pickerStyles.pathMetaText, { color: theme.colors.textSecondary }]}>
-                        showing the first matching projects; refine your search if needed
-                    </Text>
-                )}
             </ScrollView>
         </View>
     );
@@ -932,6 +852,8 @@ function NewSessionScreen() {
         renameMachineId: s.renameMachineId,
         selectedPath: s.selectedPath,
         setPath: s.setPath,
+        selectedProjectId: s.selectedProjectId,
+        selectProject: s.selectProject,
         agentType: s.agentType,
         setAgentType: s.setAgentType,
         permissionMode: s.permissionMode,
@@ -952,6 +874,8 @@ function NewSessionScreen() {
     const renameSelectedMachineId = draft.renameMachineId;
     const selectedPath = draft.selectedPath;
     const setSelectedPath = draft.setPath;
+    const selectedSavedProjectId = draft.selectedProjectId;
+    const selectSavedProject = draft.selectProject;
     const [worktreeKey, setWorktreeKey] = React.useState<string>(
         draft.worktreeKey ?? (draft.sessionType === 'worktree' ? '__new__' : '__none__')
     );
@@ -964,7 +888,7 @@ function NewSessionScreen() {
     const [permissionIndex, setPermissionIndex] = React.useState(0);
     const [modelIndex, setModelIndex] = React.useState(0);
     const [effortIndex, setEffortIndex] = React.useState(0);
-    const [isSpawning, setIsSpawning] = React.useState(false);
+    const { isStarting, startSession, cancelStart } = useStartSessionFromDraft();
     const [activePicker, setActivePicker] = React.useState<PickerType | null>(null);
     const [composerSettingsPage, setComposerSettingsPage] = React.useState<ComposerSettingPickerType | null>(null);
     const [mobileComposerHeight, setMobileComposerHeight] = React.useState(NATIVE_COMPOSER_RESERVED_HEIGHT);
@@ -1066,35 +990,32 @@ function NewSessionScreen() {
         }),
         [placeMachineIds, selectedPath, sessionList],
     );
-    const selectedProjectId = React.useMemo(
+    const selectedSessionProjectId = React.useMemo(
         () => places.find((place) => place.path === selectedPath)?.projectId ?? null,
         [places, selectedPath],
     );
     const agentWorkspaces = React.useMemo(
         () => collectSessionWorkspaces({
             machineIds: placeMachineIds,
-            projectId: selectedProjectId,
+            projectId: selectedSessionProjectId,
             sessions: sessionList,
         }),
-        [placeMachineIds, selectedProjectId, sessionList],
+        [placeMachineIds, selectedSessionProjectId, sessionList],
     );
 
-    // Workspace discovery is a Happy CLI RPC. A computer choice can name the sibling Happy Agent
-    // machine, so always address the actual CLI daemon when one is present.
+    // Saved Projects live on the Happy CLI daemon. A paired Happy Agent choice therefore still
+    // addresses its CLI sibling for registry operations.
     const discoveryMachine = selectedChoice?.happyMachine ?? selectedMachine;
-    const recentProjects = React.useMemo(
-        () => places.map((place) => ({
-            path: place.path,
-            ...(place.projectId ? { name: place.name } : {}),
-        })),
-        [places],
-    );
-
-    const discoveryLoader = React.useMemo(() => new WorkspaceProjectDiscoveryLoader({
-        request: requestWorkspaceProjects,
+    const discoveryMachineId = discoveryMachine?.id ?? null;
+    const discoveryLoader = React.useMemo(() => new SavedProjectRegistryLoader({
+        request: listSavedProjects,
     }), []);
+    const addGuard = React.useMemo(() => new SavedProjectAddGuard(), []);
+    addGuard.syncMachine(discoveryMachineId);
     const [discoveryStatus, setDiscoveryStatus] = React.useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
-    const [discoveryResult, setDiscoveryResult] = React.useState<ListWorkspaceProjectsResult | null>(null);
+    const [savedRegistryBinding, setSavedRegistryBinding] = React.useState<SavedProjectRegistryBinding | null>(null);
+    const savedRegistry = registryForMachine(savedRegistryBinding, discoveryMachineId);
+    const [isAddingSavedProject, setIsAddingSavedProject] = React.useState(false);
     const [workspaceSearchQuery, setWorkspaceSearchQuery] = React.useState('');
     const [debouncedWorkspaceSearchQuery, setDebouncedWorkspaceSearchQuery] = React.useState('');
 
@@ -1104,29 +1025,30 @@ function NewSessionScreen() {
     }, [selectedMachineId]);
 
     React.useEffect(() => {
-        const normalizedQuery = workspaceSearchQuery.trim().slice(0, MAX_WORKSPACE_PROJECT_QUERY_LENGTH);
+        const normalizedQuery = workspaceSearchQuery.trim().slice(0, MAX_SAVED_PROJECT_QUERY_LENGTH);
         const timeout = setTimeout(() => {
             setDebouncedWorkspaceSearchQuery(normalizedQuery);
-        }, WORKSPACE_PROJECT_SEARCH_DEBOUNCE_MS);
+        }, SAVED_PROJECT_SEARCH_DEBOUNCE_MS);
 
         return () => clearTimeout(timeout);
     }, [workspaceSearchQuery]);
 
     React.useEffect(() => {
-        if (activePicker !== 'path' || !discoveryMachine || !isMachineOnline(discoveryMachine)) {
+        const requiresSavedProjectCapability = activePicker === 'path' || selectedSavedProjectId !== null;
+        if (!requiresSavedProjectCapability || !discoveryMachine || !isMachineOnline(discoveryMachine)) {
             discoveryLoader.reset();
             setDiscoveryStatus('idle');
-            setDiscoveryResult(null);
+            setSavedRegistryBinding(null);
             return;
         }
 
         let disposed = false;
         setDiscoveryStatus('loading');
-        setDiscoveryResult(null);
-        void discoveryLoader.load(discoveryMachine.id, debouncedWorkspaceSearchQuery).then((outcome) => {
+        setSavedRegistryBinding(null);
+        void discoveryLoader.load(discoveryMachine.id).then((outcome) => {
             if (disposed || !outcome) return;
             if (outcome.status === 'ready') {
-                setDiscoveryResult(outcome.result);
+                setSavedRegistryBinding({ machineId: discoveryMachine.id, registry: outcome.registry });
                 setDiscoveryStatus('ready');
             } else {
                 setDiscoveryStatus('unavailable');
@@ -1137,49 +1059,63 @@ function NewSessionScreen() {
             disposed = true;
             discoveryLoader.reset();
         };
-    }, [activePicker, debouncedWorkspaceSearchQuery, discoveryLoader, discoveryMachine]);
+    }, [activePicker, discoveryLoader, discoveryMachine, selectedSavedProjectId]);
 
-    const projectSections = React.useMemo(() => buildWorkspaceProjectSections({
-        recentProjects,
-        discoveredProjects: discoveryResult?.projects ?? [],
-        homeDir: selectedHomeDir,
-        platform: discoveryMachine?.metadata?.platform === 'win32' ? 'win32' : 'unix',
-        query: workspaceSearchQuery,
-    }), [discoveryMachine?.metadata?.platform, discoveryResult?.projects, recentProjects, selectedHomeDir, workspaceSearchQuery]);
+    const savedProjects = React.useMemo(
+        () => filterSavedProjects(savedRegistry?.projects ?? [], debouncedWorkspaceSearchQuery),
+        [debouncedWorkspaceSearchQuery, savedRegistry?.projects],
+    );
+    const workspacePathItems = React.useMemo<PickerItem[]>(() => savedProjects.map((project) => ({
+        key: project.id,
+        label: project.name,
+        subtitle: formatPathRelativeToHome(project.primaryPath, selectedHomeDir),
+        selectionValue: project.primaryPath,
+    })), [savedProjects, selectedHomeDir]);
 
-    const recentPathItems = React.useMemo<PickerItem[]>(() => {
-        const placesByPath = new Map(places.map((place) => [place.path, place]));
+    const handleSelectSavedProject = React.useCallback((item: PickerItem) => {
+        const project = savedRegistry?.projects.find((candidate) => candidate.id === item.key);
+        if (project) selectSavedProject(project);
+    }, [savedRegistry?.projects, selectSavedProject]);
 
-        return projectSections.recent.map((item) => {
-            const place = placesByPath.get(item.path);
-            return {
-                key: place?.key ?? item.path,
-                label: place?.projectId
-                    ? place.name
-                    : formatPathRelativeToHome(item.path, selectedHomeDir),
-                subtitle: place?.projectId
-                    ? formatPathRelativeToHome(item.path, selectedHomeDir)
-                    : undefined,
-                selectionValue: item.path,
-            };
-        });
-    }, [places, projectSections.recent, selectedHomeDir]);
-
-    const workspacePathItems = React.useMemo<PickerItem[]>(() => projectSections.workspaceProjects.map((item) => ({
-        key: item.path,
-        label: item.name,
-        subtitle: item.relativePath,
-        selectionValue: item.path,
-    })), [projectSections.workspaceProjects]);
-
-    // Auto-select first path when machine changes
-    React.useEffect(() => {
-        if (!selectedChoice || selectedPath !== null) {
+    const handleAddSavedProject = React.useCallback(async (path: string) => {
+        if (!discoveryMachine || !isMachineOnline(discoveryMachine) || !savedRegistry) {
+            Modal.alert(t('common.error'), 'Saved projects are unavailable on this machine');
             return;
         }
+        const attempt = addGuard.begin(discoveryMachine.id);
+        setIsAddingSavedProject(true);
+        try {
+            const response: unknown = await addSavedProject(
+                discoveryMachine.id,
+                path,
+                savedRegistry.revision,
+            );
+            const outcome = addGuard.finish(attempt, response);
+            if (outcome.status === 'stale') return;
+            if (outcome.status === 'invalid') {
+                Modal.alert(t('common.error'), 'Saved project response was invalid');
+                return;
+            }
+            const result = outcome.result;
+            setSavedRegistryBinding({ machineId: discoveryMachine.id, registry: result.registry });
+            selectSavedProject(result.project);
+        } catch (error) {
+            Modal.alert(
+                t('common.error'),
+                error instanceof Error ? error.message : 'Failed to add saved project',
+            );
+        } finally {
+            setIsAddingSavedProject(false);
+        }
+    }, [addGuard, discoveryMachine, savedRegistry, selectSavedProject]);
 
-        setSelectedPath(places[0]?.path ?? '~');
-    }, [places, selectedChoice, selectedPath, setSelectedPath]);
+    // A machine with saved projects starts from a durable identity, never from a Recent path.
+    React.useEffect(() => {
+        if (!selectedChoice || selectedPath !== null || savedProjects.length === 0) {
+            return;
+        }
+        selectSavedProject(savedProjects[0]);
+    }, [savedProjects, selectSavedProject, selectedChoice, selectedPath]);
 
     const resolvedSelectedPath = React.useMemo(() => {
         return normalizePathForComparison(selectedPath, selectedHomeDir);
@@ -1202,7 +1138,7 @@ function NewSessionScreen() {
 
     // Existing Happy Agent workspaces are named places in the same project. Happy Agent creates
     // new ones through its own catalog; Git worktree RPCs remain for ordinary code-agent projects.
-    const picksWorkspaces = selectedProjectId !== null;
+    const picksWorkspaces = selectedSessionProjectId !== null;
     const createsNativeHappyAgentWorkspace = selectedAgent === 'rig'
         && picksWorkspaces
         && rigCreation !== null;
@@ -1638,240 +1574,20 @@ function NewSessionScreen() {
         setComposerSettingsPage(null);
     }, [composerSettingsPage, draft.setEffortLevel, draft.setModelMode, draft.setPermissionMode, effortLevels, modelModes, permissionModes]);
 
-    // Spawn session handler
-    const handleSend = React.useCallback(async (
-        approvedNewDirectoryCreation: boolean = false,
-    ) => {
-        const choice = findMachineChoice(collectMachineChoices(allMachines), selectedMachineId);
-        if (!choice) {
-            Modal.alert(t('common.error'), 'Please select a machine');
-            return;
-        }
-        // Resolve again at the moment of use: the draft can outlive a daemon restart, a machine
-        // pairing update, or a change in the CLI catalog.
-        const agentType = resolveChoiceAgent(choice, selectedAgent);
-        const machine = resolveAgentMachine(choice, agentType);
-        if (!machine) {
-            Modal.alert(
-                t('common.error'),
-                agentType === 'rig'
-                    ? 'Happy Agent is not running on this computer'
-                    : 'This computer has no Happy CLI daemon to start that agent',
-            );
-            return;
-        }
-        if (!isMachineOnline(machine)) {
-            Modal.alert(t('common.error'), 'Machine is offline');
-            return;
-        }
-        const spawnRigCreation = agentType === 'rig'
-            ? getRigMachineSessionCreation(machine.metadata)
-            : null;
-        if (agentType === 'rig' && !spawnRigCreation) {
-            Modal.alert(t('common.error'), 'This machine cannot start Happy agent sessions');
-            return;
-        }
-        const agentSupportsWorktree = spawnRigCreation?.supportsWorktrees
-            ?? (agentType === 'rig' ? false : getSupportsWorktree(agentType));
-        const requestedWorktree = canPickWorktree ? worktreeKey : '__none__';
-        let happyAgentTarget: ReturnType<typeof resolveHappyAgentSpawnTarget>;
-        try {
-            happyAgentTarget = spawnRigCreation
-                ? resolveHappyAgentSpawnTarget({
-                    projectId: selectedProjectId,
-                    workspaceSelection: requestedWorktree,
-                    workspaces: agentWorkspaces,
-                })
-                : null;
-        } catch (error) {
-            Modal.alert(
-                t('common.error'),
-                error instanceof Error ? error.message : 'The selected workspace is unavailable',
-            );
-            return;
-        }
-        const creationMachine = happyAgentTarget
-            ? null
-            : resolveWorktreeCreationMachine(
-                choice,
-                agentType,
-                agentSupportsWorktree,
-            );
-        const canCreateSelectedWorktree = happyAgentTarget?.kind === 'newWorkspace'
-            || creationMachine !== null;
-        const worktreeSelection = !canCreateSelectedWorktree && requestedWorktree === '__new__'
-            ? '__none__'
-            : requestedWorktree;
-
-        setIsSpawning(true);
-        try {
-            const pathToUse = trimPathInput(selectedPath) || '~';
-            const absolutePath = resolveAbsolutePath(pathToUse, machine.metadata?.homeDir);
-            const permissionKey = currentPermission?.key ?? null;
-            // Same key for every retry of this request (directory approval,
-            // pending polling, or the user pressing Start again) so Rig dedupes
-            // instead of spawning a second session. Built from what the user
-            // picked, not from the resolved worktree path, so retrying a "new
-            // worktree" spawn still lands on the session Rig already created.
-            const clientRequestId = resolveSpawnRequestId(buildSpawnRequestSignature({
-                machineId: machine.id,
-                agent: agentType,
-                directory: pathToUse,
-                worktree: worktreeSelection,
-                modelKey: currentModelKey,
-                permissionMode: permissionKey,
-                effort: currentEffort?.key ?? null,
-            }));
-
-            // Handle worktree selection
-            let spawnDirectory = absolutePath;
-            if (worktreeSelection === '__new__' && !happyAgentTarget) {
-                if (!creationMachine) {
-                    Modal.alert(t('common.error'), picksWorkspaces
-                        ? 'This computer cannot create a new workspace'
-                        : 'This computer cannot create a new worktree');
-                    return;
-                }
-                const worktreeResult = await createWorktree(creationMachine.id, absolutePath);
-                if (!worktreeResult.success) {
-                    Modal.alert(t('common.error'), worktreeResult.error || 'Failed to create worktree');
-                    return;
-                }
-                spawnDirectory = worktreeResult.worktreePath;
-            } else if (worktreeSelection !== '__none__' && worktreeSelection !== '__new__') {
-                // Existing worktree — use its path directly
-                spawnDirectory = worktreeSelection;
-            }
-
-            const spawnOptions = spawnRigCreation
-                ? {
-                    machineId: machine.id,
-                    ...buildRigSpawnConfiguration(machine.metadata, {
-                        directory: spawnDirectory,
-                        clientRequestId,
-                        approvedNewDirectoryCreation,
-                        modelKey: currentModelKey,
-                        permissionMode: permissionKey,
-                        effort: currentEffort?.key,
-                    }),
-                    ...(happyAgentTarget ? { happyAgentTarget } : {}),
-                }
-                : {
-                    machineId: machine.id,
-                    directory: spawnDirectory,
-                    approvedNewDirectoryCreation,
-                    agent: agentType,
-                    // For codex, 'default' is a concrete ask-first mode (the codex
-                    // launch default is yolo) — it must be forwarded. For other
-                    // agents 'default' is the ambient no-override value.
-                    permissionMode: permissionKey && (agentType === 'codex' || permissionKey !== 'default')
-                        ? permissionKey
-                        : undefined,
-                    modelMode: currentModelKey !== 'default' ? currentModelKey : undefined,
-                    effortLevel: currentEffort?.key,
-                };
-            let result = await machineSpawnNewSession(spawnOptions);
-            let pendingResults = 0;
-            while (result.type === 'pending' && pendingResults < MAX_RIG_PENDING_RESULTS) {
-                pendingResults += 1;
-                await delay(resolveRigPendingRetryDelayMs(
-                    result.retryAfterMs,
-                    spawnRigCreation?.pendingRetryAfterMs,
-                ));
-                if (!isMountedRef.current) return;
-                result = await machineSpawnNewSession(spawnOptions);
-            }
-            if (!isMountedRef.current) return;
-
-            switch (result.type) {
-                case 'success':
-                    // The idempotency key did its job; the next Start is a new session.
-                    completeSpawnRequest();
-                    await sync.refreshSessions();
-
-                    const currentEffortKey = currentEffort?.key ?? null;
-                    // Pin the actual launch selection to this session. A
-                    // later settings/default change must not silently rewrite
-                    // an existing session's permission, model, or effort.
-                    if (!spawnRigCreation) {
-                        sessionSetAgentModes(result.sessionId, {
-                            permissionMode: permissionKey,
-                            modelMode: currentModelKey,
-                            effortLevel: currentEffortKey,
-                        });
-                    }
-
-                    // Pull live prompt and clear it. We read via getState() so this
-                    // callback doesn't have to subscribe to `input` (which would
-                    // re-render the screen on every keystroke).
-                    const draftState = useNewSessionDraft.getState();
-                    const trimmedPrompt = draftState.input.trim();
-                    const attachments = draftState.attachments;
-
-                    // Send initial message if provided
-                    if (trimmedPrompt || attachments.length > 0) {
-                        const discardSession = async () => {
-                            const stopped = await machineStopSession(machine.id, result.sessionId);
-                            if (!stopped.success) {
-                                const killed = await sessionKill(result.sessionId);
-                                if (!killed.success) {
-                                    await sessionArchive(result.sessionId);
-                                }
-                            }
-                            await sync.refreshSessions().catch(() => { /* the list catches up on its own */ });
-                        };
-                        let queued: boolean;
-                        try {
-                            queued = await sync.sendMessage(result.sessionId, trimmedPrompt, { source: 'new_session', attachments });
-                        } catch (error) {
-                            await discardSession();
-                            throw error;
-                        }
-                        if (!queued) {
-                            await discardSession();
-                            return;
-                        }
-                    }
-
-                    draftState.setInput('');
-                    draftState.setAttachments([]);
-                    router.back();
-                    navigateToSession(result.sessionId);
-                    break;
-                case 'requestToApproveDirectoryCreation': {
-                    const approved = await Modal.confirm(
-                        'Create Directory?',
-                        `The directory '${result.directory}' does not exist. Would you like to create it?`,
-                        { cancelText: t('common.cancel'), confirmText: t('common.create') },
-                    );
-                    if (approved) {
-                        // The request is unchanged, so the retry resolves to the
-                        // same clientRequestId.
-                        await handleSend(true);
-                    }
-                    break;
-                }
-                case 'error':
-                    Modal.alert(t('common.error'), result.errorMessage);
-                    break;
-                case 'pending':
-                    Modal.alert(
-                        t('common.error'),
-                        'Rig created the session, but it is still syncing with Happy. It should appear shortly.',
-                    );
-                    break;
-            }
-        } catch (error) {
-            const errorMessage = error instanceof Error
-                ? error.message
-                : 'Failed to start session';
-            Modal.alert(t('common.error'), errorMessage);
-        } finally {
-            if (isMountedRef.current) setIsSpawning(false);
-        }
-    }, [agentWorkspaces, allMachines, canPickWorktree, currentEffort?.key, currentModelKey, currentPermission?.key, effectiveAgentDefaults.effortLevel, effectiveAgentDefaults.modelMode, effectiveAgentDefaults.permissionMode, navigateToSession, picksWorkspaces, router, selectedAgent, selectedMachineId, selectedPath, selectedProjectId, worktreeKey]);
-
-    const canSend = selectedMachineId && selectedMachine && isMachineOnline(selectedMachine) && !isSpawning;
+    // One start/cancel authority for desktop, mobile, auto-submit, and Home drafts.
+    const handleSend = React.useCallback(async () => {
+        await startSession();
+    }, [startSession]);
+    const canSend = !!(
+        selectedMachineId
+        && selectedMachine
+        && isMachineOnline(selectedMachine)
+        && selectedSavedProjectId
+        && selectedAgent !== 'rig'
+        && discoveryStatus === 'ready'
+        && savedRegistry?.projects.some((project) => project.id === selectedSavedProjectId)
+        && !isStarting
+    );
     React.useEffect(() => {
         if (
             autoSubmit !== '1'
@@ -1951,15 +1667,16 @@ function NewSessionScreen() {
         const content = type === 'path' ? (
             <PathPickerContent
                 title="Project"
-                recentItems={recentPathItems}
                 workspaceItems={workspacePathItems}
                 discoveryStatus={discoveryStatus}
-                discoveryTruncated={discoveryResult?.truncated ?? false}
                 searchQuery={workspaceSearchQuery}
                 onChangeSearchQuery={setWorkspaceSearchQuery}
                 value={selectedPath}
                 homeDir={selectedHomeDir}
                 onChangeValue={setSelectedPath}
+                onSelectItem={handleSelectSavedProject}
+                onAddPath={handleAddSavedProject}
+                isAddingPath={isAddingSavedProject}
                 onDone={closePicker}
                 embedded={sidebarLayout.showSidebar}
             />
@@ -1985,10 +1702,11 @@ function NewSessionScreen() {
         activePicker,
         closePicker,
         handlePickerSelect,
-        discoveryResult?.truncated,
         discoveryStatus,
+        handleAddSavedProject,
+        handleSelectSavedProject,
+        isAddingSavedProject,
         pickerData,
-        recentPathItems,
         selectedHomeDir,
         selectedPath,
         setSelectedPath,
@@ -2020,15 +1738,16 @@ function NewSessionScreen() {
     ) : activePicker === 'path' ? (
         <PathPickerContent
             title="Project"
-            recentItems={recentPathItems}
             workspaceItems={workspacePathItems}
             discoveryStatus={discoveryStatus}
-            discoveryTruncated={discoveryResult?.truncated ?? false}
             searchQuery={workspaceSearchQuery}
             onChangeSearchQuery={setWorkspaceSearchQuery}
             value={selectedPath}
             homeDir={selectedHomeDir}
             onChangeValue={setSelectedPath}
+            onSelectItem={handleSelectSavedProject}
+            onAddPath={handleAddSavedProject}
+            isAddingPath={isAddingSavedProject}
             onDone={closePicker}
             embedded
         />
@@ -2361,10 +2080,10 @@ function NewSessionScreen() {
     const sendButtonNode = (
         <MobileGlassSurface
             enabled={isNativeMobile}
-            interactive={!!canSend}
+            interactive={!!canSend || isStarting}
             style={[
                 styles.sendButton,
-                isSpawning ? styles.sendButtonActive :
+                isStarting ? styles.sendButtonActive :
                     canSend ? styles.sendButtonActive : styles.sendButtonInactive,
                 isNativeMobile && styles.mobileSendButton,
                 isNativeMobile && canSend && styles.mobileSendButtonActive,
@@ -2377,13 +2096,13 @@ function NewSessionScreen() {
                     pressedState.pressed && styles.sendButtonInnerPressed,
                 ]}
                 hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-                disabled={!canSend}
-                onPress={() => handleSend()}
+                disabled={!canSend && !isStarting}
+                onPress={() => { if (isStarting) cancelStart(); else void handleSend(); }}
                 accessibilityRole="button"
-                accessibilityLabel="Send"
+                accessibilityLabel={isStarting ? 'Stop' : 'Send'}
             >
-                {isSpawning ? (
-                    <ActivityIndicator size="small" color={sendButtonIconColor} />
+                {isStarting ? (
+                    <Ionicons name="stop" size={16} color={sendButtonIconColor} />
                 ) : (
                     <Octicons
                         name="arrow-up"
@@ -2668,15 +2387,16 @@ function NewSessionScreen() {
                     {activePicker === 'path' ? (
                         <PathPickerContent
                             title="Project"
-                            recentItems={recentPathItems}
                             workspaceItems={workspacePathItems}
                             discoveryStatus={discoveryStatus}
-                            discoveryTruncated={discoveryResult?.truncated ?? false}
                             searchQuery={workspaceSearchQuery}
                             onChangeSearchQuery={setWorkspaceSearchQuery}
                             value={selectedPath}
                             homeDir={selectedHomeDir}
                             onChangeValue={setSelectedPath}
+                            onSelectItem={handleSelectSavedProject}
+                            onAddPath={handleAddSavedProject}
+                            isAddingPath={isAddingSavedProject}
                             onDone={closePicker}
                         />
                     ) : pickerData ? (

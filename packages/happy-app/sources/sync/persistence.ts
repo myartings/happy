@@ -30,6 +30,7 @@ export interface NewSessionGithubIssueBindingIntent {
 export interface NewSessionDraft {
     input: string;
     selectedMachineId: string | null;
+    selectedProjectId: string | null;
     selectedPath: string | null;
     agentType: NewSessionAgentType;
     permissionMode: PermissionModeKey | null;
@@ -174,6 +175,10 @@ export function loadNewSessionDraft(): NewSessionDraft | null {
 
         const input = typeof parsed.input === 'string' ? parsed.input : '';
         const selectedMachineId = typeof parsed.selectedMachineId === 'string' ? parsed.selectedMachineId : null;
+        const selectedProjectId = typeof parsed.selectedProjectId === 'string'
+            && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(parsed.selectedProjectId)
+            ? parsed.selectedProjectId
+            : null;
         const selectedPath = typeof parsed.selectedPath === 'string' ? parsed.selectedPath : null;
         const agentType: NewSessionAgentType = parsed.agentType === 'codex' || parsed.agentType === 'gemini' || parsed.agentType === 'openclaw' || parsed.agentType === 'agy' || parsed.agentType === 'rig'
             ? parsed.agentType
@@ -213,6 +218,7 @@ export function loadNewSessionDraft(): NewSessionDraft | null {
         return {
             input,
             selectedMachineId,
+            selectedProjectId,
             selectedPath,
             agentType,
             permissionMode,

@@ -20,7 +20,7 @@ describe('Codex-first home and New Session wiring', () => {
         expect(canvas).toContain('accessibilityLabel={projectLabel}');
     });
 
-    it('enables the prompt-first contextual rail without changing the spawn handler', () => {
+    it('enables the prompt-first contextual rail through the shared Saved Project start handler', () => {
         const screen = readSource('../../app/(app)/new/index.tsx');
 
         expect(screen).toContain('resolveCurrentCodexFirstDesktopRuntime');
@@ -30,6 +30,20 @@ describe('Codex-first home and New Session wiring', () => {
         expect(screen).toContain('leftSidebarWidth: codexFirstLeftSidebarWidth');
         expect(screen).toContain('{composerNode}');
         expect(screen).toContain('{configContent}');
-        expect(screen).toContain('machineSpawnNewSession(spawnOptions)');
+        expect(screen).toContain('useStartSessionFromDraft');
+        expect(screen).toContain('await startSession()');
+        expect(screen).toContain('listSavedProjects');
+        expect(screen).toContain('addSavedProject');
+        expect(screen).toContain('new SavedProjectAddGuard()');
+        expect(screen).toContain('addGuard.syncMachine(discoveryMachineId)');
+        expect(screen).toContain('addGuard.begin(discoveryMachine.id)');
+        expect(screen).toContain('addGuard.finish(attempt, response)');
+        expect(screen).toContain('registryForMachine(savedRegistryBinding, discoveryMachineId)');
+        expect(screen).toContain("activePicker === 'path' || selectedSavedProjectId !== null");
+        expect(screen).toContain("selectedAgent !== 'rig'");
+        expect(screen).toContain('savedRegistry?.projects.some((project) => project.id === selectedSavedProjectId)');
+        expect(screen).not.toContain('machineSpawnNewSession(spawnOptions)');
+        expect(screen).not.toContain('requestWorkspaceProjects');
+        expect(screen).not.toContain('buildWorkspaceProjectSections');
     });
 });

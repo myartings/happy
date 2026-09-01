@@ -41,6 +41,7 @@ import {
 } from '@/workspace/workspaceProjectScanner';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { SavedProjectRegistry } from '@/projects/savedProjectRegistry';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -140,6 +141,7 @@ export class ApiMachineClient {
     private resumeSessionHandler: ((sessionId: string, options?: { model?: string; permissionMode?: string }) => Promise<SpawnSessionResult>) | null = null;
     private reconnectInterval: NodeJS.Timeout | null = null;
     private pendingWorktreeSnapshots = new Map<string, CreatedWorktreeSnapshot>();
+    private savedProjectRegistry = new SavedProjectRegistry();
 
     constructor(
         private token: string,
@@ -168,14 +170,14 @@ export class ApiMachineClient {
 
         // Register spawn session handler
         this.rpcHandlerManager.registerHandler('spawn-happy-session', async (params: any) => {
-            const { directory, sessionId, machineId, approvedNewDirectoryCreation, agent, permissionMode, modelMode, effortLevel, environmentVariables, token, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat } = params || {};
+            const { directory, projectId, sessionId, machineId, approvedNewDirectoryCreation, agent, permissionMode, modelMode, effortLevel, environmentVariables, token, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat } = params || {};
             logger.debug(`[API MACHINE] Spawning session with params: ${JSON.stringify(params)}`);
 
-            if (!directory) {
-                throw new Error('Directory is required');
-            }
+            const spawnDirectory = typeof projectId === 'string' && projectId.length > 0
+                ? await this.savedProjectRegistry.resolveProjectPath(projectId)
+                : requireNonEmptyString(directory, 'directory');
 
-            const result = await spawnSession({ directory, sessionId, machineId, approvedNewDirectoryCreation, agent, permissionMode, modelMode, effortLevel, environmentVariables, token, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat });
+            const result = await spawnSession({ directory: spawnDirectory, sessionId, machineId, approvedNewDirectoryCreation, agent, permissionMode, modelMode, effortLevel, environmentVariables, token, resumeClaudeSessionId, resumeCodexThreadId, parentSessionId, forkedFromMessageId, isSideChat });
 
             switch (result.type) {
                 case 'success':
@@ -197,6 +199,28 @@ export class ApiMachineClient {
                 root: join(homedir(), 'workspace'),
                 ...(query ? { query } : {}),
             });
+        });
+
+        this.rpcHandlerManager.registerHandler('list-saved-projects', async () => (
+            this.savedProjectRegistry.list()
+        ));
+
+        this.rpcHandlerManager.registerHandler('resolve-saved-project', async (params: any) => {
+            const projectId = requireNonEmptyString(params?.projectId, 'projectId');
+            const primaryPath = await this.savedProjectRegistry.resolveProjectPath(projectId);
+            return { projectId, primaryPath };
+        });
+
+        this.rpcHandlerManager.registerHandler('add-saved-project', async (params: any) => {
+            const path = requireNonEmptyString(params?.path, 'path');
+            const expectedRevision = params?.expectedRevision;
+            if (
+                expectedRevision !== undefined
+                && (!Number.isInteger(expectedRevision) || expectedRevision < 0)
+            ) {
+                throw new Error('expectedRevision must be a non-negative integer');
+            }
+            return this.savedProjectRegistry.add({ path, expectedRevision });
         });
 
         this.syncResumeSessionRpcRegistration();
