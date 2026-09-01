@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 3,
+  "slug": "fork-upstream-issue-routing",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "Present a separate exact authorization proposal for #1654 preparation; optionally add the accepted Low positive slash-remote reuse test in a future test-hardening slice.",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User approved feature/fork-upstream-issue-routing and High-risk Workspace on 2026-08-31; docs/specs/fork-upstream-issue-routing.md; docs/workspace/fork-upstream-issue-routing/task-links.md",
+      "updated": "2026-08-30T16:42:27+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/fork-upstream-issue-routing/decisions.md records explicit remote roles, defaults, validation ownership, output evidence, reversibility, and no open material decisions",
+      "updated": "2026-08-30T16:08:39+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current Root owns serial current-session implementation on feature/fork-upstream-issue-routing; stable AC1-AC8; risk controls passed; TDD seam scripts/test-happy-workflow-runtime.py; final workflow-check.py --applicable and independent review",
+      "updated": "2026-08-30T16:09:04+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared-with-controls in docs/workspace/fork-upstream-issue-routing/decisions.md: fail-closed explicit roles, deterministic fixtures, no network/mutation, rollback, full checks, and independent review",
+      "updated": "2026-08-30T16:08:40+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Required structured session summary and index now cover Root implementation, dual-axis review, Standards remediation, validation, decisions, and remaining authority boundaries; runtime implementation remains GREEN across 16 focused tests",
+      "updated": "2026-08-30T17:23:45+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures",
+      "updated": "2026-08-30T17:31:22+00:00"
+    },
+    "review": {
+      "status": "accepted_gaps",
+      "evidence": "Terminal candidate 422e76f7: Spec accepted with no findings; Standards accepted with one non-blocking Low test-hardening follow-up and no candidate regression",
+      "updated": "2026-08-30T17:34:48+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "60162822bb3fa24488e6679b2419ee0fac54c634",
+        "candidateFingerprint": "422e76f701aaf1ca5488a66a1dd5c60376609c88d768c3593b24b32e56387a5d"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md records terminal candidate 422e76f7, run 29288155, AC1-AC8, Spec accepted, Standards accepted_gaps Low test-hardening only, rollback, no external mutation, and separate #1654 authority boundary",
+      "updated": "2026-08-30T17:35:57+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-30T16:04:45+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-08-30T16:08:07+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — Accepted contract is docs/specs/fork-upstream-issue-routing.md; this repository-local prerequisite must finish before upstream #1654 preparation (approval: User explicitly approved feature/fork-upstream-issue-routing and its High-risk Workspace on 2026-08-31)"
+    },
+    {
+      "at": "2026-08-30T16:08:37+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User approved feature/fork-upstream-issue-routing and High-risk Workspace on 2026-08-31; docs/PRD.md; docs/specs/fork-upstream-issue-routing.md; docs/workspace/fork-upstream-issue-routing/task-links.md"
+    },
+    {
+      "at": "2026-08-30T16:08:39+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/fork-upstream-issue-routing/decisions.md records explicit remote roles, defaults, validation ownership, output evidence, reversibility, and no open material decisions"
+    },
+    {
+      "at": "2026-08-30T16:08:40+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared-with-controls in docs/workspace/fork-upstream-issue-routing/decisions.md: fail-closed explicit roles, deterministic fixtures, no network/mutation, rollback, full checks, and independent review"
+    },
+    {
+      "at": "2026-08-30T16:09:04+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current Root owns serial current-session implementation on feature/fork-upstream-issue-routing; stable AC1-AC8; risk controls passed; TDD seam scripts/test-happy-workflow-runtime.py; final workflow-check.py --applicable and independent review"
+    },
+    {
+      "at": "2026-08-30T16:09:07+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Write and confirm RED remote-role route tests"
+    },
+    {
+      "at": "2026-08-30T16:29:29+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED/GREEN recorded in validation.md; 12 focused issue-route tests pass; complete 26-test workflow runtime suite passes; live #1654 route returns ready without mutation; implementation and operator docs remain within AC1-AC8"
+    },
+    {
+      "at": "2026-08-30T16:29:31+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run applicable deterministic checks and pin the final candidate"
+    },
+    {
+      "at": "2026-08-30T16:38:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 3 failures; structured run: 0369a57c-7f4e-4353-95c5-4df2805f7d28"
+    },
+    {
+      "at": "2026-08-30T16:40:14+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remove out-of-bound product PRD scope and rerun the workflow-only candidate check"
+    },
+    {
+      "at": "2026-08-30T16:42:27+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User approved feature/fork-upstream-issue-routing and High-risk Workspace on 2026-08-31; docs/specs/fork-upstream-issue-routing.md; docs/workspace/fork-upstream-issue-routing/task-links.md"
+    },
+    {
+      "at": "2026-08-30T16:42:58+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "RED/GREEN evidence remains valid; 12 focused route tests and the complete 26-test runtime suite pass; docs/PRD.md was removed as out-of-bound scope; corrected staged candidate selects exactly the workflow profile"
+    },
+    {
+      "at": "2026-08-30T16:42:58+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run the corrected workflow-only candidate check and pin the final review package"
+    },
+    {
+      "at": "2026-08-30T16:50:07+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: f03bc540-3c97-423b-9164-123581c145bd"
+    },
+    {
+      "at": "2026-08-30T16:55:45+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Strengthen exact repository identity and fail closed on stale slash-remote refs"
+    },
+    {
+      "at": "2026-08-30T16:55:45+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Two additional boundary tests produced intended RED then GREEN; 14 focused route tests pass; exact owner/repository parsing and conservative canonical-ref suffix collision handling remain within AC5-AC6"
+    },
+    {
+      "at": "2026-08-30T16:55:45+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run the final strengthened staged candidate through the exact workflow profile"
+    },
+    {
+      "at": "2026-08-30T17:04:04+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: e81f938e-8789-425f-ba0a-775a756abde1"
+    },
+    {
+      "at": "2026-08-30T17:07:59+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec accepted; Standards blocked candidate 043ab4ed on overlapping slash-remote ref attribution"
+    },
+    {
+      "at": "2026-08-30T17:08:56+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Resolve Standards blocker: require unique remote-prefix attribution for target bases and reusable publication refs"
+    },
+    {
+      "at": "2026-08-30T17:12:50+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Standards blocker remediated through unique configured remote-prefix attribution; two intended behavior REDs turned GREEN; all 16 focused issue-route tests pass; Spec, decisions, and operator docs repeat the fail-closed rule"
+    },
+    {
+      "at": "2026-08-30T17:12:51+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run exact workflow checks for the overlapping-remote remediation candidate"
+    },
+    {
+      "at": "2026-08-30T17:20:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 30bd070f-8c2c-4c40-8ff1-9944920cacd3"
+    },
+    {
+      "at": "2026-08-30T17:22:45+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add the required structured session summary before pinning the terminal candidate"
+    },
+    {
+      "at": "2026-08-30T17:23:45+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Required structured session summary and index now cover Root implementation, dual-axis review, Standards remediation, validation, decisions, and remaining authority boundaries; runtime implementation remains GREEN across 16 focused tests"
+    },
+    {
+      "at": "2026-08-30T17:23:45+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run the terminal candidate check including the required structured session summary"
+    },
+    {
+      "at": "2026-08-30T17:31:22+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 29288155-45fc-400d-843e-294adc33bdc9"
+    },
+    {
+      "at": "2026-08-30T17:34:48+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "accepted_gaps",
+      "evidence": "Terminal candidate 422e76f7: Spec accepted with no findings; Standards accepted with one non-blocking Low test-hardening follow-up and no candidate regression"
+    },
+    {
+      "at": "2026-08-30T17:34:57+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record terminal evidence, accepted Low follow-up, rollback, and archive the unchanged reviewed candidate"
+    },
+    {
+      "at": "2026-08-30T17:35:57+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md records terminal candidate 422e76f7, run 29288155, AC1-AC8, Spec accepted, Standards accepted_gaps Low test-hardening only, rollback, no external mutation, and separate #1654 authority boundary"
+    },
+    {
+      "at": "2026-08-30T17:36:49+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Add explicit upstream Issue/base and fork publication remote roles with fail-closed repository, ref, collision, and overlapping-name identity checks.; result identity: archive-introducing-commit; follow-up: Present a separate exact authorization proposal for #1654 preparation; optionally add the accepted Low positive slash-remote reuse test in a future test-hardening slice."
+    }
+  ],
+  "updated": "2026-08-30T17:36:49+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Accepted contract is docs/specs/fork-upstream-issue-routing.md; this repository-local prerequisite must finish before upstream #1654 preparation",
+    "approval": "User explicitly approved feature/fork-upstream-issue-routing and its High-risk Workspace on 2026-08-31"
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "29288155-45fc-400d-843e-294adc33bdc9",
+  "checkRunFingerprint": "bae05199526cbd468ae3556d6da8ed882b33942757db95052925663f2a5c2a69",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "60162822bb3fa24488e6679b2419ee0fac54c634",
+    "candidateFingerprint": "422e76f701aaf1ca5488a66a1dd5c60376609c88d768c3593b24b32e56387a5d"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "60162822bb3fa24488e6679b2419ee0fac54c634",
+      "candidateFingerprint": "422e76f701aaf1ca5488a66a1dd5c60376609c88d768c3593b24b32e56387a5d"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "router_final_spec_review: terminal candidate 422e76f7 and diff 959df70b verified; AC1-AC8, scope, overlap remediation, and session evidence accepted with no findings or follow-ups"
+      },
+      "standards-review": {
+        "status": "accepted_gaps",
+        "evidence": "router_final_standards_review: terminal candidate 422e76f7 verified with no blocking findings; Low follow-up is a positive unambiguous slash-publication reuse behavior test, classified as test hardening rather than a current regression or frozen-AC gap"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Record terminal evidence, accepted Low follow-up, rollback, and archive the unchanged reviewed candidate",
+    "prearchiveUpdated": "2026-08-30T17:35:57+00:00",
+    "prearchiveActive": {
+      "feature": "fork-upstream-issue-routing",
+      "phase": "finish",
+      "updated": "2026-08-31",
+      "next": "Record terminal evidence, accepted Low follow-up, rollback, and archive the unchanged reviewed candidate",
+      "branch / worktree": "feature/fork-upstream-issue-routing"
+    },
+    "prearchiveArchiveObject": "a94a5f55a4fb39871a26a78ce481240c90c1636f",
+    "fingerprint": "462e2afe090a34706d5c6b47c3c1d7e6e284b941b398d285f4521f6038f4c8a0"
+  },
+  "archivedAt": "2026-08-30T17:36:49+00:00",
+  "archiveDate": "2026-08-31",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Add explicit upstream Issue/base and fork publication remote roles with fail-closed repository, ref, collision, and overlapping-name identity checks.",
+  "archiveFollowUp": "Present a separate exact authorization proposal for #1654 preparation; optionally add the accepted Low positive slash-remote reuse test in a future test-hardening slice."
+}

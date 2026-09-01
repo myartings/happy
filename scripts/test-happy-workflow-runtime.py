@@ -19,6 +19,7 @@ RUNTIME_SCRIPTS = (
     "workflow-candidate.py",
     "workflow-check.py",
     "workflow-ci.py",
+    "workflow-issue-route.py",
     "workflow-review.py",
     "workflow-state.py",
 )
@@ -128,6 +129,489 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
 
     def state(self, *args: str, ok: bool = True) -> subprocess.CompletedProcess[str]:
         return self.run_script("workflow-state.py", *args, ok=ok)
+
+    def route_issue(
+        self,
+        *,
+        base_ref: str,
+        issue_remote: str | None = None,
+        publication_remote: str | None = None,
+    ) -> dict[str, object]:
+        args = [
+            "--repo-root", str(self.project),
+            "--session-root", str(self.project),
+            "--issue-url", "https://github.com/slopus/happy/issues/1654",
+            "--issue-title", "Daemon ownership race",
+            "--base-ref", base_ref,
+            "--base-kind", "target",
+        ]
+        if issue_remote is not None:
+            args.append(f"--issue-remote={issue_remote}")
+        if publication_remote is not None:
+            args.append(f"--publication-remote={publication_remote}")
+        completed = self.run_script("workflow-issue-route.py", *args)
+        return json.loads(completed.stdout)
+
+    def add_github_remote(
+        self, name: str, repository: str, *, push_repository: str | None = None,
+    ) -> None:
+        self.git("remote", "add", name, f"https://github.com/{repository}.git")
+        if push_repository is not None:
+            self.git(
+                "remote", "set-url", "--push", name,
+                f"https://github.com/{push_repository}.git",
+            )
+
+    def configure_github_remote(self, name: str, repository: str) -> None:
+        """Create a remote config even when porcelain rejects prefix overlap."""
+        self.git(
+            "config", f"remote.{name}.url",
+            f"https://github.com/{repository}.git",
+        )
+        self.git(
+            "config", f"remote.{name}.fetch",
+            f"+refs/heads/*:refs/remotes/{name}/*",
+        )
+
+    def set_remote_ref(
+        self, remote: str, branch: str, commit: str | None = None,
+    ) -> None:
+        self.git(
+            "update-ref", f"refs/remotes/{remote}/{branch}", commit or self.base,
+        )
+
+    def route_git_snapshot(self) -> dict[str, str]:
+        return {
+            "head": self.git("rev-parse", "HEAD").stdout,
+            "branch": self.git("branch", "--show-current").stdout,
+            "refs": self.git("show-ref").stdout,
+            "worktrees": self.git("worktree", "list", "--porcelain").stdout,
+        }
+
+    def test_issue_route_supports_explicit_fork_and_upstream_remotes(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.git("remote", "set-url", "--push", "upstream", "DISABLED")
+        self.set_remote_ref("origin", "main")
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("ready", result["status"])
+        self.assertEqual("create-from-verified-base", result["preparation"])
+        self.assertEqual("slopus/happy", result["repository"])
+        self.assertEqual("upstream", result["issueRemote"])
+        self.assertEqual("origin", result["publicationRemote"])
+        self.assertEqual("myartings/happy", result["publicationRepository"])
+        self.assertEqual(self.base, result["verifiedBase"])
+        self.assertFalse(result["mutationPerformed"])
+        self.assertEqual(
+            {
+                "issueRemote": "upstream",
+                "publicationRemote": "origin",
+                "publicationRepository": "myartings/happy",
+            },
+            {
+                key: result["launchCapsule"][key]
+                for key in (
+                    "issueRemote", "publicationRemote", "publicationRepository",
+                )
+            },
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_defaults_both_remote_roles_to_origin(self) -> None:
+        self.add_github_remote("origin", "slopus/happy")
+        self.set_remote_ref("origin", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(base_ref="refs/remotes/origin/main")
+
+        self.assertEqual("ready", result["status"])
+        self.assertEqual("origin", result["issueRemote"])
+        self.assertEqual("origin", result["publicationRemote"])
+        self.assertEqual("slopus/happy", result["publicationRepository"])
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_mismatched_issue_remote(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="origin",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual("observation-failed", result["preparation"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "every Issue remote fetch URL must match the named Issue repository",
+            result["failureReason"],
+        )
+        self.assertNotIn("launchCapsule", result)
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_mixed_issue_remote_fetch_urls(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.git(
+            "remote", "set-url", "--add", "upstream",
+            "https://github.com/someone-else/happy.git",
+        )
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "Issue remote URLs must identify one GitHub repository",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_missing_issue_remote(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.set_remote_ref("origin", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/origin/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "Issue remote URLs must identify one GitHub repository",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_invalid_remote_name_before_git_lookup(self) -> None:
+        self.add_github_remote("origin", "slopus/happy")
+        self.set_remote_ref("origin", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/origin/main",
+            issue_remote="-unsafe",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual("Issue remote name is invalid", result["failureReason"])
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_target_base_from_non_issue_remote(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("origin", "main")
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/origin/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "target base must be an exact refs/remotes/upstream/... ref",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_ambiguous_slash_remote_target_base(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.add_github_remote("personal", "someone-else/happy")
+        self.configure_github_remote("personal/fork", "slopus/happy")
+        self.set_remote_ref("personal/fork", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/personal/fork/main",
+            issue_remote="personal/fork",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "target base must be uniquely attributable to the Issue remote",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_inconsistent_publication_remote(self) -> None:
+        self.add_github_remote(
+            "origin", "myartings/happy", push_repository="someone-else/happy"
+        )
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "publication remote URLs must identify one GitHub repository",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_missing_publication_remote(self) -> None:
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "publication remote URLs must identify one GitHub repository",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_non_github_publication_remote(self) -> None:
+        self.git(
+            "remote", "add", "origin",
+            "https://example.com/myartings/happy.git",
+        )
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "publication remote URLs must identify one GitHub repository",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_non_repository_github_publication_path(self) -> None:
+        self.git(
+            "remote", "add", "origin",
+            "https://github.com/myartings/happy/extra.git",
+        )
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(
+            "publication remote URLs must identify one GitHub repository",
+            result["failureReason"],
+        )
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_reuses_only_publication_remote_branch(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        initial = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+        self.assertEqual("create-from-verified-base", initial["preparation"])
+        action = initial["gitAction"]
+        self.assertIsInstance(action, list)
+        self.assertEqual("git", action[0])
+        self.git(*(str(value) for value in action[1:]))
+        branch = str(initial["branch"])
+        self.set_remote_ref("origin", branch)
+        before_reuse = self.route_git_snapshot()
+
+        reused = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("ready", reused["status"])
+        self.assertEqual("reuse-identity-matched-worktree", reused["preparation"])
+        self.assertIsNone(reused["gitAction"])
+        self.assertEqual(before_reuse, self.route_git_snapshot())
+
+        self.set_remote_ref("upstream", branch)
+        before_collision = self.route_git_snapshot()
+
+        collision = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", collision["status"])
+        self.assertEqual(
+            "remote-issue-branch-collision-or-divergence",
+            collision["failureReason"],
+        )
+        self.assertIsNone(collision["gitAction"])
+        self.assertEqual(before_collision, self.route_git_snapshot())
+
+        self.git("update-ref", "-d", f"refs/remotes/upstream/{branch}")
+        tree = self.git("rev-parse", f"{self.base}^{{tree}}").stdout.strip()
+        divergent = self.git(
+            "commit-tree", tree, "-p", self.base, "-m", "divergent publication",
+        ).stdout.strip()
+        self.set_remote_ref("origin", branch, divergent)
+        before_divergence = self.route_git_snapshot()
+
+        divergence = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", divergence["status"])
+        self.assertEqual(
+            "remote-issue-branch-collision-or-divergence",
+            divergence["failureReason"],
+        )
+        self.assertIsNone(divergence["gitAction"])
+        self.assertEqual(before_divergence, self.route_git_snapshot())
+
+    def test_issue_route_detects_divergent_branch_for_slash_named_remote(self) -> None:
+        self.add_github_remote("personal/fork", "myartings/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        initial = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="personal/fork",
+        )
+        action = initial["gitAction"]
+        self.assertIsInstance(action, list)
+        self.git(*(str(value) for value in action[1:]))
+        branch = str(initial["branch"])
+        tree = self.git("rev-parse", f"{self.base}^{{tree}}").stdout.strip()
+        divergent = self.git(
+            "commit-tree", tree, "-p", self.base, "-m", "divergent slash remote",
+        ).stdout.strip()
+        self.set_remote_ref("personal/fork", branch, divergent)
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="personal/fork",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual(
+            "remote-issue-branch-collision-or-divergence",
+            result["failureReason"],
+        )
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_ambiguous_slash_publication_ref(self) -> None:
+        self.add_github_remote("personal", "someone-else/happy")
+        self.configure_github_remote("personal/fork", "myartings/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        initial = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="personal/fork",
+        )
+        action = initial["gitAction"]
+        self.assertIsInstance(action, list)
+        self.git(*(str(value) for value in action[1:]))
+        branch = str(initial["branch"])
+        self.set_remote_ref("personal/fork", branch)
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="personal/fork",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual(
+            "remote-issue-branch-collision-or-divergence",
+            result["failureReason"],
+        )
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(before, self.route_git_snapshot())
+
+    def test_issue_route_blocks_stale_slash_remote_ref_with_live_prefix(self) -> None:
+        self.add_github_remote("origin", "myartings/happy")
+        self.add_github_remote("personal", "someone-else/happy")
+        self.add_github_remote("upstream", "slopus/happy")
+        self.set_remote_ref("upstream", "main")
+        initial = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+        action = initial["gitAction"]
+        self.assertIsInstance(action, list)
+        self.git(*(str(value) for value in action[1:]))
+        branch = str(initial["branch"])
+        self.set_remote_ref("origin", branch)
+        self.set_remote_ref("personal/fork", branch)
+        before = self.route_git_snapshot()
+
+        result = self.route_issue(
+            base_ref="refs/remotes/upstream/main",
+            issue_remote="upstream",
+            publication_remote="origin",
+        )
+
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual(
+            "remote-issue-branch-collision-or-divergence",
+            result["failureReason"],
+        )
+        self.assertIsNone(result["gitAction"])
+        self.assertEqual(before, self.route_git_snapshot())
 
     def gate(self, slug: str, name: str, status: str = "passed") -> None:
         self.state(
