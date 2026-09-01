@@ -193,10 +193,21 @@ Device, branch, and worktree. `Inbox` and `Ready` may leave Agent/Device empty;
 `Done` may retain the last values for traceability.
 
 Observe `workflow-issue-route.py` as a separate read-only boundary and use its
-exact Issue, verified base, canonical branch, absolute worktree, and selected
-client/session label in the authorization proposal. Rerun and match the Issue,
-base, branch, and worktree immediately before mutation. Verify the registered
-branch/worktree and minimum recovery state before authorized external writes.
+exact Issue, remote roles, publication repository, verified base, canonical
+branch, absolute worktree, and selected client/session label in the authorization
+proposal. Both remote roles default to `origin` for same-repository work. A fork
+contribution explicitly selects its upstream Issue/base remote with
+`--issue-remote` and its personal-fork branch remote with
+`--publication-remote`; a `target` base must be an exact
+`refs/remotes/<issue-remote>/...` ref uniquely attributable to that configured
+remote. Existing publication refs must be uniquely attributable as well;
+overlapping names such as `personal` and `personal/fork` are ambiguous for
+matching refs and fail closed. Do not infer roles or change remote configuration
+to make a route pass.
+
+Rerun and match the complete Issue/remote/base/branch/worktree tuple immediately
+before mutation. Verify the registered branch/worktree and minimum recovery
+state before authorized external writes.
 
 The authorized projection updates only the selected item to `In Progress` with
 non-empty Agent and Device, leaves Priority unchanged unless separately
