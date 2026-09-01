@@ -346,6 +346,152 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         )
         self.assertIn("implementation", blocked.stderr)
 
+    def test_replan_reopens_changed_tracker_contract_from_verification(self) -> None:
+        slug = "changed-tracker-contract"
+        config_path = self.project / ".ai" / "project.json"
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        config["tracker"] = {
+            "provider": "github",
+            "target": "example/project",
+        }
+        config_path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+
+        self.state(
+            "create", slug, "--intensity", "high-risk",
+            "--risk-required", "--decisions-required",
+        )
+        self.complete_contract(slug)
+        self.state(
+            "source", slug, "tracker",
+            "--url", "https://github.com/example/project/issues/79",
+        )
+        self.gate(slug, "acceptance")
+        self.gate(slug, "decisions")
+        self.gate(slug, "risk")
+        sizing_args = (
+            "right-sizing", slug, "acceptance",
+            "--route", "accept-slice",
+            "--outcome", "one changed contract fixture",
+            "--acceptance-seam", "one public workflow state seam",
+            "--dependencies", "existing workflow state",
+            "--review-boundary", "one checked candidate",
+            "--rollback-boundary", "revert fixture",
+            "--context-boundary", "one owning root",
+            "--consequence", "contract evidence must not be stale",
+            "--evidence", "accepted fixture contract",
+        )
+        self.state(*sizing_args)
+        self.gate(slug, "scoping")
+        self.state("transition", slug, "implementation", "Build old contract")
+        self.gate(slug, "implementation")
+        self.state("transition", slug, "verification", "Verify old contract")
+
+        state_path = (
+            self.project / "docs" / "workspace" / slug / "workflow.json"
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        old_continuation = {
+            **state["rightSizingAssessments"][0],
+            "at": "2026-01-01T00:00:00+00:00",
+            "phase": "verification",
+            "stage": "continuation",
+            "route": "continue",
+            "trigger": "no-progress",
+        }
+        state["rightSizingAssessments"].append(old_continuation)
+        state["history"].extend([
+            {"type": "right_sizing_assessment", **old_continuation},
+            {"at": "2026-01-01T00:00:01+00:00", "type": "transition", "phase": "verification", "evidence": "old review one"},
+            {"at": "2026-01-01T00:00:02+00:00", "type": "gate", "gate": "review", "status": "blocked", "evidence": "old review one"},
+            {"at": "2026-01-01T00:00:03+00:00", "type": "transition", "phase": "verification", "evidence": "old review two"},
+            {"at": "2026-01-01T00:00:04+00:00", "type": "gate", "gate": "review", "status": "blocked", "evidence": "old review two"},
+        ])
+        state_path.write_text(json.dumps(state) + "\n", encoding="utf-8")
+
+        spec = self.project / "docs" / "specs" / f"{slug}.md"
+        spec.write_text("# Reconciled spec\n", encoding="utf-8")
+        self.state(
+            "gate", slug, "acceptance", "blocked",
+            "--evidence", "tracker and local contract diverged",
+        )
+        self.state(
+            "gate", slug, "scoping", "blocked",
+            "--evidence", "changed contract requires fresh scoping",
+        )
+
+        self.state(
+            "replan", slug,
+            "--reason", "tracker contract was explicitly reconciled",
+            "--next-action", "Accept and scope the reconciled contract",
+        )
+        state = json.loads(
+            (self.project / "docs" / "workspace" / slug / "workflow.json")
+            .read_text(encoding="utf-8")
+        )
+        self.assertEqual(state["phase"], "planning")
+        self.assertEqual(
+            state["nextAction"], "Accept and scope the reconciled contract",
+        )
+        self.assertEqual(state["deliverySource"]["kind"], "tracker")
+        self.assertEqual(len(state["rightSizingAssessments"]), 2)
+        self.assertEqual(state["rightSizingEpochStart"], 2)
+        self.assertEqual(state["history"][-1]["rightSizingEpochStart"], 2)
+        for name in (
+            "acceptance", "decisions", "scoping", "risk", "implementation",
+            "check", "review", "finish",
+        ):
+            self.assertEqual(state["gates"][name]["status"], "pending")
+        self.assertEqual(state["history"][-1]["type"], "replan")
+
+        self.gate(slug, "acceptance")
+        self.gate(slug, "decisions")
+        self.gate(slug, "risk")
+        self.state(*sizing_args)
+        duplicate = self.state(*sizing_args, ok=False)
+        self.assertIn("acceptance assessment is immutable", duplicate.stderr)
+        self.gate(slug, "scoping")
+        self.state(
+            "transition", slug, "implementation", "Build reconciled contract",
+        )
+        continuation_args = (
+            "right-sizing", slug, "continuation",
+            "--route", "continue",
+            "--trigger", "no-progress",
+            "--outcome", "continue fixture",
+            "--acceptance-seam", "same accepted seam",
+            "--dependencies", "existing workflow state",
+            "--review-boundary", "one checked candidate",
+            "--rollback-boundary", "revert fixture",
+            "--context-boundary", "one owning root",
+            "--consequence", "old failures must not authorize new work",
+            "--evidence", "no new blocked boundary exists",
+        )
+        premature = self.state(*continuation_args, ok=False)
+        self.assertIn("requires repeated blocked", premature.stderr)
+
+        self.git("add", ".")
+        self.git("commit", "-m", "replanned workflow")
+        self.state(
+            "gate", slug, "acceptance", "blocked",
+            "--evidence", "second contract change",
+        )
+        self.state(
+            "replan", slug,
+            "--reason", "a second contract change was reconciled",
+            "--next-action", "Accept the second reconciled contract",
+        )
+        self.state("validate", slug)
+
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        committed_replan = next(
+            item for item in state["history"]
+            if item.get("type") == "replan"
+        )
+        committed_replan["rightSizingEpochStart"] -= 1
+        state_path.write_text(json.dumps(state) + "\n", encoding="utf-8")
+        tampered = self.state("validate", slug, ok=False)
+        self.assertIn("committed replan epoch history changed", tampered.stderr)
+
     def test_staged_guard_rejects_non_evidence_worktree_divergence(self) -> None:
         slug = "guarded-divergence"
         self.prepare_verification_candidate(slug)

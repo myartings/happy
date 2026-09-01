@@ -13,11 +13,30 @@ vi.mock('react-native-mmkv', () => ({
 }));
 
 const {
+    clearGithubIssueBindingCache,
+    loadGithubIssueBindingCache,
     loadPendingSettings,
     loadSessionDrafts,
+    saveGithubIssueBindingCache,
     savePendingSettings,
     saveSessionDrafts,
 } = await import('./persistence');
+
+describe('GitHub Issue binding cache persistence', () => {
+    beforeEach(() => store.clear());
+
+    it('explicitly deletes account-scoped binding data', () => {
+        saveGithubIssueBindingCache({ accountScope: 'account-a', bindings: [] });
+        expect(loadGithubIssueBindingCache()).toEqual({
+            accountScope: 'account-a', bindings: [],
+        });
+
+        clearGithubIssueBindingCache();
+
+        expect(loadGithubIssueBindingCache()).toBeNull();
+        expect(store.has('github-issue-binding-cache-v1')).toBe(false);
+    });
+});
 
 describe('loadPendingSettings', () => {
     beforeEach(() => store.clear());

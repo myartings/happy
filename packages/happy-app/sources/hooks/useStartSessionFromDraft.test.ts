@@ -22,6 +22,11 @@ const mocks = vi.hoisted(() => ({
     confirm: vi.fn(),
     delay: vi.fn(),
     uuidCount: 0,
+    claimGithubIssueBinding: vi.fn(),
+    replaceGithubIssueBinding: vi.fn(),
+    abandonGithubIssueBinding: vi.fn(),
+    validateBindingIntentAccount: vi.fn(),
+    githubIssuesEnabled: true,
 }));
 
 // Counts up so a test can tell a reused idempotency key from a fresh one.
@@ -38,6 +43,7 @@ vi.mock('@/sync/storage', () => ({
     useAllMachines: () => mocks.machines,
     useSessions: () => mocks.sessions,
     useSetting: () => mocks.defaultOverrides,
+    useLocalSetting: () => mocks.githubIssuesEnabled,
 }));
 
 vi.mock('@/sync/agentDefaults', () => ({
@@ -96,6 +102,17 @@ vi.mock('@/utils/worktree', () => ({
 
 vi.mock('@/utils/time', () => ({ delay: mocks.delay }));
 
+vi.mock('@/features/github-issues/githubIssueBindingApi', () => ({
+    githubIssueBindingApi: {
+        claim: mocks.claimGithubIssueBinding,
+        replace: mocks.replaceGithubIssueBinding,
+        abandonFirstDispatch: mocks.abandonGithubIssueBinding,
+    },
+}));
+vi.mock('@/features/github-issues/githubIssueBindingIntent', () => ({
+    validateGithubIssueBindingIntentAccount: mocks.validateBindingIntentAccount,
+}));
+
 vi.mock('@/components/modelModeOptions', () => ({
     filterPermissionModesForCli: (modes: any[], cliVersion?: string) => (
         cliVersion === '1.2.0' || cliVersion === '1.2.1-beta.1'
@@ -137,7 +154,11 @@ vi.mock('@/modal', () => ({
 }));
 
 vi.mock('@/text', () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: { issue?: string }) => (
+        key.startsWith('githubIssues.binding') && params?.issue
+            ? `${key}:${params.issue}`
+            : key
+    ),
 }));
 
 import { completeSpawnRequest } from '@/sync/spawnRequestId';
@@ -176,7 +197,7 @@ function createRigMachine(metadata: Record<string, unknown> = {}) {
 }
 
 function createDraft(overrides: Record<string, unknown> = {}) {
-    return {
+    const draft: any = {
         input: ' Start the implementation ',
         attachments: [{ uri: 'file:///image.jpg' }],
         selectedMachineId: 'machine-1',
@@ -189,14 +210,24 @@ function createDraft(overrides: Record<string, unknown> = {}) {
         worktreeKey: null,
         setInput: vi.fn(),
         setAttachments: vi.fn(),
+        setGithubIssueBindingIntent: vi.fn(),
         ...overrides,
     };
+    if (draft.githubIssueBindingIntent && !draft.githubIssueBindingIntent.accountScope) {
+        draft.githubIssueBindingIntent = {
+            accountScope: 'a'.repeat(64),
+            ...draft.githubIssueBindingIntent,
+        };
+    }
+    return draft;
 }
 
 describe('useStartSessionFromDraft', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mocks.uuidCount = 0;
+        mocks.validateBindingIntentAccount.mockResolvedValue(true);
+        mocks.githubIssuesEnabled = true;
         completeSpawnRequest();
         mocks.defaultOverrides = {};
         mocks.sessions = [];
@@ -209,6 +240,18 @@ describe('useStartSessionFromDraft', () => {
         mocks.machineStopSession.mockResolvedValue({ success: true });
         mocks.sessionKill.mockResolvedValue({ success: true });
         mocks.sessionArchive.mockResolvedValue({ success: true });
+        mocks.claimGithubIssueBinding.mockResolvedValue({
+            outcome: 'claimed',
+            binding: { sessionId: 'session-1', revision: 1 },
+        });
+        mocks.replaceGithubIssueBinding.mockResolvedValue({
+            outcome: 'replaced',
+            binding: { sessionId: 'session-1', revision: 5 },
+        });
+        mocks.abandonGithubIssueBinding.mockResolvedValue({
+            outcome: 'repair-required',
+            binding: { sessionId: null, revision: 2 },
+        });
     });
 
     it('creates and opens the session directly from the home draft', async () => {
@@ -243,6 +286,324 @@ describe('useStartSessionFromDraft', () => {
             .toBeLessThan(mocks.navigateToSession.mock.invocationCallOrder[0]);
     });
 
+    it('drops a restored Issue intent when the feature is disabled without consuming the ordinary draft', async () => {
+        mocks.githubIssuesEnabled = false;
+        mocks.machines = [];
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: '9'.repeat(64),
+                encryptedPayload: 'ciphertext',
+                requestId: 'disabled-feature-request',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(null);
+        expect(mocks.validateBindingIntentAccount).not.toHaveBeenCalled();
+        expect(mocks.claimGithubIssueBinding).not.toHaveBeenCalled();
+        expect(mocks.replaceGithubIssueBinding).not.toHaveBeenCalled();
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
+        expect(mocks.alert).toHaveBeenCalledWith('common.error', 'Please select a machine');
+    });
+
+    it('claims a structured Issue binding before sending the first task', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: 'a'.repeat(64),
+                encryptedPayload: 'ciphertext',
+                requestId: 'binding-request-1',
+            },
+        });
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(true);
+
+        expect(mocks.claimGithubIssueBinding).toHaveBeenCalledWith({
+            accountScope: 'a'.repeat(64),
+            issueKey: 'a'.repeat(64),
+            encryptedPayload: 'ciphertext',
+            requestId: 'binding-request-1',
+            candidateSessionId: 'session-1',
+        });
+        expect(mocks.claimGithubIssueBinding.mock.invocationCallOrder[0])
+            .toBeLessThan(mocks.sendMessage.mock.invocationCallOrder[0]);
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(null);
+    });
+
+    it('clears an Issue binding intent from another account before spawning', async () => {
+        mocks.validateBindingIntentAccount.mockResolvedValue(false);
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                accountScope: 'a'.repeat(64), issueKey: 'b'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'cross-account-request', issueLabel: 'myartings/happy#79',
+            },
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.machineSpawnNewSession).not.toHaveBeenCalled();
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(null);
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingAccountChanged:myartings/happy#79',
+        );
+    });
+
+    it('uses a localized Issue-labelled error when binding account validation is unavailable', async () => {
+        mocks.validateBindingIntentAccount.mockRejectedValue(new Error('account lookup failed'));
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                accountScope: 'a'.repeat(64), issueKey: 'b'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'account-validation-error', issueLabel: 'myartings/happy#79',
+            },
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.machineSpawnNewSession).not.toHaveBeenCalled();
+        expect(mocks.machineStopSession).not.toHaveBeenCalled();
+        expect(mocks.sendMessage).not.toHaveBeenCalled();
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingAccountValidationUnavailable:myartings/happy#79',
+        );
+    });
+
+    it('preserves repair intent when claim races with a repair-required transition', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                accountScope: 'a'.repeat(64), issueKey: 'c'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'repair-race-request', issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.claimGithubIssueBinding.mockResolvedValue({
+            outcome: 'repair-required',
+            binding: { sessionId: null, lastSessionId: 'former-session', revision: 4 },
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(expect.objectContaining({
+            operation: 'replace', expectedRevision: 4, formerSessionId: 'former-session',
+            requestId: expect.not.stringMatching(/^repair-race-request$/),
+        }));
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+        expect(mocks.sendMessage).not.toHaveBeenCalled();
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingStartRepairRequired:myartings/happy#79',
+        );
+    });
+
+    it('replays the same claim after an acknowledgement is lost without stopping the canonical Session', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: '9'.repeat(64), encryptedPayload: 'ciphertext', requestId: 'lost-ack-request',
+            },
+        });
+        mocks.claimGithubIssueBinding
+            .mockRejectedValueOnce(new Error('response lost'))
+            .mockResolvedValueOnce({ outcome: 'claimed', binding: { sessionId: 'session-1', revision: 1 } });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(true);
+
+        expect(mocks.claimGithubIssueBinding).toHaveBeenCalledTimes(2);
+        expect(mocks.claimGithubIssueBinding.mock.calls[0]).toEqual(mocks.claimGithubIssueBinding.mock.calls[1]);
+        expect(mocks.machineStopSession).not.toHaveBeenCalled();
+        expect(mocks.sendMessage).toHaveBeenCalledOnce();
+    });
+
+    it('replays the same replacement after an acknowledgement is lost', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                operation: 'replace', issueKey: '7'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'lost-replace-ack', expectedRevision: 4, formerSessionId: 'former-session',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.confirm.mockResolvedValue(true);
+        mocks.replaceGithubIssueBinding
+            .mockRejectedValueOnce(new Error('response lost'))
+            .mockResolvedValueOnce({ outcome: 'replaced', binding: { sessionId: 'session-1', revision: 5 } });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(true);
+
+        expect(mocks.replaceGithubIssueBinding).toHaveBeenCalledTimes(2);
+        expect(mocks.replaceGithubIssueBinding.mock.calls[0]).toEqual(mocks.replaceGithubIssueBinding.mock.calls[1]);
+        expect(mocks.machineStopSession).not.toHaveBeenCalled();
+    });
+
+    it('preserves and opens a replacement Session that authority identifies as the same canonical continuation', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                operation: 'replace', issueKey: '7'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'self-replace-request', expectedRevision: 4, formerSessionId: 'session-1',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.confirm.mockResolvedValue(true);
+        mocks.replaceGithubIssueBinding.mockResolvedValue({
+            outcome: 'session-conflict',
+            binding: { issueKey: '7'.repeat(64), sessionId: 'session-1', revision: 4 },
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(true);
+
+        expect(mocks.machineStopSession).not.toHaveBeenCalled();
+        expect(mocks.sendMessage).not.toHaveBeenCalled();
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(null);
+        expect(mocks.navigateToSession).toHaveBeenCalledWith('session-1');
+    });
+
+    it('uses a localized Issue-labelled error when authority cannot establish the binding', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: '6'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'binding-conflict-request', issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.claimGithubIssueBinding.mockResolvedValue({ outcome: 'request-conflict' });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingEstablishFailed:myartings/happy#79',
+        );
+    });
+
+    it('reconciles the same claim after cancellation before deciding whether to stop the Session', async () => {
+        let rejectClaim!: (error: Error) => void;
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: '8'.repeat(64), encryptedPayload: 'ciphertext', requestId: 'cancel-claim-request',
+            },
+        });
+        mocks.claimGithubIssueBinding
+            .mockReturnValueOnce(new Promise((_resolve, reject) => { rejectClaim = reject; }))
+            .mockResolvedValueOnce({ outcome: 'claimed', binding: { sessionId: 'session-1', revision: 1 } });
+
+        const { startSession, cancelStart } = useStartSessionFromDraft();
+        const starting = startSession();
+        await vi.waitFor(() => expect(mocks.claimGithubIssueBinding).toHaveBeenCalledOnce());
+        cancelStart();
+        await expect(starting).resolves.toBe(false);
+        rejectClaim(new Error('response lost'));
+        await vi.waitFor(() => expect(mocks.claimGithubIssueBinding).toHaveBeenCalledTimes(2));
+
+        expect(mocks.claimGithubIssueBinding.mock.calls[0]).toEqual(mocks.claimGithubIssueBinding.mock.calls[1]);
+        expect(mocks.machineStopSession).not.toHaveBeenCalled();
+        expect(mocks.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('discards a losing candidate without sending and navigates to the canonical winner', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: 'b'.repeat(64),
+                encryptedPayload: 'ciphertext',
+                requestId: 'binding-request-2',
+            },
+        });
+        mocks.claimGithubIssueBinding.mockResolvedValue({
+            outcome: 'resumed',
+            binding: { sessionId: 'winning-session' },
+        });
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(true);
+
+        expect(mocks.sendMessage).not.toHaveBeenCalled();
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(null);
+        expect(mocks.navigateToSession).toHaveBeenCalledWith('winning-session');
+    });
+
+    it('completes revision-safe repair replacement before sending the first task', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                operation: 'replace',
+                issueKey: 'c'.repeat(64),
+                encryptedPayload: 'replacement-ciphertext',
+                requestId: 'replacement-request',
+                expectedRevision: 4,
+                formerSessionId: 'deleted-session',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.confirm.mockResolvedValue(true);
+        const { startSession } = useStartSessionFromDraft();
+
+        await expect(startSession()).resolves.toBe(true);
+
+        expect(mocks.replaceGithubIssueBinding).toHaveBeenCalledWith({
+            accountScope: 'a'.repeat(64),
+            issueKey: 'c'.repeat(64),
+            encryptedPayload: 'replacement-ciphertext',
+            requestId: 'replacement-request',
+            expectedRevision: 4,
+            replacementSessionId: 'session-1',
+        });
+        expect(mocks.replaceGithubIssueBinding.mock.invocationCallOrder[0])
+            .toBeLessThan(mocks.sendMessage.mock.invocationCallOrder[0]);
+        expect(mocks.confirm).toHaveBeenCalledWith(
+            'githubIssues.replaceBindingTitle',
+            'githubIssues.replaceBindingMessage',
+            expect.objectContaining({ confirmText: 'githubIssues.replaceBinding' }),
+        );
+    });
+
+    it('does not replace the canonical Session when New Session confirmation is canceled', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                operation: 'replace', issueKey: 'c'.repeat(64), encryptedPayload: 'replacement-ciphertext',
+                requestId: 'replacement-request', expectedRevision: 4, formerSessionId: 'deleted-session',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.confirm.mockResolvedValue(false);
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+        expect(mocks.replaceGithubIssueBinding).not.toHaveBeenCalled();
+        expect(mocks.sendMessage).not.toHaveBeenCalled();
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+    });
+
+    it('stops before replacement transport startup when the account changes during confirmation', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                operation: 'replace', issueKey: 'c'.repeat(64), encryptedPayload: 'replacement-ciphertext',
+                requestId: 'replacement-request', expectedRevision: 4, formerSessionId: 'deleted-session',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.confirm.mockResolvedValue(true);
+        mocks.validateBindingIntentAccount
+            .mockResolvedValueOnce(true)
+            .mockResolvedValueOnce(true)
+            .mockResolvedValueOnce(false);
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.replaceGithubIssueBinding).not.toHaveBeenCalled();
+        expect(mocks.sendMessage).not.toHaveBeenCalled();
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenCalledWith(null);
+    });
+
     it('keeps the draft and removes the empty session when its first message cannot be queued', async () => {
         mocks.sendMessage.mockResolvedValue(false);
 
@@ -254,6 +615,155 @@ describe('useStartSessionFromDraft', () => {
         expect(mocks.draft.setAttachments).not.toHaveBeenCalled();
         expect(mocks.navigateToSession).not.toHaveBeenCalled();
         expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+    });
+
+    it('releases a claimed Issue binding when the first message cannot be queued', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: 'd'.repeat(64), encryptedPayload: 'ciphertext', requestId: 'binding-request-4',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.sendMessage.mockResolvedValue(false);
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.abandonGithubIssueBinding).toHaveBeenCalledWith({
+            accountScope: 'a'.repeat(64),
+            issueKey: 'd'.repeat(64), abandonedSessionId: 'session-1', expectedRevision: 1,
+            requestId: 'binding-request-4:first-dispatch-failed:1',
+        });
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenLastCalledWith(expect.objectContaining({
+            operation: 'replace', requestId: expect.not.stringMatching(/^binding-request-4$/),
+            expectedRevision: 2, formerSessionId: 'session-1',
+        }));
+        expect(mocks.machineStopSession).toHaveBeenCalledWith('machine-1', 'session-1');
+    });
+
+    it('keeps the canonical Session reachable when first-dispatch compensation is unavailable', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: 'e'.repeat(64), encryptedPayload: 'ciphertext', requestId: 'binding-request-5',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.sendMessage.mockResolvedValue(false);
+        mocks.abandonGithubIssueBinding.mockResolvedValue({
+            outcome: 'not-found', binding: { sessionId: 'session-1', revision: 1 },
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.machineStopSession).not.toHaveBeenCalled();
+        expect(mocks.navigateToSession).toHaveBeenCalledWith('session-1');
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingRecoveryUnavailable:myartings/happy#79',
+        );
+    });
+
+    it('releases a claimed binding when first-message enqueueing throws', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: 'f'.repeat(64), encryptedPayload: 'ciphertext', requestId: 'binding-request-6',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.sendMessage.mockRejectedValue(new Error('encrypt failed'));
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.abandonGithubIssueBinding).toHaveBeenCalledWith(expect.objectContaining({
+            issueKey: 'f'.repeat(64), abandonedSessionId: 'session-1', expectedRevision: 1,
+        }));
+        expect(mocks.draft.setGithubIssueBindingIntent).toHaveBeenLastCalledWith(expect.objectContaining({
+            operation: 'replace', expectedRevision: 2,
+        }));
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingFirstDispatchFailed:myartings/happy#79',
+        );
+    });
+
+    it('keeps a claimed canonical Session when canceled enqueueing ultimately succeeds', async () => {
+        let finishSend!: (queued: boolean) => void;
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: '1'.repeat(64), encryptedPayload: 'ciphertext', requestId: 'binding-request-7',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.sendMessage.mockReturnValue(new Promise((resolve) => { finishSend = resolve; }));
+
+        const { startSession, cancelStart } = useStartSessionFromDraft();
+        const starting = startSession();
+        await vi.waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledOnce());
+        cancelStart();
+        await expect(starting).resolves.toBe(false);
+        finishSend(true);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mocks.abandonGithubIssueBinding).not.toHaveBeenCalled();
+        expect(mocks.machineStopSession).not.toHaveBeenCalled();
+    });
+
+    it('releases a replacement binding when its first message cannot be queued', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                operation: 'replace', issueKey: '2'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'replacement-request-2', expectedRevision: 4, formerSessionId: 'former-session',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.confirm.mockResolvedValue(true);
+        mocks.sendMessage.mockResolvedValue(false);
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.abandonGithubIssueBinding).toHaveBeenCalledWith(expect.objectContaining({
+            issueKey: '2'.repeat(64), abandonedSessionId: 'session-1', expectedRevision: 5,
+        }));
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingFirstDispatchFailed:myartings/happy#79',
+        );
+    });
+
+    it('retries failed-first-dispatch repair with a fresh replacement request id', async () => {
+        const originalDraft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: '3'.repeat(64), encryptedPayload: 'ciphertext', requestId: 'original-claim-request',
+                issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.draft = originalDraft;
+        mocks.sendMessage.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+
+        const first = useStartSessionFromDraft();
+        await expect(first.startSession()).resolves.toBe(false);
+        const replacementIntent = originalDraft.setGithubIssueBindingIntent.mock.calls
+            .map((call: any[]) => call[0])
+            .find((intent: any) => intent?.operation === 'replace');
+        expect(replacementIntent).toEqual(expect.objectContaining({
+            requestId: expect.any(String), expectedRevision: 2, formerSessionId: 'session-1',
+        }));
+        expect(replacementIntent.requestId).not.toBe('original-claim-request');
+
+        mocks.draft = createDraft({ githubIssueBindingIntent: replacementIntent });
+        mocks.machineSpawnNewSession.mockResolvedValue({ type: 'success', sessionId: 'session-2' });
+        mocks.confirm.mockResolvedValue(true);
+        const retry = useStartSessionFromDraft();
+        await expect(retry.startSession()).resolves.toBe(true);
+
+        expect(mocks.replaceGithubIssueBinding).toHaveBeenCalledWith(expect.objectContaining({
+            requestId: replacementIntent.requestId,
+            expectedRevision: 2,
+            replacementSessionId: 'session-2',
+        }));
     });
 
     it('cancels immediately while the first message is still enqueueing and cleans up when it settles', async () => {
@@ -826,5 +1336,31 @@ describe('useStartSessionFromDraft', () => {
         expect(mocks.draft.setAttachments).not.toHaveBeenCalled();
         expect(mocks.navigateToSession).not.toHaveBeenCalled();
         expect(mocks.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('hides raw spawn errors behind a localized Issue-labelled failure', async () => {
+        mocks.draft = createDraft({
+            githubIssueBindingIntent: {
+                issueKey: 'd'.repeat(64), encryptedPayload: 'ciphertext',
+                requestId: 'spawn-error-request', issueLabel: 'myartings/happy#79',
+            },
+        });
+        mocks.machineSpawnNewSession.mockResolvedValue({
+            type: 'error',
+            errorMessage: 'myartings/happy#79: daemon secret detail',
+        });
+
+        const { startSession } = useStartSessionFromDraft();
+        await expect(startSession()).resolves.toBe(false);
+
+        expect(mocks.alert).toHaveBeenCalledWith(
+            'common.error',
+            'githubIssues.bindingStartFailed:myartings/happy#79',
+        );
+        expect(mocks.alert).not.toHaveBeenCalledWith(
+            'common.error',
+            'myartings/happy#79: daemon secret detail',
+        );
+        expect(mocks.draft.setInput).not.toHaveBeenCalled();
     });
 });

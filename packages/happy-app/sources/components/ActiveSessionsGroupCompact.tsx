@@ -29,6 +29,7 @@ import { SessionEnvironmentMetadata } from './SessionEnvironmentMetadata';
 import { resolveSessionEnvironmentDisplay } from '@/utils/sessionEnvironmentDisplay';
 import { resolveSessionRowDisplayPolicy, type SessionRowDisplayContext } from '@/utils/sessionRowDisplayContext';
 import type { DesktopSessionRowStyle } from '@/features/studio-visual-style/studioVisualStyle';
+import { GithubIssueSessionBadge } from '@/features/github-issues/GithubIssueSessionBadge';
 import {
     resolveStudioSidebarGroupPresentation,
     resolveStudioSidebarRowChrome,
@@ -538,6 +539,7 @@ export const CompactSessionRow = React.memo(({ session, selected, showBorder, di
                     />
                     {!isStudio && renderTrailingIndicator()}
                 </View>
+                <GithubIssueSessionBadge sessionId={session.id} />
                 {displayPolicy.environmentPlacement === 'full' && environment ? (
                     <SessionEnvironmentMetadata
                         environment={environment}

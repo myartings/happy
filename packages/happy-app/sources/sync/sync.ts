@@ -34,6 +34,7 @@ import { buildPersonalDisplaySettingsMigration, buildSyncedSessionListSettingsMi
 import { didSessionBecomeUnread, markSessionAttentionRead, markSessionAttentionUnread } from './sessionAttentionMarkers';
 import { Profile, profileParse } from './profile';
 import { loadPendingSettings, savePendingSettings } from './persistence';
+import { reconcileGithubIssueBindingsAfterReconnect } from '@/features/github-issues/githubIssueBindingReconnect';
 import {
     initializeTracking,
     trackGitHubConnected,
@@ -88,6 +89,8 @@ import { Modal } from '@/modal';
 import { t } from '@/text';
 import { isRigMetadataV1, rigCanUseAttachments, usesControlledSessionUi } from './rig';
 import { fetchProjects as fetchProjectRecords } from './apiProjects';
+import { publishGithubIssueBindingInvalidationIfEnabled } from '@/features/github-issues/githubIssueBindingInvalidation';
+import { githubIssueBindingIssueKeyFromKvKey } from '@/features/github-issues/githubIssueBindingKvClient';
 import { decryptProjectRecord, loadProjectAvatar, type DecryptedProjectRecord } from './projects';
 import type { Project, ProjectAvatar } from './projectTypes';
 import {
@@ -3071,6 +3074,9 @@ export class Sync {
             this.friendsSync.invalidate();
             this.friendRequestsSync.invalidate();
             this.feedSync.invalidate();
+            void reconcileGithubIssueBindingsAfterReconnect(
+                storage.getState().localSettings.devGithubIssuesEnabled,
+            );
             // Refresh only messages for sessions that are currently mounted. Git status and
             // voice focus are visibility concerns and must not be repeated on reconnect.
             const visibleSessionIds = selectVisibleSessionIds(this.visibleSessionRefCounts);
@@ -3237,6 +3243,16 @@ export class Sync {
             this.projectsSync.invalidate();
 
             log.log(`🗑️ Session ${sessionId} deleted from local storage`);
+        } else if (updateData.body.t === 'kv-batch-update') {
+            const issueKeys = updateData.body.changes
+                .map((change) => githubIssueBindingIssueKeyFromKvKey(change.key))
+                .filter((issueKey): issueKey is string => issueKey !== null);
+            if (issueKeys.length > 0) {
+                publishGithubIssueBindingInvalidationIfEnabled(
+                    storage.getState().localSettings.devGithubIssuesEnabled,
+                    { issueKeys },
+                );
+            }
         } else if (updateData.body.t === 'update-session') {
             // Session + encryption may not be initialized yet if sessions are
             // still syncing on startup. Mirror the new-message path: await the

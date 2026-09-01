@@ -17,6 +17,11 @@ describe('Codex-first workspace and Settings wiring', () => {
         expect(session).toContain("workspaceChrome.actions.some(action => action.id === 'side-chat')");
         expect(session).toContain("workspaceChrome.actions.some(action => action.id === 'issues')");
         expect(session).toContain('{showGithubIssuesAction ? (');
+        expect(session).toContain('const showGithubIssueSessionContext = showGithubIssuesAction && !!githubIssueProjection;');
+        expect(session).toContain('useGithubIssueSessionProjection(sessionId, showGithubIssuesAction, true)');
+        expect(session).toContain('useGithubIssueSessionFreshness(sessionId, showGithubIssuesAction)');
+        expect(session).toContain('{showGithubIssueSessionContext ? (');
+        expect(session).toContain("showGithubIssueSessionContext && githubIssueProjection?.status === 'bound'");
         expect(session).toContain('quickPanelShowSideChatAction={showQuickPanelSideChatAction}');
         expect(session).toContain('studioRightPanelWidth: width');
     });

@@ -58,6 +58,8 @@ export const githubIssuesApi = createGithubIssuesClient({
 
 export const githubIssuesAuthorization = createGithubIssuesAuthorizationSession(githubIssuesApi);
 
+export { githubIssueBindingApi } from './githubIssueBindingApi';
+
 export const githubIssuesRepositoryResolver = createGithubRepositoryEntryResolver({
     listRepositories: () => githubIssuesApi.listRepositories(),
     lookupRemotes: async ({ sessionId, path }) => {

@@ -7,7 +7,7 @@ import { Item } from '@/components/Item';
 import { ItemGroup } from '@/components/ItemGroup';
 import { ItemList } from '@/components/ItemList';
 import { Avatar } from '@/components/Avatar';
-import { useSession, useIsDataReady, useSessionProjectAvatar } from '@/sync/storage';
+import { useSession, useIsDataReady, useSessionProjectAvatar, useLocalSetting } from '@/sync/storage';
 import { getSessionName, useSessionStatus, formatOSPlatform, formatPathRelativeToHome, getSessionAvatarId, getResumeCommand } from '@/utils/sessionUtils';
 import * as Clipboard from 'expo-clipboard';
 import { Modal } from '@/modal';
@@ -26,6 +26,8 @@ import { HappyError } from '@/utils/errors';
 import { MobileGlassSurface } from '@/components/MobileGlass';
 import { getRigIdentity, isRigMetadata } from '@/sync/rig';
 import { MOBILE_GLASS_HEADER_HEIGHT } from '@/components/navigation/headerMetrics';
+import { useGithubIssueSessionFreshness, useGithubIssueSessionProjection } from '@/features/github-issues/GithubIssueSessionBadge';
+import { openExternalUrl } from '@/utils/openExternalUrl';
 
 // Animated status dot component
 function StatusDot({ color, isPulsing, size = 8 }: { color: string; isPulsing?: boolean; size?: number }) {
@@ -127,6 +129,9 @@ function formatDangerouslySkipPermissionsMetadata(
 }
 
 function SessionInfoContent({ session }: { session: Session }) {
+    const githubIssuesEnabled = useLocalSetting('devGithubIssuesEnabled');
+    const githubIssueProjection = useGithubIssueSessionProjection(session.id, githubIssuesEnabled, true);
+    const githubIssueFreshness = useGithubIssueSessionFreshness(session.id, githubIssuesEnabled);
     const { theme } = useUnistyles();
     const router = useRouter();
     const projectAvatar = useSessionProjectAvatar(session.id);
@@ -305,6 +310,14 @@ function SessionInfoContent({ session }: { session: Session }) {
 
                 {/* Session Details */}
                 <ItemGroup>
+                    {githubIssueProjection ? (
+                        <Item
+                            title={`${t('githubIssues.title')}: ${githubIssueProjection.payload.titleSnapshot}`}
+                            subtitle={`${githubIssueProjection.payload.ownerSnapshot}/${githubIssueProjection.payload.repositorySnapshot}#${githubIssueProjection.payload.number}${githubIssueProjection.status === 'replaced' ? ` · ${t('githubIssues.replaced')}` : githubIssueProjection.status === 'repair-required' ? ` · ${t('githubIssues.repairSession')}` : githubIssueFreshness === 'identity-conflict' ? ` · ${t('githubIssues.identityConflict')}` : githubIssueFreshness === 'unavailable' ? ` · ${t('githubIssues.cachedIssueContext')}` : githubIssueFreshness === 'changed' ? ` · ${t('githubIssues.staleIssueContext')}` : ` · ${t('githubIssues.currentSession')}`}`}
+                            icon={<Ionicons name="logo-github" size={29} color="#24292F" />}
+                            onPress={() => void openExternalUrl(githubIssueProjection.payload.urlSnapshot)}
+                        />
+                    ) : null}
                     <Item
                         title={t('sessionInfo.happySessionId')}
                         subtitle={`${session.id.substring(0, 8)}...${session.id.substring(session.id.length - 8)}`}

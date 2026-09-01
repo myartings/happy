@@ -98,6 +98,9 @@ import { StudioPanelResizeHandle } from '@/features/studio-panel-resize/StudioPa
 import { projectStudioPanelWidths } from '@/features/studio-panel-resize/studioPanelResizePolicy';
 import { setStudioRightPanelVisible } from '@/features/studio-panel-resize/studioPanelResizeVisibility';
 import { AnimatedFade } from '@/components/AnimatedOverlay';
+import { useGithubIssueSessionFreshness, useGithubIssueSessionProjection } from '@/features/github-issues/GithubIssueSessionBadge';
+import { acknowledgeGithubIssueAgentContext } from '@/features/github-issues/githubIssueBindingStore';
+import { prepareGithubIssueAgentContextRefreshDraft } from '@/features/github-issues/githubIssueBindingAgentContext';
 import { resolveCurrentCodexFirstDesktopRuntime } from '@/features/codex-first-shell/resolveCurrentCodexFirstDesktopRuntime';
 import { resolveCodexFirstWorkspaceChrome } from '@/features/codex-first-shell/codexFirstWorkspaceChrome';
 import { resolveCodexFirstDesktopLayout } from '@/features/codex-first-shell/codexFirstDesktopHardening';
@@ -193,6 +196,19 @@ export const SessionView = React.memo((props: {
         githubIssuesEnabled,
         sideChatQuickPanelEnabled: sideChatQuickPanelSettingEnabled,
     });
+    const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
+        enabled: githubIssuesEnabled,
+        hasSession: !!session,
+        deviceType,
+        platform: Platform.OS,
+        isTauri: runningInTauri,
+    });
+    const showGithubIssuesAction = showGithubIssuesSessionEntry
+        && (!codexFirstContract.enabled
+            || workspaceChrome.actions.some(action => action.id === 'issues'));
+    const githubIssueProjection = useGithubIssueSessionProjection(sessionId, showGithubIssuesAction, true);
+    const githubIssueFreshness = useGithubIssueSessionFreshness(sessionId, showGithubIssuesAction);
+    const showGithubIssueSessionContext = showGithubIssuesAction && !!githubIssueProjection;
 
     React.useEffect(() => {
         if (!workspaceChrome.quickPanelEnabled) setQuickPanelPickerOpen(false);
@@ -510,16 +526,6 @@ export const SessionView = React.memo((props: {
             isConnected,
         };
     }, [session, isDataReady]);
-    const showGithubIssuesSessionEntry = shouldShowGithubIssuesSessionEntry({
-        enabled: githubIssuesEnabled,
-        hasSession: !!session,
-        deviceType,
-        platform: Platform.OS,
-        isTauri: runningInTauri,
-    });
-    const showGithubIssuesAction = showGithubIssuesSessionEntry
-        && (!codexFirstContract.enabled
-            || workspaceChrome.actions.some(action => action.id === 'issues'));
     const quickPanelHeaderControls = showQuickPanelControls && (!showSidebar || quickPanelPickerOpen)
         ? (
             <SideChatQuickPanelControls
@@ -539,6 +545,74 @@ export const SessionView = React.memo((props: {
     const headerRight = showGithubIssuesAction || quickPanelHeaderControls
         ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                {showGithubIssueSessionContext ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open GitHub Issue ${githubIssueProjection.payload.ownerSnapshot}/${githubIssueProjection.payload.repositorySnapshot}#${githubIssueProjection.payload.number}`}
+                        onPress={() => {
+                            openGithubIssuesWorkspace({
+                                repository: {
+                                    owner: githubIssueProjection.payload.ownerSnapshot,
+                                    repo: githubIssueProjection.payload.repositorySnapshot,
+                                },
+                                mode: 'detail',
+                                issueNumber: githubIssueProjection.payload.number,
+                            });
+                        }}
+                        style={{ minHeight: 44, maxWidth: 260, justifyContent: 'center', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: theme.colors.surfaceHigh }}
+                    >
+                        <Text style={{ color: theme.colors.header.tint, fontSize: 11 }} numberOfLines={1}>
+                            {githubIssueProjection.payload.ownerSnapshot}/{githubIssueProjection.payload.repositorySnapshot}#{githubIssueProjection.payload.number}
+                        </Text>
+                        <Text style={{ color: theme.colors.textSecondary, fontSize: 10 }} numberOfLines={1}>
+                            {githubIssueProjection.payload.titleSnapshot}
+                        </Text>
+                        {githubIssueProjection.status === 'replaced' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.replaced')}
+                            </Text>
+                        ) : githubIssueProjection.status === 'repair-required' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.repairSession')}
+                            </Text>
+                        ) : githubIssueFreshness === 'identity-conflict' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.identityConflict')}
+                            </Text>
+                        ) : githubIssueFreshness === 'changed' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.issueUpdatedSinceLoaded')}
+                            </Text>
+                        ) : githubIssueFreshness === 'unavailable' ? (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.cachedIssueContext')}
+                            </Text>
+                        ) : (
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 9 }} numberOfLines={1}>
+                                {t('githubIssues.currentSession')}
+                            </Text>
+                        )}
+                    </Pressable>
+                ) : null}
+                {showGithubIssueSessionContext && githubIssueProjection?.status === 'bound' && githubIssueFreshness === 'changed' ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('githubIssues.refreshAgentContext')}
+                        onPress={() => {
+                            const current = storage.getState().sessions[sessionId]?.draft;
+                            storage.getState().updateSessionDraft(
+                                sessionId,
+                                prepareGithubIssueAgentContextRefreshDraft(current, githubIssueProjection.payload),
+                            );
+                            void acknowledgeGithubIssueAgentContext(sessionId);
+                        }}
+                        style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 8, borderRadius: 8, backgroundColor: theme.colors.surfaceHigh }}
+                    >
+                        <Text style={{ color: theme.colors.header.tint, fontSize: 10 }}>
+                            {t('githubIssues.refreshAgentContext')}
+                        </Text>
+                    </Pressable>
+                ) : null}
                 {showGithubIssuesAction ? (
                     <GithubIssuesButton
                         tintColor={theme.colors.header.tint}

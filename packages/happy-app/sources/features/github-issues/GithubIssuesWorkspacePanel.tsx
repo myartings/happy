@@ -2,6 +2,7 @@ import * as React from 'react';
 import { ActivityIndicator, Modal as NativeModal, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { randomUUID } from 'expo-crypto';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '@/components/StyledText';
 import { MarkdownView } from '@/components/markdown/MarkdownView';
@@ -10,20 +11,28 @@ import { useNewSessionDraft } from '@/hooks/useNewSessionDraft';
 import { useNavigateToSession } from '@/hooks/useNavigateToSession';
 import { Modal } from '@/modal';
 import { sessionBash } from '@/sync/ops';
-import { storage, useAllSessions } from '@/sync/storage';
+import { storage } from '@/sync/storage';
 import { t } from '@/text';
 import { openExternalUrl } from '@/utils/openExternalUrl';
-import { getSessionName, getSessionSubtitle } from '@/utils/sessionUtils';
+import { getSessionSubtitle } from '@/utils/sessionUtils';
 import {
     buildGithubIssueDispatchTask,
     getGithubIssueRelativeTime,
     getGithubIssuesErrorMessage,
     githubIssuesApi,
+    githubIssuesRepositoryResolver,
     prepareGithubIssueSessionDraft,
     type GithubIssue,
     type GithubIssueState,
+    type GithubRepository,
 } from './githubIssuesApi';
 import type { GithubIssuesWorkspaceSelection } from './githubIssuesWorkspace';
+import { getGithubIssueBindingDispatchActionKey, resolveGithubIssueBindingDispatch, type GithubIssueBindingDispatchResolution } from './githubIssueBindingDispatch';
+import type { GithubIssueBindingIntent } from './githubIssueBindingIdentity';
+import {
+    mutateGithubIssueBindingForExistingSession,
+    prepareGithubIssueExceptionalReplacement,
+} from './githubIssueBindingReplacement';
 
 export function GithubIssuesWorkspacePanel({
     parentSessionId,
@@ -135,20 +144,33 @@ function IssueDetail({ parentSessionId, selection, onSelectionChange }: {
     const router = useRouter();
     const newSessionDraft = useNewSessionDraft();
     const navigateToSession = useNavigateToSession();
-    const allSessions = useAllSessions();
     const [issue, setIssue] = React.useState<GithubIssue | null>(null);
+    const [repositoryRecord, setRepositoryRecord] = React.useState<GithubRepository | null>(null);
+    const [bindingIntent, setBindingIntent] = React.useState<GithubIssueBindingIntent | null>(null);
     const [error, setError] = React.useState<string | null>(null);
     const [mutating, setMutating] = React.useState(false);
     const [actionsVisible, setActionsVisible] = React.useState(false);
     const [dispatchVisible, setDispatchVisible] = React.useState(false);
     const [workflow, setWorkflow] = React.useState<'triage-first' | 'repository-rules'>('repository-rules');
+    const [currentRepositoryEligible, setCurrentRepositoryEligible] = React.useState(false);
+    const [currentBindingEligible, setCurrentBindingEligible] = React.useState(false);
+    const [canonicalDispatch, setCanonicalDispatch] = React.useState<GithubIssueBindingDispatchResolution>({ kind: 'loading' });
     const number = selection.issueNumber!;
     const load = React.useCallback(async () => {
         try {
-            setIssue(await githubIssuesApi.getIssue({ ...selection.repository, number }));
+            const [nextIssue, repositories] = await Promise.all([
+                githubIssuesApi.getIssue({ ...selection.repository, number }),
+                githubIssuesApi.listRepositories(),
+            ]);
+            const repository = repositories.find((candidate) =>
+                candidate.owner.toLowerCase() === selection.repository.owner.toLowerCase()
+                && candidate.name.toLowerCase() === selection.repository.repo.toLowerCase());
+            if (!repository) throw new Error('Repository identity is unavailable');
+            setIssue(nextIssue);
+            setRepositoryRecord(repository);
             setError(null);
         } catch (caught) {
-            setError(getGithubIssuesErrorMessage(caught));
+            setError(`${selection.repository.owner}/${selection.repository.repo}#${number}: ${getGithubIssuesErrorMessage(caught)}`);
         }
     }, [number, selection.repository]);
     React.useEffect(() => { void load(); }, [load]);
@@ -161,20 +183,70 @@ function IssueDetail({ parentSessionId, selection, onSelectionChange }: {
             timeout: 3000,
         }).then((result) => setWorkflow(result.success ? 'triage-first' : 'repository-rules'));
     }, [parentSessionId]);
+    React.useEffect(() => {
+        const source = storage.getState().sessions[parentSessionId];
+        setCurrentRepositoryEligible(false);
+        if (!source?.active || !source.metadata?.path || !repositoryRecord) return;
+        void githubIssuesRepositoryResolver.resolve({
+            sessionId: source.id,
+            machineId: source.metadata.machineId,
+            path: source.metadata.path,
+        }).then((resolution) => setCurrentRepositoryEligible(
+            resolution.status === 'resolved' && resolution.repository.id === repositoryRecord.id,
+        )).catch(() => setCurrentRepositoryEligible(false));
+    }, [parentSessionId, repositoryRecord]);
+    React.useEffect(() => {
+        let canceled = false;
+        if (!repositoryRecord || !issue) return;
+        setCurrentBindingEligible(false);
+        void Promise.all([
+            import('./githubIssueBindingIntent'),
+            import('./githubIssueBindingApi'),
+            import('./githubIssueBindingStore'),
+        ]).then(async ([{ prepareGithubIssueBindingIntent }, { githubIssueBindingApi }, {
+            getGithubIssueCanonicalProjectionByIssueKey,
+            getGithubIssueCanonicalIssueKeyForSession,
+            refreshGithubIssueSessionProjections,
+            validateGithubIssueBindingEvidence,
+        }]) => {
+            await refreshGithubIssueSessionProjections();
+            const intent = await prepareGithubIssueBindingIntent(repositoryRecord, issue);
+            const currentIssueKey = getGithubIssueCanonicalIssueKeyForSession(parentSessionId);
+            const resolution = await resolveGithubIssueBindingDispatch(
+                githubIssueBindingApi,
+                intent.issueKey,
+                (issueKey) => getGithubIssueCanonicalProjectionByIssueKey(issueKey)?.sessionId ?? null,
+                validateGithubIssueBindingEvidence,
+            );
+            if (!canceled) {
+                setCurrentBindingEligible(
+                    !currentIssueKey || currentIssueKey === intent.issueKey,
+                );
+                setCanonicalDispatch(resolution);
+            }
+        }).catch(() => { if (!canceled) setCanonicalDispatch({ kind: 'unavailable' }); });
+        return () => { canceled = true; };
+    }, [issue, parentSessionId, repositoryRecord]);
 
     if (!issue) return <View style={styles.center}>{error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator />}</View>;
+    const issueIdentity = `${selection.repository.owner}/${selection.repository.repo}#${issue.number}`;
     const task = buildGithubIssueDispatchTask({ repository: selection.repository, issue, workflow });
     const source = storage.getState().sessions[parentSessionId];
-    const matching = source?.metadata?.path
-        ? allSessions.filter((candidate) => candidate.active && candidate.metadata?.path === source.metadata?.path)
-        : [];
+    const eligibleCurrent = source?.active
+        && source.metadata?.path
+        && !source.metadata?.isSideChat
+        && currentRepositoryEligible
+        && currentBindingEligible
+        && (bindingIntent?.operation !== 'replace' || bindingIntent.formerSessionId !== source.id)
+        ? source
+        : null;
     const setState = async () => {
         if (mutating) return;
         setMutating(true);
         try {
             setIssue(await githubIssuesApi.setIssueState({ ...selection.repository, number, state: issue.state === 'open' ? 'closed' : 'open' }));
         } catch (caught) {
-            Modal.alert(t('githubIssues.updateFailed'), getGithubIssuesErrorMessage(caught));
+            Modal.alert(t('githubIssues.updateFailed'), `${issueIdentity}: ${getGithubIssuesErrorMessage(caught)}`);
         } finally { setMutating(false); }
     };
     const remove = async () => {
@@ -186,26 +258,180 @@ function IssueDetail({ parentSessionId, selection, onSelectionChange }: {
             await githubIssuesApi.deleteIssue({ ...selection.repository, number });
             onSelectionChange({ ...selection, mode: 'list', issueNumber: undefined });
         } catch (caught) {
-            Modal.alert(t('githubIssues.deleteFailed'), getGithubIssuesErrorMessage(caught));
+            Modal.alert(t('githubIssues.deleteFailed'), `${issueIdentity}: ${getGithubIssuesErrorMessage(caught)}`);
         } finally { setMutating(false); }
     };
     const addToSession = async (sessionId: string) => {
+        if (!bindingIntent) return;
         const current = storage.getState().sessions[sessionId];
-        if (current?.draft?.trim()) {
+        if (current?.metadata?.isSideChat) return;
+        if (bindingIntent.operation === 'replace' && bindingIntent.formerSessionId === sessionId) return;
+        if (bindingIntent.operation === 'replace') {
+            const confirmed = await Modal.confirm(
+                t('githubIssues.replaceBindingTitle'),
+                t('githubIssues.replaceBindingMessage', {
+                    issue: `${selection.repository.owner}/${selection.repository.repo}#${issue.number}`,
+                    oldSession: bindingIntent.formerSessionId ?? t('githubIssues.missingSession'),
+                    newSession: sessionId,
+                }),
+                { cancelText: t('common.cancel'), confirmText: t('githubIssues.replaceBinding') },
+            );
+            if (!confirmed) return;
+        } else {
+            const confirmed = await Modal.confirm(
+                t('githubIssues.adoptBindingTitle'),
+                t('githubIssues.adoptBindingMessage', {
+                    issue: issueIdentity,
+                    session: sessionId,
+                    hasDraft: !!current?.draft?.trim(),
+                }),
+                { cancelText: t('common.cancel'), confirmText: t('githubIssues.adoptBinding') },
+            );
+            if (!confirmed) return;
+        }
+        if (bindingIntent.operation === 'replace' && current?.draft?.trim()) {
             const confirmed = await Modal.confirm(t('githubIssues.addDraftTitle'), t('githubIssues.addDraftMessage'), { cancelText: t('common.cancel'), confirmText: t('githubIssues.addDraft') });
             if (!confirmed) return;
         }
-        storage.getState().updateSessionDraft(sessionId, prepareGithubIssueSessionDraft(current?.draft, task));
-        setDispatchVisible(false);
-        if (sessionId !== parentSessionId) navigateToSession(sessionId);
+        setCanonicalDispatch({ kind: 'binding' });
+        try {
+            const [{ githubIssueBindingApi }, { validateGithubIssueBindingIntentAccount }] = await Promise.all([
+                import('./githubIssueBindingApi'),
+                import('./githubIssueBindingIntent'),
+            ]);
+            if (!await validateGithubIssueBindingIntentAccount(bindingIntent)) {
+                setBindingIntent(null);
+                newSessionDraft.setGithubIssueBindingIntent(null);
+                setDispatchVisible(false);
+                setCanonicalDispatch({ kind: 'unavailable' });
+                Modal.alert(t('common.error'), t('githubIssues.bindingAccountChanged', { issue: issueIdentity }));
+                return;
+            }
+            const result = await mutateGithubIssueBindingForExistingSession(
+                githubIssueBindingApi,
+                bindingIntent,
+                sessionId,
+            );
+            if (result.outcome === 'repair-required') {
+                setBindingIntent({
+                    ...bindingIntent,
+                    operation: 'replace',
+                    requestId: randomUUID(),
+                    expectedRevision: result.binding.revision,
+                    formerSessionId: result.binding.lastSessionId ?? null,
+                });
+                setCanonicalDispatch({
+                    kind: 'repair-required',
+                    expectedRevision: result.binding.revision,
+                    formerSessionId: result.binding.lastSessionId ?? null,
+                });
+                return;
+            }
+            if ((result.outcome === 'resumed' || result.outcome === 'revision-conflict') && result.binding.sessionId !== sessionId) {
+                setDispatchVisible(false);
+                if (result.binding.sessionId) navigateToSession(result.binding.sessionId);
+                return;
+            }
+            if (result.outcome !== 'claimed' && result.outcome !== 'resumed' && result.outcome !== 'replaced') {
+                setCanonicalDispatch({ kind: 'conflict' });
+                Modal.alert(t('common.error'), `${issueIdentity}: ${t('githubIssues.bindingConflictHelp')}`);
+                return;
+            }
+            storage.getState().updateSessionDraft(sessionId, prepareGithubIssueSessionDraft(current?.draft, task));
+            setDispatchVisible(false);
+            if (sessionId !== parentSessionId) navigateToSession(sessionId);
+        } catch {
+            setCanonicalDispatch({ kind: 'unavailable' });
+            Modal.alert(t('common.error'), `${issueIdentity}: ${t('githubIssues.bindingRetry')}`);
+        }
     };
     const startNewSession = () => {
+        if (!bindingIntent) return;
         if (source?.metadata?.machineId) newSessionDraft.setMachineId(source.metadata.machineId);
         if (source?.metadata?.path) newSessionDraft.setPath(source.metadata.path);
-        newSessionDraft.setInput(task.prompt);
+        newSessionDraft.setInput(prepareGithubIssueSessionDraft(newSessionDraft.input, task));
+        newSessionDraft.setGithubIssueBindingIntent(bindingIntent);
         setDispatchVisible(false);
         router.navigate('/new');
     };
+    const openDispatch = async () => {
+        if (!repositoryRecord || mutating) return;
+        setMutating(true);
+        try {
+            const [{ prepareGithubIssueBindingIntent }, { githubIssueBindingApi }, {
+                getGithubIssueCanonicalProjectionByIssueKey,
+                refreshGithubIssueSessionProjections,
+                validateGithubIssueBindingEvidence,
+            }] = await Promise.all([
+                import('./githubIssueBindingIntent'),
+                import('./githubIssueBindingApi'),
+                import('./githubIssueBindingStore'),
+            ]);
+            await refreshGithubIssueSessionProjections();
+            const intent = await prepareGithubIssueBindingIntent(repositoryRecord, issue);
+            const resolution = await resolveGithubIssueBindingDispatch(
+                githubIssueBindingApi,
+                intent.issueKey,
+                (issueKey) => getGithubIssueCanonicalProjectionByIssueKey(issueKey)?.sessionId ?? null,
+                validateGithubIssueBindingEvidence,
+            );
+            setCanonicalDispatch(resolution);
+            if (resolution.kind === 'continue' || resolution.kind === 'offline') {
+                navigateToSession(resolution.sessionId);
+                return;
+            }
+            if (resolution.kind === 'restore') {
+                const { restoreGithubIssueCanonicalSession } = await import('./githubIssueBindingRestore');
+                const restored = await restoreGithubIssueCanonicalSession(resolution.sessionId);
+                if (restored.outcome === 'restored') {
+                    navigateToSession(restored.sessionId);
+                } else {
+                    Modal.alert(t('common.error'), t('githubIssues.bindingRestoreFailed', { issue: issueIdentity }));
+                    router.push(`/session/${resolution.sessionId}/info`);
+                }
+                return;
+            }
+            if (resolution.kind === 'repair-required') {
+                setBindingIntent({
+                    ...intent,
+                    operation: 'replace',
+                    expectedRevision: resolution.expectedRevision,
+                    formerSessionId: resolution.formerSessionId,
+                });
+                setDispatchVisible(true);
+                return;
+            }
+            if (resolution.kind !== 'unbound') {
+                Modal.alert(t('common.error'), `${issueIdentity}: ${t('githubIssues.bindingUnavailable')}`);
+                return;
+            }
+            setBindingIntent(intent);
+            setDispatchVisible(true);
+        } catch {
+            Modal.alert(t('common.error'), `${issueIdentity}: ${t('githubIssues.bindingUnavailable')}`);
+        } finally {
+            setMutating(false);
+        }
+    };
+    const openReplacementDispatch = async () => {
+        if (!repositoryRecord || mutating) return;
+        setMutating(true);
+        setActionsVisible(false);
+        try {
+            const [{ prepareGithubIssueBindingIntent }, { githubIssueBindingApi }] = await Promise.all([
+                import('./githubIssueBindingIntent'),
+                import('./githubIssueBindingApi'),
+            ]);
+            const intent = await prepareGithubIssueBindingIntent(repositoryRecord, issue);
+            setBindingIntent(await prepareGithubIssueExceptionalReplacement(githubIssueBindingApi, intent));
+            setDispatchVisible(true);
+        } catch {
+            Modal.alert(t('common.error'), `${issueIdentity}: ${t('githubIssues.bindingUnavailable')}`);
+        } finally {
+            setMutating(false);
+        }
+    };
+    const canonicalActionLabel = t(getGithubIssueBindingDispatchActionKey(canonicalDispatch));
     return (
         <View style={styles.page}>
             <PanelHeader
@@ -220,6 +446,9 @@ function IssueDetail({ parentSessionId, selection, onSelectionChange }: {
             {actionsVisible ? (
                 <View style={styles.actionsMenu}>
                     <Pressable onPress={() => void openExternalUrl(issue.url)}><Text style={styles.menuText}>{t('githubIssues.openOnGithub')}</Text></Pressable>
+                    {canonicalDispatch.kind === 'continue' || canonicalDispatch.kind === 'restore' || canonicalDispatch.kind === 'offline' ? (
+                        <Pressable disabled={mutating} onPress={() => void openReplacementDispatch()}><Text style={styles.menuText}>{t('githubIssues.replaceCanonicalSession')}</Text></Pressable>
+                    ) : null}
                     {issue.viewerCanDelete ? <Pressable disabled={mutating} onPress={() => void remove()}><Text style={styles.deleteText}>{t('githubIssues.deletePermanently')}</Text></Pressable> : null}
                 </View>
             ) : null}
@@ -228,19 +457,19 @@ function IssueDetail({ parentSessionId, selection, onSelectionChange }: {
                 <Text style={styles.secondary}>{t(issue.state === 'open' ? 'githubIssues.open' : 'githubIssues.closed')} · {issue.author?.login ?? 'unknown'} · {formatRelativeTime(issue.updatedAt)} · {issue.comments}</Text>
                 {issue.labels.length > 0 ? <View style={styles.labels}>{issue.labels.map((label) => <Text key={label.name} style={styles.label}>{label.name}</Text>)}</View> : null}
                 <View style={styles.body}>{issue.body ? <MarkdownView markdown={issue.body} /> : <Text style={styles.secondary}>{t('githubIssues.noDescription')}</Text>}</View>
-                <Pressable accessibilityRole="button" onPress={() => setDispatchVisible(true)} style={styles.primaryButton}><Text style={styles.primaryText}>{t('githubIssues.workOnIssue')}</Text></Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel={canonicalActionLabel} disabled={mutating} onPress={() => void openDispatch()} style={styles.primaryButton}><Text style={styles.primaryText}>{canonicalActionLabel}</Text></Pressable>
                 <Pressable accessibilityRole="button" disabled={mutating} onPress={() => void setState()} style={styles.lifecycleButton}><Text style={styles.link}>{mutating ? t('githubIssues.updating') : t(issue.state === 'open' ? 'githubIssues.closeIssue' : 'githubIssues.reopenIssue')}</Text></Pressable>
             </ScrollView>
             <NativeModal visible={dispatchVisible} transparent animationType="fade" onRequestClose={() => setDispatchVisible(false)}>
                 <Pressable style={styles.backdrop} onPress={() => setDispatchVisible(false)}>
                     <View style={styles.dispatchSheet}>
                         <Text style={styles.sheetTitle}>{t('githubIssues.workOnIssueNumber', { number: issue.number })}</Text>
-                        {matching.map((candidate) => (
-                            <Pressable key={candidate.id} style={styles.targetRow} onPress={() => void addToSession(candidate.id)}>
-                                <Text style={styles.menuText}>{candidate.id === parentSessionId ? t('githubIssues.addCurrentSession') : getSessionName(candidate)}</Text>
-                                <Text style={styles.secondary}>{candidate.draft ? `${t('githubIssues.keepsDraft')} · ` : ''}{getSessionSubtitle(candidate)}</Text>
+                        {eligibleCurrent ? (
+                            <Pressable style={styles.targetRow} onPress={() => void addToSession(eligibleCurrent.id)}>
+                                <Text style={styles.menuText}>{t('githubIssues.addCurrentSession')}</Text>
+                                <Text style={styles.secondary}>{eligibleCurrent.draft ? `${t('githubIssues.keepsDraft')} · ` : ''}{getSessionSubtitle(eligibleCurrent)}</Text>
                             </Pressable>
-                        ))}
+                        ) : null}
                         <Pressable style={styles.targetRow} onPress={startNewSession}><Text style={styles.menuText}>{t('githubIssues.startNewSession')}</Text></Pressable>
                     </View>
                 </Pressable>

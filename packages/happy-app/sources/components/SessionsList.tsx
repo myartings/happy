@@ -33,6 +33,7 @@ import { SessionActionsAnchor, SessionActionsPopover } from './SessionActionsPop
 import { useSessionActionAlert } from '@/hooks/useSessionQuickActions';
 import { t } from '@/text';
 import { SessionShortcutHintBadge } from './ShortcutHints';
+import { GithubIssueSessionBadge } from '@/features/github-issues/GithubIssueSessionBadge';
 import { ProviderIcon } from './ProviderIcon';
 import { isTauri } from '@/utils/isTauri';
 import {
@@ -993,6 +994,8 @@ const SessionItem = React.memo(({ session, selected, isFirst, isLast, isSingle, 
                         style={styles.sessionShortcutBadge}
                     />
                 </View>
+
+                <GithubIssueSessionBadge sessionId={session.id} />
 
                 {showSessionModel && session.identityLine ? (
                     <View style={styles.sessionSubtitleRow}>

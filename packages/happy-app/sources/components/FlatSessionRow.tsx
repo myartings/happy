@@ -22,6 +22,7 @@ import { t } from '@/text';
 import { RigGitLineChanges } from './RigGitLineChanges';
 import { ShimmerText } from './ShimmerText';
 import { resolveFlatSessionRowPresentation } from '@/utils/flatSessionRowPresentation';
+import { GithubIssueSessionBadge } from '@/features/github-issues/GithubIssueSessionBadge';
 import { resolveCurrentRequestRowAttention } from '@/features/needs-attention/currentRequestAttention';
 import { useSetting } from '@/sync/storage';
 
@@ -260,6 +261,8 @@ export const FlatSessionRow = React.memo(({ row, selected, showBorder, archived 
                         )}
                     </View>
                 </View>
+
+                <GithubIssueSessionBadge sessionId={session.id} />
 
                 <Text style={styles.project} numberOfLines={1}>
                     {projectName}

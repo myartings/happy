@@ -7,6 +7,7 @@ import type { PermissionModeKey } from '@/components/PermissionModeSelector';
 
 const mmkv = new MMKV();
 const NEW_SESSION_DRAFT_KEY = 'new-session-draft-v1';
+const GITHUB_ISSUE_BINDING_CACHE_KEY = 'github-issue-binding-cache-v1';
 const REGISTERED_PUSH_TOKEN_KEY = 'registered-push-token-v1';
 const VOICE_SOFT_PAYWALL_SHOWN_KEY = 'voice-soft-paywall-shown';
 const VOICE_ONBOARDING_PROMPT_LOAD_COUNT_KEY = 'voice-onboarding-prompt-load-count';
@@ -14,6 +15,17 @@ const VOICE_MESSAGE_COUNT_KEY = 'voice-message-count';
 
 export type NewSessionAgentType = 'claude' | 'codex' | 'gemini' | 'openclaw' | 'agy' | 'rig';
 export type NewSessionSessionType = 'simple' | 'worktree';
+
+export interface NewSessionGithubIssueBindingIntent {
+    accountScope?: string;
+    issueKey: string;
+    encryptedPayload: string;
+    requestId: string;
+    operation?: 'claim' | 'replace';
+    expectedRevision?: number;
+    formerSessionId?: string | null;
+    issueLabel: string;
+}
 
 export interface NewSessionDraft {
     input: string;
@@ -25,6 +37,7 @@ export interface NewSessionDraft {
     effortLevel: string | null;
     sessionType: NewSessionSessionType;
     worktreeKey: string | null;
+    githubIssueBindingIntent: NewSessionGithubIssueBindingIntent | null;
     updatedAt: number;
 }
 
@@ -172,6 +185,29 @@ export function loadNewSessionDraft(): NewSessionDraft | null {
         const effortLevel: string | null = typeof parsed.effortLevel === 'string' ? parsed.effortLevel : null;
         const sessionType: NewSessionSessionType = parsed.sessionType === 'worktree' ? 'worktree' : 'simple';
         const worktreeKey = typeof parsed.worktreeKey === 'string' ? parsed.worktreeKey : null;
+        const githubIssueBindingIntent: NewSessionGithubIssueBindingIntent | null = parsed.githubIssueBindingIntent
+            && typeof parsed.githubIssueBindingIntent === 'object'
+            && typeof parsed.githubIssueBindingIntent.issueKey === 'string'
+            && typeof parsed.githubIssueBindingIntent.accountScope === 'string'
+            && /^[a-f0-9]{64}$/.test(parsed.githubIssueBindingIntent.accountScope)
+            && /^[a-f0-9]{64}$/.test(parsed.githubIssueBindingIntent.issueKey)
+            && typeof parsed.githubIssueBindingIntent.encryptedPayload === 'string'
+            && parsed.githubIssueBindingIntent.encryptedPayload.length > 0
+            && typeof parsed.githubIssueBindingIntent.requestId === 'string'
+            && parsed.githubIssueBindingIntent.requestId.length >= 16
+            && typeof parsed.githubIssueBindingIntent.issueLabel === 'string'
+            && parsed.githubIssueBindingIntent.issueLabel.length > 0
+            ? {
+                ...parsed.githubIssueBindingIntent,
+                operation: parsed.githubIssueBindingIntent.operation === 'replace' ? 'replace' : 'claim',
+                expectedRevision: Number.isInteger(parsed.githubIssueBindingIntent.expectedRevision)
+                    ? parsed.githubIssueBindingIntent.expectedRevision
+                    : undefined,
+                formerSessionId: typeof parsed.githubIssueBindingIntent.formerSessionId === 'string'
+                    ? parsed.githubIssueBindingIntent.formerSessionId
+                    : null,
+            }
+            : null;
         const updatedAt = typeof parsed.updatedAt === 'number' ? parsed.updatedAt : Date.now();
 
         return {
@@ -184,6 +220,7 @@ export function loadNewSessionDraft(): NewSessionDraft | null {
             effortLevel,
             sessionType,
             worktreeKey,
+            githubIssueBindingIntent,
             updatedAt,
         };
     } catch (e) {
@@ -198,6 +235,24 @@ export function saveNewSessionDraft(draft: NewSessionDraft) {
 
 export function clearNewSessionDraft() {
     mmkv.delete(NEW_SESSION_DRAFT_KEY);
+}
+
+export function loadGithubIssueBindingCache(): unknown {
+    const raw = mmkv.getString(GITHUB_ISSUE_BINDING_CACHE_KEY);
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+export function saveGithubIssueBindingCache(value: unknown): void {
+    mmkv.set(GITHUB_ISSUE_BINDING_CACHE_KEY, JSON.stringify(value));
+}
+
+export function clearGithubIssueBindingCache(): void {
+    mmkv.delete(GITHUB_ISSUE_BINDING_CACHE_KEY);
 }
 
 export function loadRegisteredPushToken(): string | null {
