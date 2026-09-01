@@ -29,7 +29,7 @@ import { connectionState } from '@/utils/serverConnectionErrors';
 import { setupOfflineReconnection } from '@/utils/setupOfflineReconnection';
 import type { PermissionMode } from '@/api/types';
 import type { ApiSessionClient } from '@/api/apiSession';
-import { resolveCodexExecutionPolicy, shouldAutoApproveCodexApproval } from './executionPolicy';
+import { resolveCodexExecutionPolicy } from './executionPolicy';
 import {
     mapCodexMcpMessageToSessionEnvelopes,
     mapCodexProcessorMessageToSessionEnvelopes,
@@ -50,6 +50,13 @@ import {
 } from './codexPrompt';
 import { discoverCodexSkillCommands } from './codexSkills';
 import { CodexRemoteModeState } from './remoteModeState';
+import {
+    CodexLivePermissionModeController,
+    registerCodexLivePermissionModeRpcForSession,
+    resolveCodexApprovalDecision,
+    runWithCodexLivePermissionModeAbortGuard,
+    withCodexLivePermissionModeMetadata,
+} from './livePermissionModeController';
 import {
     applyCodexPrimaryTurnLifecycleEvent,
     hasCodexSubagentReference,
@@ -207,6 +214,7 @@ export async function runCodex(opts: {
     // Permission handler declared here so it can be updated in onSessionSwap callback
     // (assigned later at line ~385 after client setup)
     let permissionHandler: CodexPermissionHandler;
+    let livePermissionModeController: CodexLivePermissionModeController;
     let client!: CodexAppServerClient;
     let reasoningProcessor!: ReasoningProcessor;
     let abortInProgress: Promise<void> | null = null;
@@ -221,6 +229,9 @@ export async function runCodex(opts: {
             // Update permission handler with new session to avoid stale reference
             if (permissionHandler) {
                 permissionHandler.updateSession(newSession);
+            }
+            if (livePermissionModeController) {
+                registerCodexLivePermissionModeRpcForSession(newSession, livePermissionModeController);
             }
         }
     });
@@ -485,44 +496,54 @@ export async function runCodex(opts: {
         }
 
         logger.debug('[Codex] Abort requested - stopping current task');
-        abortInProgress = (async () => {
-            try {
-                // Resolve any pending permission requests as 'abort' first.
-                if (permissionHandler) {
-                    permissionHandler.abortAll();
-                }
-
-                // Request interruption, then force-restart Codex app-server if
-                // it doesn't settle quickly (long-running shell commands).
-                if (client) {
-                    const abortResult = await client.abortTurnWithFallback({
-                        gracePeriodMs: 3000,
-                        forceRestartOnTimeout: true,
-                    });
-                    if (abortResult.forcedRestart) {
-                        logger.warn('[Codex] Forced app-server restart after interrupt timeout');
-                        session.sendSessionEvent({
-                            type: 'message',
-                            message: abortResult.resumedThread
-                                ? 'Force-stopped active task after interrupt timeout. Codex backend was restarted and the previous thread was resumed.'
-                                : 'Force-stopped active task after interrupt timeout. Codex backend was restarted, but the previous thread could not be resumed.',
-                        });
+        abortInProgress = runWithCodexLivePermissionModeAbortGuard(
+            livePermissionModeController,
+            async () => {
+                try {
+                    // Resolve any pending permission requests as 'abort' first.
+                    if (permissionHandler) {
+                        permissionHandler.abortAll();
                     }
-                }
 
-                if (reasoningProcessor) {
-                    reasoningProcessor.abort();
+                    // Request interruption, then force-restart Codex app-server if
+                    // it doesn't settle quickly (long-running shell commands).
+                    if (client) {
+                        const abortResult = await client.abortTurnWithFallback({
+                            gracePeriodMs: 3000,
+                            forceRestartOnTimeout: true,
+                        });
+                        if (abortResult.forcedRestart) {
+                            logger.warn('[Codex] Forced app-server restart after interrupt timeout');
+                            session.sendSessionEvent({
+                                type: 'message',
+                                message: abortResult.resumedThread
+                                    ? 'Force-stopped active task after interrupt timeout. Codex backend was restarted and the previous thread was resumed.'
+                                    : 'Force-stopped active task after interrupt timeout. Codex backend was restarted, but the previous thread could not be resumed.',
+                            });
+                        }
+                    }
+
+                    if (reasoningProcessor) {
+                        reasoningProcessor.abort();
+                    }
+                    logger.debug('[Codex] Abort completed - session remains active');
+                } catch (error) {
+                    logger.debug('[Codex] Error during abort:', error);
                 }
-                logger.debug('[Codex] Abort completed - session remains active');
-            } catch (error) {
-                logger.debug('[Codex] Error during abort:', error);
-            } finally {
+            },
+            () => {
                 resetCurrentModeDefaults();
+                if (livePermissionModeController) {
+                    session.updateMetadata((metadata) => withCodexLivePermissionModeMetadata(
+                        metadata,
+                        livePermissionModeController.getState(),
+                    ));
+                }
                 // Wake up message queue wait if idle
                 abortController.abort();
                 abortController = new AbortController();
-            }
-        })();
+            },
+        );
 
         await abortInProgress;
         abortInProgress = null;
@@ -623,6 +644,13 @@ export async function runCodex(opts: {
     // process that died while a tool prompt was open — see the matching
     // call in claudeRemoteLauncher for the full rationale.
     permissionHandler.reset('Previous CLI process exited before responding');
+    livePermissionModeController = new CodexLivePermissionModeController({
+        remoteModeState,
+        approveAllPending: () => permissionHandler.approveAllPending(),
+        sandboxManagedByHappy: client.sandboxEnabled,
+        initialRevision: session.getMetadata()?.permissionModeRevision,
+    });
+    registerCodexLivePermissionModeRpcForSession(session, livePermissionModeController);
     reasoningProcessor = new ReasoningProcessor((message) => {
         const envelopes = mapCodexProcessorMessageToSessionEnvelopes(message, { currentTurnId });
         for (const envelope of envelopes) {
@@ -714,28 +742,23 @@ export async function runCodex(opts: {
             : params.type === 'patch'
                 ? { changes: params.fileChanges }
                 : (params.input ?? {});
-        const activePermissionMode = activeTurnPermissionMode ?? remoteModeState.currentPermissionMode;
-        // Check the latest session mode too: a turn pinned under an untrusted
-        // policy keeps prompting after the user flips to yolo mid-turn
-        // otherwise. Only when the mode was EXPLICITLY picked by the user —
-        // the abort-reset restores the launch default (yolo for plain codex),
-        // and a straggler approval from the dying turn (the ~3s abort grace
-        // window, when the pinned turn mode is still set) must not be waved
-        // through by that reset value.
-        const latestPermissionMode = remoteModeState.currentPermissionModeExplicitlySet
-            ? remoteModeState.currentPermissionMode
-            : undefined;
-
-        if (shouldAutoApproveCodexApproval(activePermissionMode, client.sandboxEnabled)
-            || (latestPermissionMode !== undefined && shouldAutoApproveCodexApproval(latestPermissionMode, client.sandboxEnabled))) {
-            logger.debug(`[Codex] Auto-approving ${params.type} approval in ${activePermissionMode} mode (latest: ${latestPermissionMode ?? 'n/a'})`);
-            return 'approved';
-        }
-
+        // An explicit live selection supersedes the mode pinned when this turn
+        // started in BOTH directions. Without this precedence, a turn started
+        // in YOLO would keep auto-approving after the user switched to Auto.
+        // If no live selection exists, the pinned turn remains authoritative;
+        // abort/reset therefore cannot elevate a straggler through a launch
+        // default restored only in remoteModeState.
         try {
-            const result = await permissionHandler.handleToolCall(params.callId, toolName, input);
-            logger.debug('[Codex] Permission result:', result.decision);
-            return result.decision;
+            return await resolveCodexApprovalDecision({
+                activeTurnPermissionMode,
+                remoteModeState,
+                sandboxManagedByHappy: client.sandboxEnabled,
+                requestDecision: async () => {
+                    const result = await permissionHandler.handleToolCall(params.callId, toolName, input);
+                    logger.debug('[Codex] Permission result:', result.decision);
+                    return result.decision;
+                },
+            });
         } catch (error) {
             logger.debug('[Codex] Error handling permission:', error);
             return 'denied';

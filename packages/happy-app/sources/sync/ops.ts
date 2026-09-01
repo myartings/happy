@@ -819,16 +819,33 @@ async function sessionUpdateAgentModesMetadata(
         }
         if (result.result === 'version-mismatch') {
             currentVersion = result.version!;
-            const latest = await encryption.decryptRaw(result.metadata!);
+            const latest = await encryption.decryptRaw(result.metadata!) as Record<string, unknown> | null;
             if (!latest) {
                 throw new Error('Failed to decrypt latest session metadata');
+            }
+            const pendingPermissionRevision = pendingPatch.permissionModeRevision;
+            const latestPermissionRevision = latest.permissionModeRevision;
+            if (pendingPermissionRevision !== undefined
+                && typeof latestPermissionRevision === 'number'
+                && Number.isSafeInteger(latestPermissionRevision)
+                && latestPermissionRevision >= pendingPermissionRevision) {
+                storage.getState().updateSessionAgentModes(sessionId, {
+                    permissionMode: typeof latest.permissionMode === 'string'
+                        ? latest.permissionMode
+                        : null,
+                    permissionModeRevision: latestPermissionRevision,
+                });
+                delete pendingPatch.permissionMode;
+                delete pendingPatch.permissionModeRevision;
             }
             // A newer local action (another pick, an abort clearing modes) may
             // have changed the mirror since this push started — that action
             // owns the field now, and blindly replaying the original patch
             // would resurrect a pick the user already cleared.
             const liveSession = storage.getState().sessions[sessionId];
-            for (const field of Object.keys(pendingPatch) as (keyof SessionAgentModesPatch)[]) {
+            for (const field of Object.keys(pendingPatch).filter(
+                (field): field is AgentModeField => field !== 'permissionModeRevision',
+            )) {
                 if ((liveSession?.[field] ?? null) !== (pendingPatch[field] ?? null)) {
                     delete pendingPatch[field];
                 }
@@ -862,15 +879,23 @@ export function sessionSetAgentModes(sessionId: string, patch: SessionAgentModes
     // synced metadata: a local-only value (e.g. the EnterPlanMode auto-switch
     // writes the mirror without metadata) must still be pushed when the user
     // picks it explicitly, or other devices never see it.
-    const isChanged = (value: string | null, field: keyof SessionAgentModesPatch): boolean => {
+    const isChanged = (value: string | null, field: AgentModeField): boolean => {
         const mirror = session?.[field] ?? null;
         const metaRaw = session?.metadata?.[field];
         const meta = metaRaw === undefined ? null : (metaRaw ?? null);
         return value !== mirror || value !== meta;
     };
     const changed: SessionAgentModesPatch = {};
-    if (patch.permissionMode !== undefined && isChanged(patch.permissionMode, 'permissionMode')) {
+    const permissionRevisionIsNewer = patch.permissionModeRevision === undefined
+        || patch.permissionModeRevision > (session?.permissionModeRevision ?? 0);
+    if (patch.permissionMode !== undefined
+        && permissionRevisionIsNewer
+        && isChanged(patch.permissionMode, 'permissionMode')) {
         changed.permissionMode = patch.permissionMode;
+    }
+    if (patch.permissionModeRevision !== undefined
+        && patch.permissionModeRevision > (session?.permissionModeRevision ?? 0)) {
+        changed.permissionModeRevision = patch.permissionModeRevision;
     }
     if (patch.modelMode !== undefined && isChanged(patch.modelMode, 'modelMode')) {
         changed.modelMode = patch.modelMode;
@@ -890,7 +915,9 @@ export function sessionSetAgentModes(sessionId: string, patch: SessionAgentModes
     // While the push is in flight, inbound updates still carry the OLD
     // metadata; mark the fields pending so applySessions keeps the fresher
     // local mirror instead of bouncing the pick back.
-    const changedFields = Object.keys(changed) as AgentModeField[];
+    const changedFields = Object.keys(changed).filter(
+        (field): field is AgentModeField => field !== 'permissionModeRevision',
+    );
     markAgentModePushPending(sessionId, changedFields);
     sessionUpdateAgentModesMetadata(sessionId, changed)
         .catch((error) => {
@@ -899,6 +926,108 @@ export function sessionSetAgentModes(sessionId: string, patch: SessionAgentModes
         .finally(() => {
             clearAgentModePushPending(sessionId, changedFields);
         });
+}
+
+type LivePermissionModeResponse = {
+    requestId: string;
+    permissionMode: string;
+    pendingApprovalsResolved: number;
+    revision: number;
+    generation: string;
+};
+
+type LivePermissionModeState = {
+    permissionMode: string;
+    revision: number;
+    generation: string;
+};
+
+function isValidLivePermissionModeState(value: unknown): value is LivePermissionModeState {
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+    const state = value as Partial<LivePermissionModeState>;
+    return typeof state.permissionMode === 'string'
+        && Number.isSafeInteger(state.revision)
+        && state.revision! >= 0
+        && typeof state.generation === 'string'
+        && state.generation.length > 0;
+}
+
+const permissionModeUpdateQueues = new Map<string, Promise<LivePermissionModeResponse>>();
+
+/**
+ * Apply an explicit permission pick to the connected Codex CLI before the
+ * local/cross-device mirror claims success. Authorization changes are never
+ * retried automatically after uncertain RPC delivery.
+ */
+export function sessionSetPermissionMode(
+    sessionId: string,
+    permissionMode: string,
+): Promise<LivePermissionModeResponse> {
+    const previous = permissionModeUpdateQueues.get(sessionId);
+    const queued = (previous ? previous.catch(() => undefined) : Promise.resolve())
+        .then(async () => {
+            // Keep the native crypto dependency behind this explicit action so
+            // unrelated session operations and their lightweight tests do not
+            // load the React Native runtime merely by importing ops.ts.
+            const { randomUUID } = await import('expo-crypto');
+            const requestId = randomUUID();
+            const before = await apiSocket.sessionRPC<LivePermissionModeState, Record<string, never>>(
+                sessionId,
+                'permission-mode-state',
+                {},
+            );
+            if (!isValidLivePermissionModeState(before)) {
+                throw new Error('The computer returned an invalid permission-mode state');
+            }
+            const response = await apiSocket.sessionRPC<LivePermissionModeResponse, {
+                requestId: string;
+                permissionMode: string;
+                generation: string;
+            }>(sessionId, 'permission-mode', {
+                requestId,
+                permissionMode,
+                generation: before.generation,
+            });
+
+            if (!response
+                || response.requestId !== requestId
+                || response.permissionMode !== permissionMode
+                || response.generation !== before.generation
+                || !Number.isInteger(response.pendingApprovalsResolved)
+                || response.pendingApprovalsResolved < 0
+                || !Number.isSafeInteger(response.revision)
+                || response.revision <= before.revision) {
+                throw new Error('The computer returned an invalid permission-mode acknowledgement');
+            }
+
+            const confirmed = await apiSocket.sessionRPC<LivePermissionModeState, LivePermissionModeResponse>(
+                sessionId,
+                'permission-mode-confirm',
+                response,
+            );
+            if (!isValidLivePermissionModeState(confirmed)
+                || confirmed.generation !== response.generation
+                || confirmed.revision !== response.revision
+                || confirmed.permissionMode !== response.permissionMode) {
+                throw new Error('The permission-mode acknowledgement was invalidated before confirmation');
+            }
+
+            sessionSetAgentModes(sessionId, {
+                permissionMode,
+                permissionModeRevision: response.revision,
+            });
+            return response;
+        });
+    let tracked!: Promise<LivePermissionModeResponse>;
+    tracked = queued.finally(() => {
+        if (permissionModeUpdateQueues.get(sessionId) === tracked) {
+            permissionModeUpdateQueues.delete(sessionId);
+        }
+    });
+    permissionModeUpdateQueues.set(sessionId, tracked);
+    return tracked;
 }
 
 /**
