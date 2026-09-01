@@ -302,7 +302,10 @@ export type Metadata = {
   currentModelCode?: string,
   /** Explicit model currently requested by the running agent session. */
   modelMode?: string | null,
-  /** Display mirror of the explicit live permission mode; never authority. */
+  /**
+   * Synchronized per-session permission mode and display mirror.
+   * This seeds launch state but is never a live CLI authorization command.
+   */
   permissionMode?: string | null,
   /** Monotonic CLI order for acknowledged live permission-mode changes. */
   permissionModeRevision?: number,

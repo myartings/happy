@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 3,
+  "slug": "codex-session-permission-mode-preservation",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "Commit/push/PR/release/install and Issue #87 reconciliation require explicit authorization",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User reconfirmed continuation in exact Issue #87 owning session; live Issue re-read on 2026-09-01 matches docs/specs/codex-session-permission-mode-preservation.md AC1-AC10 and one-Slice task links",
+      "updated": "2026-09-01T08:30:04+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-session-permission-mode-preservation/decisions.md D1-D4 resolve precedence, legacy evidence, creation persistence, and unchanged defaults",
+      "updated": "2026-09-01T08:30:04+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current owning Root, current-root serial topology; App resolver/message/sync plus CLI initial metadata and focused tests only; no protected native/server/release/tracker writes; scope containment applies",
+      "updated": "2026-09-01T08:30:05+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/codex-session-permission-mode-preservation/risk.md; exact true-only legacy recovery, explicit reset precedence, initial metadata persistence, fail-closed compatibility, independent high-risk review",
+      "updated": "2026-09-01T08:30:05+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Review remediation complete: non-Codex RED reproduced YOLO elevation; internal flavor guard GREEN 7/7; complete resolver/message matrix 36/36; nearest App 59/59; App typecheck and git diff --check passed",
+      "updated": "2026-09-01T09:49:31+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Structured rerun 6b493757-9fdb-47f2-9712-b97e7206cbc8; candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b; App 1918/1919 with only untouched Studio wiring failure; Server 110/112 with only two untouched local-storage 404 failures; transient blob timeout passed focused 9/9 and passed in this full rerun; command indexes 2 and 3 exactly match prior user authorization",
+      "updated": "2026-09-01T10:27:07+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Fresh independent high-risk Spec and Standards axes accepted candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b with no actionable findings",
+      "updated": "2026-09-01T10:30:38+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+        "candidateFingerprint": "aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "All AC1-AC10 complete; final candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b has accepted named check gaps, fresh passed dual-axis review, documented rollback, limitations, follow-ups, and tracker recommendation without external mutation",
+      "updated": "2026-09-01T10:34:52+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-01T08:17:02+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-01T08:17:02+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/87"
+    },
+    {
+      "at": "2026-09-01T08:30:04+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User reconfirmed continuation in exact Issue #87 owning session; live Issue re-read on 2026-09-01 matches docs/specs/codex-session-permission-mode-preservation.md AC1-AC10 and one-Slice task links"
+    },
+    {
+      "at": "2026-09-01T08:30:04+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-session-permission-mode-preservation/decisions.md D1-D4 resolve precedence, legacy evidence, creation persistence, and unchanged defaults"
+    },
+    {
+      "at": "2026-09-01T08:30:05+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/codex-session-permission-mode-preservation/risk.md; exact true-only legacy recovery, explicit reset precedence, initial metadata persistence, fail-closed compatibility, independent high-risk review"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-01T08:30:05+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Preserve one Codex session permission mode across client replies and initial session synchronization",
+      "acceptanceSeam": "AC1-AC10: shared effective-mode resolver, outbound metadata, initial encrypted launch metadata, synchronized explicit changes",
+      "dependencies": "Existing Session metadata passthrough, App session mode synchronization, Codex spawn options and CLI metadata creation; no external blocker",
+      "reviewBoundary": "One pinned App/CLI candidate reviewed for privilege non-escalation, cross-client consistency, compatibility, interruption, and rollback",
+      "rollbackBoundary": "Revert isolated resolver and initial metadata publication; no server migration, cleanup, release, or tracker mutation",
+      "contextBoundary": "Current owning Root in exact registered Issue #87 worktree; T1-T4 are serial internal tasks",
+      "consequence": "High-risk authorization and cross-device synchronization: ambiguous recovery can elevate permissions and default fallback can silently downgrade YOLO",
+      "evidence": "Live Issue #87; accepted spec AC1-AC10; decisions D1-D4; risk.md; repository evidence in messageMeta.ts, SessionView.tsx, storageTypes.ts, ops.ts, and runCodex.ts",
+      "contractFingerprint": "05d0d1eabd96f8bd66980600c2b35757373c725b5b665d2ea494d0d578964725",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-01T08:30:05+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current owning Root, current-root serial topology; App resolver/message/sync plus CLI initial metadata and focused tests only; no protected native/server/release/tracker writes; scope containment applies"
+    },
+    {
+      "at": "2026-09-01T08:31:01+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "T1 RED: shared effective Codex permission-mode resolution and initial metadata persistence"
+    },
+    {
+      "at": "2026-09-01T08:45:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "T1-T3 complete: App focused 31/31, nearest App 96/96, CLI focused 19/19, nearest CLI 23/23, both typechecks and git diff --check passed; validation.md records RED/GREEN and Windows setup gap"
+    },
+    {
+      "at": "2026-09-01T08:45:10+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run configured applicable check on the complete candidate, then independent high-risk review"
+    },
+    {
+      "at": "2026-09-01T09:07:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 3 failures; structured run: 4ccf8db9-8b4b-450d-91b3-19aadb9c4f64"
+    },
+    {
+      "at": "2026-09-01T09:27:23+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 9251c637-04f4-4c7e-9fab-ac6a8b52d7bb"
+    },
+    {
+      "at": "2026-09-01T09:41:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Structured run 9251c637-04f4-4c7e-9fab-ac6a8b52d7bb; candidate a1cb574cde6b0086f8db077a9ce218d2a6a359d530566aa127f14c31ca66bbf1; command indexes 2 and 3 accepted after exact base-diff attribution; focused Issue #87 tests and both typechecks passed; structured run: 9251c637-04f4-4c7e-9fab-ac6a8b52d7bb; accepted command indexes: 2, 3; approval: User explicitly accepted the two configured command gaps on 2026-09-01: one untouched Studio wiring test and two untouched Windows local-storage route tests"
+    },
+    {
+      "at": "2026-09-01T09:45:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Both independent high-risk axes blocked the same AC1/D2 root: require Codex flavor guard inside shared resolver and complete focused authorization-boundary matrix"
+    },
+    {
+      "at": "2026-09-01T09:46:41+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate review-blocking AC1/D2 flavor guard and focused authorization matrix"
+    },
+    {
+      "at": "2026-09-01T09:49:31+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation complete: non-Codex RED reproduced YOLO elevation; internal flavor guard GREEN 7/7; complete resolver/message matrix 36/36; nearest App 59/59; App typecheck and git diff --check passed"
+    },
+    {
+      "at": "2026-09-01T09:49:31+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage remediated complete candidate, rerun configured check, then fresh independent high-risk review"
+    },
+    {
+      "at": "2026-09-01T10:09:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 3b7469e3-bb51-41e2-b87a-75f6627b013a"
+    },
+    {
+      "at": "2026-09-01T10:26:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 6b493757-9fdb-47f2-9712-b97e7206cbc8"
+    },
+    {
+      "at": "2026-09-01T10:27:07+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Structured rerun 6b493757-9fdb-47f2-9712-b97e7206cbc8; candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b; App 1918/1919 with only untouched Studio wiring failure; Server 110/112 with only two untouched local-storage 404 failures; transient blob timeout passed focused 9/9 and passed in this full rerun; command indexes 2 and 3 exactly match prior user authorization; structured run: 6b493757-9fdb-47f2-9712-b97e7206cbc8; accepted command indexes: 2, 3; approval: User explicitly selected '接受检查 gap，继续审查（推荐）' on 2026-09-01 for the named untouched Studio wiring failure and two untouched Windows local-storage route failures"
+    },
+    {
+      "at": "2026-09-01T10:30:38+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh independent high-risk Spec and Standards axes accepted candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b with no actionable findings"
+    },
+    {
+      "at": "2026-09-01T10:30:57+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Summarize accepted Issue #87 candidate, complete Finish evidence, run staged CI, and generate terminal archive projection"
+    },
+    {
+      "at": "2026-09-01T10:34:52+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "All AC1-AC10 complete; final candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b has accepted named check gaps, fresh passed dual-axis review, documented rollback, limitations, follow-ups, and tracker recommendation without external mutation"
+    },
+    {
+      "at": "2026-09-01T10:35:34+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Preserved Codex session permission mode across clients and initial metadata; final candidate checked with explicitly accepted baseline gaps and passed independent high-risk review; result identity: archive-introducing-commit; follow-up: Commit/push/PR/release/install and Issue #87 reconciliation require explicit authorization"
+    }
+  ],
+  "updated": "2026-09-01T10:35:34+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/87",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-01T08:30:05+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Preserve one Codex session permission mode across client replies and initial session synchronization",
+      "acceptanceSeam": "AC1-AC10: shared effective-mode resolver, outbound metadata, initial encrypted launch metadata, synchronized explicit changes",
+      "dependencies": "Existing Session metadata passthrough, App session mode synchronization, Codex spawn options and CLI metadata creation; no external blocker",
+      "reviewBoundary": "One pinned App/CLI candidate reviewed for privilege non-escalation, cross-client consistency, compatibility, interruption, and rollback",
+      "rollbackBoundary": "Revert isolated resolver and initial metadata publication; no server migration, cleanup, release, or tracker mutation",
+      "contextBoundary": "Current owning Root in exact registered Issue #87 worktree; T1-T4 are serial internal tasks",
+      "consequence": "High-risk authorization and cross-device synchronization: ambiguous recovery can elevate permissions and default fallback can silently downgrade YOLO",
+      "evidence": "Live Issue #87; accepted spec AC1-AC10; decisions D1-D4; risk.md; repository evidence in messageMeta.ts, SessionView.tsx, storageTypes.ts, ops.ts, and runCodex.ts",
+      "contractFingerprint": "05d0d1eabd96f8bd66980600c2b35757373c725b5b665d2ea494d0d578964725",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "6b493757-9fdb-47f2-9712-b97e7206cbc8",
+  "checkRunFingerprint": "17e39bca3f39ed5a3e8d753106e9711c3def617920c7c0fbd06907861f98f779",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+    "candidateFingerprint": "aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      3
+    ],
+    "approval": "User explicitly selected '接受检查 gap，继续审查（推荐）' on 2026-09-01 for the named untouched Studio wiring failure and two untouched Windows local-storage route failures"
+  },
+  "checkAcceptedFailuresFingerprint": "b80f3d230bc9b3e6efaaedc388244268198bf13e7fe46a1ce230244e7b3c5d78",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+      "candidateFingerprint": "aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Independent capable Spec rereview of candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b: no findings; AC1/D2 flavor guard and exact marker/Auto/Default/YOLO matrix verified; scope accepted"
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Independent capable Standards rereview of candidate aefae2341ca433f1074f8ae781eceecf6fd86595870263c79b9caeb33c48302b after one unchanged-candidate clarification: no binding findings; D2 flavor guard applies to legacy recovery, D1 explicit-mode precedence and Codex-gated consumers verified"
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Summarize accepted Issue #87 candidate, complete Finish evidence, run staged CI, and generate terminal archive projection",
+    "prearchiveUpdated": "2026-09-01T10:34:52+00:00",
+    "prearchiveActive": {
+      "feature": "codex-session-permission-mode-preservation",
+      "phase": "finish",
+      "updated": "2026-09-01",
+      "next": "Summarize accepted Issue #87 candidate, complete Finish evidence, run staged CI, and generate terminal archive projection",
+      "branch / worktree": "issue/87-android-reply-silently-changes-existing-codex-se"
+    },
+    "prearchiveArchiveObject": "07b674a85e66a1cac5297c40f4a29bb5b5390577",
+    "fingerprint": "d492d29f1c6f5d029bf05ec4060ed66289a95f06ec14b61a43c6091fd2495f9a"
+  },
+  "archivedAt": "2026-09-01T10:35:34+00:00",
+  "archiveDate": "2026-09-01",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Preserved Codex session permission mode across clients and initial metadata; final candidate checked with explicitly accepted baseline gaps and passed independent high-risk review",
+  "archiveFollowUp": "Commit/push/PR/release/install and Issue #87 reconciliation require explicit authorization"
+}

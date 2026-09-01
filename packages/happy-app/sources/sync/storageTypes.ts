@@ -167,7 +167,7 @@ export const MetadataSchema = z.object({
         name: z.string(),
     }).passthrough().optional(),
     sandbox: z.any().nullish(), // Sandbox config metadata from CLI (or null when disabled)
-    dangerouslySkipPermissions: z.boolean().nullish(), // Claude --dangerously-skip-permissions mode (or null when unknown)
+    dangerouslySkipPermissions: z.boolean().nullish(), // Legacy full-access launch marker (or null when unknown)
     lifecycleState: z.string().optional(),
     lifecycleStateSince: z.number().optional(),
     archivedBy: z.string().optional(),

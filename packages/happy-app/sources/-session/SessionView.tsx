@@ -69,6 +69,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import type { ModelMode, PermissionMode } from '@/components/PermissionModeSelector';
 import { resolveAgentDefaultConfig } from '@/sync/agentDefaults';
+import { resolveCodexSessionPermissionMode } from '@/sync/sessionPermissionMode';
 import { performAgentGoalAction } from './agentGoalActionHandler';
 import { MOBILE_GLASS_HEADER_HEIGHT } from '@/components/navigation/headerMetrics';
 import {
@@ -1098,6 +1099,9 @@ export function SessionViewLoaded({
     const effectiveAgentDefaults = React.useMemo(() => (
         resolveAgentDefaultConfig(agentDefaultOverrides, flavor, cliVersion)
     ), [agentDefaultOverrides, cliVersion, flavor]);
+    const effectivePermissionMode = flavor === 'codex'
+        ? resolveCodexSessionPermissionMode(session, effectiveAgentDefaults.permissionMode)
+        : effectiveAgentDefaults.permissionMode;
     const availableModels = React.useMemo(() => (
         getAvailableModels(
             flavor,
@@ -1118,11 +1122,11 @@ export function SessionViewLoaded({
                 session.metadata?.permissionMode,
                 session.metadata?.session?.permissionMode,
             ] : [
-                effectiveAgentDefaults.permissionMode,
+                effectivePermissionMode,
                 session.metadata?.currentOperatingModeCode,
             ]),
         ])
-    ), [availableModes, session.permissionMode, effectiveAgentDefaults.permissionMode, session.metadata?.currentOperatingModeCode, session.metadata?.permissionMode, session.metadata?.session?.permissionMode, isRig]);
+    ), [availableModes, session.permissionMode, effectivePermissionMode, session.metadata?.currentOperatingModeCode, session.metadata?.permissionMode, session.metadata?.session?.permissionMode, isRig]);
 
     const modelMode = React.useMemo<ModelMode | null>(() => (
         resolveCurrentOption(availableModels, [
