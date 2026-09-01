@@ -5,13 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 const state = vi.hoisted(() => ({
     cancel: vi.fn(),
-    pending: [{
-        createdAt: 1,
-        id: 'unsupported-1',
-        kind: 'unsupported' as const,
-        rawKind: 'file_pick',
-        title: 'Pick a file',
-    }],
+    pending: [] as Array<Record<string, unknown>>,
 }));
 
 vi.mock('react-native', async () => {
@@ -53,7 +47,16 @@ beforeAll(() => {
     });
 });
 afterAll(() => vi.restoreAllMocks());
-beforeEach(() => state.cancel.mockReset().mockResolvedValue(undefined));
+beforeEach(() => {
+    state.cancel.mockReset().mockResolvedValue(undefined);
+    state.pending = [{
+        createdAt: 1,
+        id: 'unsupported-1',
+        kind: 'unsupported',
+        rawKind: 'file_pick',
+        title: 'Pick a file',
+    }];
+});
 
 function dismissButton(renderer: ReactTestRenderer) {
     return renderer.root.findAllByType('Pressable' as any)
@@ -61,6 +64,14 @@ function dismissButton(renderer: ReactTestRenderer) {
 }
 
 describe('AgentQuestionBanner decision lifecycle', () => {
+    it('renders nothing when no communication is pending and no focus is requested', () => {
+        state.pending = [];
+
+        expect(() => {
+            act(() => { create(React.createElement(AgentQuestionBanner, { sessionId: 'session-1' })); });
+        }).not.toThrow();
+    });
+
     it('keeps a successfully dismissed request visibly resolved until authoritative removal', async () => {
         let renderer!: ReactTestRenderer;
         act(() => { renderer = create(React.createElement(AgentQuestionBanner, { sessionId: 'session-1' })); });

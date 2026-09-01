@@ -168,7 +168,9 @@ export class SavedProjectRegistryLoader {
 
     constructor({
         request,
-        timeoutMs = 3_000,
+        // Match apiSocket's machine-RPC acknowledgement budget. The server can
+        // spend 15 seconds waiting for a reconnecting daemon before dispatch.
+        timeoutMs = 50_000,
     }: {
         request: (machineId: string) => Promise<unknown>;
         timeoutMs?: number;
