@@ -301,6 +301,10 @@ describe('acquireDaemonLock', () => {
 describe('daemon state ownership', () => {
     let testDir: string;
 
+    const daemonTestUuid = (sequence: number) => (
+        `00000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`
+    );
+
     const createDeadGeneration = (pid: number, ownerToken: string, publishState: boolean) => {
         const generationPath = join(testDir, `daemon.state.json.generation.${pid}.${ownerToken}`);
         mkdirSync(generationPath);
@@ -357,7 +361,7 @@ describe('daemon state ownership', () => {
 
     it('cannot let a delayed reclaimer touch successor H after final validation of G', async () => {
         const stalePid = 424241;
-        createDeadGeneration(stalePid, 'generation-g', true);
+        createDeadGeneration(stalePid, daemonTestUuid(1), true);
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
             if (pid === stalePid) {
                 const error = new Error('no such process') as NodeJS.ErrnoException;
@@ -395,7 +399,7 @@ describe('daemon state ownership', () => {
 
     it('allows exactly one of two real reclaimers to clean a dead generation', async () => {
         const stalePid = 424242;
-        createDeadGeneration(stalePid, 'generation-race', true);
+        createDeadGeneration(stalePid, daemonTestUuid(2), true);
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
             if (pid === stalePid) {
                 const error = new Error('no such process') as NodeJS.ErrnoException;
@@ -415,7 +419,7 @@ describe('daemon state ownership', () => {
 
     it('recovers a dead generation that crashed after fixed-lock publication', async () => {
         const stalePid = 424243;
-        createDeadGeneration(stalePid, 'lock-only', false);
+        createDeadGeneration(stalePid, daemonTestUuid(3), false);
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
             if (pid === stalePid) {
                 const error = new Error('no such process') as NodeJS.ErrnoException;
@@ -439,7 +443,7 @@ describe('daemon state ownership', () => {
             startTime: 'stale-predecessor',
             startedWithCliVersion: '1.0.0',
         }), 'utf-8');
-        createDeadGeneration(stalePid, 'lock-with-stale-state', false);
+        createDeadGeneration(stalePid, daemonTestUuid(4), false);
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
             if (pid === stalePid) {
                 const error = new Error('no such process') as NodeJS.ErrnoException;
@@ -458,13 +462,14 @@ describe('daemon state ownership', () => {
 
     it('recovers state written privately before its fixed alias was published', async () => {
         const stalePid = 424249;
-        const generationPath = createDeadGeneration(stalePid, 'private-state-only', false);
+        const ownerToken = daemonTestUuid(5);
+        const generationPath = createDeadGeneration(stalePid, ownerToken, false);
         writeFileSync(join(generationPath, 'state.json'), JSON.stringify({
             pid: stalePid,
             httpPort: 4000,
             startTime: 'private-state-only',
             startedWithCliVersion: '1.0.0',
-            ownerToken: 'private-state-only',
+            ownerToken,
         }), 'utf-8');
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
             if (pid === stalePid) {
@@ -483,8 +488,9 @@ describe('daemon state ownership', () => {
 
     it('resumes retirement immediately after the generation-directory claim', async () => {
         const stalePid = 424250;
-        const generationPath = createDeadGeneration(stalePid, 'retirement-start', true);
-        const retiringPath = join(testDir, `daemon.state.json.retiring.${stalePid}.retirement-start`);
+        const ownerToken = daemonTestUuid(6);
+        const generationPath = createDeadGeneration(stalePid, ownerToken, true);
+        const retiringPath = join(testDir, `daemon.state.json.retiring.${stalePid}.${ownerToken}.${daemonTestUuid(106)}`);
         renameSync(generationPath, retiringPath);
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
             if (pid === stalePid) {
@@ -503,8 +509,9 @@ describe('daemon state ownership', () => {
 
     it('resumes retirement after fixed state was removed but before fixed lock', async () => {
         const stalePid = 424244;
-        const generationPath = createDeadGeneration(stalePid, 'retirement-crash', true);
-        const retiringPath = join(testDir, `daemon.state.json.retiring.${stalePid}.retirement-crash`);
+        const ownerToken = daemonTestUuid(7);
+        const generationPath = createDeadGeneration(stalePid, ownerToken, true);
+        const retiringPath = join(testDir, `daemon.state.json.retiring.${stalePid}.${ownerToken}.${daemonTestUuid(107)}`);
         renameSync(generationPath, retiringPath);
         unlinkSync(mockConfiguration.daemonStateFile);
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
@@ -524,8 +531,9 @@ describe('daemon state ownership', () => {
 
     it('gives exactly one delayed reclaimer authority over an already-retiring generation', async () => {
         const stalePid = 424252;
-        const generationPath = createDeadGeneration(stalePid, 'retiring-race', true);
-        const retiringPath = join(testDir, `daemon.state.json.retiring.${stalePid}.retiring-race`);
+        const ownerToken = daemonTestUuid(8);
+        const generationPath = createDeadGeneration(stalePid, ownerToken, true);
+        const retiringPath = join(testDir, `daemon.state.json.retiring.${stalePid}.${ownerToken}.${daemonTestUuid(108)}`);
         renameSync(generationPath, retiringPath);
         vi.spyOn(process, 'kill').mockImplementation((pid) => {
             if (pid === stalePid) {
@@ -563,7 +571,8 @@ describe('daemon state ownership', () => {
 
     it('does not let delayed orphan GC remove a concurrently published successor state', async () => {
         const stalePid = 424253;
-        const orphanPath = join(testDir, `daemon.state.json.generation.${stalePid}.orphan-g`);
+        const orphanToken = daemonTestUuid(9);
+        const orphanPath = join(testDir, `daemon.state.json.generation.${stalePid}.${orphanToken}`);
         mkdirSync(orphanPath);
         writeFileSync(join(orphanPath, 'lock.pid'), String(stalePid), 'utf-8');
         writeFileSync(join(orphanPath, 'state.json'), JSON.stringify({ pid: stalePid }), 'utf-8');
@@ -590,13 +599,14 @@ describe('daemon state ownership', () => {
         const delayedGc = acquireDaemonLock(1, 0);
         await atOrphanBoundary;
 
-        const successorPath = join(testDir, `daemon.state.json.generation.${process.pid}.successor-h`);
+        const successorToken = daemonTestUuid(10);
+        const successorPath = join(testDir, `daemon.state.json.generation.${process.pid}.${successorToken}`);
         mkdirSync(successorPath);
         writeFileSync(join(successorPath, 'lock.pid'), String(process.pid), 'utf-8');
         linkSync(join(successorPath, 'lock.pid'), mockConfiguration.daemonLockFile);
         unlinkSync(mockConfiguration.daemonStateFile);
         const successorState = join(successorPath, 'state.json');
-        writeFileSync(successorState, JSON.stringify({ pid: process.pid, ownerToken: 'successor-h' }), 'utf-8');
+        writeFileSync(successorState, JSON.stringify({ pid: process.pid, ownerToken: successorToken }), 'utf-8');
         linkSync(successorState, mockConfiguration.daemonStateFile);
 
         resumeGc();
@@ -608,9 +618,9 @@ describe('daemon state ownership', () => {
 
     it('garbage-collects dead temp and rollback orphans but preserves live ones', async () => {
         const deadPid = 424245;
-        const deadTemp = join(testDir, `daemon.state.json.generation.${deadPid}.temp-crash.tmp`);
-        const deadRollback = join(testDir, `daemon.state.json.generation.${deadPid}.rollback-orphan`);
-        const liveOrphan = join(testDir, `daemon.state.json.generation.${process.pid}.live-orphan`);
+        const deadTemp = join(testDir, `daemon.state.json.generation.${deadPid}.${daemonTestUuid(11)}.tmp`);
+        const deadRollback = join(testDir, `daemon.state.json.generation.${deadPid}.${daemonTestUuid(12)}`);
+        const liveOrphan = join(testDir, `daemon.state.json.generation.${process.pid}.${daemonTestUuid(13)}`);
         for (const path of [deadTemp, deadRollback, liveOrphan]) {
             mkdirSync(path);
             const pid = path === liveOrphan ? process.pid : deadPid;
@@ -636,9 +646,100 @@ describe('daemon state ownership', () => {
         await releaseDaemonLock(handle!);
     });
 
+    it.each([
+        'not-a-uuid',
+        '00000000-0000-4000-8000-000000000001.extra',
+        '00000000-0000-1000-8000-000000000001',
+    ])('preserves a dead generation with malformed owner token %s', async (ownerToken) => {
+        const deadPid = 424254;
+        const impostorPath = join(testDir, `daemon.state.json.generation.${deadPid}.${ownerToken}`);
+        mkdirSync(impostorPath);
+        writeFileSync(join(impostorPath, 'lock.pid'), String(deadPid), 'utf-8');
+        writeFileSync(join(impostorPath, 'foreign-data.txt'), 'not owned by Happy', 'utf-8');
+        vi.spyOn(process, 'kill').mockImplementation((pid) => {
+            if (pid === deadPid) {
+                const error = new Error('no such process') as NodeJS.ErrnoException;
+                error.code = 'ESRCH';
+                throw error;
+            }
+            return true;
+        });
+
+        const handle = await acquireDaemonLock(1, 0);
+
+        expect(handle).not.toBeNull();
+        expect(existsSync(impostorPath)).toBe(true);
+        expect(readFileSync(join(impostorPath, 'foreign-data.txt'), 'utf-8')).toBe('not owned by Happy');
+        await releaseDaemonLock(handle!);
+    });
+
+    it('preserves a non-empty lockless temp directory even when its name and PID are valid', async () => {
+        const deadPid = 424255;
+        const ownerToken = '00000000-0000-4000-8000-000000000002';
+        const impostorPath = join(testDir, `daemon.state.json.generation.${deadPid}.${ownerToken}.tmp`);
+        mkdirSync(impostorPath);
+        writeFileSync(join(impostorPath, 'foreign-data.txt'), 'not owned by Happy', 'utf-8');
+        vi.spyOn(process, 'kill').mockImplementation((pid) => {
+            if (pid === deadPid) {
+                const error = new Error('no such process') as NodeJS.ErrnoException;
+                error.code = 'ESRCH';
+                throw error;
+            }
+            return true;
+        });
+
+        const handle = await acquireDaemonLock(1, 0);
+
+        expect(handle).not.toBeNull();
+        expect(existsSync(impostorPath)).toBe(true);
+        expect(readFileSync(join(impostorPath, 'foreign-data.txt'), 'utf-8')).toBe('not owned by Happy');
+        await releaseDaemonLock(handle!);
+    });
+
+    it('preserves an empty lockless temp directory when its owner token is malformed', async () => {
+        const deadPid = 424257;
+        const malformedTempPath = join(testDir, `daemon.state.json.generation.${deadPid}.not-a-uuid.tmp`);
+        mkdirSync(malformedTempPath);
+        vi.spyOn(process, 'kill').mockImplementation((pid) => {
+            if (pid === deadPid) {
+                const error = new Error('no such process') as NodeJS.ErrnoException;
+                error.code = 'ESRCH';
+                throw error;
+            }
+            return true;
+        });
+
+        const handle = await acquireDaemonLock(1, 0);
+
+        expect(handle).not.toBeNull();
+        expect(existsSync(malformedTempPath)).toBe(true);
+        await releaseDaemonLock(handle!);
+    });
+
+    it('removes an empty valid temp directory left by a crash between mkdir and lock.pid', async () => {
+        const deadPid = 424256;
+        const ownerToken = '00000000-0000-4000-8000-000000000003';
+        const crashedTempPath = join(testDir, `daemon.state.json.generation.${deadPid}.${ownerToken}.tmp`);
+        mkdirSync(crashedTempPath);
+        vi.spyOn(process, 'kill').mockImplementation((pid) => {
+            if (pid === deadPid) {
+                const error = new Error('no such process') as NodeJS.ErrnoException;
+                error.code = 'ESRCH';
+                throw error;
+            }
+            return true;
+        });
+
+        const handle = await acquireDaemonLock(1, 0);
+
+        expect(handle).not.toBeNull();
+        expect(existsSync(crashedTempPath)).toBe(false);
+        await releaseDaemonLock(handle!);
+    });
+
     it('supports old-binary fixed-path reads and cleans its rollback orphan later', async () => {
         const stalePid = 424248;
-        const generationPath = createDeadGeneration(stalePid, 'rollback-smoke', true);
+        const generationPath = createDeadGeneration(stalePid, daemonTestUuid(14), true);
         const oldBinaryState = JSON.parse(readFileSync(mockConfiguration.daemonStateFile, 'utf-8'));
         expect(readFileSync(mockConfiguration.daemonLockFile, 'utf-8')).toBe(String(stalePid));
         expect(oldBinaryState).toMatchObject({ pid: stalePid, httpPort: 4000 });
