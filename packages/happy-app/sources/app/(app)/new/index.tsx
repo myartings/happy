@@ -1007,6 +1007,7 @@ function NewSessionScreen() {
     // addresses its CLI sibling for registry operations.
     const discoveryMachine = selectedChoice?.happyMachine ?? selectedMachine;
     const discoveryMachineId = discoveryMachine?.id ?? null;
+    const discoveryMachineOnline = discoveryMachine ? isMachineOnline(discoveryMachine) : false;
     const discoveryLoader = React.useMemo(() => new SavedProjectRegistryLoader({
         request: listSavedProjects,
     }), []);
@@ -1035,20 +1036,25 @@ function NewSessionScreen() {
 
     React.useEffect(() => {
         const requiresSavedProjectCapability = activePicker === 'path' || selectedSavedProjectId !== null;
-        if (!requiresSavedProjectCapability || !discoveryMachine || !isMachineOnline(discoveryMachine)) {
+        if (!requiresSavedProjectCapability || !discoveryMachineId || !discoveryMachineOnline) {
             discoveryLoader.reset();
             setDiscoveryStatus('idle');
-            setSavedRegistryBinding(null);
+            return;
+        }
+
+        const cached = discoveryLoader.peek(discoveryMachineId);
+        if (cached) {
+            setSavedRegistryBinding({ machineId: discoveryMachineId, registry: cached });
+            setDiscoveryStatus('ready');
             return;
         }
 
         let disposed = false;
         setDiscoveryStatus('loading');
-        setSavedRegistryBinding(null);
-        void discoveryLoader.load(discoveryMachine.id).then((outcome) => {
+        void discoveryLoader.load(discoveryMachineId).then((outcome) => {
             if (disposed || !outcome) return;
             if (outcome.status === 'ready') {
-                setSavedRegistryBinding({ machineId: discoveryMachine.id, registry: outcome.registry });
+                setSavedRegistryBinding({ machineId: discoveryMachineId, registry: outcome.registry });
                 setDiscoveryStatus('ready');
             } else {
                 setDiscoveryStatus('unavailable');
@@ -1059,7 +1065,7 @@ function NewSessionScreen() {
             disposed = true;
             discoveryLoader.reset();
         };
-    }, [activePicker, discoveryLoader, discoveryMachine, selectedSavedProjectId]);
+    }, [activePicker, discoveryLoader, discoveryMachineId, discoveryMachineOnline, selectedSavedProjectId]);
 
     const savedProjects = React.useMemo(
         () => filterSavedProjects(savedRegistry?.projects ?? [], debouncedWorkspaceSearchQuery),
@@ -1097,6 +1103,7 @@ function NewSessionScreen() {
                 return;
             }
             const result = outcome.result;
+            discoveryLoader.remember(discoveryMachine.id, result.registry);
             setSavedRegistryBinding({ machineId: discoveryMachine.id, registry: result.registry });
             selectSavedProject(result.project);
         } catch (error) {
@@ -1107,7 +1114,7 @@ function NewSessionScreen() {
         } finally {
             setIsAddingSavedProject(false);
         }
-    }, [addGuard, discoveryMachine, savedRegistry, selectSavedProject]);
+    }, [addGuard, discoveryLoader, discoveryMachine, savedRegistry, selectSavedProject]);
 
     // A machine with saved projects starts from a durable identity, never from a Recent path.
     React.useEffect(() => {
