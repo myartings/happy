@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 type Draft = {
     input: string;
     selectedMachineId: string | null;
+    selectedProjectId: string | null;
     selectedPath: string | null;
     agentType: 'claude' | 'codex' | 'gemini' | 'openclaw' | 'agy' | 'rig';
     permissionMode: string | null;
@@ -30,6 +31,7 @@ function persistedDraft(overrides: Partial<Draft> = {}): Draft {
     return {
         input: '',
         selectedMachineId: null,
+        selectedProjectId: null,
         selectedPath: null,
         agentType: 'claude',
         permissionMode: null,
@@ -96,5 +98,33 @@ describe('useNewSessionDraft', () => {
 
         expect(useNewSessionDraft.getState().attachments).toEqual([attachment]);
         expect(mockPersistence.saved).toHaveLength(0);
+    });
+
+    it('keeps project identity machine-scoped and clears it when a path is edited', async () => {
+        const { useNewSessionDraft } = await import('./useNewSessionDraft');
+
+        useNewSessionDraft.getState().setMachineId('machine-1');
+        useNewSessionDraft.getState().selectProject({
+            id: '11111111-1111-4111-8111-111111111111',
+            primaryPath: '/home/dev/happy',
+        });
+        expect(useNewSessionDraft.getState()).toMatchObject({
+            selectedMachineId: 'machine-1',
+            selectedProjectId: '11111111-1111-4111-8111-111111111111',
+            selectedPath: '/home/dev/happy',
+        });
+        expect(mockPersistence.saved.at(-1)).toMatchObject({
+            selectedProjectId: '11111111-1111-4111-8111-111111111111',
+            selectedPath: '/home/dev/happy',
+        });
+
+        useNewSessionDraft.getState().setPath('/home/dev/other');
+        expect(useNewSessionDraft.getState().selectedProjectId).toBeNull();
+        useNewSessionDraft.getState().setMachineId('machine-2');
+        expect(useNewSessionDraft.getState()).toMatchObject({
+            selectedMachineId: 'machine-2',
+            selectedProjectId: null,
+            selectedPath: null,
+        });
     });
 });

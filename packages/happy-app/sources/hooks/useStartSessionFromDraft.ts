@@ -5,6 +5,7 @@ import { getCodeAgentDefaults, resolveAgentDefaultConfig } from '@/sync/agentDef
 import {
     machineSpawnNewSession,
     machineStopSession,
+    resolveSavedProject,
     sessionArchive,
     sessionKill,
     sessionSetAgentModes,
@@ -262,6 +263,7 @@ export function useStartSessionFromDraft() {
         const prompt = draft.input.trim();
         const attachments = draft.attachments;
         const selectedPath = draft.selectedPath?.trim() || '~';
+        const savedProjectId = draft.selectedProjectId?.trim() || null;
         const absolutePath = resolveAbsolutePath(selectedPath, machine.metadata?.homeDir);
         const sessionList = (sessions ?? []).filter((item): item is Session => typeof item !== 'string');
         const places = collectSessionPlaces({
@@ -310,12 +312,33 @@ export function useStartSessionFromDraft() {
             && requestedWorktree === '__new__'
             ? '__none__'
             : requestedWorktree;
+        if (savedProjectId && worktreeSelection === '__none__') {
+            if (agentType === 'rig') {
+                Modal.alert(
+                    t('common.error'),
+                    formatStartError('Saved projects are unavailable for Happy Agent sessions'),
+                );
+                return false;
+            }
+            const registryMachine = choice.happyMachine;
+            if (!registryMachine || !isMachineOnline(registryMachine)) {
+                Modal.alert(t('common.error'), formatStartError('Saved projects are unavailable on this machine'));
+                return false;
+            }
+            try {
+                await resolveSavedProject(registryMachine.id, savedProjectId);
+            } catch {
+                Modal.alert(t('common.error'), formatStartError('Saved projects are unavailable on this machine'));
+                return false;
+            }
+        }
         // Reused across every retry of this exact request so a second press of
         // Start is deduped by Rig instead of spawning a second session.
         const clientRequestId = resolveSpawnRequestId(buildSpawnRequestSignature({
             machineId: machine.id,
             agent: agentType,
             directory: selectedPath,
+            projectId: savedProjectId,
             worktree: worktreeSelection,
             modelKey: model.key,
             permissionMode: permission.key,
@@ -383,11 +406,17 @@ export function useStartSessionFromDraft() {
                             permissionMode: permission.key,
                             effort: effort?.key,
                         }),
+                        ...(savedProjectId && worktreeSelection === '__none__'
+                            ? { projectId: savedProjectId }
+                            : {}),
                         ...(happyAgentTarget ? { happyAgentTarget } : {}),
                     }
                     : {
                         machineId: machine.id,
                         directory: spawnDirectory,
+                        ...(savedProjectId && worktreeSelection === '__none__'
+                            ? { projectId: savedProjectId }
+                            : {}),
                         approvedNewDirectoryCreation,
                         agent: agentType,
                         // Codex Default is a concrete ask-first policy, not an

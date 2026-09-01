@@ -22,6 +22,7 @@ describe('Rig machine spawn RPC', () => {
         await expect(machineSpawnNewSession({
             machineId: 'rig-machine',
             directory: '/work/project',
+            projectId: '11111111-1111-4111-8111-111111111111',
             approvedNewDirectoryCreation: false,
             agent: 'rig',
             clientRequestId: 'request-1',
@@ -48,6 +49,7 @@ describe('Rig machine spawn RPC', () => {
                 agent: 'rig',
                 clientRequestId: 'request-1',
                 directory: '/work/project',
+                projectId: '11111111-1111-4111-8111-111111111111',
                 approvedNewDirectoryCreation: false,
                 providerId: 'codex',
                 modelId: 'gpt-5.6-sol',
