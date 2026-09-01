@@ -194,6 +194,7 @@ export const MetadataSchema = z.object({
      * means "never picked".
      */
     permissionMode: z.string().nullish(),
+    permissionModeRevision: z.number().int().nonnegative().optional(),
     modelMode: z.string().nullish(),
     effortLevel: z.string().nullish(),
     serviceTier: z.string().nullish(),
@@ -383,6 +384,7 @@ export type TodoItem = z.infer<typeof TodoItemSchema>;
  */
 export interface SessionAgentModesPatch {
     permissionMode?: string | null;
+    permissionModeRevision?: number;
     modelMode?: string | null;
     effortLevel?: string | null;
     serviceTier?: string | null;
@@ -407,6 +409,7 @@ export interface Session {
     todos?: TodoItem[];
     draft?: string | null; // Local draft message, not synced to server
     permissionMode?: string | null; // Permission pick; local mirror of synced metadata.permissionMode (#1492)
+    permissionModeRevision?: number; // CLI arrival order for the permission-mode mirror
     modelMode?: string | null; // Model pick; local mirror of synced metadata.modelMode (#1492)
     effortLevel?: string | null; // Effort pick; local mirror of synced metadata.effortLevel (#1492)
     serviceTier?: string | null; // Codex service-tier pick; local mirror of synced metadata.serviceTier

@@ -52,12 +52,16 @@ export class CodexRemoteModeState {
         this.currentServiceTier = options.serviceTier ?? 'default';
     }
 
+    applyExplicitPermissionMode(permissionMode: PermissionMode): void {
+        this.currentPermissionMode = permissionMode;
+        this.currentPermissionModeExplicitlySet = true;
+    }
+
     resolve(meta: MessageMeta | undefined): CodexRemoteModeResolution {
         let permission: Resolution<PermissionMode>;
         if (meta?.permissionMode) {
             if (isRemoteCodexPermissionMode(meta.permissionMode)) {
-                this.currentPermissionMode = meta.permissionMode;
-                this.currentPermissionModeExplicitlySet = true;
+                this.applyExplicitPermissionMode(meta.permissionMode);
                 permission = { kind: 'updated', value: this.currentPermissionMode };
             } else {
                 permission = {

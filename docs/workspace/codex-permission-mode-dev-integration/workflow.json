@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 3,
+  "slug": "codex-permission-mode-dev-integration",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly authorized merge-local workflow, validation, and push; docs/specs/codex-permission-mode-dev-integration.md MI1-MI9 freeze one integration Slice for PR #90",
+      "updated": "2026-09-01T12:42:39+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-permission-mode-dev-integration/decisions.md D1-D4 resolve parent preservation, metadata/live-authority semantics, normal merge lifecycle, and exact gap policy",
+      "updated": "2026-09-01T12:42:40+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current Root in current session/worktree; serial topology due overlapping authorization code; no protected/native/server/release changes; accepted test authority is combined App/CLI public seams plus full configured check and capable review",
+      "updated": "2026-09-01T12:42:40+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/codex-permission-mode-dev-integration/risk.md; exact legacy/live authority boundaries, combined tests, candidate-bound review, merge CI, and no force push",
+      "updated": "2026-09-01T12:42:40+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Resolved merge candidate has zero unmerged entries and zero conflict markers; archive retains both parent rows; Metadata.permissionMode has exactly one declaration; combined post-merge focused suites passed App 43/43 and CLI 41/41; Happy App and Happy CLI typechecks passed; staged whitespace check passed.",
+      "updated": "2026-09-01T12:45:51+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged full-profile run passed 7/9 commands. Index 2: one untouched Studio sidebar string-wiring assertion failed while 1925 App tests passed. Index 3: two untouched native-Windows local-storage route fixtures failed while 110 Server tests passed. All other typecheck, workflow runtime (22 tests), validator, and strict audit commands passed.",
+      "updated": "2026-09-01T13:01:28+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards reviews accepted frozen candidate c9c19cb0288fadb43e790e506f0c63ed0b6cf8b2b0d97f6337a95c6889ce1f25 with no actionable findings; exact baseline gaps remain contained.",
+      "updated": "2026-09-01T13:08:02+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "5f8585f8d9d5f4b344c75939629773ede15e374b",
+        "candidateFingerprint": "c9c19cb0288fadb43e790e506f0c63ed0b6cf8b2b0d97f6337a95c6889ce1f25"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "All MI1-MI9 pre-delivery acceptance rows are complete; structured check accepted only exact unchanged baseline indexes 2 and 3; independent capable reviews accepted the frozen candidate; rollback is a normal merge revert; no candidate-owned follow-up or tracker mutation.",
+      "updated": "2026-09-01T13:10:28+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-01T12:41:00+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-01T12:41:00+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — Merge-local integration required to reconcile Issue #87 delivery with Issue #88 already merged into dev without inventing a new external delivery slice (approval: User explicitly authorized merge-local workflow, validation, and push on 2026-09-01)"
+    },
+    {
+      "at": "2026-09-01T12:42:39+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly authorized merge-local workflow, validation, and push; docs/specs/codex-permission-mode-dev-integration.md MI1-MI9 freeze one integration Slice for PR #90"
+    },
+    {
+      "at": "2026-09-01T12:42:40+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-permission-mode-dev-integration/decisions.md D1-D4 resolve parent preservation, metadata/live-authority semantics, normal merge lifecycle, and exact gap policy"
+    },
+    {
+      "at": "2026-09-01T12:42:40+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "cleared-with-controls: docs/workspace/codex-permission-mode-dev-integration/risk.md; exact legacy/live authority boundaries, combined tests, candidate-bound review, merge CI, and no force push"
+    },
+    {
+      "at": "2026-09-01T12:42:40+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current Root in current session/worktree; serial topology due overlapping authorization code; no protected/native/server/release changes; accepted test authority is combined App/CLI public seams plus full configured check and capable review"
+    },
+    {
+      "at": "2026-09-01T12:45:05+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Stage the resolved merge candidate and record combined behavior evidence"
+    },
+    {
+      "at": "2026-09-01T12:45:51+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Resolved merge candidate has zero unmerged entries and zero conflict markers; archive retains both parent rows; Metadata.permissionMode has exactly one declaration; combined post-merge focused suites passed App 43/43 and CLI 41/41; Happy App and Happy CLI typechecks passed; staged whitespace check passed."
+    },
+    {
+      "at": "2026-09-01T12:45:51+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run fresh candidate-bound configured check against feature parent 5f8585f8, then independent capable Spec and Standards review"
+    },
+    {
+      "at": "2026-09-01T13:00:45+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 206bd05a-d7f5-4ebf-a8ad-e8a8eb5b8f7a"
+    },
+    {
+      "at": "2026-09-01T13:01:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged full-profile run passed 7/9 commands. Index 2: one untouched Studio sidebar string-wiring assertion failed while 1925 App tests passed. Index 3: two untouched native-Windows local-storage route fixtures failed while 110 Server tests passed. All other typecheck, workflow runtime (22 tests), validator, and strict audit commands passed.; structured run: 206bd05a-d7f5-4ebf-a8ad-e8a8eb5b8f7a; accepted command indexes: 2, 3; approval: User explicitly selected '接受检查 gap，继续审查（推荐）' for the same named Studio wiring and Windows local-storage baseline gaps; this fresh merge-local run reproduces only those exact gaps with all three failing test blobs byte-identical in feature parent, MERGE_HEAD, origin/dev, index, and worktree."
+    },
+    {
+      "at": "2026-09-01T13:07:47+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards reviews accepted the same frozen candidate c9c19cb...e1f25 with no actionable findings; exact baseline gaps remain contained."
+    },
+    {
+      "at": "2026-09-01T13:07:52+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete acceptance/rollback notes, pre-archive CI, canonical archive, delivery CI, normal merge commit, committed CI, and ordinary push"
+    },
+    {
+      "at": "2026-09-01T13:08:02+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards reviews accepted frozen candidate c9c19cb0288fadb43e790e506f0c63ed0b6cf8b2b0d97f6337a95c6889ce1f25 with no actionable findings; exact baseline gaps remain contained."
+    },
+    {
+      "at": "2026-09-01T13:08:12+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete acceptance and rollback notes, pre-archive CI, canonical archive, delivery CI, normal merge commit, committed CI, and ordinary push"
+    },
+    {
+      "at": "2026-09-01T13:10:28+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "All MI1-MI9 pre-delivery acceptance rows are complete; structured check accepted only exact unchanged baseline indexes 2 and 3; independent capable reviews accepted the frozen candidate; rollback is a normal merge revert; no candidate-owned follow-up or tracker mutation."
+    },
+    {
+      "at": "2026-09-01T14:00:41+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Integrated Issue #87 cross-client permission-mode preservation with Issue #88 live mode control on dev; fresh full check accepted only exact unchanged baseline gaps, both capable reviews accepted, and pre-archive merge CI passed.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-01T14:00:41+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Merge-local integration required to reconcile Issue #87 delivery with Issue #88 already merged into dev without inventing a new external delivery slice",
+    "approval": "User explicitly authorized merge-local workflow, validation, and push on 2026-09-01"
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "206bd05a-d7f5-4ebf-a8ad-e8a8eb5b8f7a",
+  "checkRunFingerprint": "a9aad233952d532b32f738c877580dc1d1b468812d9ac92632239ca3a908150d",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "5f8585f8d9d5f4b344c75939629773ede15e374b",
+    "candidateFingerprint": "c9c19cb0288fadb43e790e506f0c63ed0b6cf8b2b0d97f6337a95c6889ce1f25"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      3
+    ],
+    "approval": "User explicitly selected '接受检查 gap，继续审查（推荐）' for the same named Studio wiring and Windows local-storage baseline gaps; this fresh merge-local run reproduces only those exact gaps with all three failing test blobs byte-identical in feature parent, MERGE_HEAD, origin/dev, index, and worktree."
+  },
+  "checkAcceptedFailuresFingerprint": "ee82d4a2942caa03f35d85ca2f73a36e08b877e2a53427c166a46ec6629f02ce",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "5f8585f8d9d5f4b344c75939629773ede15e374b",
+      "candidateFingerprint": "c9c19cb0288fadb43e790e506f0c63ed0b6cf8b2b0d97f6337a95c6889ce1f25"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Capable Spec reviewer issue87_merge_spec_review accepted frozen candidate c9c19cb0288fadb43e790e506f0c63ed0b6cf8b2b0d97f6337a95c6889ce1f25 with no actionable findings; four intended overlap seams preserve both parent contracts and add no out-of-scope behavior."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Capable Standards reviewer issue87_merge_standards_review accepted frozen candidate c9c19cb0288fadb43e790e506f0c63ed0b6cf8b2b0d97f6337a95c6889ce1f25 with no actionable findings; authorization stays behind encrypted RPC, metadata is launch/display only, and race/error paths fail closed."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete acceptance and rollback notes, pre-archive CI, canonical archive, delivery CI, normal merge commit, committed CI, and ordinary push",
+    "prearchiveUpdated": "2026-09-01T13:10:28+00:00",
+    "prearchiveActive": {
+      "feature": "codex-permission-mode-dev-integration",
+      "phase": "finish",
+      "updated": "2026-09-01",
+      "next": "Complete acceptance and rollback notes, pre-archive CI, canonical archive, delivery CI, normal merge commit, committed CI, and ordinary push",
+      "branch / worktree": "issue/87-android-reply-silently-changes-existing-codex-se"
+    },
+    "prearchiveArchiveObject": "cae6f105b236d77c01f2aaabd7308876687c3f6b",
+    "fingerprint": "149dee9d542aa631844d8144eb9885f9e6022a3eeb0b77742b2d6e4118b01959"
+  },
+  "archivedAt": "2026-09-01T14:00:41+00:00",
+  "archiveDate": "2026-09-01",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Integrated Issue #87 cross-client permission-mode preservation with Issue #88 live mode control on dev; fresh full check accepted only exact unchanged baseline gaps, both capable reviews accepted, and pre-archive merge CI passed.",
+  "archiveFollowUp": "None"
+}

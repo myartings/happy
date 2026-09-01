@@ -302,6 +302,13 @@ export type Metadata = {
   currentModelCode?: string,
   /** Explicit model currently requested by the running agent session. */
   modelMode?: string | null,
+  /**
+   * Synchronized per-session permission mode and display mirror.
+   * This seeds launch state but is never a live CLI authorization command.
+   */
+  permissionMode?: string | null,
+  /** Monotonic CLI order for acknowledged live permission-mode changes. */
+  permissionModeRevision?: number,
   operatingModes?: Array<{ code: string; value: string; description?: string | null }>,
   currentOperatingModeCode?: string,
   thoughtLevels?: Array<{ code: string; value: string; description?: string | null }>,
@@ -340,8 +347,6 @@ export type Metadata = {
   flavor?: string
   sandbox?: SandboxConfig | null
   dangerouslySkipPermissions?: boolean | null
-  /** Concrete per-session launch mode synchronized to every Happy client. */
-  permissionMode?: string | null
   /** Lineage for sessions created via the fork / duplicate flow. */
   parentSessionId?: string
   forkedFromMessageId?: string
