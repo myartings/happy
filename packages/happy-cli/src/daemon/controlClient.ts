@@ -94,6 +94,24 @@ export async function notifyDaemonSessionStarted(
   }
 }
 
+export async function notifyDaemonCodexEffectiveRoute(
+  sessionId: string,
+  route: {
+    effectiveModel: string;
+    effectiveReasoningEffort: string;
+  } | null,
+): Promise<{ error?: string } | any> {
+  const state = await readDaemonState();
+  if (!state?.ownerToken) {
+    return { error: 'Cannot update effective route without daemon generation proof' };
+  }
+  return await daemonPost('/session-effective-route', {
+    expectedOwnerToken: state.ownerToken,
+    sessionId,
+    route,
+  }, state);
+}
+
 export async function listDaemonSessions(): Promise<any[]> {
   const result = await daemonPost('/list');
   return result.children || [];

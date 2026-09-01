@@ -670,3 +670,77 @@ environment and counter-evidence instead of speculative changes.
   repository workflow evidence.
 - A daemon architecture choice or any required external-state mutation blocks
   completion pending explicit owner approval.
+
+# Runtime-confirmed Codex Route Metadata
+
+## Problem
+
+Happy publishes the model requested by its UI or CLI, but does not publish one
+machine-verifiable pair containing the model and reasoning effort that Codex
+App Server actually accepted. Downstream launch verification must therefore
+stop for manual confirmation even when process, branch, worktree, and session
+binding are otherwise valid. Treating requested values as effective would
+create a false authorization signal.
+
+## Desired outcome
+
+Every effective Codex route exposed in Happy Session metadata is one current,
+atomic model/effort pair confirmed by Codex App Server. Consumers can verify a
+matching route automatically and detect a mismatch without trusting launch
+arguments, picker state, defaults, prior metadata, or process inspection.
+
+## Product requirements
+
+1. Codex Session metadata supports optional `effectiveModel` and
+   `effectiveReasoningEffort` fields without redefining the requested-state
+   `modelMode` field.
+2. The effective fields are published or updated together only from a Codex
+   App Server response or notification that confirms both concrete values for
+   the current thread or accepted route change.
+3. Initial thread start, resume/reconnect, and supported fork paths publish the
+   confirmed pair.
+4. Later accepted model or effort changes replace the pair only after Codex
+   confirms the resulting concrete pair; requested/effective mismatches remain
+   visible as the reported effective values.
+5. Missing, null, malformed, partial, reset/default, or otherwise unconfirmed
+   evidence withholds or clears both effective fields and never retains a stale
+   or mixed pair.
+6. The existing daemon Session projection exposes the optional pair without
+   adding prompt content, credentials, tokens, raw logs, or other sensitive
+   state.
+7. Existing startup flags, requested-state display, remote mode selection,
+   reconnect behavior, non-Codex agents, and older metadata consumers remain
+   compatible.
+
+## Observable success
+
+- A deterministic Luna Max fixture reaches the daemon projection as
+  `effectiveModel=gpt-5.6-luna` and `effectiveReasoningEffort=max` from App
+  Server-confirmed evidence.
+- Negative fixtures prove fail-closed behavior for requested/effective
+  mismatch, absent effort, stale metadata, reset/default, resume, and
+  model-only or effort-only changes.
+- The unchanged launcher v0.5 parser accepts a matching confirmed pair and
+  rejects or defers every missing, partial, or mismatched pair.
+
+## Scope
+
+- Happy CLI Session metadata typing, the focused Codex runtime metadata seam,
+  App Server lifecycle response propagation, `runCodex` integration, existing
+  daemon Session projection, focused tests, and minimal contract documentation.
+
+## Non-goals
+
+- Routing-policy, default-model/effort, picker, permission, service-tier,
+  sandbox, launcher, canary, UI, release, install, or non-Codex-agent changes.
+- New polling, telemetry, logs-as-protocol, or any inference from arguments,
+  environment variables, process state, launch receipts, or previous metadata.
+
+## Constraints
+
+- Optional fields must remain backward compatible and contain only the
+  non-sensitive confirmed route values.
+- Publication is fail-closed and atomic: partial evidence clears or withholds
+  the whole effective pair.
+- The change is locally reversible by removing the optional fields and their
+  propagation; rollback returns consumers to manual verification.

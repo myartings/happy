@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createSerialAsyncHandler } from './serialAsyncHandler';
+import { createLatestAsyncHandler, createSerialAsyncHandler } from './serialAsyncHandler';
 
 async function tick(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -52,5 +52,31 @@ describe('createSerialAsyncHandler', () => {
 
         expect(events).toEqual(['first', 'second']);
         expect(onError).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('createLatestAsyncHandler', () => {
+    it('never blocks the caller and coalesces queued values to the latest state', async () => {
+        const events: string[] = [];
+        let releaseFirst!: () => void;
+        const firstDone = new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+        });
+        const handle = createLatestAsyncHandler<string>(async (value) => {
+            events.push(`start:${value}`);
+            if (value === 'first') await firstDone;
+            events.push(`end:${value}`);
+        });
+
+        handle('first');
+        handle('obsolete');
+        handle('latest');
+        await tick();
+        expect(events).toEqual(['start:first']);
+
+        releaseFirst();
+        await tick();
+        await tick();
+        expect(events).toEqual(['start:first', 'end:first', 'start:latest', 'end:latest']);
     });
 });

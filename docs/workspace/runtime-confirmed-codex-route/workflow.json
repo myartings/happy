@@ -1,0 +1,502 @@
+{
+  "schemaVersion": 3,
+  "slug": "runtime-confirmed-codex-route",
+  "intensity": "feature",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly accepted Issue #80; PRD and docs/specs/runtime-confirmed-codex-route.md freeze one independently deliverable Slice with AC1-AC12.",
+      "updated": "2026-09-01T15:14:12+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D3 record the accepted authority, fail-closed atomic-pair, and modelMode compatibility decisions; no material product decision remains open.",
+      "updated": "2026-09-01T15:14:12+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: current Root owns exact confirmed fresh-session Issue #80 worktree; topology=current-root serial; capability=gpt-5.6-sol medium confirmed by operator; TDD seams and final CLI/workflow checks fixed; risk controls passed.",
+      "updated": "2026-09-01T15:16:53+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared-with-controls: complete App Server evidence is the only authority; partial evidence clears both fields; negative false-success fixtures, independent review, and reversible removal are required.",
+      "updated": "2026-09-01T15:14:12+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Production candidate unchanged; finish, task, session, and acceptance evidence completed for the pre-archive candidate.",
+      "updated": "2026-09-01T17:40:42+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Complete pre-archive candidate: seven of nine configured commands passed. Index 2 is the unchanged App parallel-load timeout; index 5 is the three pre-existing autocrlf raw-byte fingerprint failures. Product tests and final finish evidence are unchanged.",
+      "updated": "2026-09-01T17:49:54+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent Spec and Standards axes accepted the complete pre-archive candidate.",
+      "updated": "2026-09-01T17:51:23+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "8ecad0b722e535deba79b059d87d88bdc7f79f1a",
+        "candidateFingerprint": "3c5a60459768a6423be1b6fb87f3fa3307619f30d87dcac25d36ee61f60f3092"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish evidence complete; AC1-AC12 verified, accepted-gaps check bound, dual review passed, rollback/operations/follow-up/tracker recommendation recorded.",
+      "updated": "2026-09-01T17:51:35+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-01T15:11:40+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-01T15:11:51+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/80"
+    },
+    {
+      "at": "2026-09-01T15:14:12+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly accepted Issue #80; PRD and docs/specs/runtime-confirmed-codex-route.md freeze one independently deliverable Slice with AC1-AC12."
+    },
+    {
+      "at": "2026-09-01T15:14:12+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D3 record the accepted authority, fail-closed atomic-pair, and modelMode compatibility decisions; no material product decision remains open."
+    },
+    {
+      "at": "2026-09-01T15:14:12+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared-with-controls: complete App Server evidence is the only authority; partial evidence clears both fields; negative false-success fixtures, independent review, and reversible removal are required."
+    },
+    {
+      "at": "2026-09-01T15:14:12+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Complete right-sizing and scoping after runtime model/effort capability is confirmed."
+    },
+    {
+      "at": "2026-09-01T15:15:06+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "blocked",
+      "evidence": "Current Session exposes no App Server-confirmed runtime model/effort. Launch capsule requests gpt-5.6-sol/medium but requested argv is not authority; implementation requires visible /status or equivalent confirmation before right-sizing and scoping can pass."
+    },
+    {
+      "at": "2026-09-01T15:16:52+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "pending",
+      "evidence": "Operator confirmed gpt-5.6-sol medium; previous runtime-capability blocker resolved, pending fresh right-sizing receipt."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-01T15:16:53+00:00",
+      "phase": "design",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Publish one atomic current App Server-confirmed Codex model/effort pair through existing Session metadata and daemon projection.",
+      "acceptanceSeam": "AC1-AC12: typed optional pair, lifecycle propagation, fail-closed negative fixtures, daemon/launcher consumer seam, full checks and review.",
+      "dependencies": "Consumes existing modelMode requested-state metadata, App Server lifecycle response types, and unchanged launcher v0.5 field names; no blocking implementation dependency.",
+      "reviewBoundary": "Metadata schema, confirmation propagation, stale/reset handling, projection visibility, and tests are accepted or rejected together.",
+      "rollbackBoundary": "Revert the optional pair and its propagation to restore current manual verification without migration.",
+      "contextBoundary": "One serial Sol Medium current-root session in the exact registered Issue #80 worktree; no writer delegation or adjacent launcher/canary work.",
+      "consequence": "Medium workflow/safety consequence: false-positive effective metadata could authorize work under the wrong route; atomic fail-closed controls required.",
+      "evidence": "Live Issue #80 and current origin/dev seams revalidated; current code still has requested-only modelMode while App Server start/resume/fork responses expose model plus reasoning effort and client seams drop effort.",
+      "contractFingerprint": "4f199f42ca3ef2881ee8eb0ace972d2c2904d99d974d081c9a45d416779034eb",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-01T15:16:53+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current Root owns exact confirmed fresh-session Issue #80 worktree; topology=current-root serial; capability=gpt-5.6-sol medium confirmed by operator; TDD seams and final CLI/workflow checks fixed; risk controls passed."
+    },
+    {
+      "at": "2026-09-01T15:16:54+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD T1 atomic effective-route metadata contract."
+    },
+    {
+      "at": "2026-09-01T15:47:45+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented atomic effective-route metadata, App Server start/resume/fork/settings/reconnect propagation, runCodex stale-pair clearing, and privacy-bounded daemon projection; focused suite passes 45/45 and unchanged launcher v0.5 fixture passes."
+    },
+    {
+      "at": "2026-09-01T15:47:45+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the accepted candidate and run the complete applicable recorded check family."
+    },
+    {
+      "at": "2026-09-01T15:59:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: cd380541-772f-4129-89e8-c04bacf7a49a"
+    },
+    {
+      "at": "2026-09-01T16:14:48+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented and tested atomic effective-route metadata, App Server lifecycle/settings/reconnect propagation, ordered live daemon projection updates, fail-closed clearing, and privacy-bounded list output; focused 46/46 and complete Happy CLI 968/968 pass."
+    },
+    {
+      "at": "2026-09-01T16:26:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: be28c313-0742-436f-847a-56bd97a31bfb"
+    },
+    {
+      "at": "2026-09-01T16:29:10+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged run: seven of nine configured commands passed. Accepted index 2: unchanged Happy App large-blob test timed out only under full parallel load while 1928 peers passed and isolated reruns passed 3/3. Accepted index 5: three pre-existing autocrlf raw-byte configuration fingerprint failures, proven independent of Issue #80. Focused #80 suite 46/46 and complete Happy CLI 968/968 pass.; structured run: be28c313-0742-436f-847a-56bd97a31bfb; accepted command indexes: 2, 5; approval: User explicitly accepted both candidate-external check gaps on 2026-09-02 after evidence review."
+    },
+    {
+      "at": "2026-09-01T16:35:23+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate remediation after blocked review invalidates prior check."
+    },
+    {
+      "at": "2026-09-01T16:35:23+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate fail-closed validation, failed reconnect clearing, fork resume, and negative coverage."
+    },
+    {
+      "at": "2026-09-01T16:43:23+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation complete: strict effective-route validation, failed reconnect clearing, fork-resume Session/daemon publication, focused 52/52, and complete CLI 974/974."
+    },
+    {
+      "at": "2026-09-01T16:43:23+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze revised candidate and run the complete applicable staged check family."
+    },
+    {
+      "at": "2026-09-01T16:52:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: ed718311-d93a-4827-8f01-012b524c968b"
+    },
+    {
+      "at": "2026-09-01T16:53:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh revised candidate run: seven of nine configured commands passed. Index 2 reproduced the unchanged Happy App large-blob timeout only under full parallel load; index 5 reproduced the three pre-existing autocrlf raw-byte configuration fingerprint failures. Focused remediation suite 52/52 and complete Happy CLI 974/974 passed.; structured run: ed718311-d93a-4827-8f01-012b524c968b; accepted command indexes: 2, 5; approval: User explicitly accepted both candidate-external check gaps on 2026-09-02; the fresh run reproduces only the same App parallel-load timeout and pre-existing autocrlf raw-byte fingerprint failures."
+    },
+    {
+      "at": "2026-09-01T16:56:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Blocked dual review requires candidate remediation and a fresh structured check."
+    },
+    {
+      "at": "2026-09-01T16:56:51+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate mixed/unbound notification handling, daemon capability proof, protocol-grounded model validation, non-blocking projection, and missing coverage."
+    },
+    {
+      "at": "2026-09-01T17:08:18+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second review remediation complete: mixed/unbound settings fail closed, generation-bound daemon writes, startup spoof stripping, protocol-grounded model validation, non-blocking latest-state projection, Luna Max end-to-end and requested-change coverage; focused 73/73 and complete CLI 985/985."
+    },
+    {
+      "at": "2026-09-01T17:08:18+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze third revised candidate and run the complete applicable staged check family."
+    },
+    {
+      "at": "2026-09-01T17:18:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 6cbc7147-216a-4523-b062-55ecec8ebe58"
+    },
+    {
+      "at": "2026-09-01T17:18:46+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Third revised candidate run: seven of nine configured commands passed. Index 2 reproduced the unchanged Happy App large-blob timeout only under full parallel load; index 5 reproduced the three pre-existing autocrlf raw-byte configuration fingerprint failures. Focused remediation suite 73/73 and complete Happy CLI 985/985 passed.; structured run: 6cbc7147-216a-4523-b062-55ecec8ebe58; accepted command indexes: 2, 5; approval: User explicitly accepted both candidate-external check gaps on 2026-09-02; this third run again reproduces only the same App parallel-load timeout and pre-existing autocrlf raw-byte fingerprint failures."
+    },
+    {
+      "at": "2026-09-01T17:21:56+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Add the missing candidate-local launcher v0.5 compatibility fixture, then bind a fresh check."
+    },
+    {
+      "at": "2026-09-01T17:21:56+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add reproducible launcher v0.5 complete/partial/mismatch compatibility coverage."
+    },
+    {
+      "at": "2026-09-01T17:24:54+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Candidate-local launcher v0.5 compatibility fixture added for complete Luna Max, absent/partial, and mismatch outcomes; focused control-server 4/4 and complete CLI 985/985 passed."
+    },
+    {
+      "at": "2026-09-01T17:24:54+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze final candidate and run the complete applicable staged check family."
+    },
+    {
+      "at": "2026-09-01T17:35:36+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: e45fcc74-5e97-432e-8390-4dc90ec8f986"
+    },
+    {
+      "at": "2026-09-01T17:35:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Final candidate run: seven of nine configured commands passed. Index 2 reproduced the unchanged Happy App large-blob timeout only under full parallel load; index 5 reproduced the three pre-existing autocrlf raw-byte configuration fingerprint failures. Candidate-local launcher v0.5 fixture, focused remediation suite 73/73, and complete Happy CLI 985/985 passed.; structured run: e45fcc74-5e97-432e-8390-4dc90ec8f986; accepted command indexes: 2, 5; approval: User explicitly accepted both candidate-external check gaps on 2026-09-02; the final run again reproduces only the same App parallel-load timeout and pre-existing autocrlf raw-byte fingerprint failures."
+    },
+    {
+      "at": "2026-09-01T17:38:21+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent Spec and Standards axes both accepted the final pinned candidate with no blocking findings."
+    },
+    {
+      "at": "2026-09-01T17:38:23+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, stage pre-archive candidate, run workflow CI, and generate canonical archive projection."
+    },
+    {
+      "at": "2026-09-01T17:39:16+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence complete: AC1-AC12 verified; focused 73/73, CLI 985/985, final accepted-gaps staged check, and independent Spec/Standards review passed; rollback, operational notes, tracker recommendation, and follow-up classification recorded."
+    },
+    {
+      "at": "2026-09-01T17:39:59+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Finish/task/session acceptance evidence changed the staged candidate after final review; bind the complete pre-archive candidate."
+    },
+    {
+      "at": "2026-09-01T17:39:59+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Re-review the complete pre-archive candidate including finish evidence."
+    },
+    {
+      "at": "2026-09-01T17:40:41+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "pending",
+      "evidence": "Complete pre-archive candidate requires a fresh check/review binding after finish evidence changes."
+    },
+    {
+      "at": "2026-09-01T17:40:41+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Rebind the complete pre-archive candidate after finish evidence changed candidate identity."
+    },
+    {
+      "at": "2026-09-01T17:40:42+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Production candidate unchanged; finish, task, session, and acceptance evidence completed for the pre-archive candidate."
+    },
+    {
+      "at": "2026-09-01T17:40:42+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final structured check and dual review on the complete pre-archive candidate."
+    },
+    {
+      "at": "2026-09-01T17:49:40+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: dc576db4-1417-43e6-8375-8504b97b4de7"
+    },
+    {
+      "at": "2026-09-01T17:49:54+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Complete pre-archive candidate: seven of nine configured commands passed. Index 2 is the unchanged App parallel-load timeout; index 5 is the three pre-existing autocrlf raw-byte fingerprint failures. Product tests and final finish evidence are unchanged.; structured run: dc576db4-1417-43e6-8375-8504b97b4de7; accepted command indexes: 2, 5; approval: User explicitly accepted both candidate-external check gaps on 2026-09-02; the complete pre-archive run again reproduces only the same App parallel-load timeout and pre-existing autocrlf raw-byte fingerprint failures."
+    },
+    {
+      "at": "2026-09-01T17:51:23+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent Spec and Standards axes accepted the complete pre-archive candidate."
+    },
+    {
+      "at": "2026-09-01T17:51:25+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Run pre-archive workflow CI and generate the canonical terminal projection."
+    },
+    {
+      "at": "2026-09-01T17:51:28+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence complete; AC1-AC12 verified, accepted-gaps check bound, dual review passed, rollback/operations/follow-up/tracker recommendation recorded."
+    },
+    {
+      "at": "2026-09-01T17:51:35+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence complete; AC1-AC12 verified, accepted-gaps check bound, dual review passed, rollback/operations/follow-up/tracker recommendation recorded."
+    },
+    {
+      "at": "2026-09-01T17:52:16+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #80 publishes one atomic App Server-confirmed Codex model/effort pair with fail-closed lifecycle handling, generation-bound non-blocking daemon projection, reproducible launcher compatibility, accepted external check gaps, and passed dual review.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-01T17:52:16+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/80",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-01T15:16:53+00:00",
+      "phase": "design",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Publish one atomic current App Server-confirmed Codex model/effort pair through existing Session metadata and daemon projection.",
+      "acceptanceSeam": "AC1-AC12: typed optional pair, lifecycle propagation, fail-closed negative fixtures, daemon/launcher consumer seam, full checks and review.",
+      "dependencies": "Consumes existing modelMode requested-state metadata, App Server lifecycle response types, and unchanged launcher v0.5 field names; no blocking implementation dependency.",
+      "reviewBoundary": "Metadata schema, confirmation propagation, stale/reset handling, projection visibility, and tests are accepted or rejected together.",
+      "rollbackBoundary": "Revert the optional pair and its propagation to restore current manual verification without migration.",
+      "contextBoundary": "One serial Sol Medium current-root session in the exact registered Issue #80 worktree; no writer delegation or adjacent launcher/canary work.",
+      "consequence": "Medium workflow/safety consequence: false-positive effective metadata could authorize work under the wrong route; atomic fail-closed controls required.",
+      "evidence": "Live Issue #80 and current origin/dev seams revalidated; current code still has requested-only modelMode while App Server start/resume/fork responses expose model plus reasoning effort and client seams drop effort.",
+      "contractFingerprint": "4f199f42ca3ef2881ee8eb0ace972d2c2904d99d974d081c9a45d416779034eb",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "dc576db4-1417-43e6-8375-8504b97b4de7",
+  "checkRunFingerprint": "295d35da9fad8e972e50f488752efb6a23338c6563a7fec48d3ba0ce30d9d87e",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "8ecad0b722e535deba79b059d87d88bdc7f79f1a",
+    "candidateFingerprint": "3c5a60459768a6423be1b6fb87f3fa3307619f30d87dcac25d36ee61f60f3092"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      5
+    ],
+    "approval": "User explicitly accepted both candidate-external check gaps on 2026-09-02; the complete pre-archive run again reproduces only the same App parallel-load timeout and pre-existing autocrlf raw-byte fingerprint failures."
+  },
+  "checkAcceptedFailuresFingerprint": "4f61b0959deaeadacf3f7a4c3c16a3dbd42eb4a49604fde1a70a9a617b264abe",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "8ecad0b722e535deba79b059d87d88bdc7f79f1a",
+      "candidateFingerprint": "3c5a60459768a6423be1b6fb87f3fa3307619f30d87dcac25d36ee61f60f3092"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Pre-archive candidate passed; product unchanged and AC1-AC12 remain satisfied with complete finish evidence."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Pre-archive candidate passed; product/test blobs unchanged and task/session evidence is coherent, scoped, and preserves accepted gaps."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Run pre-archive workflow CI and generate the canonical terminal projection.",
+    "prearchiveUpdated": "2026-09-01T17:51:35+00:00",
+    "prearchiveActive": {
+      "feature": "runtime-confirmed-codex-route",
+      "phase": "finish",
+      "updated": "2026-09-02",
+      "next": "Run pre-archive workflow CI and generate the canonical terminal projection.",
+      "branch / worktree": "issue/80-publish-runtime-confirmed-codex-model-and-effort"
+    },
+    "prearchiveArchiveObject": "7df24ba9e01cb5a8de2a1df48eb6aa031193538f",
+    "fingerprint": "7959caed79e5d3d2e213575a4ca006a4fdd825f4bc22324a6a50dbf52639cd45"
+  },
+  "archivedAt": "2026-09-01T17:52:16+00:00",
+  "archiveDate": "2026-09-02",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #80 publishes one atomic App Server-confirmed Codex model/effort pair with fail-closed lifecycle handling, generation-bound non-blocking daemon projection, reproducible launcher compatibility, accepted external check gaps, and passed dual review.",
+  "archiveFollowUp": "None"
+}
