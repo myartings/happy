@@ -59,6 +59,26 @@ describe('saved project model', () => {
         await expect(unavailable.load('machine-1')).resolves.toEqual({ status: 'unavailable' });
     });
 
+    it('accepts a registry response that arrives after the server lookup exceeds three seconds', async () => {
+        vi.useFakeTimers();
+        try {
+            const request = vi.fn(() => new Promise((resolve) => {
+                setTimeout(() => resolve({ schemaVersion: 1, revision: 1, projects: [project] }), 3_100);
+            }));
+            const loader = new SavedProjectRegistryLoader({ request });
+
+            const outcome = loader.load('machine-1');
+            await vi.advanceTimersByTimeAsync(3_100);
+
+            await expect(outcome).resolves.toEqual({
+                status: 'ready',
+                registry: expect.objectContaining({ revision: 1 }),
+            });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it('rejects relative paths and primary/canonical identity mismatches', () => {
         expect(isSavedProjectRegistrySnapshot({
             schemaVersion: 1,
