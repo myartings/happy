@@ -30,7 +30,7 @@ import { Modal } from '@/modal';
 import { voiceHooks } from '@/realtime/hooks/voiceHooks';
 import { getCurrentVoiceConversationId, getCurrentVoiceSessionDurationSeconds, startRealtimeSession, stopRealtimeSession } from '@/realtime/RealtimeSession';
 import { gitStatusSync } from '@/sync/gitStatusSync';
-import { sessionAbort, sessionCancelCommunication, sessionGoalAction, sessionSetAgentModes, spawnSideChat, sessionKill, sessionArchive } from '@/sync/ops';
+import { sessionAbort, sessionCancelCommunication, sessionGoalAction, sessionSetAgentModes, sessionSetPermissionMode, spawnSideChat, sessionKill, sessionArchive } from '@/sync/ops';
 import { storage, useIsDataReady, useLocalSetting, useLocalSettingMutable, useRealtimeStatus, useSessionGitStatus, useSessionMessages, useSessionPendingCommunications, useSessionUsage, useSetting, useSideChatSessions } from '@/sync/storage';
 import { useSession } from '@/sync/storage';
 import { getSessionForkSource } from '@/utils/sessionFork';
@@ -1188,8 +1188,17 @@ export function SessionViewLoaded({
 
     // Function to update permission mode
     const updatePermissionMode = React.useCallback((mode: PermissionMode) => {
+        if (flavor === 'codex') {
+            void sessionSetPermissionMode(sessionId, mode.key).catch((error) => {
+                Modal.alert(
+                    t('common.error'),
+                    error instanceof Error ? error.message : String(error),
+                );
+            });
+            return;
+        }
         sessionSetAgentModes(sessionId, { permissionMode: mode.key });
-    }, [sessionId]);
+    }, [sessionId, flavor]);
 
     const updateModelMode = React.useCallback((mode: ModelMode) => {
         const nextEffortLevels = getEffortLevelsForModel(flavor, mode.key, session.metadata);

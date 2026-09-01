@@ -41,6 +41,50 @@ export class CodexPermissionHandler extends BasePermissionHandler {
         super(session);
     }
 
+    /**
+     * Approve the exact set of requests pending when an authenticated live
+     * permission-mode change reaches the CLI. Requests added after this
+     * snapshot are handled against the newly installed live mode instead.
+     */
+    approveAllPending(): number {
+        const pendingSnapshot = Array.from(this.pendingRequests.entries());
+        if (pendingSnapshot.length === 0) {
+            return 0;
+        }
+
+        for (const [id, pending] of pendingSnapshot) {
+            this.pendingRequests.delete(id);
+            pending.resolve({ decision: 'approved' });
+        }
+
+        const approvedIds = new Set(pendingSnapshot.map(([id]) => id));
+        this.session.updateAgentState((currentState) => {
+            const remainingRequests = { ...currentState.requests };
+            const completedRequests = { ...currentState.completedRequests };
+
+            for (const id of approvedIds) {
+                const request = remainingRequests[id];
+                if (!request) continue;
+                delete remainingRequests[id];
+                completedRequests[id] = {
+                    ...request,
+                    completedAt: Date.now(),
+                    status: 'approved',
+                    decision: 'approved',
+                };
+            }
+
+            return {
+                ...currentState,
+                requests: remainingRequests,
+                completedRequests,
+            } satisfies AgentState;
+        });
+
+        logger.debug(`${this.getLogPrefix()} Approved ${pendingSnapshot.length} pending permission(s) from live mode change`);
+        return pendingSnapshot.length;
+    }
+
     protected getLogPrefix(): string {
         return '[Codex]';
     }

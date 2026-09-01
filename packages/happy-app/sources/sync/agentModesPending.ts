@@ -11,7 +11,7 @@ import type { SessionAgentModesPatch } from './storageTypes';
  * use it without an import cycle. Counters (not booleans) so overlapping
  * pushes for the same field don't clear each other's pending state.
  */
-export type AgentModeField = keyof SessionAgentModesPatch;
+export type AgentModeField = Exclude<keyof SessionAgentModesPatch, 'permissionModeRevision'>;
 
 const pendingBySession = new Map<string, Map<AgentModeField, number>>();
 

@@ -581,7 +581,16 @@ export const storage = create<StorageState>()((set, get) => {
                         ? session.metadata[field] ?? null
                         : existing;
                 };
-                const resolvedPermissionMode = resolveModePick('permissionMode');
+                const existingPermissionRevision = state.sessions[session.id]?.permissionModeRevision ?? 0;
+                const incomingPermissionRevision = session.metadata?.permissionModeRevision;
+                const hasNewerOrderedPermissionMode = incomingPermissionRevision !== undefined
+                    && incomingPermissionRevision >= existingPermissionRevision;
+                const resolvedPermissionMode = hasNewerOrderedPermissionMode
+                    ? (session.metadata?.permissionMode ?? null)
+                    : resolveModePick('permissionMode');
+                const resolvedPermissionModeRevision = hasNewerOrderedPermissionMode
+                    ? incomingPermissionRevision
+                    : existingPermissionRevision;
                 const resolvedModelMode = resolveModePick('modelMode');
                 const resolvedEffortLevel = resolveModePick('effortLevel');
                 const resolvedServiceTier = resolveModePick('serviceTier');
@@ -594,6 +603,7 @@ export const storage = create<StorageState>()((set, get) => {
                     presence,
                     draft: existingDraft || savedDraft || session.draft || null,
                     permissionMode: resolvedPermissionMode,
+                    permissionModeRevision: resolvedPermissionModeRevision,
                     modelMode: resolvedModelMode,
                     effortLevel: resolvedEffortLevel,
                     serviceTier: resolvedServiceTier,
@@ -1252,11 +1262,18 @@ export const storage = create<StorageState>()((set, get) => {
             const session = state.sessions[sessionId];
             if (!session) return state;
 
+            const existingPermissionRevision = session.permissionModeRevision ?? 0;
+            const permissionRevisionIsCurrent = patch.permissionModeRevision === undefined
+                || patch.permissionModeRevision >= existingPermissionRevision;
+
             const updatedSessions = {
                 ...state.sessions,
                 [sessionId]: {
                     ...session,
-                    ...(patch.permissionMode !== undefined && { permissionMode: patch.permissionMode }),
+                    ...(patch.permissionMode !== undefined && permissionRevisionIsCurrent && { permissionMode: patch.permissionMode }),
+                    ...(patch.permissionModeRevision !== undefined && permissionRevisionIsCurrent && {
+                        permissionModeRevision: patch.permissionModeRevision,
+                    }),
                     ...(patch.modelMode !== undefined && { modelMode: patch.modelMode }),
                     ...(patch.effortLevel !== undefined && { effortLevel: patch.effortLevel }),
                     ...(patch.serviceTier !== undefined && { serviceTier: patch.serviceTier }),

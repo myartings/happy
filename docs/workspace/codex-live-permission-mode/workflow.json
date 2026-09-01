@@ -1,0 +1,380 @@
+{
+  "schemaVersion": 3,
+  "slug": "codex-live-permission-mode",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "GitHub Issue #88; docs/specs/codex-live-permission-mode.md; docs/workspace/codex-live-permission-mode/context.md",
+      "updated": "2026-09-01T08:46:12+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/codex-live-permission-mode/decisions.md D1-D6",
+      "updated": "2026-09-01T08:46:13+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current-root/current-session serial TDD; owning Root is exact registered Issue #88 worktree; shared contracts and overlapping app/CLI authorization seam remain serial; focused Vitest plus applicable workflow checks; no protected paths",
+      "updated": "2026-09-01T08:46:25+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/specs/codex-live-permission-mode.md Risk controls; docs/workspace/codex-live-permission-mode/decisions.md Risk assessment",
+      "updated": "2026-09-01T08:46:13+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Fourth remediation: complete process/generation response journal; revision-aware CLI publication; permission-mode-confirm atomically validates and schedules CLI-owned metadata. CLI focused 29/29, App ops 21/21, CLI/App typechecks passed.",
+      "updated": "2026-09-01T10:48:41+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Fourth-remediation candidate b1040b47: App 1911/1912 with only unchanged Studio source-string baseline; server 110/112 with only two unchanged Windows local-storage routes; App/server typechecks, workflow runtime 22/22, validators 9/9, and strict audit passed.",
+      "updated": "2026-09-01T11:22:38+00:00"
+    },
+    "review": {
+      "status": "accepted_gaps",
+      "evidence": "Independent pinned candidate review: Spec accepted; Standards accepted with two non-blocking follow-ups. Candidate b1040b47, base 30445040, package identity verified by both axes.",
+      "updated": "2026-09-01T11:27:41+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+        "candidateFingerprint": "b1040b470abf6382c69eaafbc9b2087910e9fb0b86776a1412e476a0fd203317"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish evidence complete: AC1-AC7 verified with named accepted baseline gaps; candidate check and pinned dual-axis review current; rollback, classified non-blocking follow-ups, and tracker recommendation recorded without external mutation.",
+      "updated": "2026-09-01T11:32:02+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-01T08:37:55+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-01T08:37:56+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/88"
+    },
+    {
+      "at": "2026-09-01T08:46:12+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "GitHub Issue #88; docs/specs/codex-live-permission-mode.md; docs/workspace/codex-live-permission-mode/context.md"
+    },
+    {
+      "at": "2026-09-01T08:46:13+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-live-permission-mode/decisions.md D1-D6"
+    },
+    {
+      "at": "2026-09-01T08:46:13+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/specs/codex-live-permission-mode.md Risk controls; docs/workspace/codex-live-permission-mode/decisions.md Risk assessment"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-01T08:46:14+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Explicit client permission picks immediately control one connected Codex session",
+      "acceptanceSeam": "Encrypted permission-mode RPC, pending approval race, and shared picker acknowledgement",
+      "dependencies": "Input: explicit authenticated client selection; output: acknowledged live Codex mode plus mirrored metadata; Issue #87 independent",
+      "reviewBoundary": "One app sync/UI seam, Codex live-mode controller and permission handler, focused tests",
+      "rollbackBoundary": "Remove live RPC seam and retain existing message-meta per-turn behavior",
+      "contextBoundary": "Issue #88 shared client-to-Codex path only; no server, defaults, other agents, release, or Issue #87",
+      "consequence": "High: false success may elevate active command/filesystem permissions; controlled by encrypted RPC, fail-closed ack, idempotency, and independent review",
+      "evidence": "docs/specs/codex-live-permission-mode.md; docs/tasks/codex-live-permission-mode-tasks.md; docs/workspace/codex-live-permission-mode/decisions.md",
+      "contractFingerprint": "3bab4f341076fb131905869b482b9974d271b3b9c6d5604b0f9ffc2ae160632e",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-01T08:46:25+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current-root/current-session serial TDD; owning Root is exact registered Issue #88 worktree; shared contracts and overlapping app/CLI authorization seam remain serial; focused Vitest plus applicable workflow checks; no protected paths"
+    },
+    {
+      "at": "2026-09-01T08:46:49+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Add focused RED tests for the encrypted live permission-mode controller and app acknowledgement seam"
+    },
+    {
+      "at": "2026-09-01T09:05:17+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "docs/workspace/codex-live-permission-mode/validation.md: RED/GREEN controller, RPC, pending approval, App ack, queue, reverse transition; CLI/App typechecks pass; focused 20+34 tests pass; App ops 18 pass; CLI/App full-suite gaps are unrelated or isolated-pass transient"
+    },
+    {
+      "at": "2026-09-01T09:05:18+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run candidate-bound applicable checks, reconcile the known unchanged Studio baseline, and obtain independent high-risk review"
+    },
+    {
+      "at": "2026-09-01T09:24:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 3 failures; structured run: 1aac0415-c879-453a-b6c8-2406b26eb73a"
+    },
+    {
+      "at": "2026-09-01T09:28:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Run 1aac0415-c879-453a-b6c8-2406b26eb73a: server typecheck failure was repaired by repository-defined Prisma generation and passed on rerun; App full-suite failures are an unchanged Studio source-string baseline plus a load-sensitive blob timeout that passes 9/9 isolated; server tests retain two unchanged Windows local-storage route failures; all failed tests and tested sources are identical to origin/dev.; structured run: 1aac0415-c879-453a-b6c8-2406b26eb73a; accepted command indexes: 1, 2, 3; approval: User explicitly accepted the candidate-external baseline gaps in this chat on 2026-09-01 and asked to continue review."
+    },
+    {
+      "at": "2026-09-01T09:34:40+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Independent Spec and Standards reviews of pinned candidate 3bac71a9 both blocked: abort acknowledgement race, missing post-snapshot approval-path test, and cross-client metadata completion ordering."
+    },
+    {
+      "at": "2026-09-01T09:37:48+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate review: abort serialization, monotonic mirror revisions, and post-snapshot approval coverage"
+    },
+    {
+      "at": "2026-09-01T09:46:10+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation RED/GREEN: abort guard and stale duplicate invalidation; post-snapshot approval decision; monotonic CLI revision and cross-client metadata CAS ordering. CLI 23 tests, App focused 32 tests, App ops 20 tests, CLI/App typechecks passed."
+    },
+    {
+      "at": "2026-09-01T09:46:11+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage remediated candidate, rerun candidate-bound checks, and dispatch fresh independent review"
+    },
+    {
+      "at": "2026-09-01T10:06:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 15b3da5e-c8bd-4df2-8c56-49cca8e24e7b"
+    },
+    {
+      "at": "2026-09-01T10:06:51+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh remediated candidate 50849724: App 1910/1911 with only unchanged Studio source-string baseline; server 110/112 with only two unchanged Windows local-storage routes; App/server typechecks, blob test, workflow runtime 22/22, validators 9/9, and strict audit passed.; structured run: 15b3da5e-c8bd-4df2-8c56-49cca8e24e7b; accepted command indexes: 2, 3; approval: User explicitly accepted these candidate-external baseline gaps in this chat on 2026-09-01 and asked to continue review; the fresh run reproduced the same unchanged Studio and Windows local-storage failures only."
+    },
+    {
+      "at": "2026-09-01T10:12:22+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Close in-flight abort acknowledgement, evicted replay, and reconnect revision gaps"
+    },
+    {
+      "at": "2026-09-01T10:22:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Third review remediation: encrypted generation preflight and confirmation, abort generation rotation plus higher reset revision metadata, eviction replay rejection, reconnect revision advancement. CLI 27 tests, App focused 33 tests, App ops 21 tests, CLI/App typechecks passed."
+    },
+    {
+      "at": "2026-09-01T10:22:27+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage generation-protected candidate, run fresh checks, and dispatch third independent review"
+    },
+    {
+      "at": "2026-09-01T10:37:42+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 889e23f2-b96f-4cf0-acb0-c04f0f4b0f09"
+    },
+    {
+      "at": "2026-09-01T10:38:03+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Generation-protected candidate fb33ea58: App 1911/1912 with only unchanged Studio source-string baseline; server 110/112 with only two unchanged Windows local-storage routes; App/server typechecks, blob test, workflow runtime 22/22, validators 9/9, and strict audit passed.; structured run: 889e23f2-b96f-4cf0-acb0-c04f0f4b0f09; accepted command indexes: 2, 3; approval: User explicitly accepted these candidate-external baseline gaps in this chat on 2026-09-01 and asked to continue review; the third fresh run reproduced the same unchanged Studio and Windows local-storage failures only."
+    },
+    {
+      "at": "2026-09-01T10:48:13+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fourth remediation: complete process/generation response journal; revision-aware CLI publication; permission-mode-confirm atomically validates and schedules CLI-owned metadata. CLI focused 29/29, App ops 21/21, CLI/App typechecks passed."
+    },
+    {
+      "at": "2026-09-01T10:48:34+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate third Spec review: durable same-generation idempotency, monotonic CLI metadata publication, and atomic CLI confirmation"
+    },
+    {
+      "at": "2026-09-01T10:48:41+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fourth remediation: complete process/generation response journal; revision-aware CLI publication; permission-mode-confirm atomically validates and schedules CLI-owned metadata. CLI focused 29/29, App ops 21/21, CLI/App typechecks passed."
+    },
+    {
+      "at": "2026-09-01T10:48:42+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage fourth-remediation candidate, run fresh candidate-bound checks, and dispatch fourth independent high-risk review"
+    },
+    {
+      "at": "2026-09-01T11:22:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 38c1920f-6b1d-44fa-a4c1-e6d00c931dea"
+    },
+    {
+      "at": "2026-09-01T11:22:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fourth-remediation candidate b1040b47: App 1911/1912 with only unchanged Studio source-string baseline; server 110/112 with only two unchanged Windows local-storage routes; App/server typechecks, workflow runtime 22/22, validators 9/9, and strict audit passed.; structured run: 38c1920f-6b1d-44fa-a4c1-e6d00c931dea; accepted command indexes: 2, 3; approval: User explicitly accepted these candidate-external baseline gaps in this chat on 2026-09-01 and repeatedly asked to continue; this fourth candidate-bound run reproduced only the same unchanged Studio source-string and Windows local-storage failures."
+    },
+    {
+      "at": "2026-09-01T11:27:41+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "accepted_gaps",
+      "evidence": "Independent pinned candidate review: Spec accepted; Standards accepted with two non-blocking follow-ups. Candidate b1040b47, base 30445040, package identity verified by both axes."
+    },
+    {
+      "at": "2026-09-01T11:27:54+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, scope-containment follow-ups, tracker recommendation, staged CI, and deterministic archive projection"
+    },
+    {
+      "at": "2026-09-01T11:32:02+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence complete: AC1-AC7 verified with named accepted baseline gaps; candidate check and pinned dual-axis review current; rollback, classified non-blocking follow-ups, and tracker recommendation recorded without external mutation."
+    },
+    {
+      "at": "2026-09-01T11:32:50+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #88 live Codex permission-mode control completed: encrypted acknowledged RPC, deterministic pending approvals, replay/Abort/reconnect/cross-client race controls, candidate-bound checks with accepted unchanged baselines, and independent Spec/Standards review.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-01T11:32:50+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/88",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-01T08:46:14+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Explicit client permission picks immediately control one connected Codex session",
+      "acceptanceSeam": "Encrypted permission-mode RPC, pending approval race, and shared picker acknowledgement",
+      "dependencies": "Input: explicit authenticated client selection; output: acknowledged live Codex mode plus mirrored metadata; Issue #87 independent",
+      "reviewBoundary": "One app sync/UI seam, Codex live-mode controller and permission handler, focused tests",
+      "rollbackBoundary": "Remove live RPC seam and retain existing message-meta per-turn behavior",
+      "contextBoundary": "Issue #88 shared client-to-Codex path only; no server, defaults, other agents, release, or Issue #87",
+      "consequence": "High: false success may elevate active command/filesystem permissions; controlled by encrypted RPC, fail-closed ack, idempotency, and independent review",
+      "evidence": "docs/specs/codex-live-permission-mode.md; docs/tasks/codex-live-permission-mode-tasks.md; docs/workspace/codex-live-permission-mode/decisions.md",
+      "contractFingerprint": "3bab4f341076fb131905869b482b9974d271b3b9c6d5604b0f9ffc2ae160632e",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "38c1920f-6b1d-44fa-a4c1-e6d00c931dea",
+  "checkRunFingerprint": "877ba0b6cd1ba8b2666a5c31d55492be5dfcc07095c4c28729b918c10ebd7d9a",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+    "candidateFingerprint": "b1040b470abf6382c69eaafbc9b2087910e9fb0b86776a1412e476a0fd203317"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      3
+    ],
+    "approval": "User explicitly accepted these candidate-external baseline gaps in this chat on 2026-09-01 and repeatedly asked to continue; this fourth candidate-bound run reproduced only the same unchanged Studio source-string and Windows local-storage failures."
+  },
+  "checkAcceptedFailuresFingerprint": "4ea7b7879f5c24d23086b6d4083c1dd8be4798a3857d35e3f4242a6e849519f3",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "304450403ea6c84d475f0ebc34f1c1fdc302bd2c",
+      "candidateFingerprint": "b1040b470abf6382c69eaafbc9b2087910e9fb0b86776a1412e476a0fd203317"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Fourth pinned review accepted candidate b1040b47: AC1-AC7 and all prior blockers re-audited; no actionable findings."
+      },
+      "standards-review": {
+        "status": "accepted_gaps",
+        "evidence": "Fourth pinned review accepted with non-blocking follow-ups only: clear obsolete response journal entries after generation rotation and add a real ApiSessionClient metadata-lock ordering integration test. No blocking correctness, security, architecture, compatibility, rollback, or test-quality findings."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish evidence, scope-containment follow-ups, tracker recommendation, staged CI, and deterministic archive projection",
+    "prearchiveUpdated": "2026-09-01T11:32:02+00:00",
+    "prearchiveActive": {
+      "feature": "codex-live-permission-mode",
+      "phase": "finish",
+      "updated": "2026-09-01",
+      "next": "Complete finish evidence, scope-containment follow-ups, tracker recommendation, staged CI, and deterministic archive projection",
+      "branch / worktree": "issue/88-windows-permission-picker-does-not-apply-yolo-to"
+    },
+    "prearchiveArchiveObject": "07b674a85e66a1cac5297c40f4a29bb5b5390577",
+    "fingerprint": "f6b67d35a6301c99a88fdc373040d3fe27a0d18743aaa16ab096a2e84b8c6ac3"
+  },
+  "archivedAt": "2026-09-01T11:32:50+00:00",
+  "archiveDate": "2026-09-01",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #88 live Codex permission-mode control completed: encrypted acknowledged RPC, deterministic pending approvals, replay/Abort/reconnect/cross-client race controls, candidate-bound checks with accepted unchanged baselines, and independent Spec/Standards review.",
+  "archiveFollowUp": "None"
+}
