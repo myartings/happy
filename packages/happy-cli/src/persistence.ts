@@ -5,7 +5,7 @@
  */
 
 import { readFile, writeFile, mkdir, open, unlink, rename, stat } from 'node:fs/promises'
-import { existsSync, writeFileSync, readFileSync, unlinkSync, renameSync, mkdirSync, rmSync, lstatSync, linkSync, readdirSync } from 'node:fs'
+import { existsSync, writeFileSync, readFileSync, unlinkSync, renameSync, mkdirSync, rmSync, rmdirSync, lstatSync, linkSync, readdirSync } from 'node:fs'
 import { constants } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import { basename, dirname, join } from 'node:path'
@@ -400,6 +400,7 @@ export interface DaemonLockHandle {
 
 const daemonPrivateLockFile = 'lock.pid';
 const daemonPrivateStateFile = 'state.json';
+const daemonOwnerTokenPattern = '[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
 
 type DaemonPersistenceTestHooks = {
   beforeGenerationClaim?: (ownerToken: string) => Promise<void> | void;
@@ -452,26 +453,40 @@ function daemonArtifactEntries(): string[] {
   }
 }
 
+type DaemonArtifactName = {
+  phase: 'generation' | 'retiring';
+  pid: number;
+  ownerToken: string;
+  temporary: boolean;
+};
+
+function parseDaemonArtifactName(name: string): DaemonArtifactName | null {
+  const stateBase = basename(configuration.daemonStateFile).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const generationMatch = name.match(new RegExp(
+    `^${stateBase}\\.generation\\.([1-9]\\d*)\\.(${daemonOwnerTokenPattern})(\\.tmp)?$`,
+  ));
+  const retiringMatch = generationMatch
+    ? null
+    : name.match(new RegExp(
+      `^${stateBase}\\.retiring\\.([1-9]\\d*)\\.(${daemonOwnerTokenPattern})\\.${daemonOwnerTokenPattern}$`,
+    ));
+  const match = generationMatch ?? retiringMatch;
+  if (!match) return null;
+  const pid = Number(match[1]);
+  if (!Number.isSafeInteger(pid)) return null;
+  return {
+    phase: generationMatch ? 'generation' : 'retiring',
+    pid,
+    ownerToken: match[2],
+    temporary: generationMatch?.[3] === '.tmp',
+  };
+}
+
 function findGenerationForLock(lockPath: string): Extract<DaemonLockObservation, { kind: 'generation' }> | null {
-  const stateBase = basename(configuration.daemonStateFile);
   const parent = dirname(configuration.daemonStateFile);
   for (const name of daemonArtifactEntries()) {
-    let phase: 'generation' | 'retiring';
-    let suffix: string;
-    if (name.startsWith(`${stateBase}.generation.`) && !name.endsWith('.tmp')) {
-      phase = 'generation';
-      suffix = name.slice(`${stateBase}.generation.`.length);
-    } else if (name.startsWith(`${stateBase}.retiring.`)) {
-      phase = 'retiring';
-      suffix = name.slice(`${stateBase}.retiring.`.length);
-    } else {
-      continue;
-    }
-    const parts = suffix.split('.');
-    if (parts.length < 2) continue;
-    const pid = Number(parts[0]);
-    const ownerToken = parts[1];
-    if (!Number.isSafeInteger(pid) || pid <= 0 || !ownerToken) continue;
+    const artifact = parseDaemonArtifactName(name);
+    if (!artifact || artifact.temporary) continue;
     const path = join(parent, name);
     try {
       if (!lstatSync(path).isDirectory()) continue;
@@ -483,10 +498,10 @@ function findGenerationForLock(lockPath: string): Extract<DaemonLockObservation,
       return {
         kind: 'generation',
         identity: fileIdentity(lockPath)!,
-        pid,
-        ownerToken,
+        pid: artifact.pid,
+        ownerToken: artifact.ownerToken,
         path,
-        phase,
+        phase: artifact.phase,
       };
     }
   }
@@ -644,7 +659,6 @@ function processIsAffirmativelyDead(pid: number): boolean {
 }
 
 async function garbageCollectDaemonArtifacts(): Promise<void> {
-  const stateBase = basename(configuration.daemonStateFile);
   const lockBase = basename(configuration.daemonLockFile);
   const parent = dirname(configuration.daemonStateFile);
   for (const name of daemonArtifactEntries()) {
@@ -656,11 +670,8 @@ async function garbageCollectDaemonArtifacts(): Promise<void> {
       }
       continue;
     }
-    const match = name.match(new RegExp(`^${stateBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.(generation|retiring)\\.(\\d+)\\.(.+?)(\\.tmp)?$`));
-    if (!match) continue;
-    const pidText = match[2];
-    const pid = Number(pidText);
-    if (!Number.isSafeInteger(pid) || pid <= 0 || !processIsAffirmativelyDead(pid)) continue;
+    const artifact = parseDaemonArtifactName(name);
+    if (!artifact || !processIsAffirmativelyDead(artifact.pid)) continue;
 
     const artifactPath = join(parent, name);
     try {
@@ -670,12 +681,14 @@ async function garbageCollectDaemonArtifacts(): Promise<void> {
     }
     const privateLock = join(artifactPath, daemonPrivateLockFile);
     try {
-      if (readFileSync(privateLock, 'utf-8').trim() !== String(pid)) continue;
+      if (readFileSync(privateLock, 'utf-8').trim() !== String(artifact.pid)) continue;
     } catch {
-      if (name.endsWith('.tmp')) {
-        // The PID is encoded before mkdir, so even a crash between mkdir and
-        // lock.pid publication leaves a temp artifact with a provably dead owner.
-        rmSync(artifactPath, { recursive: true, force: true });
+      if (artifact.temporary) {
+        // A valid UUID name plus an affirmatively dead PID identifies the
+        // publication attempt, but without lock.pid there is no ownership
+        // marker for any contents. rmdirSync is intentionally non-recursive:
+        // it recovers only the provably empty mkdir -> lock.pid crash residue.
+        try { rmdirSync(artifactPath); } catch { }
       }
       continue;
     }
@@ -691,11 +704,10 @@ async function garbageCollectDaemonArtifacts(): Promise<void> {
       continue;
     }
 
-    const ownerToken = match[3].split('.')[0];
-    await daemonPersistenceTestHooks.beforeOrphanClaim?.(ownerToken);
+    await daemonPersistenceTestHooks.beforeOrphanClaim?.(artifact.ownerToken);
     const claimedPath = join(
       parent,
-      `${stateBase}.retiring.${pid}.${ownerToken}.${randomUUID()}`,
+      `${basename(configuration.daemonStateFile)}.retiring.${artifact.pid}.${artifact.ownerToken}.${randomUUID()}`,
     );
     try {
       renameSync(artifactPath, claimedPath);
@@ -720,8 +732,8 @@ async function garbageCollectDaemonArtifacts(): Promise<void> {
     await claimAndRemoveGeneration({
       kind: 'generation',
       identity: fileIdentity(claimedLock)!,
-      pid,
-      ownerToken,
+      pid: artifact.pid,
+      ownerToken: artifact.ownerToken,
       path: claimedPath,
       phase: 'retiring',
     });

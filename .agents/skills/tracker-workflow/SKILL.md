@@ -82,11 +82,22 @@ selects transfer, replacement, or cleanup. `Inbox` and `Ready` may keep Agent
 and Device empty; `Done` may retain the last values for traceability.
 
 Run the deterministic Issue router as a separate read-only boundary before
-proposing preparation. Repeat its exact Issue, verified base, canonical branch,
-absolute device-local worktree, and selected session/client label. Immediately
-before local mutation, rerun the router and require the Issue, base, branch, and
-worktree to match the authorized tuple. Create and verify the branch, registered
-worktree, and minimum recovery state before tracker writes.
+proposing preparation. Same-repository work may keep the default Issue and
+publication remote `origin`. For a fork contribution, explicitly pass the remote
+whose fetch repository owns the Issue and target base with `--issue-remote`, and
+the consistent fetch/push repository that will publish the branch with
+`--publication-remote`. A `target` base must be an exact remote-tracking ref
+beneath and uniquely attributable to the selected Issue remote. An existing
+publication ref must likewise be uniquely attributable to the publication
+remote, including when configured remote names overlap through `/`. Never infer
+these roles or rewrite Git remote configuration to satisfy the planner.
+
+Repeat the route's exact Issue, Issue remote, publication remote and repository,
+verified base, canonical branch, absolute device-local worktree, and selected
+session/client label. Immediately before local mutation, rerun the router and
+require that complete tuple to match the authorized projection. Create and
+verify the branch, registered worktree, and minimum recovery state before
+tracker writes.
 
 A generic named-Issue or continuation instruction does not authorize these
 writes. Only an explicit response to the concrete projection authorizes updating

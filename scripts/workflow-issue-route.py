@@ -72,6 +72,8 @@ def normalized_github_repository(raw: str) -> str | None:
         host, repository = scp.groups()
     else:
         parsed = urlparse(value)
+        if parsed.query or parsed.fragment:
+            return None
         if parsed.scheme == "https" and parsed.netloc.lower() == "github.com":
             host, repository = parsed.netloc, parsed.path.lstrip("/")
         elif parsed.scheme == "ssh" and parsed.hostname:
@@ -80,21 +82,86 @@ def normalized_github_repository(raw: str) -> str | None:
             return None
     if host.casefold() != "github.com":
         return None
+    if re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository) is None:
+        return None
     return repository
 
 
-def require_matching_remote(root: Path, owner: str, repository: str) -> None:
-    fetch = run_git(root, "remote", "get-url", "--all", "origin")
-    push = run_git(root, "remote", "get-url", "--push", "--all", "origin")
-    if fetch.returncode or push.returncode:
-        raise ValueError("origin remote must identify the Issue repository")
-    expected = f"{owner}/{repository}".lower()
-    repositories = [
-        value.lower() if (value := normalized_github_repository(raw)) else None
-        for raw in fetch.stdout.splitlines() + push.stdout.splitlines()
-    ]
-    if not repositories or any(value != expected for value in repositories):
-        raise ValueError("every origin URL must match the named Issue repository")
+def validated_remote_name(root: Path, raw: str, role: str) -> str:
+    if not raw or raw.startswith("-"):
+        raise ValueError(f"{role} remote name is invalid")
+    completed = run_git(root, "check-ref-format", f"refs/remotes/{raw}/probe")
+    if completed.returncode:
+        raise ValueError(f"{role} remote name is invalid")
+    return raw
+
+
+def remote_urls(root: Path, remote: str, *, role: str, push: bool) -> list[str]:
+    args = ["remote", "get-url"]
+    if push:
+        args.append("--push")
+    args.extend(("--all", remote))
+    completed = run_git(root, *args)
+    if completed.returncode:
+        raise ValueError(f"{role} remote URLs must identify one GitHub repository")
+    return [line for line in completed.stdout.splitlines() if line]
+
+
+def github_remote_repository(
+    root: Path,
+    remote: str,
+    *,
+    role: str,
+    include_push: bool,
+) -> str:
+    urls = remote_urls(root, remote, role=role, push=False)
+    if include_push:
+        urls.extend(remote_urls(root, remote, role=role, push=True))
+    repositories = [normalized_github_repository(raw) for raw in urls]
+    if not repositories or any(value is None for value in repositories):
+        raise ValueError(f"{role} remote URLs must identify one GitHub repository")
+    normalized = {str(value).casefold() for value in repositories}
+    if len(normalized) != 1:
+        raise ValueError(f"{role} remote URLs must identify one GitHub repository")
+    return normalized.pop()
+
+
+def require_issue_remote(
+    root: Path, remote: str, owner: str, repository: str,
+) -> None:
+    actual = github_remote_repository(
+        root, remote, role="Issue", include_push=False
+    )
+    if actual != f"{owner}/{repository}".casefold():
+        raise ValueError(
+            "every Issue remote fetch URL must match the named Issue repository"
+        )
+
+
+def configured_remote_names(root: Path) -> list[str]:
+    completed = run_git(root, "remote")
+    if completed.returncode:
+        raise ValueError("cannot inspect configured Git remotes")
+    return [line for line in completed.stdout.splitlines() if line]
+
+
+def remote_ref_attributions(root: Path, ref: str) -> list[tuple[str, str]]:
+    if not ref.startswith("refs/remotes/"):
+        return []
+    relative = ref.removeprefix("refs/remotes/")
+    matches: list[tuple[str, str]] = []
+    for remote in configured_remote_names(root):
+        prefix = f"{remote}/"
+        if relative.startswith(prefix):
+            branch = relative.removeprefix(prefix)
+            if branch:
+                matches.append((remote, branch))
+    return matches
+
+
+def uniquely_attributed_to_remote(root: Path, ref: str, remote: str) -> bool:
+    matches = remote_ref_attributions(root, ref)
+    return len(matches) == 1 and matches[0][0] == remote
 
 
 def is_full_object_id(root: Path, value: str) -> bool:
@@ -110,9 +177,18 @@ def is_full_object_id(root: Path, value: str) -> bool:
     ) is not None
 
 
-def verified_base(root: Path, raw_ref: str, kind: str) -> str:
-    if kind == "target" and not raw_ref.startswith("refs/remotes/origin/"):
-        raise ValueError("target base must be an exact refs/remotes/origin/... ref")
+def verified_base(root: Path, raw_ref: str, kind: str, issue_remote: str) -> str:
+    target_prefix = f"refs/remotes/{issue_remote}/"
+    if kind == "target" and not raw_ref.startswith(target_prefix):
+        raise ValueError(
+            f"target base must be an exact {target_prefix}... ref"
+        )
+    if kind == "target" and not uniquely_attributed_to_remote(
+        root, raw_ref, issue_remote
+    ):
+        raise ValueError(
+            "target base must be uniquely attributable to the Issue remote"
+        )
     if kind == "dependency" and not (
         raw_ref.startswith("refs/") or is_full_object_id(root, raw_ref)
     ):
@@ -149,6 +225,25 @@ def worktrees(root: Path) -> list[dict[str, str]]:
         key, _, value = field.partition(" ")
         current[key] = value
     return rows
+
+
+def remote_branch_refs(root: Path, branch: str) -> list[str]:
+    listing = run_git(
+        root, "for-each-ref", "--format=%(refname)", "refs/remotes"
+    )
+    if listing.returncode:
+        raise ValueError("cannot inspect remote Git refs")
+    matches: list[str] = []
+    for ref in listing.stdout.splitlines():
+        if not ref.startswith("refs/remotes/"):
+            continue
+        relative = ref.removeprefix("refs/remotes/")
+        if relative.endswith(f"/{branch}"):
+            # Remote names and branch names may both contain slashes, and stale
+            # remote-tracking refs outlive remote configuration. Treat every
+            # canonical suffix as an identity claim; ambiguity must fail closed.
+            matches.append(ref)
+    return matches
 
 
 def ref_commit(root: Path, ref: str) -> str | None:
@@ -224,6 +319,9 @@ def launch_capsule(
         "kind": "issue-session-launch",
         "issue": issue,
         "repository": result["repository"],
+        "issueRemote": result["issueRemote"],
+        "publicationRemote": result["publicationRemote"],
+        "publicationRepository": result["publicationRepository"],
         "branch": result["branch"],
         "worktree": result["worktree"],
         "durableResumeSource": issue,
@@ -291,8 +389,15 @@ def plan(args: argparse.Namespace) -> dict[str, object]:
     common_dir = git_common_dir(root)
     if git_common_dir(session_root) != common_dir:
         raise ValueError("session root must belong to the selected repository")
-    require_matching_remote(root, owner, repository)
-    base = verified_base(root, args.base_ref, args.base_kind)
+    issue_remote = validated_remote_name(root, args.issue_remote, "Issue")
+    publication_remote = validated_remote_name(
+        root, args.publication_remote, "publication"
+    )
+    require_issue_remote(root, issue_remote, owner, repository)
+    publication_repository = github_remote_repository(
+        root, publication_remote, role="publication", include_push=True
+    )
+    base = verified_base(root, args.base_ref, args.base_kind, issue_remote)
     branch = f"issue/{number}-{slugify(args.issue_title)}"
     branch_ref = f"refs/heads/{branch}"
     rows = worktrees(root)
@@ -307,6 +412,9 @@ def plan(args: argparse.Namespace) -> dict[str, object]:
         "issue": args.issue_url,
         "acceptedIntent": args.accepted_intent or args.issue_title,
         "repository": f"{owner}/{repository}",
+        "issueRemote": issue_remote,
+        "publicationRemote": publication_remote,
+        "publicationRepository": publication_repository,
         "baseKind": args.base_kind,
         "baseRef": args.base_ref,
         "verifiedBase": base,
@@ -343,19 +451,18 @@ def plan(args: argparse.Namespace) -> dict[str, object]:
         or row.get("branch") == branch_ref
     ]
     local_commit = ref_commit(root, branch_ref)
-    remote_listing = run_git(
-        root, "for-each-ref", "--format=%(refname)", "refs/remotes"
-    )
-    if remote_listing.returncode:
-        raise ValueError("cannot inspect remote Git refs")
-    remote_refs = [
-        ref for ref in remote_listing.stdout.splitlines()
-        if ref.startswith("refs/remotes/")
-        and ref.removeprefix("refs/remotes/").partition("/")[2] == branch
-    ]
-    expected_remote = f"refs/remotes/origin/{branch}"
+    remote_refs = remote_branch_refs(root, branch)
+    expected_remote = f"refs/remotes/{publication_remote}/{branch}"
     remote_commit = ref_commit(root, expected_remote)
     path_exists = planned_worktree.exists() or planned_worktree.is_symlink()
+
+    if (
+        expected_remote in remote_refs
+        and not uniquely_attributed_to_remote(
+            root, expected_remote, publication_remote
+        )
+    ):
+        return blocked(result, "remote-issue-branch-collision-or-divergence")
 
     fully_absent = not identity_rows and local_commit is None and not remote_refs
     if fully_absent and not path_exists:
@@ -469,6 +576,20 @@ def parser() -> argparse.ArgumentParser:
     )
     result.add_argument("--base-ref", required=True)
     result.add_argument("--base-kind", choices=("target", "dependency"), required=True)
+    result.add_argument(
+        "--issue-remote", default="origin",
+        help=(
+            "Git remote whose fetch repository owns the Issue and target base; "
+            "defaults to origin"
+        ),
+    )
+    result.add_argument(
+        "--publication-remote", default="origin",
+        help=(
+            "Git remote whose repository owns the published Issue branch; "
+            "defaults to origin"
+        ),
+    )
     result.add_argument("--isolation", choices=("default", "opt-out"), default="default")
     result.add_argument("--session-binding-json")
     return result
