@@ -53,6 +53,55 @@ describe('resolveMessageModeMeta', () => {
         expect(meta.permissionMode).toBe('auto');
     });
 
+    it('preserves legacy Codex YOLO from an unambiguous launch marker', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: {
+                flavor: 'codex',
+                version: '1.2.1-beta.2',
+                dangerouslySkipPermissions: true,
+            },
+        } as any);
+
+        expect(meta.permissionMode).toBe('yolo');
+    });
+
+    it('does not restore legacy YOLO after an explicit synchronized reset', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: {
+                flavor: 'codex',
+                version: '1.2.1-beta.2',
+                permissionMode: null,
+                dangerouslySkipPermissions: true,
+            },
+        } as any);
+
+        expect(meta.permissionMode).toBe('auto');
+    });
+
+    it('lets an explicit synchronized mode override legacy and global defaults', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: {
+                flavor: 'codex',
+                version: '1.2.1-beta.2',
+                permissionMode: 'auto',
+                dangerouslySkipPermissions: true,
+            },
+        } as any, {
+            agentDefaultOverrides: { codex: { permissionMode: 'yolo' } },
+        } as any);
+
+        expect(meta.permissionMode).toBe('auto');
+    });
+
     it('keeps an explicit Codex YOLO override on an old CLI', () => {
         const meta = resolveMessageModeMeta({
             permissionMode: null,

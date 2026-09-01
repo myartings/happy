@@ -340,6 +340,8 @@ export type Metadata = {
   flavor?: string
   sandbox?: SandboxConfig | null
   dangerouslySkipPermissions?: boolean | null
+  /** Concrete per-session launch mode synchronized to every Happy client. */
+  permissionMode?: string | null
   /** Lineage for sessions created via the fork / duplicate flow. */
   parentSessionId?: string
   forkedFromMessageId?: string

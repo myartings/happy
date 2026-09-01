@@ -3,6 +3,7 @@ import type { Settings } from './settings';
 import { getAgentDefaultOverride, resolveAgentDefaultConfig, retirePermissionMode } from './agentDefaults';
 import { permissionModeSupportedByCli } from '@/components/modelModeOptions';
 import type { PermissionModeKey } from '@/components/PermissionModeSelector';
+import { resolveCodexSessionPermissionMode } from './sessionPermissionMode';
 import {
     getRigCurrentModel,
     getRigModels,
@@ -101,7 +102,8 @@ export function resolveMessageModeMeta(
     // the established default semantics of other harnesses.
     if (flavor === 'codex') {
         const defaults = resolveAgentDefaultConfig(settings?.agentDefaultOverrides, flavor, cliVersion);
-        meta.permissionMode = supported(retirePermissionMode(session.permissionMode ?? defaults.permissionMode));
+        const permissionMode = resolveCodexSessionPermissionMode(session, defaults.permissionMode);
+        meta.permissionMode = supported(retirePermissionMode(permissionMode));
 
         const modelMode = session.modelMode ?? defaults.modelMode;
         meta.model = modelMode === 'default' ? null : modelMode;

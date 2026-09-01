@@ -84,6 +84,16 @@ describe('createSessionMetadata', () => {
         expect(metadata.dangerouslySkipPermissions).toBe(true);
     });
 
+    it.each(['auto', 'yolo'])('publishes the %s launch permission mode in initial metadata', (permissionMode) => {
+        const { metadata } = createSessionMetadata({
+            flavor: 'codex',
+            machineId: 'machine-codex-mode',
+            permissionMode,
+        });
+
+        expect(metadata.permissionMode).toBe(permissionMode);
+    });
+
     it('sets fork lineage metadata when provided', () => {
         const { metadata } = createSessionMetadata({
             flavor: 'codex',
