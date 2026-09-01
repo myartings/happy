@@ -3,15 +3,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const registry = vi.hoisted(() => ({
     list: vi.fn(),
     add: vi.fn(),
+    importDiscovered: vi.fn(),
     resolveProjectPath: vi.fn(),
+}));
+
+const workspaceScanner = vi.hoisted(() => ({
+    listWorkspaceProjects: vi.fn(),
 }));
 
 vi.mock('@/projects/savedProjectRegistry', () => ({
     SavedProjectRegistry: class {
         list = registry.list;
         add = registry.add;
+        importDiscovered = registry.importDiscovered;
         resolveProjectPath = registry.resolveProjectPath;
     },
+}));
+
+vi.mock('@/workspace/workspaceProjectScanner', () => ({
+    MAX_WORKSPACE_PROJECT_QUERY_LENGTH: 256,
+    listWorkspaceProjects: workspaceScanner.listWorkspaceProjects,
 }));
 
 function machineClient() {
@@ -29,6 +40,12 @@ function handlersFrom(client: any): Map<string, (params: unknown) => Promise<unk
 describe('ApiMachineClient saved-project RPC', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        workspaceScanner.listWorkspaceProjects.mockResolvedValue({
+            root: 'C:\\Users\\test\\workspace',
+            projects: [],
+            scannedAt: 1,
+            truncated: false,
+        });
     });
 
     it('resolves project identity on the machine and ignores a stale caller directory', async () => {
@@ -57,9 +74,26 @@ describe('ApiMachineClient saved-project RPC', () => {
     });
 
     it('exposes machine-local list and revision-aware add operations', async () => {
-        const snapshot = { schemaVersion: 1, revision: 2, projects: [] };
+        const importedProjects = [
+            { id: 'alpha-id', primaryPath: 'C:\\Users\\test\\workspace\\alpha' },
+            { id: 'bravo-id', primaryPath: 'C:\\Users\\test\\workspace\\bravo' },
+        ];
+        const snapshot = { schemaVersion: 1, revision: 2, projects: importedProjects };
         const added = { created: true, project: { id: 'project-1' }, registry: snapshot };
-        registry.list.mockResolvedValue(snapshot);
+        workspaceScanner.listWorkspaceProjects.mockResolvedValue({
+            root: 'C:\\Users\\test\\workspace',
+            projects: [
+                { path: 'C:\\Users\\test\\workspace\\alpha' },
+                { path: 'C:\\Users\\test\\workspace\\bravo' },
+            ],
+            scannedAt: 1,
+            truncated: false,
+        });
+        registry.importDiscovered.mockResolvedValue({
+            importedCount: 2,
+            skipped: [],
+            registry: snapshot,
+        });
         registry.add.mockResolvedValue(added);
         const { ApiMachineClient } = await import('./apiMachine');
         const client = new ApiMachineClient('token', machineClient());
@@ -76,10 +110,43 @@ describe('ApiMachineClient saved-project RPC', () => {
             expectedRevision: 1,
         })).resolves.toBe(added);
 
+        expect(workspaceScanner.listWorkspaceProjects).toHaveBeenCalledWith({
+            root: expect.stringMatching(/[\\/]workspace$/),
+        });
+        expect(registry.importDiscovered).toHaveBeenCalledWith({
+            paths: [
+                'C:\\Users\\test\\workspace\\alpha',
+                'C:\\Users\\test\\workspace\\bravo',
+            ],
+        });
         expect(registry.add).toHaveBeenCalledWith({
             path: '~/workspace/happy',
             expectedRevision: 1,
         });
+    });
+
+    it('returns the unchanged registry when workspace discovery is empty', async () => {
+        const snapshot = {
+            schemaVersion: 1,
+            revision: 4,
+            projects: [{ id: 'existing-id', primaryPath: 'C:\\existing' }],
+        };
+        registry.importDiscovered.mockResolvedValue({
+            importedCount: 0,
+            skipped: [],
+            registry: snapshot,
+        });
+        const { ApiMachineClient } = await import('./apiMachine');
+        const client = new ApiMachineClient('token', machineClient());
+        client.setRPCHandlers({
+            spawnSession: vi.fn(),
+            stopSession: vi.fn(),
+            requestShutdown: vi.fn(),
+        });
+
+        await expect(handlersFrom(client).get('machine-1:list-saved-projects')?.({}))
+            .resolves.toEqual(snapshot);
+        expect(registry.importDiscovered).toHaveBeenCalledWith({ paths: [] });
     });
 
     it('revalidates and resolves a project for capability-gated starts', async () => {
