@@ -13,14 +13,12 @@ import { TrackedSession, SessionEncryptionData } from './types';
 import { SpawnSessionOptions, SpawnSessionResult } from '@/modules/common/registerCommonHandlers';
 
 export function startDaemonControlServer({
-  ownerToken,
   getChildren,
   stopSession,
   spawnSession,
   requestShutdown,
   onHappySessionWebhook
 }: {
-  ownerToken: string;
   getChildren: () => TrackedSession[];
   stopSession: (sessionId: string) => boolean;
   spawnSession: (options: SpawnSessionOptions) => Promise<SpawnSessionResult>;
@@ -198,24 +196,13 @@ export function startDaemonControlServer({
     // Stop daemon
     typed.post('/stop', {
       schema: {
-        body: z.object({
-          expectedOwnerToken: z.string()
-        }),
         response: {
           200: z.object({
             status: z.string()
-          }),
-          409: z.object({
-            error: z.string()
           })
         }
       }
-    }, async (request, reply) => {
-      if (request.body.expectedOwnerToken !== ownerToken) {
-        logger.debug('[CONTROL SERVER] Refusing stop request for a different daemon generation');
-        reply.code(409);
-        return { error: 'Daemon generation changed; stop request refused' };
-      }
+    }, async () => {
       logger.debug('[CONTROL SERVER] Stop daemon request received');
 
       // Give time for response to arrive

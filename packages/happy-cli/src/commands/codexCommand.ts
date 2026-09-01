@@ -29,7 +29,7 @@ export async function handleCodexCommand(args: string[]): Promise<void> {
   }
 
   const { credentials } = await authAndSetupMachineIfNeeded()
-  await ensureDaemonRunning(startedBy)
+  await ensureDaemonRunning()
 
   await runCodex({
     credentials,
