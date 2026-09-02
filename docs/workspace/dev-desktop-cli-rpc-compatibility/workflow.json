@@ -1,0 +1,530 @@
+{
+  "schemaVersion": 3,
+  "slug": "dev-desktop-cli-rpc-compatibility",
+  "intensity": "feature",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "finish",
+  "nextAction": "Deliver reviewed source PR to dev, run authorized DC-09 refresh, then archive terminal evidence",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User continued accepted Issue #98 Slice after live Issue re-read; docs/specs/dev-desktop-cli-rpc-compatibility.md DC-01..DC-09 and docs/tasks/dev-desktop-cli-rpc-compatibility-tasks.md",
+      "updated": "2026-09-02T05:14:28+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/dev-desktop-cli-rpc-compatibility/decisions.md D1-D6 resolve workspace source, installed-bundle probe, fail-closed order, installer reuse, platform boundary, and reporting",
+      "updated": "2026-09-02T05:14:29+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready; owner=current Root; topology=current-root/fresh-session serial; no independent ready units; Feature with required risk controls; TDD devtools shell seam then focused CLI/App and applicable checks",
+      "updated": "2026-09-02T05:14:31+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/workspace/dev-desktop-cli-rpc-compatibility/risk.md; cleared-with-controls for local CLI link, daemon restart, Desktop replacement, staged reporting, backup, and stop conditions",
+      "updated": "2026-09-02T05:14:30+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Delivery-review TDD remediation complete: npm-root exit 27 propagates through install identity, bundle, executable, daemon, and RPC helper chains; existing find 26 and stage fixtures pass.",
+      "updated": "2026-09-02T07:21:59+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Candidate 637c664a560a: 7/9 commands passed; exact accepted indexes 2 and 5 only; npm-root exit 27 and find 26 focused coverage plus adjacent smokes pass.",
+      "updated": "2026-09-02T07:27:50+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Release-bound capable Spec and Standards reviews both accepted candidate 637c664a560a / diff 9fc5cb17e6d3 with no actionable findings.",
+      "updated": "2026-09-02T07:34:33+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
+        "candidateFingerprint": "637c664a560adbb27722ede621ef754a8649d24205e37139913748d13acb1f26"
+      }
+    },
+    "finish": {
+      "status": "pending",
+      "evidence": "",
+      "updated": "2026-09-02T07:17:24+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-02T05:11:16+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-02T05:11:17+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/98"
+    },
+    {
+      "at": "2026-09-02T05:14:28+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User continued accepted Issue #98 Slice after live Issue re-read; docs/specs/dev-desktop-cli-rpc-compatibility.md DC-01..DC-09 and docs/tasks/dev-desktop-cli-rpc-compatibility-tasks.md"
+    },
+    {
+      "at": "2026-09-02T05:14:29+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/dev-desktop-cli-rpc-compatibility/decisions.md D1-D6 resolve workspace source, installed-bundle probe, fail-closed order, installer reuse, platform boundary, and reporting"
+    },
+    {
+      "at": "2026-09-02T05:14:30+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/workspace/dev-desktop-cli-rpc-compatibility/risk.md; cleared-with-controls for local CLI link, daemon restart, Desktop replacement, staged reporting, backup, and stop conditions"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T05:14:31+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One macOS Dev refresh produces one locally compatible Desktop/CLI/daemon runtime set or fails before incompatible Desktop replacement",
+      "acceptanceSeam": "Devtools paired-refresh fixtures plus CLI/App focused tests and authorized real forced refresh",
+      "dependencies": "Consumes existing workspace CLI installer, daemon commands, Saved Projects RPC registration, and Desktop backup/install flow; outputs verified paired runtime",
+      "reviewBoundary": "CLI build/install, daemon restart, installed-bundle RPC verification, Desktop replacement, and reporting are one operational transaction",
+      "rollbackBoundary": "One devtools Slice; source revert plus existing Desktop backup/rollback, with workspace CLI reinstall recovery",
+      "contextBoundary": "One confirmed current Root Issue session with serial happyctl implementation and independent final review",
+      "consequence": "Local executable relink, daemon restart, and personal Dev app replacement are consequential but recoverable and controlled",
+      "evidence": "Live Issue #98 right-sizing assessment revalidated against devtools/happyctl, packages/happy-cli/scripts/install-local.cjs, apiMachine.ts, and devtools smoke seams on 2026-09-02",
+      "contractFingerprint": "34f2a038a125d2de907c2e85faca1c6e7b5986bc8394c4c696ca013456215102",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T05:14:31+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready; owner=current Root; topology=current-root/fresh-session serial; no independent ready units; Feature with required risk controls; TDD devtools shell seam then focused CLI/App and applicable checks"
+    },
+    {
+      "at": "2026-09-02T05:14:32+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD paired CLI/Desktop refresh orchestration and missing-RPC failure"
+    },
+    {
+      "at": "2026-09-02T05:28:41+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD paired refresh implementation complete: dry-run, serial CLI build/install, replacement PID proof, compiled dist RPC verification, stage reports, and fail-before-Desktop matrix; devtools smokes, CLI build/20 tests, App 16 tests, and diff check pass; validation.md"
+    },
+    {
+      "at": "2026-09-02T05:28:41+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Pin the complete candidate and run applicable checks plus independent review"
+    },
+    {
+      "at": "2026-09-02T05:39:44+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: ddf678e3-d83f-46f8-87fe-eac757439ccb"
+    },
+    {
+      "at": "2026-09-02T05:52:49+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate aa46e4aba73c: index 2 is one nondeterministic 1MB blob timeout with 2/3 targeted reruns passing; index 5 is three same-root core.autocrlf merge fixture failures with LF positive control passing; all other 7 configured commands and Issue #98 focused tests passed.; structured run: ddf678e3-d83f-46f8-87fe-eac757439ccb; accepted command indexes: 2, 5; approval: User explicitly accepted the exact App blob-timeout and workflow CRLF/LF configuration-fingerprint gaps on 2026-09-02."
+    },
+    {
+      "at": "2026-09-02T05:56:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec accepted; Standards blocked on one High accepted-contract-gap: bind daemon startup/health to the exact npm-linked compatible CLI and test mismatched PATH/npm identities."
+    },
+    {
+      "at": "2026-09-02T05:56:53+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD exact installed-CLI executable identity for daemon restart and compatibility"
+    },
+    {
+      "at": "2026-09-02T06:01:41+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Standards remediation TDD complete: exact npm-linked workspace package identity, exact bin/happy.mjs daemon restart, PATH-decoy rejection, replacement PID proof; compatibility, refresh-guard, signing smokes and diff check pass; validation.md"
+    },
+    {
+      "at": "2026-09-02T06:01:58+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Repin the remediated complete candidate and rerun applicable checks plus fresh independent review"
+    },
+    {
+      "at": "2026-09-02T06:08:57+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 80556492-c69f-410f-8e1e-e88856a66f2c"
+    },
+    {
+      "at": "2026-09-02T06:09:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate bf02b26c6cee: 8/9 configured commands passed, including App 245 files/1931 tests and Server 112 tests; index 5 alone reproduces the same three core.autocrlf merge/archive configuration-fingerprint fixture failures previously accepted, with no new failure.; structured run: 80556492-c69f-410f-8e1e-e88856a66f2c; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02; the remediated candidate reproduces only the same three fixtures and no new failure."
+    },
+    {
+      "at": "2026-09-02T06:16:33+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec blocked on original exit-code preservation; Standards blocked on composite PATH-dependent installer and stage attribution. Both are frozen-contract gaps on candidate bf02b26c6cee."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T06:17:08+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One macOS Dev refresh atomically links the workspace CLI, restarts through that exact installed executable, verifies RPC compatibility, or fails before Desktop replacement while preserving stage and exit code",
+      "acceptanceSeam": "Atomic install/exact-daemon smoke fixtures with distinctive exit codes, followed by complete check and fresh dual-axis review",
+      "dependencies": "Existing workspace CLI build, install-local link operation, exact installed bin and bundle resolvers, daemon PID state, and Desktop refresh report",
+      "reviewBoundary": "Batch both compatible review findings: split link from daemon lifecycle and preserve original command statuses in the same happyctl transaction",
+      "rollbackBoundary": "Same Issue #98 source slice; link-only installer mode is recoverable via existing cli:install and no real runtime mutation occurs before final authorization",
+      "contextBoundary": "Current Root implements serially; fresh independent Spec and Standards contexts review each repinned candidate",
+      "consequence": "Local CLI link and daemon restart remain consequential but are exercised only through stubs until the checked/reviewed authorized refresh",
+      "evidence": "Two blocked review boundaries produced convergent in-scope contract findings: PATH-independent atomic link/restart staging and D6 exit-status preservation; no new product scope or independent remainder",
+      "contractFingerprint": "dea45419f5e34f4f9400dc4f7481532f6717104e276f4e3fa96aa9b5e1e1198a",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T06:17:08+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD atomic CLI link/exact daemon stages and preserve distinctive failure codes"
+    },
+    {
+      "at": "2026-09-02T06:21:18+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second-review TDD remediation complete: install-local link-only mode, exact installed executable daemon lifecycle, PATH-decoy install fixture, distinctive 23/24 status and report-stage preservation; focused and adjacent smokes pass; validation.md"
+    },
+    {
+      "at": "2026-09-02T06:21:18+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Repin atomic link/exact-daemon candidate, rerun applicable check, then fresh dual-axis review"
+    },
+    {
+      "at": "2026-09-02T06:28:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 9f0f8494-e96f-4778-ab5f-a5f1bd7ebd9c"
+    },
+    {
+      "at": "2026-09-02T06:28:31+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate fda888a69164: 7/9 configured commands passed; index 2 is the same 1MB blob fixed-timeout flake, index 5 is the same three core.autocrlf merge/archive configuration-fingerprint fixtures, and no new failure occurred. Focused atomic link/exact daemon tests pass.; structured run: 9f0f8494-e96f-4778-ab5f-a5f1bd7ebd9c; accepted command indexes: 2, 5; approval: User explicitly accepted these exact two gaps on 2026-09-02: the nondeterministic 1MB App blob timeout and the three same-root workflow CRLF/LF configuration-fingerprint fixtures; this candidate reproduces only those failures."
+    },
+    {
+      "at": "2026-09-02T06:33:13+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh independent Spec and Standards capable reviews both accepted candidate fda888a69164 / diff 972ea4a638de with no actionable findings; only authorized real forced refresh remains pending."
+    },
+    {
+      "at": "2026-09-02T06:36:11+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish report, session summary, terminal CI, and archive projection"
+    },
+    {
+      "at": "2026-09-02T06:55:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "Required terminal session/task documentation changed the staged candidate after source review; rebind through implementation and verification."
+    },
+    {
+      "at": "2026-09-02T06:55:11+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh review required after documented candidate rebinding."
+    },
+    {
+      "at": "2026-09-02T06:55:11+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Rebind required terminal session/task documentation into the final delivery candidate"
+    },
+    {
+      "at": "2026-09-02T06:55:19+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implementation unchanged; required terminal session/task documentation added; focused compatibility smoke passes."
+    },
+    {
+      "at": "2026-09-02T06:55:19+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final applicable check and fresh dual-axis review for documented delivery candidate"
+    },
+    {
+      "at": "2026-09-02T06:58:19+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: f88dff84-a071-46f5-a32d-ff996dd37909"
+    },
+    {
+      "at": "2026-09-02T06:58:47+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Final documented candidate f7d7bd48725a: 8/9 configured commands passed, including App 245/1931 and Server 112; index 5 alone reproduces the same three accepted core.autocrlf merge/archive configuration-fingerprint fixtures.; structured run: f88dff84-a071-46f5-a32d-ff996dd37909; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02; final documented candidate reproduces only the same three fixtures and no new failure."
+    },
+    {
+      "at": "2026-09-02T07:03:30+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Final Spec review blocked only on compatibility-command status preservation; Standards accepted and all prior blockers remain closed."
+    },
+    {
+      "at": "2026-09-02T07:03:30+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD distinctive RPC compatibility command-status preservation"
+    },
+    {
+      "at": "2026-09-02T07:07:01+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final Spec remediation TDD complete: npm-root/find/grep compatibility command statuses preserved, fake find exit 26 propagates, no-marker remains 1; focused and adjacent smokes pass."
+    },
+    {
+      "at": "2026-09-02T07:07:01+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Bind final status-preserving delivery candidate through applicable check and fresh review"
+    },
+    {
+      "at": "2026-09-02T07:11:35+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 1ff9a433-be92-4e24-8c3e-fb145b6e2f27"
+    },
+    {
+      "at": "2026-09-02T07:12:00+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Final status-preserving candidate 43245f14171b: 7/9 configured commands passed; index 2 is the accepted 1MB blob timeout and index 5 the accepted three core.autocrlf fixtures; no new failure, focused RPC exit-26 coverage passes.; structured run: 1ff9a433-be92-4e24-8c3e-fb145b6e2f27; accepted command indexes: 2, 5; approval: User explicitly accepted these exact two gaps on 2026-09-02: the nondeterministic 1MB App blob timeout and the three same-root workflow CRLF/LF configuration-fingerprint fixtures; final remediation candidate reproduces only them."
+    },
+    {
+      "at": "2026-09-02T07:17:08+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec blocked on same-root npm-root status propagation through helper callers; Standards accepted."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T07:17:24+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One refresh preserves original command statuses through every workspace package, exact daemon, and RPC compatibility helper boundary before Desktop replacement",
+      "acceptanceSeam": "npm-root exit 27 fault injection across install identity, bundle, executable, daemon, and RPC helpers plus existing find 26 and public stage fixtures",
+      "dependencies": "Existing npm global package resolver and exact package-derived bundle/executable helper chain",
+      "reviewBoundary": "One same-root status-propagation repair across thin helper callers; no product or delivery scope expansion",
+      "rollbackBoundary": "Same Issue #98 source diff; shell helper changes and fixtures are locally reversible before delivery",
+      "contextBoundary": "Current Root serial repair followed by final fresh capable Spec and Standards review",
+      "consequence": "No runtime mutation during remediation; authorized delivery remains gated on accepted final candidate",
+      "evidence": "Two review boundaries after the last accepted review found progressively deeper instances of the same frozen exit-status contract; current exact gap is bounded to npm-root 27 coercion at helper callers",
+      "contractFingerprint": "672e6a6ea75a7c504db6247d0b2d659afdb34dbb68a8806170db370f7b90e915",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T07:17:24+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD npm-root exit 27 propagation through install, daemon, and RPC helper chains"
+    },
+    {
+      "at": "2026-09-02T07:21:59+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Delivery-review TDD remediation complete: npm-root exit 27 propagates through install identity, bundle, executable, daemon, and RPC helper chains; existing find 26 and stage fixtures pass."
+    },
+    {
+      "at": "2026-09-02T07:21:59+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Bind complete npm-root status-preserving delivery candidate through final check and review"
+    },
+    {
+      "at": "2026-09-02T07:27:23+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 63be68be-7af4-4d7f-b697-1479d11df482"
+    },
+    {
+      "at": "2026-09-02T07:27:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 637c664a560a: 7/9 commands passed; exact accepted indexes 2 and 5 only; npm-root exit 27 and find 26 focused coverage plus adjacent smokes pass.; structured run: 63be68be-7af4-4d7f-b697-1479d11df482; accepted command indexes: 2, 5; approval: User explicitly accepted these exact two gaps on 2026-09-02: nondeterministic 1MB App blob timeout and three same-root workflow CRLF/LF configuration-fingerprint fixtures; npm-root remediation candidate reproduces only them."
+    },
+    {
+      "at": "2026-09-02T07:34:33+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Release-bound capable Spec and Standards reviews both accepted candidate 637c664a560a / diff 9fc5cb17e6d3 with no actionable findings."
+    },
+    {
+      "at": "2026-09-02T07:34:34+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Deliver reviewed source PR to dev, run authorized DC-09 refresh, then archive terminal evidence"
+    }
+  ],
+  "updated": "2026-09-02T07:34:34+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/98",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-02T05:14:31+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One macOS Dev refresh produces one locally compatible Desktop/CLI/daemon runtime set or fails before incompatible Desktop replacement",
+      "acceptanceSeam": "Devtools paired-refresh fixtures plus CLI/App focused tests and authorized real forced refresh",
+      "dependencies": "Consumes existing workspace CLI installer, daemon commands, Saved Projects RPC registration, and Desktop backup/install flow; outputs verified paired runtime",
+      "reviewBoundary": "CLI build/install, daemon restart, installed-bundle RPC verification, Desktop replacement, and reporting are one operational transaction",
+      "rollbackBoundary": "One devtools Slice; source revert plus existing Desktop backup/rollback, with workspace CLI reinstall recovery",
+      "contextBoundary": "One confirmed current Root Issue session with serial happyctl implementation and independent final review",
+      "consequence": "Local executable relink, daemon restart, and personal Dev app replacement are consequential but recoverable and controlled",
+      "evidence": "Live Issue #98 right-sizing assessment revalidated against devtools/happyctl, packages/happy-cli/scripts/install-local.cjs, apiMachine.ts, and devtools smoke seams on 2026-09-02",
+      "contractFingerprint": "34f2a038a125d2de907c2e85faca1c6e7b5986bc8394c4c696ca013456215102",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T06:17:08+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One macOS Dev refresh atomically links the workspace CLI, restarts through that exact installed executable, verifies RPC compatibility, or fails before Desktop replacement while preserving stage and exit code",
+      "acceptanceSeam": "Atomic install/exact-daemon smoke fixtures with distinctive exit codes, followed by complete check and fresh dual-axis review",
+      "dependencies": "Existing workspace CLI build, install-local link operation, exact installed bin and bundle resolvers, daemon PID state, and Desktop refresh report",
+      "reviewBoundary": "Batch both compatible review findings: split link from daemon lifecycle and preserve original command statuses in the same happyctl transaction",
+      "rollbackBoundary": "Same Issue #98 source slice; link-only installer mode is recoverable via existing cli:install and no real runtime mutation occurs before final authorization",
+      "contextBoundary": "Current Root implements serially; fresh independent Spec and Standards contexts review each repinned candidate",
+      "consequence": "Local CLI link and daemon restart remain consequential but are exercised only through stubs until the checked/reviewed authorized refresh",
+      "evidence": "Two blocked review boundaries produced convergent in-scope contract findings: PATH-independent atomic link/restart staging and D6 exit-status preservation; no new product scope or independent remainder",
+      "contractFingerprint": "dea45419f5e34f4f9400dc4f7481532f6717104e276f4e3fa96aa9b5e1e1198a",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T07:17:24+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One refresh preserves original command statuses through every workspace package, exact daemon, and RPC compatibility helper boundary before Desktop replacement",
+      "acceptanceSeam": "npm-root exit 27 fault injection across install identity, bundle, executable, daemon, and RPC helpers plus existing find 26 and public stage fixtures",
+      "dependencies": "Existing npm global package resolver and exact package-derived bundle/executable helper chain",
+      "reviewBoundary": "One same-root status-propagation repair across thin helper callers; no product or delivery scope expansion",
+      "rollbackBoundary": "Same Issue #98 source diff; shell helper changes and fixtures are locally reversible before delivery",
+      "contextBoundary": "Current Root serial repair followed by final fresh capable Spec and Standards review",
+      "consequence": "No runtime mutation during remediation; authorized delivery remains gated on accepted final candidate",
+      "evidence": "Two review boundaries after the last accepted review found progressively deeper instances of the same frozen exit-status contract; current exact gap is bounded to npm-root 27 coercion at helper callers",
+      "contractFingerprint": "672e6a6ea75a7c504db6247d0b2d659afdb34dbb68a8806170db370f7b90e915",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "63be68be-7af4-4d7f-b697-1479d11df482",
+  "checkRunFingerprint": "1047bfe5a78a0853f0f5f5b1fe15916b1855f54dfffbac5703502f55bc5f39a5",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
+    "candidateFingerprint": "637c664a560adbb27722ede621ef754a8649d24205e37139913748d13acb1f26"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      5
+    ],
+    "approval": "User explicitly accepted these exact two gaps on 2026-09-02: nondeterministic 1MB App blob timeout and three same-root workflow CRLF/LF configuration-fingerprint fixtures; npm-root remediation candidate reproduces only them."
+  },
+  "checkAcceptedFailuresFingerprint": "4baabb0d9c36ce56f89507503d513df7836bfdfe642ae94419a7ed039461e2a9",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
+      "candidateFingerprint": "637c664a560adbb27722ede621ef754a8649d24205e37139913748d13acb1f26"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Candidate 637c664a560a / diff 9fc5cb17e6d3: accepted, no findings; npm-root 27 full chain, find 26, grep errors, missing marker 1, public report/exit, and terminal docs verified."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Candidate 637c664a560a / diff 9fc5cb17e6d3: accepted, no findings; shell status handling, exact identity, atomic ordering, fault injection, rollback, and docs verified."
+      }
+    }
+  }
+}

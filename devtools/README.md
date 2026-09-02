@@ -39,7 +39,7 @@ upstream/main -> personal main (devtools-only delta) -> dev (personal product fe
 
 Personal `main` contains the official product tree plus allowlisted infrastructure only: `devtools/`, the Happy operation skills, `AGENTS.md`, and `.gitignore`. `happyctl` verifies that `main` contains the current `upstream/main` and has no product/build-input differences before using it for the isolated official baseline client.
 
-`refresh-desktop` merges new official commits into personal `main`, verifies that invariant, merges `main` into `dev`, builds `dev`, then installs and verifies the personal desktop client. It stops on dirty state, divergence, conflicts, build failures, or verification failures.
+`refresh-desktop` merges new official commits into personal `main`, verifies that invariant, merges `main` into `dev`, then builds the Dev Desktop and workspace Happy CLI. Before replacing or launching the Desktop app, it installs the local CLI, restarts and confirms the daemon, and verifies that the globally installed compiled bundle exposes the Saved Projects `list-saved-projects` RPC. Update reports record each CLI/daemon/compatibility stage separately. It stops on dirty state, divergence, conflicts, build/install failures, or either runtime verification failure.
 
 ## Mobile builds from worktrees
 
@@ -140,6 +140,7 @@ Copy `config.example.env` to the untracked `devtools/config.env` on macOS/Linux,
 
 ```bash
 bash -n devtools/happyctl
+bash devtools/tests/happyctl-desktop-cli-compatibility-smoke.sh
 bash devtools/tests/happyctl-official-baseline-smoke.sh
 bash devtools/tests/mobile-plan-smoke.sh
 bash devtools/tests/mobile-build-report-smoke.sh
