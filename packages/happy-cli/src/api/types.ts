@@ -302,10 +302,11 @@ export type Metadata = {
   currentModelCode?: string,
   /** Explicit model currently requested by the running agent session. */
   modelMode?: string | null,
-  /**
-   * Synchronized per-session permission mode and display mirror.
-   * This seeds launch state but is never a live CLI authorization command.
-   */
+  /** Concrete model confirmed by the current Codex App Server runtime. */
+  effectiveModel?: string,
+  /** Concrete reasoning effort paired with the effective Codex model. */
+  effectiveReasoningEffort?: string,
+  /** Display mirror of the explicit live permission mode; never authority. */
   permissionMode?: string | null,
   /** Monotonic CLI order for acknowledged live permission-mode changes. */
   permissionModeRevision?: number,

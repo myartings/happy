@@ -1,11 +1,12 @@
 import { trimIdent } from '@/utils/trimIdent';
+import { withCodexEffectiveRouteMetadata } from './codexRuntimeModelMetadata';
 
 type ResumeThreadClient = {
     resumeThread: (opts: {
         threadId: string;
         cwd: string;
         mcpServers: Record<string, unknown>;
-    }) => Promise<{ threadId: string; model: string }>;
+    }) => Promise<{ threadId: string; model: string; reasoningEffort: string | null }>;
 };
 
 type ResumeThreadSession = {
@@ -30,7 +31,13 @@ export async function resumeExistingThread(opts: {
      * internal resume detail out of the conversation. Defaults to `true`.
      */
     announce?: boolean;
-}): Promise<{ threadId: string; model: string }> {
+    /** Publish the same confirmed pair to any local runtime projection. */
+    onConfirmedRoute?: (route: {
+        threadId: string;
+        model: string;
+        reasoningEffort: string | null;
+    }) => Promise<void> | void;
+}): Promise<{ threadId: string; model: string; reasoningEffort: string | null }> {
     try {
         const resumedThread = await opts.client.resumeThread({
             threadId: opts.threadId,
@@ -38,10 +45,11 @@ export async function resumeExistingThread(opts: {
             mcpServers: opts.mcpServers,
         });
 
-        opts.session.updateMetadata((currentMetadata) => ({
+        opts.session.updateMetadata((currentMetadata) => withCodexEffectiveRouteMetadata({
             ...currentMetadata,
             codexThreadId: resumedThread.threadId,
-        }));
+        }, resumedThread));
+        await opts.onConfirmedRoute?.(resumedThread);
         opts.messageBuffer.addMessage(`Resumed thread ${trimIdent(resumedThread.threadId)}`, 'status');
         if (opts.announce !== false) {
             opts.session.sendSessionEvent({

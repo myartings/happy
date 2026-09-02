@@ -45,6 +45,40 @@ describe('saved project model', () => {
         expect(request).toHaveBeenCalledWith('machine-1');
     });
 
+    it('reuses the first registry loaded for a machine across heartbeat rerenders', async () => {
+        const request = vi.fn().mockResolvedValue({
+            schemaVersion: 1,
+            revision: 3,
+            projects: [project],
+        });
+        const loader = new SavedProjectRegistryLoader({ request, timeoutMs: 100 });
+
+        const first = await loader.load('machine-1');
+        const heartbeatRerender = await loader.load('machine-1');
+
+        expect(heartbeatRerender).toEqual(first);
+        expect(loader.peek('machine-1')).toBe(first?.status === 'ready' ? first.registry : null);
+        expect(request).toHaveBeenCalledTimes(1);
+    });
+
+    it('deduplicates an in-flight machine load and remembers an unavailable outcome', async () => {
+        let resolveRequest!: (value: unknown) => void;
+        const request = vi.fn(() => new Promise<unknown>((resolve) => {
+            resolveRequest = resolve;
+        }));
+        const loader = new SavedProjectRegistryLoader({ request, timeoutMs: 100 });
+
+        const first = loader.load('machine-1');
+        loader.reset();
+        const second = loader.load('machine-1');
+        resolveRequest({ malformed: true });
+
+        await expect(first).resolves.toBeNull();
+        await expect(second).resolves.toEqual({ status: 'unavailable' });
+        await expect(loader.load('machine-1')).resolves.toEqual({ status: 'unavailable' });
+        expect(request).toHaveBeenCalledTimes(1);
+    });
+
     it('fails closed on malformed or unavailable registry responses', async () => {
         const malformed = new SavedProjectRegistryLoader({
             request: vi.fn().mockResolvedValue({ schemaVersion: 1, revision: 0, projects: [{ ...project, id: 'not-a-uuid' }] }),

@@ -11,6 +11,10 @@ import { Metadata } from '@/api/types';
 import { decodeBase64 } from '@/api/encryption';
 import { TrackedSession, SessionEncryptionData } from './types';
 import { SpawnSessionOptions, SpawnSessionResult } from '@/modules/common/registerCommonHandlers';
+import {
+  isCodexReasoningEffort,
+  isConcreteCodexModel,
+} from '@/codex/codexRuntimeModelMetadata';
 
 export function startDaemonControlServer({
   ownerToken,
@@ -73,9 +77,68 @@ export function startDaemonControlServer({
         };
       }
 
-      onHappySessionWebhook(sessionId, metadata, encryptionData);
+      // Effective-route authority arrives only through the generation-bound
+      // endpoint below, never through caller-supplied startup metadata.
+      const {
+        effectiveModel: _effectiveModel,
+        effectiveReasoningEffort: _effectiveReasoningEffort,
+        ...startupMetadata
+      } = (metadata ?? {}) as Metadata;
+      onHappySessionWebhook(sessionId, startupMetadata as Metadata, encryptionData);
 
       return { status: 'ok' as const };
+    });
+
+    // Keep the daemon's local Session projection current without exposing the
+    // rest of the encrypted Session metadata or polling the remote server.
+    typed.post('/session-effective-route', {
+      schema: {
+        body: z.object({
+          expectedOwnerToken: z.string(),
+          sessionId: z.string(),
+          route: z.object({
+            effectiveModel: z.string().refine(isConcreteCodexModel),
+            effectiveReasoningEffort: z.string().refine(isCodexReasoningEffort),
+          }).strict().nullable(),
+        }),
+        response: {
+          200: z.object({
+            status: z.literal('ok'),
+            updated: z.boolean(),
+          }),
+          409: z.object({
+            error: z.string(),
+          }),
+        },
+      },
+    }, async (request, reply) => {
+      if (request.body.expectedOwnerToken !== ownerToken) {
+        logger.debug('[CONTROL SERVER] Refusing route update for a different daemon generation');
+        reply.code(409);
+        return { error: 'Daemon generation changed; route update refused' };
+      }
+      const child = getChildren().find(
+        candidate => candidate.happySessionId === request.body.sessionId,
+      );
+      if (!child) {
+        return { status: 'ok' as const, updated: false };
+      }
+
+      const currentMetadata = child.happySessionMetadataFromLocalWebhook ?? {} as Metadata;
+      if (request.body.route) {
+        child.happySessionMetadataFromLocalWebhook = {
+          ...currentMetadata,
+          ...request.body.route,
+        };
+      } else {
+        const {
+          effectiveModel: _effectiveModel,
+          effectiveReasoningEffort: _effectiveReasoningEffort,
+          ...remainingMetadata
+        } = currentMetadata;
+        child.happySessionMetadataFromLocalWebhook = remainingMetadata;
+      }
+      return { status: 'ok' as const, updated: true };
     });
 
     // List all tracked sessions
@@ -86,7 +149,11 @@ export function startDaemonControlServer({
             children: z.array(z.object({
               startedBy: z.string(),
               happySessionId: z.string(),
-              pid: z.number()
+              pid: z.number(),
+              metadata: z.object({
+                effectiveModel: z.string(),
+                effectiveReasoningEffort: z.string(),
+              }).optional(),
             }))
           })
         }
@@ -97,11 +164,22 @@ export function startDaemonControlServer({
       return { 
         children: children
           .filter(child => child.happySessionId !== undefined)
-          .map(child => ({
-            startedBy: child.startedBy,
-            happySessionId: child.happySessionId!,
-            pid: child.pid
-          }))
+          .map(child => {
+            const metadata = child.happySessionMetadataFromLocalWebhook;
+            const hasConfirmedRoute = isConcreteCodexModel(metadata?.effectiveModel)
+              && isCodexReasoningEffort(metadata?.effectiveReasoningEffort);
+            return {
+              startedBy: child.startedBy,
+              happySessionId: child.happySessionId!,
+              pid: child.pid,
+              ...(hasConfirmedRoute ? {
+                metadata: {
+                  effectiveModel: metadata.effectiveModel!,
+                  effectiveReasoningEffort: metadata.effectiveReasoningEffort!,
+                },
+              } : {}),
+            };
+          })
       }
     });
 

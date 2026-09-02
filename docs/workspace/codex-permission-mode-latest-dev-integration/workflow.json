@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 3,
+  "slug": "codex-permission-mode-latest-dev-integration",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "Consider changing SavedProjectRegistryLoader so an initially unavailable registry can recover later; this behavior is inherited unchanged from dev and is outside this merge-local scope.",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly authorized merge-local workflow, validation, push, and PR merge for Issue #87; bounded outcome is a two-parent merge of origin/dev@03936270022bdbb635f66a0cbab647a7b9e9b92b preserving both parent contracts without new product behavior.",
+      "updated": "2026-09-02T06:21:25+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D4 freeze target-first exact archive union, dev-parent exact Metadata block, zero new runtime behavior, and ordinary checked delivery.",
+      "updated": "2026-09-02T06:21:00+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: current Root owns one serial high-risk merge-local slice in the existing Issue #87 worktree; no writer delegation. Tests are focused App/CLI integration suites and typechecks followed by complete applicable check; protected/native paths are untouched.",
+      "updated": "2026-09-02T06:21:25+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared-with-controls: permission metadata is authorization-adjacent; preserve both parent behavior exactly, add no authority path, require zero unmerged entries, exact archive union, App/CLI focused tests and typechecks, candidate-bound applicable check, independent capable Spec and Standards review, staged and committed workflow CI, ordinary non-force push, and GitHub checks before merge. Rollback is reverting the merge commit or PR merge commit.",
+      "updated": "2026-09-02T06:17:27+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Resolved both conflicts without new behavior: target-first exact archive union; dev-parent exact Metadata block retaining Issue #87 permission fields and Issue #80 effective route fields. No unmerged paths or markers. App focused 38/38, CLI focused 87/87, App and CLI typechecks passed.",
+      "updated": "2026-09-02T06:21:59+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged full-profile run passed 7/9 commands: both typechecks, workflow runtime 38/38, upgrade 2/2, validator 9/9, selective validation, and strict audit passed. Command 2 had one Studio wiring source-string failure after 1944 App tests passed; command 3 had the two established Windows local-storage 404/200 fixture failures after 110 Server tests passed. Focused integration suites pass 38/38 App and 87/87 CLI.",
+      "updated": "2026-09-02T06:37:38+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards reviews accepted frozen candidate cb4c31019ed244e2194d69b03b15225d3ae9bb91646bb9973a3e272c1ec5dbcf with no blockers; one dev-inherited non-blocking Saved Projects cache follow-up.",
+      "updated": "2026-09-02T06:46:56+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "2433100c40df7675c62fae6e59e5b5fa625087e6",
+        "candidateFingerprint": "cb4c31019ed244e2194d69b03b15225d3ae9bb91646bb9973a3e272c1ec5dbcf"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish review complete: MI1-MI6 have verified or explicitly accepted-gap evidence; exact rollback and terminal delivery sequence recorded; one dev-inherited Saved Projects cache suggestion classified non-blocking.",
+      "updated": "2026-09-02T06:50:02+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-02T06:17:26+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-02T06:17:27+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly authorized merge-local workflow, validation, push, and PR merge for Issue #87; bounded outcome is a two-parent merge of origin/dev@03936270022bdbb635f66a0cbab647a7b9e9b92b preserving both parent contracts without new product behavior."
+    },
+    {
+      "at": "2026-09-02T06:17:27+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared-with-controls: permission metadata is authorization-adjacent; preserve both parent behavior exactly, add no authority path, require zero unmerged entries, exact archive union, App/CLI focused tests and typechecks, candidate-bound applicable check, independent capable Spec and Standards review, staged and committed workflow CI, ordinary non-force push, and GitHub checks before merge. Rollback is reverting the merge commit or PR merge commit."
+    },
+    {
+      "at": "2026-09-02T06:21:00+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 freeze target-first exact archive union, dev-parent exact Metadata block, zero new runtime behavior, and ordinary checked delivery."
+    },
+    {
+      "at": "2026-09-02T06:21:00+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current Root owns one serial high-risk merge-local slice in the existing Issue #87 worktree; no writer delegation. Tests are focused App/CLI integration suites and typechecks followed by complete applicable check; growth routes through discovered-scope containment. Protected/native paths are untouched."
+    },
+    {
+      "at": "2026-09-02T06:21:24+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "pending",
+      "evidence": "Reordering receipts so the approved local-only delivery source precedes acceptance."
+    },
+    {
+      "at": "2026-09-02T06:21:25+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — Merge-local reconciliation of two already accepted parent deliveries; no new external delivery slice. (approval: User explicitly authorized merge-local workflow, validation, push, and merge in this session.)"
+    },
+    {
+      "at": "2026-09-02T06:21:25+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly authorized merge-local workflow, validation, push, and PR merge for Issue #87; bounded outcome is a two-parent merge of origin/dev@03936270022bdbb635f66a0cbab647a7b9e9b92b preserving both parent contracts without new product behavior."
+    },
+    {
+      "at": "2026-09-02T06:21:25+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current Root owns one serial high-risk merge-local slice in the existing Issue #87 worktree; no writer delegation. Tests are focused App/CLI integration suites and typechecks followed by complete applicable check; protected/native paths are untouched."
+    },
+    {
+      "at": "2026-09-02T06:21:59+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Resolved both conflicts without new behavior: target-first exact archive union; dev-parent exact Metadata block retaining Issue #87 permission fields and Issue #80 effective route fields. No unmerged paths or markers. App focused 38/38, CLI focused 87/87, App and CLI typechecks passed."
+    },
+    {
+      "at": "2026-09-02T06:22:15+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Conflict resolution and focused verification complete; prepare final candidate"
+    },
+    {
+      "at": "2026-09-02T06:22:16+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run complete staged applicable check and independent review"
+    },
+    {
+      "at": "2026-09-02T06:36:44+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: e02c36aa-c365-4d44-9cca-cee6e1a96bf3"
+    },
+    {
+      "at": "2026-09-02T06:37:38+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh staged full-profile run passed 7/9 commands: both typechecks, workflow runtime 38/38, upgrade 2/2, validator 9/9, selective validation, and strict audit passed. Command 2 had one Studio wiring source-string failure after 1944 App tests passed; command 3 had the two established Windows local-storage 404/200 fixture failures after 110 Server tests passed. Focused integration suites pass 38/38 App and 87/87 CLI.; structured run: e02c36aa-c365-4d44-9cca-cee6e1a96bf3; accepted command indexes: 2, 3; approval: User explicitly accepted the established check gaps and instructed review to continue; this fresh run reproduces only the same App Studio source-string assertion and two native-Windows Server local-storage fixture assertions, with no candidate changes to those failing blobs."
+    },
+    {
+      "at": "2026-09-02T06:46:26+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards reviews accepted frozen candidate cb4c31019ed244e2194d69b03b15225d3ae9bb91646bb9973a3e272c1ec5dbcf with no blockers; one dev-inherited non-blocking Saved Projects cache follow-up."
+    },
+    {
+      "at": "2026-09-02T06:46:56+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards reviews accepted frozen candidate cb4c31019ed244e2194d69b03b15225d3ae9bb91646bb9973a3e272c1ec5dbcf with no blockers; one dev-inherited non-blocking Saved Projects cache follow-up."
+    },
+    {
+      "at": "2026-09-02T06:48:00+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Run terminal pre-archive CI, archive, create the authorized two-parent merge commit, verify, push, and merge PR #90"
+    },
+    {
+      "at": "2026-09-02T06:50:02+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish review complete: MI1-MI6 have verified or explicitly accepted-gap evidence; exact rollback and terminal delivery sequence recorded; one dev-inherited Saved Projects cache suggestion classified non-blocking."
+    },
+    {
+      "at": "2026-09-02T10:40:57+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Integrated latest origin/dev into PR #90 with exact parent-preserving conflict resolution; fresh applicable checks and independent Spec/Standards reviews passed, with the two previously accepted inherited test gaps recorded.; result identity: archive-introducing-commit; follow-up: Consider changing SavedProjectRegistryLoader so an initially unavailable registry can recover later; this behavior is inherited unchanged from dev and is outside this merge-local scope."
+    }
+  ],
+  "updated": "2026-09-02T10:40:57+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Merge-local reconciliation of two already accepted parent deliveries; no new external delivery slice.",
+    "approval": "User explicitly authorized merge-local workflow, validation, push, and merge in this session."
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "e02c36aa-c365-4d44-9cca-cee6e1a96bf3",
+  "checkRunFingerprint": "8b053da5237a0cd39852ae7e7c73e9b8624d364756a79dab852605eb7f0672a0",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "2433100c40df7675c62fae6e59e5b5fa625087e6",
+    "candidateFingerprint": "cb4c31019ed244e2194d69b03b15225d3ae9bb91646bb9973a3e272c1ec5dbcf"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      3
+    ],
+    "approval": "User explicitly accepted the established check gaps and instructed review to continue; this fresh run reproduces only the same App Studio source-string assertion and two native-Windows Server local-storage fixture assertions, with no candidate changes to those failing blobs."
+  },
+  "checkAcceptedFailuresFingerprint": "5aedfbb4eaa7b61aefc272559355422ee61e9b60e87ec5917ab53e17ae945b1b",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "2433100c40df7675c62fae6e59e5b5fa625087e6",
+      "candidateFingerprint": "cb4c31019ed244e2194d69b03b15225d3ae9bb91646bb9973a3e272c1ec5dbcf"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Spec capable review accepted package 1895dd795676e52f; candidate cb4c31019ed2 and diff 3c74a53e1493 independently matched. No blocking contract/candidate issues; product result preserves both parents. MI2/MI6 remain terminal delivery checks."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Standards capable review accepted the same package and independently matched candidate/diff identities. No blocking regression or binding-authority violation. One Medium Saved Projects failure-cache follow-up is exact dev-parent behavior and out of this preservation slice."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Run terminal pre-archive CI, archive, create the authorized two-parent merge commit, verify, push, and merge PR #90",
+    "prearchiveUpdated": "2026-09-02T06:50:02+00:00",
+    "prearchiveActive": {
+      "feature": "codex-permission-mode-latest-dev-integration",
+      "phase": "finish",
+      "updated": "2026-09-02",
+      "next": "Run terminal pre-archive CI, archive, create the authorized two-parent merge commit, verify, push, and merge PR #90",
+      "branch / worktree": "issue/87-android-reply-silently-changes-existing-codex-se"
+    },
+    "prearchiveArchiveObject": "2b1b4351092095fecd872b16c3453c8b77347cd3",
+    "fingerprint": "dea86ab61dc6b67ed635833fe5a8d79b14d1c9f18ae1968c37ae404f4e26555b"
+  },
+  "archivedAt": "2026-09-02T10:40:57+00:00",
+  "archiveDate": "2026-09-02",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Integrated latest origin/dev into PR #90 with exact parent-preserving conflict resolution; fresh applicable checks and independent Spec/Standards reviews passed, with the two previously accepted inherited test gaps recorded.",
+  "archiveFollowUp": "Consider changing SavedProjectRegistryLoader so an initially unavailable registry can recover later; this behavior is inherited unchanged from dev and is outside this merge-local scope."
+}

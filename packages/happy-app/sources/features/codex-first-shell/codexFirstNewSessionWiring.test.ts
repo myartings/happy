@@ -39,6 +39,9 @@ describe('Codex-first home and New Session wiring', () => {
         expect(screen).toContain('addGuard.begin(discoveryMachine.id)');
         expect(screen).toContain('addGuard.finish(attempt, response)');
         expect(screen).toContain('registryForMachine(savedRegistryBinding, discoveryMachineId)');
+        expect(screen).toContain('discoveryLoader.peek(discoveryMachineId)');
+        expect(screen).toContain('[activePicker, discoveryLoader, discoveryMachineId, discoveryMachineOnline, selectedSavedProjectId]');
+        expect(screen).not.toContain('[activePicker, discoveryLoader, discoveryMachine, selectedSavedProjectId]');
         expect(screen).toContain("activePicker === 'path' || selectedSavedProjectId !== null");
         expect(screen).toContain("selectedAgent !== 'rig'");
         expect(screen).toContain('savedRegistry?.projects.some((project) => project.id === selectedSavedProjectId)');

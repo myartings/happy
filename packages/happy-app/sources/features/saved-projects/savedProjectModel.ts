@@ -163,6 +163,8 @@ export class SavedProjectAddGuard {
 
 export class SavedProjectRegistryLoader {
     private generation = 0;
+    private readonly outcomes = new Map<string, SavedProjectRegistryOutcome>();
+    private readonly pending = new Map<string, Promise<SavedProjectRegistryOutcome>>();
     private readonly request: (machineId: string) => Promise<unknown>;
     private readonly timeoutMs: number;
 
@@ -181,27 +183,53 @@ export class SavedProjectRegistryLoader {
 
     async load(machineId: string): Promise<SavedProjectRegistryOutcome | null> {
         const generation = ++this.generation;
+        const outcome = await this.loadOnce(machineId);
+        return generation === this.generation ? outcome : null;
+    }
+
+    private loadOnce(machineId: string): Promise<SavedProjectRegistryOutcome> {
+        const cached = this.outcomes.get(machineId);
+        if (cached) return Promise.resolve(cached);
+        const existing = this.pending.get(machineId);
+        if (existing) return existing;
+
         let timeout: ReturnType<typeof setTimeout> | undefined;
-        try {
-            const value = await Promise.race([
-                this.request(machineId),
-                new Promise<never>((_resolve, reject) => {
-                    timeout = setTimeout(() => reject(new Error('Saved project registry timed out')), this.timeoutMs);
-                }),
-            ]);
-            if (generation !== this.generation) return null;
-            return isSavedProjectRegistrySnapshot(value)
-                ? { status: 'ready', registry: value }
-                : { status: 'unavailable' };
-        } catch {
-            return generation === this.generation ? { status: 'unavailable' } : null;
-        } finally {
-            if (timeout) clearTimeout(timeout);
-        }
+        const pending = (async (): Promise<SavedProjectRegistryOutcome> => {
+            let outcome: SavedProjectRegistryOutcome;
+            try {
+                const value = await Promise.race([
+                    this.request(machineId),
+                    new Promise<never>((_resolve, reject) => {
+                        timeout = setTimeout(() => reject(new Error('Saved project registry timed out')), this.timeoutMs);
+                    }),
+                ]);
+                outcome = isSavedProjectRegistrySnapshot(value)
+                    ? { status: 'ready', registry: value }
+                    : { status: 'unavailable' };
+            } catch {
+                outcome = { status: 'unavailable' };
+            } finally {
+                if (timeout) clearTimeout(timeout);
+                this.pending.delete(machineId);
+            }
+            this.outcomes.set(machineId, outcome);
+            return outcome;
+        })();
+        this.pending.set(machineId, pending);
+        return pending;
     }
 
     reset(): void {
         this.generation += 1;
+    }
+
+    peek(machineId: string): SavedProjectRegistrySnapshot | null {
+        const outcome = this.outcomes.get(machineId);
+        return outcome?.status === 'ready' ? outcome.registry : null;
+    }
+
+    remember(machineId: string, registry: SavedProjectRegistrySnapshot): void {
+        this.outcomes.set(machineId, { status: 'ready', registry });
     }
 }
 

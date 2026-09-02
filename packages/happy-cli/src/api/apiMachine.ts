@@ -142,6 +142,7 @@ export class ApiMachineClient {
     private reconnectInterval: NodeJS.Timeout | null = null;
     private pendingWorktreeSnapshots = new Map<string, CreatedWorktreeSnapshot>();
     private savedProjectRegistry = new SavedProjectRegistry();
+    private workspaceProjectImport: Promise<void> | null = null;
 
     constructor(
         private token: string,
@@ -167,6 +168,7 @@ export class ApiMachineClient {
         requestShutdown
     }: MachineRpcHandlers) {
         this.resumeSessionHandler = resumeSession ?? null;
+        this.startWorkspaceProjectImport();
 
         // Register spawn session handler
         this.rpcHandlerManager.registerHandler('spawn-happy-session', async (params: any) => {
@@ -202,18 +204,8 @@ export class ApiMachineClient {
         });
 
         this.rpcHandlerManager.registerHandler('list-saved-projects', async () => {
-            const discovered = await listWorkspaceProjects({
-                root: join(homedir(), 'workspace'),
-            });
-            const imported = await this.savedProjectRegistry.importDiscovered({
-                paths: discovered.projects.map((project) => project.path),
-            });
-            if (imported.importedCount > 0 || imported.skipped.length > 0) {
-                logger.debug(
-                    `[API MACHINE] Workspace Saved Project import: ${imported.importedCount} imported, ${imported.skipped.length} skipped`,
-                );
-            }
-            return imported.registry;
+            await this.workspaceProjectImport;
+            return this.savedProjectRegistry.list();
         });
 
         this.rpcHandlerManager.registerHandler('resolve-saved-project', async (params: any) => {
@@ -435,6 +427,27 @@ export class ApiMachineClient {
 
             return { message: 'Daemon stop request acknowledged, starting shutdown sequence...' };
         });
+    }
+
+    private startWorkspaceProjectImport(): void {
+        if (this.workspaceProjectImport) return;
+        this.workspaceProjectImport = (async () => {
+            try {
+                const discovered = await listWorkspaceProjects({
+                    root: join(homedir(), 'workspace'),
+                });
+                const imported = await this.savedProjectRegistry.importDiscovered({
+                    paths: discovered.projects.map((project) => project.path),
+                });
+                if (imported.importedCount > 0 || imported.skipped.length > 0) {
+                    logger.debug(
+                        `[API MACHINE] Workspace Saved Project import: ${imported.importedCount} imported, ${imported.skipped.length} skipped`,
+                    );
+                }
+            } catch (error) {
+                logger.warn('[API MACHINE] Workspace Saved Project import failed; using the local registry', error);
+            }
+        })();
     }
 
     private syncResumeSessionRpcRegistration(): void {
