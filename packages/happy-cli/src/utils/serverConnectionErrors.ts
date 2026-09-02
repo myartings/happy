@@ -74,6 +74,12 @@ export interface OfflineReconnectionConfig<TSession> {
     /** Optional cleanup callback invoked when cancel() is called */
     onCleanup?: () => void;
 
+    /** Called when a permanent error stops the reconnection loop. */
+    onTerminalError?: (error: OfflineReconnectionTerminalError) => void;
+
+    /** Called when the reconnection loop is explicitly cancelled. */
+    onCancelled?: (error: OfflineReconnectionCancelledError) => void;
+
     /**
      * Optional: override the health check function.
      * Injected for testing. Default uses axios.get to /v1/sessions.
@@ -92,6 +98,22 @@ export interface OfflineReconnectionConfig<TSession> {
      * Default uses exponential backoff with jitter. Set to a tiny fixed delay in tests.
      */
     retryDelayMs?: (failureCount: number) => number;
+}
+
+export class OfflineReconnectionTerminalError extends Error {
+    readonly reason = 'authentication' as const;
+
+    constructor(cause: unknown) {
+        super('Offline reconnection stopped because authentication failed', { cause });
+        this.name = 'OfflineReconnectionTerminalError';
+    }
+}
+
+export class OfflineReconnectionCancelledError extends Error {
+    constructor() {
+        super('Offline reconnection was cancelled');
+        this.name = 'OfflineReconnectionCancelledError';
+    }
 }
 
 /**
@@ -206,6 +228,7 @@ export function startOfflineReconnection<TSession>(
             if (axios.isAxiosError(e) && e.response?.status === 401) {
                 logger.debug('[OfflineReconnection] Authentication error, stopping retries');
                 config.onNotify('❌ Authentication failed. Please re-authenticate with `happy auth`.');
+                config.onTerminalError?.(new OfflineReconnectionTerminalError(e));
                 return; // Don't schedule retry - this is a permanent failure
             }
 
@@ -233,6 +256,7 @@ export function startOfflineReconnection<TSession>(
                 clearTimeout(timeoutId);
                 timeoutId = null;
             }
+            config.onCancelled?.(new OfflineReconnectionCancelledError());
             config.onCleanup?.();
         },
         getSession: () => session,

@@ -1,0 +1,399 @@
+{
+  "schemaVersion": 3,
+  "slug": "publish-launch-pinned-codex-effort-dev-integration",
+  "intensity": "low-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "Create and push the authorized ordinary merge commit, pass committed and hosted CI, merge PR #106, and verify Issue #103 closes",
+  "riskRequired": false,
+  "decisionsRequired": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly requested this integration task and merge; correction removes an accidental reviewer-tier adjective while preserving every Issue #103 / PR #106 outcome.",
+      "updated": "2026-09-02T14:46:31+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D4 fix exact archive union, prohibit novel inherited behavior and history rewriting, select ordinary merge publication, and require fail-closed validation.",
+      "updated": "2026-09-02T14:46:32+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: current Root owns serial current-root integration; manual inherited edit is exact archive union; full applicable checks and independent low-risk-profile dual review are authoritative.",
+      "updated": "2026-09-02T14:46:32+00:00"
+    },
+    "risk": {
+      "status": "not_required",
+      "evidence": "No configured risk trigger applies; one documentation union and canonical lifecycle evidence with gated publication.",
+      "updated": "2026-09-02T14:46:32+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Corrected the reviewer-profile wording only; exact archive union, parent identities, and no-product-edit boundary remain unchanged.",
+      "updated": "2026-09-02T14:46:32+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "9 configured commands; 0 failures",
+      "updated": "2026-09-02T14:52:39+00:00"
+    },
+    "review": {
+      "status": "accepted_gaps",
+      "evidence": "Same candidate 819b6f91 independently reviewed: Spec accepted; Standards accepted with one non-blocking out-of-scope resilience follow-up and no actionable blocker.",
+      "updated": "2026-09-02T14:59:02+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+        "candidateFingerprint": "819b6f91190b4bf40d946a3a15989f2544cfee596e4b2e9be53d89e4199bed21"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "finish.md and validation.md complete: corrected candidate passed 9/9 configured checks, candidate 819b6f91 received accepted Spec and accepted-gap Standards review with no blocker, rollback and post-archive delivery steps recorded.",
+      "updated": "2026-09-02T15:01:13+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-02T14:30:27+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-02T14:34:25+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/103"
+    },
+    {
+      "at": "2026-09-02T14:34:25+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly requested creation of an integration task and continuation through merge on 2026-09-02; Issue #103, PR #106, source 008f90c4, and target 124299f0 define one stable delivery slice."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T14:34:25+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One mergeable PR #106 candidate preserving Issue #103 and workflow-2026.09.2 parent contracts.",
+      "acceptanceSeam": "Exact parent/archive comparisons, full applicable checks, independent dual review, staged and committed workflow CI, hosted CI, PR merge, and Issue closure.",
+      "dependencies": "PR #106 head 008f90c4 and origin/dev 124299f0; output is one ordinary two-parent integration commit.",
+      "reviewBoundary": "Accept or reject the complete parent union and the one merge-local integration Workspace together.",
+      "rollbackBoundary": "Before PR merge retain the prior remote head; afterward revert the ordinary merge commits; no migration or data rollback.",
+      "contextBoundary": "One current Root session in the existing Issue #103 worktree; serial implementation and independent read-only review.",
+      "consequence": "Low-risk integration; false success could drop lifecycle evidence or merge unvalidated parent composition.",
+      "evidence": "Only docs/workspace/archive.md conflicted; its resolution is the exact parent-row union, and no unmerged paths remain.",
+      "contractFingerprint": "9afdcf89219e77f65cf3f402b350cd824b5bc00230c17c72cb890ca717c72276",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T14:34:25+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 fix exact archive union, prohibit novel inherited behavior and history rewriting, select ordinary merge publication, and require fail-closed validation."
+    },
+    {
+      "at": "2026-09-02T14:34:25+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "No configured risk trigger applies: one documentation union plus canonical lifecycle evidence, no auth, protocol, data, deployment, destructive, protected-path, or permission change; publication remains gated."
+    },
+    {
+      "at": "2026-09-02T14:34:25+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current Root owns serial current-root integration; novel scope is one Workspace/spec/tasks and terminal row, manual inherited edit is exact archive union; full applicable checks and capable dual review are authoritative."
+    },
+    {
+      "at": "2026-09-02T14:34:25+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Verify exact parent preservation and complete the integrated candidate"
+    },
+    {
+      "at": "2026-09-02T14:34:26+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Resolved the sole archive conflict as the exact parent-row union; no unmerged paths, conflict markers, or whitespace errors remain; no product conflict or merge-local product edit exists."
+    },
+    {
+      "at": "2026-09-02T14:34:26+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete merge candidate and run the full applicable structured check"
+    },
+    {
+      "at": "2026-09-02T14:39:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "9 configured commands; 0 failures; structured run: 2f5efe72-5557-40c3-9415-c4c617b01a3e"
+    },
+    {
+      "at": "2026-09-02T14:45:50+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly requested creation of an integration task and continuation through merge on 2026-09-02; corrected review wording now matches the repository low-risk profile without changing Issue #103 or PR #106 outcomes."
+    },
+    {
+      "at": "2026-09-02T14:45:50+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 remain unchanged: exact archive union, no novel inherited behavior or history rewriting, ordinary merge publication, and fail-closed validation."
+    },
+    {
+      "at": "2026-09-02T14:45:50+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "No configured risk trigger applies; correction is contract wording only and publication controls remain mandatory."
+    },
+    {
+      "at": "2026-09-02T14:45:53+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Record the review-contract correction and reconfirm exact parent preservation"
+    },
+    {
+      "at": "2026-09-02T14:45:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Corrected only the low-risk reviewer-tier wording identified by Spec review; exact archive union and parent-preserving integration behavior remain unchanged."
+    },
+    {
+      "at": "2026-09-02T14:45:53+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Rerun the full applicable structured check for the changed candidate"
+    },
+    {
+      "at": "2026-09-02T14:46:31+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "blocked",
+      "evidence": "Spec review proved the accepted scoping evidence named capable review while the low-risk repository profile mandates standard review; contract wording must be reconciled before fresh checks."
+    },
+    {
+      "at": "2026-09-02T14:46:31+00:00",
+      "type": "replan",
+      "phase": "planning",
+      "evidence": "Reconcile the reviewer tier in the accepted contract with the repository's low-risk review profile.",
+      "rightSizingEpochStart": 1
+    },
+    {
+      "at": "2026-09-02T14:46:31+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly requested this integration task and merge; correction removes an accidental reviewer-tier adjective while preserving every Issue #103 / PR #106 outcome."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T14:46:32+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One mergeable PR #106 candidate preserving Issue #103 and workflow-2026.09.2 parent contracts.",
+      "acceptanceSeam": "Exact parent/archive comparisons, full applicable checks, independent low-risk-profile dual review, staged and committed workflow CI, hosted CI, PR merge, and Issue closure.",
+      "dependencies": "PR #106 head 008f90c4 and origin/dev 124299f0; output is one ordinary two-parent integration commit.",
+      "reviewBoundary": "Accept or reject the complete parent union and the one merge-local integration Workspace together.",
+      "rollbackBoundary": "Before PR merge retain the prior remote head; afterward revert ordinary merge commits; no migration or data rollback.",
+      "contextBoundary": "One current Root session in the existing Issue #103 worktree; serial implementation and independent read-only review.",
+      "consequence": "Low-risk integration; false success could drop lifecycle evidence or merge unvalidated parent composition.",
+      "evidence": "The sole review finding was the standard-versus-capable wording mismatch; the contract now delegates tier selection to the repository's low-risk profile.",
+      "contractFingerprint": "ffe22490fa24ed632d42e761daf5fd4da3987377aeff88855d6f5de3c90910ed",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T14:46:32+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 fix exact archive union, prohibit novel inherited behavior and history rewriting, select ordinary merge publication, and require fail-closed validation."
+    },
+    {
+      "at": "2026-09-02T14:46:32+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "not_required",
+      "evidence": "No configured risk trigger applies; one documentation union and canonical lifecycle evidence with gated publication."
+    },
+    {
+      "at": "2026-09-02T14:46:32+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current Root owns serial current-root integration; manual inherited edit is exact archive union; full applicable checks and independent low-risk-profile dual review are authoritative."
+    },
+    {
+      "at": "2026-09-02T14:46:32+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Record the corrected reviewer-profile contract and reconfirm the parent union"
+    },
+    {
+      "at": "2026-09-02T14:46:32+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Corrected the reviewer-profile wording only; exact archive union, parent identities, and no-product-edit boundary remain unchanged."
+    },
+    {
+      "at": "2026-09-02T14:46:32+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Rerun the full applicable structured check for the corrected candidate"
+    },
+    {
+      "at": "2026-09-02T14:52:39+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "9 configured commands; 0 failures; structured run: 4d79a829-4c71-4b5a-b8be-60436cd365ba"
+    },
+    {
+      "at": "2026-09-02T14:59:02+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "accepted_gaps",
+      "evidence": "Same candidate 819b6f91 independently reviewed: Spec accepted; Standards accepted with one non-blocking out-of-scope resilience follow-up and no actionable blocker."
+    },
+    {
+      "at": "2026-09-02T14:59:07+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, run staged CI, archive, commit, push, wait hosted CI, merge PR #106, and verify Issue #103 closure"
+    },
+    {
+      "at": "2026-09-02T15:01:13+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "finish.md and validation.md complete: corrected candidate passed 9/9 configured checks, candidate 819b6f91 received accepted Spec and accepted-gap Standards review with no blocker, rollback and post-archive delivery steps recorded."
+    },
+    {
+      "at": "2026-09-02T15:16:44+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Integrated dev@124299f0 into PR #106 with exact parent lifecycle union, 9/9 configured checks, candidate-bound independent Spec and Standards acceptance, and no merge-local product change; result identity: archive-introducing-commit; follow-up: Create and push the authorized ordinary merge commit, pass committed and hosted CI, merge PR #106, and verify Issue #103 closes"
+    }
+  ],
+  "updated": "2026-09-02T15:16:44+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/103",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-02T14:34:25+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One mergeable PR #106 candidate preserving Issue #103 and workflow-2026.09.2 parent contracts.",
+      "acceptanceSeam": "Exact parent/archive comparisons, full applicable checks, independent dual review, staged and committed workflow CI, hosted CI, PR merge, and Issue closure.",
+      "dependencies": "PR #106 head 008f90c4 and origin/dev 124299f0; output is one ordinary two-parent integration commit.",
+      "reviewBoundary": "Accept or reject the complete parent union and the one merge-local integration Workspace together.",
+      "rollbackBoundary": "Before PR merge retain the prior remote head; afterward revert the ordinary merge commits; no migration or data rollback.",
+      "contextBoundary": "One current Root session in the existing Issue #103 worktree; serial implementation and independent read-only review.",
+      "consequence": "Low-risk integration; false success could drop lifecycle evidence or merge unvalidated parent composition.",
+      "evidence": "Only docs/workspace/archive.md conflicted; its resolution is the exact parent-row union, and no unmerged paths remain.",
+      "contractFingerprint": "9afdcf89219e77f65cf3f402b350cd824b5bc00230c17c72cb890ca717c72276",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T14:46:32+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "One mergeable PR #106 candidate preserving Issue #103 and workflow-2026.09.2 parent contracts.",
+      "acceptanceSeam": "Exact parent/archive comparisons, full applicable checks, independent low-risk-profile dual review, staged and committed workflow CI, hosted CI, PR merge, and Issue closure.",
+      "dependencies": "PR #106 head 008f90c4 and origin/dev 124299f0; output is one ordinary two-parent integration commit.",
+      "reviewBoundary": "Accept or reject the complete parent union and the one merge-local integration Workspace together.",
+      "rollbackBoundary": "Before PR merge retain the prior remote head; afterward revert ordinary merge commits; no migration or data rollback.",
+      "contextBoundary": "One current Root session in the existing Issue #103 worktree; serial implementation and independent read-only review.",
+      "consequence": "Low-risk integration; false success could drop lifecycle evidence or merge unvalidated parent composition.",
+      "evidence": "The sole review finding was the standard-versus-capable wording mismatch; the contract now delegates tier selection to the repository's low-risk profile.",
+      "contractFingerprint": "ffe22490fa24ed632d42e761daf5fd4da3987377aeff88855d6f5de3c90910ed",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "rightSizingEpochStart": 1,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "4d79a829-4c71-4b5a-b8be-60436cd365ba",
+  "checkRunFingerprint": "6ce17c8e6e8d9dfd9674de5cd361cf42aab9755b9204313febe3f602b23e7e97",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+    "candidateFingerprint": "819b6f91190b4bf40d946a3a15989f2544cfee596e4b2e9be53d89e4199bed21"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+      "candidateFingerprint": "819b6f91190b4bf40d946a3a15989f2544cfee596e4b2e9be53d89e4199bed21"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Candidate 819b6f91: exact parent-row union, inherited paths from one parent, and novel files confined to the accepted integration lifecycle; no Spec findings."
+      },
+      "standards-review": {
+        "status": "accepted_gaps",
+        "evidence": "Candidate 819b6f91: no Standards blockers; daemon fail-closed is required by frozen AC2/AC6. Optional separate follow-up may reconsider unavailable-daemon resilience through a new contract."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish evidence, run staged CI, archive, commit, push, wait hosted CI, merge PR #106, and verify Issue #103 closure",
+    "prearchiveUpdated": "2026-09-02T15:01:13+00:00",
+    "prearchiveActive": {
+      "feature": "publish-launch-pinned-codex-effort-dev-integration",
+      "phase": "finish",
+      "updated": "2026-09-02",
+      "next": "Complete finish evidence, run staged CI, archive, commit, push, wait hosted CI, merge PR #106, and verify Issue #103 closure",
+      "branch / worktree": "issue/103-publish-launch-pinned-codex-effort-before-the-fi"
+    },
+    "prearchiveArchiveObject": "92ebb83c4843478ec344d78b01dec56c5897caf0",
+    "fingerprint": "4b53a8eeb9319869706349c7a776eda0706b55a179e173ceb4d5455c1bd2a775"
+  },
+  "archivedAt": "2026-09-02T15:16:44+00:00",
+  "archiveDate": "2026-09-02",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Integrated dev@124299f0 into PR #106 with exact parent lifecycle union, 9/9 configured checks, candidate-bound independent Spec and Standards acceptance, and no merge-local product change",
+  "archiveFollowUp": "Create and push the authorized ordinary merge commit, pass committed and hosted CI, merge PR #106, and verify Issue #103 closes"
+}

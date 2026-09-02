@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Metadata } from '@/api/types';
 import {
     withCodexEffectiveRouteMetadata,
+    withCodexPendingLaunchRouteMetadata,
     withCodexRuntimeModelMetadata,
     withCodexUnconfirmedRouteRequestMetadata,
 } from './codexRuntimeModelMetadata';
@@ -35,6 +36,26 @@ describe('withCodexRuntimeModelMetadata', () => {
     it('returns the existing metadata when the published model is unchanged', () => {
         const current = { ...metadata, modelMode: 'gpt-5.6-sol' };
         expect(withCodexRuntimeModelMetadata(current, 'gpt-5.6-sol')).toBe(current);
+    });
+});
+
+describe('withCodexPendingLaunchRouteMetadata', () => {
+    it('marks requested launch state as pending until App Server confirms it', () => {
+        const pending = withCodexPendingLaunchRouteMetadata(metadata, 'gpt-5.6-luna');
+        expect(pending).toMatchObject({
+            modelMode: 'gpt-5.6-luna',
+            codexLaunchRoutePending: true,
+        });
+
+        const confirmed = withCodexEffectiveRouteMetadata(pending, {
+            model: 'gpt-5.6-luna',
+            reasoningEffort: 'max',
+        });
+        expect(confirmed).not.toHaveProperty('codexLaunchRoutePending');
+        expect(confirmed).toMatchObject({
+            effectiveModel: 'gpt-5.6-luna',
+            effectiveReasoningEffort: 'max',
+        });
     });
 });
 

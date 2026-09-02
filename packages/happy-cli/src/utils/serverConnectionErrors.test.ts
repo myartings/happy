@@ -47,6 +47,8 @@ interface TestHandleConfig<T = { id: string }> {
     onReconnected?: () => Promise<T>;
     onNotify?: (msg: string) => void;
     onCleanup?: () => void;
+    onTerminalError?: (error: Error) => void;
+    onCancelled?: (error: Error) => void;
     initialDelayMs?: number;
     retryDelayMs?: (failureCount: number) => number;
 }
@@ -65,6 +67,8 @@ function createTestHandle<T = { id: string }>(config: TestHandleConfig<T> = {}) 
         onReconnected: onReconnected as () => Promise<T>,
         onNotify,
         onCleanup,
+        onTerminalError: config.onTerminalError,
+        onCancelled: config.onCancelled,
         healthCheck: config.healthCheck ?? (async () => { /* success */ }),
         initialDelayMs: config.initialDelayMs ?? 1,
         retryDelayMs: config.retryDelayMs ?? (() => 1),
@@ -208,6 +212,18 @@ describe('startOfflineReconnection', () => {
     });
 
     describe('cancellation', () => {
+        it('reports a typed cancellation event', () => {
+            const onCancelled = vi.fn();
+            const { handle } = createTestHandle({ onCancelled, initialDelayMs: 25 });
+
+            handle.cancel();
+
+            expect(onCancelled).toHaveBeenCalledOnce();
+            expect(onCancelled.mock.calls[0]?.[0]).toMatchObject({
+                name: 'OfflineReconnectionCancelledError',
+            });
+        });
+
         it('should stop attempts when cancelled', async () => {
             let attemptCount = 0;
             const healthCheck = async () => {
@@ -256,6 +272,21 @@ describe('startOfflineReconnection', () => {
     });
 
     describe('error handling', () => {
+        it('reports a typed terminal error when authentication permanently stops reconnection', async () => {
+            const onTerminalError = vi.fn();
+            const { handle } = createTestHandle({
+                healthCheck: async () => { throw createAxiosError(401); },
+                onTerminalError,
+            });
+
+            await vi.waitFor(() => expect(onTerminalError).toHaveBeenCalledOnce());
+            expect(onTerminalError.mock.calls[0]?.[0]).toMatchObject({
+                name: 'OfflineReconnectionTerminalError',
+                reason: 'authentication',
+            });
+            handle.cancel();
+        });
+
         it('should stop retrying on 401 authentication error', async () => {
             let attemptCount = 0;
             const healthCheck = async () => {

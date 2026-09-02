@@ -905,8 +905,17 @@ export class CodexAppServerClient {
         await this.disconnectInternal();
     }
 
-    private buildThreadConfig(mcpServers?: Record<string, unknown>): Record<string, unknown> | null {
-        return mcpServers ? { mcp_servers: mcpServers } : null;
+    private buildThreadConfig(
+        mcpServers?: Record<string, unknown>,
+        reasoningEffort?: ReasoningEffort,
+    ): Record<string, unknown> | null {
+        if (!mcpServers && !reasoningEffort) {
+            return null;
+        }
+        return {
+            ...(mcpServers ? { mcp_servers: mcpServers } : {}),
+            ...(reasoningEffort ? { model_reasoning_effort: reasoningEffort } : {}),
+        };
     }
 
     private rememberThreadDefaults(opts: {
@@ -929,6 +938,7 @@ export class CodexAppServerClient {
 
     async startThread(opts: {
         model?: string;
+        effort?: ReasoningEffort;
         cwd?: string;
         approvalPolicy?: ApprovalPolicy;
         sandbox?: SandboxMode;
@@ -941,7 +951,7 @@ export class CodexAppServerClient {
             cwd: opts.cwd ?? process.cwd(),
             approvalPolicy: opts.approvalPolicy ?? null,
             sandbox: opts.sandbox ?? null,
-            config: this.buildThreadConfig(opts.mcpServers),
+            config: this.buildThreadConfig(opts.mcpServers, opts.effort),
             baseInstructions: null,
             developerInstructions: null,
             compactPrompt: null,

@@ -59,6 +59,23 @@ export function withCodexRuntimeModelMetadata(
     };
 }
 
+/** Mark a fresh launch as pending without presenting requested state as authority. */
+export function withCodexPendingLaunchRouteMetadata(
+    metadata: Metadata,
+    model: string | null | undefined,
+): Metadata {
+    const requestedMetadata = withCodexRuntimeModelMetadata(metadata, model);
+    const {
+        effectiveModel: _effectiveModel,
+        effectiveReasoningEffort: _effectiveReasoningEffort,
+        ...unconfirmedMetadata
+    } = requestedMetadata;
+    return {
+        ...unconfirmedMetadata,
+        codexLaunchRoutePending: true,
+    };
+}
+
 /** Clear confirmed authority whenever a requested model or effort changes. */
 export function withCodexUnconfirmedRouteRequestMetadata(
     metadata: Metadata,
@@ -96,11 +113,13 @@ export function withCodexEffectiveRouteMetadata(
         return remainingMetadata;
     }
     if (metadata.effectiveModel === evidence.model
-        && metadata.effectiveReasoningEffort === evidence.reasoningEffort) {
+        && metadata.effectiveReasoningEffort === evidence.reasoningEffort
+        && metadata.codexLaunchRoutePending === undefined) {
         return metadata;
     }
+    const { codexLaunchRoutePending: _codexLaunchRoutePending, ...confirmedMetadata } = metadata;
     return {
-        ...metadata,
+        ...confirmedMetadata,
         effectiveModel: evidence.model,
         effectiveReasoningEffort: evidence.reasoningEffort,
     };

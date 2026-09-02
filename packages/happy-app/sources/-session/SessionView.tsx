@@ -69,6 +69,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import type { ModelMode, PermissionMode } from '@/components/PermissionModeSelector';
 import { resolveAgentDefaultConfig } from '@/sync/agentDefaults';
+import {
+    resolveCodexDisplayCandidate,
+    resolveCodexSessionDisplayRoute,
+} from '@/sync/codexEffectiveRoute';
 import { performAgentGoalAction } from './agentGoalActionHandler';
 import { MOBILE_GLASS_HEADER_HEIGHT } from '@/components/navigation/headerMetrics';
 import {
@@ -1098,14 +1102,23 @@ export function SessionViewLoaded({
     const effectiveAgentDefaults = React.useMemo(() => (
         resolveAgentDefaultConfig(agentDefaultOverrides, flavor, cliVersion)
     ), [agentDefaultOverrides, cliVersion, flavor]);
+    const codexDisplayRoute = React.useMemo(() => (
+        flavor === 'codex' && !isRig
+            ? resolveCodexSessionDisplayRoute(session, effectiveAgentDefaults)
+            : null
+    ), [effectiveAgentDefaults, flavor, isRig, session]);
     const availableModels = React.useMemo(() => (
         getAvailableModels(
             flavor,
             session.metadata,
             t,
-            session.modelMode ?? (isRig ? null : effectiveAgentDefaults.modelMode),
+            session.modelMode ?? (isRig ? null : resolveCodexDisplayCandidate(
+                codexDisplayRoute,
+                'modelMode',
+                effectiveAgentDefaults.modelMode,
+            )),
         )
-    ), [flavor, session.metadata, session.modelMode, effectiveAgentDefaults.modelMode, isRig]);
+    ), [flavor, session.metadata, session.modelMode, effectiveAgentDefaults.modelMode, codexDisplayRoute?.modelMode, isRig]);
     const availableModes = React.useMemo(() => (
         getAvailablePermissionModes(flavor, session.metadata, t, session.permissionMode)
     ), [flavor, session.metadata, session.permissionMode]);
@@ -1127,10 +1140,16 @@ export function SessionViewLoaded({
     const modelMode = React.useMemo<ModelMode | null>(() => (
         resolveCurrentOption(availableModels, [
             session.modelMode,
-            isRig ? getRigCurrentModelOptionKey(session.metadata) : effectiveAgentDefaults.modelMode,
+            isRig
+                ? getRigCurrentModelOptionKey(session.metadata)
+                : resolveCodexDisplayCandidate(
+                    codexDisplayRoute,
+                    'modelMode',
+                    effectiveAgentDefaults.modelMode,
+                ),
             isRig ? undefined : session.metadata?.currentModelCode,
         ])
-    ), [availableModels, session.modelMode, effectiveAgentDefaults.modelMode, session.metadata, isRig]);
+    ), [availableModels, session.modelMode, effectiveAgentDefaults.modelMode, codexDisplayRoute?.modelMode, session.metadata, isRig]);
     const supportsFastMode = !isRig
         && flavor === 'codex'
         && supportsCodexFastMode(session.metadata, modelMode);
@@ -1144,9 +1163,15 @@ export function SessionViewLoaded({
     const effortLevel = React.useMemo<EffortLevel | null>(() => (
         resolveCurrentOption(availableEffortLevels, [
             session.effortLevel,
-            isRig ? getRigReasoningSelection(session.metadata, modelKey) : effectiveAgentDefaults.effortLevel,
+            isRig
+                ? getRigReasoningSelection(session.metadata, modelKey)
+                : resolveCodexDisplayCandidate(
+                    codexDisplayRoute,
+                    'effortLevel',
+                    effectiveAgentDefaults.effortLevel,
+                ),
         ])
-    ), [availableEffortLevels, session.effortLevel, effectiveAgentDefaults.effortLevel, session.metadata, modelKey, isRig]);
+    ), [availableEffortLevels, session.effortLevel, effectiveAgentDefaults.effortLevel, codexDisplayRoute?.effortLevel, session.metadata, modelKey, isRig]);
 
     const sessionStatus = useSessionStatus(session);
     const sessionUsage = useSessionUsage(sessionId);

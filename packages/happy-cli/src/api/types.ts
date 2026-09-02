@@ -306,6 +306,8 @@ export type Metadata = {
   effectiveModel?: string,
   /** Concrete reasoning effort paired with the effective Codex model. */
   effectiveReasoningEffort?: string,
+  /** Fresh Codex launch is awaiting an authoritative App Server route pair. */
+  codexLaunchRoutePending?: boolean,
   /** Display mirror of the explicit live permission mode; never authority. */
   permissionMode?: string | null,
   /** Monotonic CLI order for acknowledged live permission-mode changes. */
