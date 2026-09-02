@@ -33,6 +33,13 @@ dependency inputs/outputs, review, rollback, context, consequence/signals, and
 disposition. Parent/child structure coordinates outcomes but never substitutes
 for dependency interfaces.
 
+## Campaign boundary
+
+Happy does not adopt the template repository's Unattended Issue Campaign
+schema or runtime. All tracker actions use the read-before-write and explicit
+mutation rules below; historical Issues, claims, Workspaces, sessions, and
+receipts remain passive evidence.
+
 ## Issue-first authority boundary
 
 An **Issue imperative** is an explicit request to handle one named Issue. It
@@ -193,21 +200,20 @@ Device, branch, and worktree. `Inbox` and `Ready` may leave Agent/Device empty;
 `Done` may retain the last values for traceability.
 
 Observe `workflow-issue-route.py` as a separate read-only boundary and use its
-exact Issue, remote roles, publication repository, verified base, canonical
-branch, absolute worktree, and selected client/session label in the authorization
-proposal. Both remote roles default to `origin` for same-repository work. A fork
-contribution explicitly selects its upstream Issue/base remote with
-`--issue-remote` and its personal-fork branch remote with
-`--publication-remote`; a `target` base must be an exact
-`refs/remotes/<issue-remote>/...` ref uniquely attributable to that configured
-remote. Existing publication refs must be uniquely attributable as well;
-overlapping names such as `personal` and `personal/fork` are ambiguous for
-matching refs and fail closed. Do not infer roles or change remote configuration
-to make a route pass.
+exact Issue, verified base, canonical branch, absolute worktree, and selected
+client/session label in the authorization proposal. Rerun and match the Issue,
+base, branch, and worktree immediately before mutation. Verify the registered
+branch/worktree and minimum recovery state before authorized external writes.
 
-Rerun and match the complete Issue/remote/base/branch/worktree tuple immediately
-before mutation. Verify the registered branch/worktree and minimum recovery
-state before authorized external writes.
+For a manual Issue session, supply the router's versioned
+`manualIssueLaunchContract` only after the selected live Issue has complete
+right-sizing, consequence/risk, and capability evidence from the authorities
+that own those facts. The explicit input must not be inferred from a title or
+label; pass it through `--manual-launch-json`. The only executable routes are
+bounded (Luna Max) and Sol-required (Sol
+Medium by default); incomplete or non-one-slice input emits no route, and
+material ambiguity selects Sol conservatively with a stable reason. Higher Sol
+effort requires visible justification.
 
 The authorized projection updates only the selected item to `In Progress` with
 non-empty Agent and Device, leaves Priority unchanged unless separately
@@ -220,6 +226,13 @@ Before launch, the locator states that local acceptance is pending and no
 Workspace exists. If the coordinator later changes material Issue intent,
 dependencies, hierarchy, labels, or acceptance discussion, the owning session
 re-reads and explicitly reconciles the delta before continuing.
+
+The model contract is namespaced from the inert Issue session capsule and from
+unattended-campaign authority. It always reports `launchOccurred: false` and
+cannot prove adapter support, launch, binding, effective model, or Workspace
+acceptance. The receiving Root verifies live identity and `/status` model/effort
+before lifecycle acceptance; stale, unsupported, mismatched, or non-executable
+contracts stop at one visible manual selection boundary.
 
 A transfer requires separate authorization and a prepared receiver. Update the
 current Agent/Device and append a new locator while preserving earlier comments.
@@ -250,6 +263,13 @@ The owning Issue session prepares that completion recommendation. A coordinator
 may perform separately authorized tracker reconciliation and safe worktree or
 branch cleanup only after the owning session is no longer using the worktree and
 has reached a safe terminal boundary.
+
+After the archive-introducing delivery commit exists, use `tracker-workflow`
+with the exact Workspace and Issue, plus an exact PR when known, to observe the
+current PR/check/merge/closure facts. This read-only reconciliation neither
+passes a local gate nor authorizes an action. A closed Issue, green checks, or
+merged PR alone is not fully reconciled; the exact PR must have closed the exact
+Issue and all identities must agree.
 
 ## Interface boundary
 

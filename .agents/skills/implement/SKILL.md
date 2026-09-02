@@ -33,7 +33,7 @@ description: Implement the smallest accepted task slice while preserving reposit
    manifest. Do not automatically load verification-only context.
    Reconfirm the scoping preflight, and rerun it if accepted risk metadata or
    implementation topology changed. Apply capability guidance only after
-   scoping fixes ownership: Luna High suits bounded deterministic work; Root
+   scoping fixes ownership: Luna Max suits bounded deterministic work; Root
    judgment, architecture, diagnosis, independent review, and High-risk
    boundaries use Sol Medium or a higher explicitly justified effort. If a
    Luna Root materially crosses that boundary, state why, recommend the exact

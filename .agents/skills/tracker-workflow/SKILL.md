@@ -17,6 +17,10 @@ The external tracker is the human-visible queue and acceptance boundary.
 implementation scope, execution state, validation, review, and finish evidence.
 Never infer a local workflow gate from an Issue label or closed state.
 
+Happy does not adopt the template repository's Unattended Issue Campaign
+protocol or runtime. Every tracker mutation therefore follows the normal
+read-before-write and explicit-mutation rules in this Skill.
+
 An accepted task binds one Issue per independently deliverable slice only when
 it uses an external queue or coordination boundary. Otherwise it may use an
 explicit accepted local source. Record the selected source through
@@ -82,22 +86,22 @@ selects transfer, replacement, or cleanup. `Inbox` and `Ready` may keep Agent
 and Device empty; `Done` may retain the last values for traceability.
 
 Run the deterministic Issue router as a separate read-only boundary before
-proposing preparation. Same-repository work may keep the default Issue and
-publication remote `origin`. For a fork contribution, explicitly pass the remote
-whose fetch repository owns the Issue and target base with `--issue-remote`, and
-the consistent fetch/push repository that will publish the branch with
-`--publication-remote`. A `target` base must be an exact remote-tracking ref
-beneath and uniquely attributable to the selected Issue remote. An existing
-publication ref must likewise be uniquely attributable to the publication
-remote, including when configured remote names overlap through `/`. Never infer
-these roles or rewrite Git remote configuration to satisfy the planner.
+proposing preparation. Repeat its exact Issue, verified base, canonical branch,
+absolute device-local worktree, and selected session/client label. Immediately
+before local mutation, rerun the router and require the Issue, base, branch, and
+worktree to match the authorized tuple. Create and verify the branch, registered
+worktree, and minimum recovery state before tracker writes.
 
-Repeat the route's exact Issue, Issue remote, publication remote and repository,
-verified base, canonical branch, absolute device-local worktree, and selected
-session/client label. Immediately before local mutation, rerun the router and
-require that complete tuple to match the authorized projection. Create and
-verify the branch, registered worktree, and minimum recovery state before
-tracker writes.
+For a manual Issue session, prepare the router's versioned
+`manualIssueLaunchContract` only after the live Issue is sufficiently specified
+and its right-sizing, consequence/risk, and capability facts have been read from
+their owning authorities. Pass those facts explicitly through
+`--manual-launch-json`; never classify from the title or label alone. Only
+`bounded` (Luna Max) and `sol-required` (Sol Medium by default) are executable.
+Malformed, incomplete, or non-one-slice input emits no model route, while
+material capability/risk ambiguity routes conservatively to Sol with a stable
+reason. A higher Sol effort requires visible justification in the input and
+output contract.
 
 A generic named-Issue or continuation instruction does not authorize these
 writes. Only an explicit response to the concrete projection authorizes updating
@@ -116,6 +120,12 @@ Before launch, the locator must state that local acceptance is pending and no
 Workspace exists. The subsequently confirmed session or explicitly opted-out
 current Root, not the coordinator role, performs the Issue re-read and
 acceptance boundary.
+
+The manual launch contract is client-neutral and always reports
+`launchOccurred: false`. It does not prove that a launcher supports the route,
+that a session started, or that the requested model is effective. Keep it
+namespaced from unattended-campaign capsules and stop at a visible manual model
+selection boundary when no supported adapter can honor it.
 
 A transfer is separately authorized. Prepare and verify the receiver first,
 then update Agent/Device and append a transfer locator without erasing earlier
