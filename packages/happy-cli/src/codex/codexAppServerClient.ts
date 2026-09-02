@@ -374,6 +374,7 @@ export class CodexAppServerClient {
         const isRawNotification = method === 'thread/started'
             || method === 'thread/goal/updated'
             || method === 'thread/goal/cleared'
+            || method === 'thread/settings/updated'
             || method === 'turn/started'
             || method === 'turn/completed'
             || method === 'thread/status/changed'
@@ -384,7 +385,10 @@ export class CodexAppServerClient {
             return false;
         }
 
-        if (this.notificationProtocol === 'legacy') {
+        // Settings notifications are the only authoritative later-route seam.
+        // They may coexist with legacy codex/event output, so never let the
+        // presentation protocol selector suppress them.
+        if (this.notificationProtocol === 'legacy' && method !== 'thread/settings/updated') {
             return false;
         }
 
@@ -489,6 +493,36 @@ export class CodexAppServerClient {
             if (statusType === 'idle' && this.pendingTurnCompletion && this.isPrimaryThread(threadId)) {
                 this.emitRawTurnCompletion(this._turnId, 'completed', null, method, threadId);
             }
+            return true;
+        }
+
+        if (method === 'thread/settings/updated') {
+            const threadId = this.extractThreadId(params);
+            if (!this._threadId) {
+                return true;
+            }
+            if (!threadId) {
+                this.eventHandler?.({
+                    type: 'thread_settings_updated',
+                    thread_id: this._threadId,
+                    threadId: this._threadId,
+                    model: null,
+                    reasoning_effort: null,
+                    reasoningEffort: null,
+                });
+                return true;
+            }
+            if (threadId !== this._threadId) {
+                return true;
+            }
+            const settings = params?.threadSettings;
+            this.eventHandler?.({
+                type: 'thread_settings_updated',
+                ...(threadId ? { thread_id: threadId, threadId } : {}),
+                model: settings?.model,
+                reasoning_effort: settings?.effort,
+                reasoningEffort: settings?.effort,
+            });
             return true;
         }
 
@@ -899,7 +933,7 @@ export class CodexAppServerClient {
         approvalPolicy?: ApprovalPolicy;
         sandbox?: SandboxMode;
         mcpServers?: Record<string, unknown>;
-    }): Promise<{ threadId: string; model: string }> {
+    }): Promise<{ threadId: string; model: string; reasoningEffort: ReasoningEffort | null }> {
         const params: NewConversationParams = {
             model: opts.model ?? null,
             modelProvider: null,
@@ -922,7 +956,11 @@ export class CodexAppServerClient {
         this.rawSubagentActivitySignaturesByItemId.clear();
         this.rememberThreadDefaults(opts);
         logger.debug('[CodexAppServer] Thread started:', this._threadId);
-        return { threadId: result.thread.id, model: result.model };
+        return {
+            threadId: result.thread.id,
+            model: result.model,
+            reasoningEffort: result.reasoningEffort,
+        };
     }
 
     async resumeThread(opts?: {
@@ -932,7 +970,7 @@ export class CodexAppServerClient {
         approvalPolicy?: ApprovalPolicy;
         sandbox?: SandboxMode;
         mcpServers?: Record<string, unknown>;
-    }): Promise<{ threadId: string; model: string }> {
+    }): Promise<{ threadId: string; model: string; reasoningEffort: ReasoningEffort | null }> {
         const threadId = opts?.threadId ?? this._threadId;
         if (!threadId) {
             throw new Error('No thread available to resume.');
@@ -964,7 +1002,11 @@ export class CodexAppServerClient {
             mcpServers: opts?.mcpServers ?? defaults.mcpServers,
         });
         logger.debug('[CodexAppServer] Thread resumed:', this._threadId);
-        return { threadId: result.thread.id, model: result.model };
+        return {
+            threadId: result.thread.id,
+            model: result.model,
+            reasoningEffort: result.reasoningEffort,
+        };
     }
 
     async forkThread(opts: {
@@ -974,7 +1016,12 @@ export class CodexAppServerClient {
         approvalPolicy?: ApprovalPolicy;
         sandbox?: SandboxMode;
         mcpServers?: Record<string, unknown>;
-    }): Promise<{ threadId: string; model: string; thread: Thread }> {
+    }): Promise<{
+        threadId: string;
+        model: string;
+        reasoningEffort: ReasoningEffort | null;
+        thread: Thread;
+    }> {
         const defaults = this.threadDefaults ?? {};
         const params: ForkConversationParams = {
             threadId: opts.threadId,
@@ -1001,7 +1048,12 @@ export class CodexAppServerClient {
             mcpServers: opts.mcpServers ?? defaults.mcpServers,
         });
         logger.debug('[CodexAppServer] Thread forked:', opts.threadId, '->', this._threadId);
-        return { threadId: result.thread.id, model: result.model, thread: result.thread };
+        return {
+            threadId: result.thread.id,
+            model: result.model,
+            reasoningEffort: result.reasoningEffort ?? null,
+            thread: result.thread,
+        };
     }
 
     async readThread(opts: {
@@ -1129,19 +1181,47 @@ export class CodexAppServerClient {
     async reconnectAndResumeThread(): Promise<boolean> {
         const threadId = this._threadId;
         await this.disconnectInternal({ preserveThreadState: !!threadId });
-        await this.connect();
+
+        const clearConfirmedRoute = () => {
+            this._threadId = null;
+            this.threadDefaults = null;
+            if (threadId) {
+                this.eventHandler?.({
+                    type: 'thread_settings_updated',
+                    thread_id: threadId,
+                    threadId,
+                    model: null,
+                    reasoning_effort: null,
+                    reasoningEffort: null,
+                });
+            }
+        };
+
+        try {
+            await this.connect();
+        } catch (error) {
+            clearConfirmedRoute();
+            throw error;
+        }
 
         if (!threadId) {
             return false;
         }
 
         try {
-            await this.resumeThread({ threadId });
+            const resumedThread = await this.resumeThread({ threadId });
+            this.eventHandler?.({
+                type: 'thread_settings_updated',
+                thread_id: resumedThread.threadId,
+                threadId: resumedThread.threadId,
+                model: resumedThread.model,
+                reasoning_effort: resumedThread.reasoningEffort,
+                reasoningEffort: resumedThread.reasoningEffort,
+            });
             return true;
         } catch (error) {
             logger.warn('[CodexAppServer] Failed to resume thread after reconnect', error);
-            this._threadId = null;
-            this.threadDefaults = null;
+            clearConfirmedRoute();
             return false;
         }
     }

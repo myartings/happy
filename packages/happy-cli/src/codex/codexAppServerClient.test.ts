@@ -138,6 +138,70 @@ describe('CodexAppServerClient sandbox integration', () => {
         expect(new CodexAppServerClient().supportsGoalActions()).toBe(false);
     });
 
+    it('returns the App Server-confirmed model and effort when a thread starts', async () => {
+        const proc = createMockProcess({
+            onRequest: (msg, stdout) => {
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-luna', path: '/tmp/thread-luna' },
+                            model: 'gpt-5.6-luna',
+                            modelProvider: 'openai',
+                            cwd: '/tmp/project',
+                            approvalPolicy: 'never',
+                            sandbox: { type: 'readOnly' },
+                            reasoningEffort: 'max',
+                        },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+
+        await client.connect();
+        await expect(client.startThread({ model: 'requested-model' })).resolves.toEqual({
+            threadId: 'thread-luna',
+            model: 'gpt-5.6-luna',
+            reasoningEffort: 'max',
+        });
+        await client.disconnect();
+    });
+
+    it('returns the App Server-confirmed model and effort when a thread resumes', async () => {
+        const proc = createMockProcess({
+            onRequest: (msg, stdout) => {
+                if (msg.method === 'thread/resume' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-resumed', path: '/tmp/thread-resumed' },
+                            model: 'gpt-5.6-terra',
+                            modelProvider: 'openai',
+                            cwd: '/tmp/project',
+                            approvalPolicy: 'never',
+                            sandbox: { type: 'readOnly' },
+                            reasoningEffort: 'high',
+                        },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+
+        await client.connect();
+        await expect(client.resumeThread({ threadId: 'thread-resumed' })).resolves.toEqual({
+            threadId: 'thread-resumed',
+            model: 'gpt-5.6-terra',
+            reasoningEffort: 'high',
+        });
+        await client.disconnect();
+    });
+
     it('wraps transport when sandbox is enabled', async () => {
         const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin');
         // Dynamic import to ensure mocks are applied
@@ -335,12 +399,12 @@ describe('CodexAppServerClient sandbox integration', () => {
                             id: msg.id,
                             result: {
                                 thread: { id: 'thread-1', path: '/tmp/thread-1' },
-                                model: 'gpt-test',
+                                model: 'gpt-5.6-luna',
                                 modelProvider: 'openai',
                                 cwd: '/tmp/project',
                                 approvalPolicy: 'on-request',
                                 sandbox: { type: 'readOnly' },
-                                reasoningEffort: null,
+                                reasoningEffort: 'max',
                             },
                         });
                     }, 0);
@@ -402,6 +466,14 @@ describe('CodexAppServerClient sandbox integration', () => {
             turn_id: 'turn-1',
             forced_restart: true,
         }));
+        expect(events).toContainEqual({
+            type: 'thread_settings_updated',
+            thread_id: 'thread-1',
+            threadId: 'thread-1',
+            model: 'gpt-5.6-luna',
+            reasoning_effort: 'max',
+            reasoningEffort: 'max',
+        });
 
         const resumeRequest = secondProcessRequests.find((msg) => msg.method === 'thread/resume');
         expect(resumeRequest?.params).toEqual(expect.objectContaining({
@@ -546,7 +618,7 @@ describe('CodexAppServerClient sandbox integration', () => {
                                 cwd: '/tmp/project',
                                 approvalPolicy: 'on-request',
                                 sandbox: { type: 'workspaceWrite' },
-                                reasoningEffort: null,
+                                reasoningEffort: 'max',
                             },
                         });
                     }, 0);
@@ -617,7 +689,11 @@ describe('CodexAppServerClient sandbox integration', () => {
             }],
         });
 
-        expect(forked.threadId).toBe('thread-forked');
+        expect(forked).toMatchObject({
+            threadId: 'thread-forked',
+            model: 'gpt-test',
+            reasoningEffort: 'max',
+        });
         expect(read.thread.turns).toHaveLength(1);
         expect(rolledBack.thread.turns).toHaveLength(1);
         expect(injected).toEqual({});
@@ -1214,6 +1290,12 @@ describe('CodexAppServerClient sandbox integration', () => {
             automatic_recovery: true,
             recovery_resumed: false,
             recovery_error: expect.stringContaining('reconnect initialize failed'),
+        }));
+        expect(events).toContainEqual(expect.objectContaining({
+            type: 'thread_settings_updated',
+            thread_id: 'thread-recovery-fails',
+            model: null,
+            reasoningEffort: null,
         }));
 
         await client.disconnect();
@@ -1819,6 +1901,86 @@ describe('CodexAppServerClient sandbox integration', () => {
             }),
         ]));
 
+        await client.disconnect();
+    });
+
+    it('maps primary thread settings updates into confirmed route events', async () => {
+        const proc = createMockProcess({
+            onRequest: (msg, stdout) => {
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, {
+                            id: msg.id,
+                            result: {
+                                thread: { id: 'thread-settings', path: '/tmp/thread-settings' },
+                                model: 'gpt-5.6-sol',
+                                modelProvider: 'openai',
+                                cwd: '/tmp/project',
+                                approvalPolicy: 'never',
+                                sandbox: { type: 'readOnly' },
+                                reasoningEffort: 'medium',
+                            },
+                        });
+                        setTimeout(() => {
+                            pushJsonLine(stdout, {
+                                method: 'codex/event',
+                                params: {
+                                    msg: { type: 'agent_message', message: 'legacy stream selected' },
+                                },
+                            });
+                            pushJsonLine(stdout, {
+                                method: 'thread/settings/updated',
+                                params: {
+                                    threadId: 'thread-settings',
+                                    threadSettings: { model: 'gpt-5.6-luna', effort: 'max' },
+                                },
+                            });
+                            pushJsonLine(stdout, {
+                                method: 'thread/settings/updated',
+                                params: {
+                                    threadId: 'thread-child',
+                                    threadSettings: { model: 'gpt-5.6-terra', effort: 'high' },
+                                },
+                            });
+                            pushJsonLine(stdout, {
+                                method: 'thread/settings/updated',
+                                params: {
+                                    threadSettings: { model: 'gpt-5.6-sol', effort: 'medium' },
+                                },
+                            });
+                        }, 10);
+                    }, 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        const events: Array<Record<string, unknown>> = [];
+        client.setEventHandler((event) => events.push(event as Record<string, unknown>));
+
+        await client.connect();
+        await client.startThread({ model: 'gpt-5.6-sol' });
+        await waitFor(() => events.some((event) => event.type === 'thread_settings_updated'));
+
+        expect(events.filter((event) => event.type === 'thread_settings_updated')).toEqual([
+            {
+                type: 'thread_settings_updated',
+                thread_id: 'thread-settings',
+                threadId: 'thread-settings',
+                model: 'gpt-5.6-luna',
+                reasoning_effort: 'max',
+                reasoningEffort: 'max',
+            },
+            {
+                type: 'thread_settings_updated',
+                thread_id: 'thread-settings',
+                threadId: 'thread-settings',
+                model: null,
+                reasoning_effort: null,
+                reasoningEffort: null,
+            },
+        ]);
         await client.disconnect();
     });
 

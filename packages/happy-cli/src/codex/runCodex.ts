@@ -21,7 +21,10 @@ import { startHappyServer } from '@/claude/utils/startHappyServer';
 import { MessageBuffer } from "@/ui/ink/messageBuffer";
 import { CodexDisplay } from "@/ui/ink/CodexDisplay";
 import { trimIdent } from "@/utils/trimIdent";
-import { notifyDaemonSessionStarted } from "@/daemon/controlClient";
+import {
+    notifyDaemonCodexEffectiveRoute,
+    notifyDaemonSessionStarted,
+} from "@/daemon/controlClient";
 import { encodeBase64, decodeBase64 } from '@/api/encryption';
 import type { Session as ApiSession, UserMessage } from '@/api/types';
 import { registerKillSessionHandler } from "@/claude/registerKillSessionHandler";
@@ -40,8 +43,12 @@ import { isCodexClearText } from './codexClearCommand';
 import { resolveCodexUncertainDelivery, routeCodexUserText } from './codexUserMessageRouter';
 import { downloadCodexFileEventAttachment } from './utils/attachmentEvents';
 import { prepareCodexImageInputItems } from './utils/imageInput';
-import { withCodexRuntimeModelMetadata } from './codexRuntimeModelMetadata';
-import { createSerialAsyncHandler } from './utils/serialAsyncHandler';
+import {
+    withCodexEffectiveRouteMetadata,
+    withCodexRuntimeModelMetadata,
+    withCodexUnconfirmedRouteRequestMetadata,
+} from './codexRuntimeModelMetadata';
+import { createLatestAsyncHandler, createSerialAsyncHandler } from './utils/serialAsyncHandler';
 import { buildCodexThreadBackfillEnvelopes } from './utils/threadImageBackfill';
 import {
     buildCodexThreadTurnPrompt,
@@ -269,6 +276,36 @@ export async function runCodex(opts: {
         }
     }
 
+    const publishDaemonEffectiveRoute = createLatestAsyncHandler<{
+        effectiveModel: string;
+        effectiveReasoningEffort: string;
+    } | null>(async (route) => {
+        const result = await notifyDaemonCodexEffectiveRoute(response!.id, route);
+        if (result?.error) {
+            logger.debug('[Codex] Failed to update daemon effective-route projection:', result.error);
+        }
+    }, (error) => {
+        logger.debug('[Codex] Failed to update daemon effective-route projection:', error);
+    });
+    const publishEffectiveRouteToDaemon = (evidence: {
+        model?: unknown;
+        reasoningEffort?: unknown;
+    } | null) => {
+        if (!response) return;
+        const projectedMetadata = withCodexEffectiveRouteMetadata(
+            session.getMetadata() ?? metadata,
+            evidence,
+        );
+        const route = projectedMetadata.effectiveModel
+            && projectedMetadata.effectiveReasoningEffort
+            ? {
+                effectiveModel: projectedMetadata.effectiveModel,
+                effectiveReasoningEffort: projectedMetadata.effectiveReasoningEffort,
+            }
+            : null;
+        publishDaemonEffectiveRoute(route);
+    };
+
     const messageQueue = new MessageQueue2<EnhancedMode>(hashCodexEnhancedMode);
 
     session.onFileEvent((fileEvent) => {
@@ -315,10 +352,6 @@ export async function runCodex(opts: {
             logger.debug(`[Codex] User message received with no permission mode override, using current: ${modeResolution.permissionMode}`);
         }
         if (modeResolution.modelResolution.kind === 'updated') {
-            const publishedModelMode = modeResolution.model ?? 'default';
-            if (session.getMetadata()?.modelMode !== publishedModelMode) {
-                session.updateMetadata((metadata) => withCodexRuntimeModelMetadata(metadata, modeResolution.model));
-            }
             logger.debug(`[Codex] Model updated from user message: ${modeResolution.model || 'reset to default'}`);
         } else {
             logger.debug(`[Codex] User message received with no model override, using current: ${modeResolution.model || 'default'}`);
@@ -331,6 +364,18 @@ export async function runCodex(opts: {
             logger.debug(`[Codex] Ignoring invalid effort from user message: ${String(modeResolution.effortResolution.incoming)}`);
         } else {
             logger.debug(`[Codex] User message received with no effort override, using current: ${modeResolution.effort ?? 'default'}`);
+        }
+        if (modeResolution.modelResolution.kind === 'updated'
+            || modeResolution.effortResolution.kind === 'updated') {
+            session.updateMetadata((metadata) => withCodexUnconfirmedRouteRequestMetadata(
+                metadata,
+                {
+                    modelUpdated: modeResolution.modelResolution.kind === 'updated',
+                    model: modeResolution.model,
+                    effortUpdated: modeResolution.effortResolution.kind === 'updated',
+                },
+            ));
+            publishEffectiveRouteToDaemon(null);
         }
         if (modeResolution.serviceTierResolution.kind === 'updated') {
             logger.debug(`[Codex] Service tier updated from user message: ${modeResolution.serviceTier}`);
@@ -770,6 +815,18 @@ export async function runCodex(opts: {
         logger.debug(`[Codex] Event: ${JSON.stringify(msg)}`);
         const isSubagentScopedEvent = hasCodexSubagentReference(msg as Record<string, unknown>);
 
+        if (msg.type === 'thread_settings_updated') {
+            const effectiveRoute = {
+                model: (msg as any).model,
+                reasoningEffort: (msg as any).reasoningEffort ?? (msg as any).reasoning_effort,
+            };
+            session.updateMetadata((currentMetadata) => withCodexEffectiveRouteMetadata(
+                currentMetadata,
+                effectiveRoute,
+            ));
+            publishEffectiveRouteToDaemon(effectiveRoute);
+        }
+
         // Add messages to the ink UI buffer based on message type
         if (msg.type === 'agent_message') {
             messageBuffer.addMessage((msg as any).message, 'assistant');
@@ -931,13 +988,14 @@ export async function runCodex(opts: {
                 mcpServers,
                 // Side chats start empty — keep the resume notice out of the UI.
                 announce: !isSideChat,
+                onConfirmedRoute: publishEffectiveRouteToDaemon,
             });
             first = false;
             appendSystemPromptInjectedThreadId = client.threadId;
         }
 
         const forkCodexThreadId = process.env.HAPPY_FORK_CODEX_THREAD_ID;
-        if (!reconnectSessionId && forkCodexThreadId) {
+        if (!reconnectSessionId && !opts.resumeThreadId && forkCodexThreadId) {
             // Side chats inherit the forked thread's context inside the model
             // (thread/fork copies it), but we deliberately do NOT replay the
             // pre-fork history into the UI: a side chat starts empty from the
@@ -962,10 +1020,19 @@ export async function runCodex(opts: {
                     logger.debug(`[CODEX FORK BACKFILL] Failed to read thread ${forkCodexThreadId}:`, error);
                 }
             }
-            session.updateMetadata((currentMetadata) => ({
-                ...currentMetadata,
-                codexThreadId: forkCodexThreadId,
-            }));
+            await resumeExistingThread({
+                client,
+                session,
+                messageBuffer,
+                threadId: forkCodexThreadId,
+                cwd: process.cwd(),
+                mcpServers,
+                // Side chats start empty — keep the resume notice out of the UI.
+                announce: !isSideChat,
+                onConfirmedRoute: publishEffectiveRouteToDaemon,
+            });
+            first = false;
+            appendSystemPromptInjectedThreadId = client.threadId;
         }
 
         let pending: { message: string; mode: EnhancedMode; isolate: boolean; hash: string; attachments?: PendingAttachment[]; clientUserMessageId?: string; deliveryUncertain?: boolean; messageDisplayed?: boolean } | null = null;
@@ -1047,8 +1114,9 @@ export async function runCodex(opts: {
                 session.updateMetadata((currentMetadata) => {
                     const nextMetadata = { ...currentMetadata };
                     delete nextMetadata.codexThreadId;
-                    return nextMetadata;
+                    return withCodexEffectiveRouteMetadata(nextMetadata, null);
                 });
+                publishEffectiveRouteToDaemon(null);
                 emitReadyIfIdle({
                     pending,
                     queueSize: () => messageQueue.size(),
@@ -1085,10 +1153,11 @@ export async function runCodex(opts: {
                         mcpServers,
                     });
                     activeThreadId = startedThread.threadId;
-                    session.updateMetadata((currentMetadata) => ({
+                    session.updateMetadata((currentMetadata) => withCodexEffectiveRouteMetadata({
                         ...currentMetadata,
                         codexThreadId: startedThread.threadId,
-                    }));
+                    }, startedThread));
+                    publishEffectiveRouteToDaemon(startedThread);
                 }
 
                 const goalCommand = parseCodexGoalCommand(message.message);

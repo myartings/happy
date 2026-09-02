@@ -25,7 +25,11 @@ vi.mock('@/configuration', () => ({
   },
 }))
 
-import { checkIfDaemonRunningAndCleanupStaleState, stopDaemon } from './controlClient'
+import {
+  checkIfDaemonRunningAndCleanupStaleState,
+  notifyDaemonCodexEffectiveRoute,
+  stopDaemon,
+} from './controlClient'
 
 describe('checkIfDaemonRunningAndCleanupStaleState', () => {
   beforeEach(() => {
@@ -53,6 +57,33 @@ describe('checkIfDaemonRunningAndCleanupStaleState', () => {
 
     await expect(checkIfDaemonRunningAndCleanupStaleState()).resolves.toBe(true)
     expect(mocks.mockClearDaemonState).not.toHaveBeenCalled()
+  })
+
+  it('binds effective-route mutation to the observed daemon generation', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ status: 'ok', updated: true }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await notifyDaemonCodexEffectiveRoute('session-route', {
+      effectiveModel: 'gpt-5.6-luna',
+      effectiveReasoningEffort: 'max',
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:4321/session-effective-route',
+      expect.objectContaining({
+        body: JSON.stringify({
+          expectedOwnerToken: 'generation-current',
+          sessionId: 'session-route',
+          route: {
+            effectiveModel: 'gpt-5.6-luna',
+            effectiveReasoningEffort: 'max',
+          },
+        }),
+      }),
+    )
   })
 
   it('preserves ownership when the PID probe is denied', async () => {
