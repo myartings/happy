@@ -45,6 +45,8 @@ export interface SetupOfflineReconnectionResult {
     reconnectionHandle: ReturnType<typeof startOfflineReconnection<ApiSessionClient>> | null;
     /** Whether we're in offline mode */
     isOffline: boolean;
+    /** Resolves once a real Session client and its server response are available. */
+    readySession: Promise<{ session: ApiSessionClient; response: Session }>;
 }
 
 /**
@@ -79,6 +81,15 @@ export function setupOfflineReconnection(opts: SetupOfflineReconnectionOptions):
 
     let session: ApiSessionClient;
     let reconnectionHandle: ReturnType<typeof startOfflineReconnection<ApiSessionClient>> | null = null;
+    let resolveReadySession!: (value: { session: ApiSessionClient; response: Session }) => void;
+    let rejectReadySession!: (error: Error) => void;
+    const readySession = new Promise<{ session: ApiSessionClient; response: Session }>((resolve, reject) => {
+        resolveReadySession = resolve;
+        rejectReadySession = reject;
+    });
+    // Some callers use only the legacy session/handle fields. Mark terminal
+    // rejection as observed without changing what awaiters receive.
+    void readySession.catch(() => {});
 
     // Note: connectionState.notifyOffline() was already called by api.ts with error details
     if (!response) {
@@ -94,17 +105,21 @@ export function setupOfflineReconnection(opts: SetupOfflineReconnectionOptions):
                 const realSession = api.sessionSyncClient(resp);
                 // Notify caller to swap the session reference
                 onSessionSwap(realSession);
+                resolveReadySession({ session: realSession, response: resp });
                 return realSession;
             },
             onNotify: (msg) => {
                 // Log to console - this matches Claude's behavior
                 console.log(msg);
-            }
+            },
+            onTerminalError: rejectReadySession,
+            onCancelled: rejectReadySession,
         });
 
-        return { session, reconnectionHandle, isOffline: true };
+        return { session, reconnectionHandle, isOffline: true, readySession };
     } else {
         session = api.sessionSyncClient(response);
-        return { session, reconnectionHandle: null, isOffline: false };
+        resolveReadySession({ session, response });
+        return { session, reconnectionHandle: null, isOffline: false, readySession };
     }
 }

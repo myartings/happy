@@ -172,6 +172,54 @@ describe('CodexAppServerClient sandbox integration', () => {
         await client.disconnect();
     });
 
+    it('pins launch effort in thread configuration without starting a turn', async () => {
+        const requests: MockRpcMessage[] = [];
+        const proc = createMockProcess({
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-launch-pinned', path: '/tmp/thread-launch-pinned' },
+                            model: 'gpt-5.6-luna',
+                            modelProvider: 'openai',
+                            cwd: '/tmp/project',
+                            approvalPolicy: 'never',
+                            sandbox: { type: 'readOnly' },
+                            reasoningEffort: 'max',
+                        },
+                    }), 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+
+        await client.connect();
+        await client.startThread({
+            model: 'gpt-5.6-luna',
+            effort: 'max',
+            cwd: '/tmp/project',
+            mcpServers: {
+                happy: { command: 'node', args: ['happy-mcp.mjs'] },
+            },
+        });
+
+        expect(requests.find((msg) => msg.method === 'thread/start')?.params).toMatchObject({
+            model: 'gpt-5.6-luna',
+            config: {
+                model_reasoning_effort: 'max',
+                mcp_servers: {
+                    happy: { command: 'node', args: ['happy-mcp.mjs'] },
+                },
+            },
+        });
+        expect(requests.some((msg) => msg.method === 'turn/start')).toBe(false);
+        await client.disconnect();
+    });
+
     it('preserves a launch-pinned route through the first message, thread settings, and daemon projection', async () => {
         const requests: MockRpcMessage[] = [];
         const proc = createMockProcess({

@@ -1,0 +1,531 @@
+{
+  "schemaVersion": 3,
+  "slug": "publish-launch-pinned-codex-effort",
+  "intensity": "feature",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User explicitly confirmed Sol Medium and continuation in the exact fresh Issue #103 session; docs/specs/publish-launch-pinned-codex-effort.md freezes one independently deliverable Slice with AC1-AC8.",
+      "updated": "2026-09-02T12:02:10+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/publish-launch-pinned-codex-effort/decisions.md D1-D5 resolve authority, supported effort configuration, eager fresh-thread timing, fail-closed behavior, and ADR scope.",
+      "updated": "2026-09-02T12:02:10+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: current Root owns the exact confirmed fresh-session Issue #103 worktree; topology=current-root serial; Sol Medium confirmed; TDD seams are App Server thread config and runCodex eager fresh-thread orchestration; protected paths untouched; risk controls passed.",
+      "updated": "2026-09-02T12:03:05+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared-with-controls: docs/workspace/publish-launch-pinned-codex-effort/risk.md; no-turn, one-thread, complete-pair, lifecycle compatibility, failure, rollback, and independent-review controls.",
+      "updated": "2026-09-02T12:02:10+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Fourth-review remediation complete: typed authentication/cancellation terminal events settle readySession exactly once; runCodex owns and cancels the pre-resource reconnection wait on rejection; actual orchestration proves terminal/cancel no-thread/no-turn cleanup and untouched Luna/Max plus explicit Terra/High first-turn reuse. Focused 92/92, full CLI 1031/1031, setup cancellation public-boundary 3/3, and diff check pass.",
+      "updated": "2026-09-02T13:46:17+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "8/9 configured commands passed for candidate 5c0d3a1577b4; command index 5 failed only test_committed_merge_auto_detects_second_parent_as_source, test_committed_merge_preserves_explicit_first_parent_source, and test_pending_merge_can_archive_fresh_reviewed_integration_task with the same stale bound configuration under core.autocrlf=true.",
+      "updated": "2026-09-02T13:51:41+00:00"
+    },
+    "review": {
+      "status": "accepted_gaps",
+      "evidence": "Candidate 5c0d3a1577b4: Spec accepted; Standards accepted with only the previously user-accepted candidate-external workflow fixture gap and a non-blocking absence of real-server E2E.",
+      "updated": "2026-09-02T13:57:23+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+        "candidateFingerprint": "5c0d3a1577b4c3fd5d42af109bfb5ce10881bc8ceea0644884160190097bbb5c"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish evidence complete for unchanged reviewed candidate 5c0d3a1577b4: AC1-AC7 verified and AC8 accepted gap; CLI 1031/1031; check 8/9 with explicit user acceptance; fifth Spec accepted and Standards accepted gaps; rollback, operational notes, follow-up classifications, and tracker recommendation recorded without mutation. The single Root session summary remains the originally reviewed durable record; detailed completion evidence is in finish.md and validation.md.",
+      "updated": "2026-09-02T14:02:45+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-02T11:59:23+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-02T11:59:23+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/103"
+    },
+    {
+      "at": "2026-09-02T12:02:10+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User explicitly confirmed Sol Medium and continuation in the exact fresh Issue #103 session; docs/specs/publish-launch-pinned-codex-effort.md freezes one independently deliverable Slice with AC1-AC8."
+    },
+    {
+      "at": "2026-09-02T12:02:10+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/publish-launch-pinned-codex-effort/decisions.md D1-D5 resolve authority, supported effort configuration, eager fresh-thread timing, fail-closed behavior, and ADR scope."
+    },
+    {
+      "at": "2026-09-02T12:02:10+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared-with-controls: docs/workspace/publish-launch-pinned-codex-effort/risk.md; no-turn, one-thread, complete-pair, lifecycle compatibility, failure, rollback, and independent-review controls."
+    },
+    {
+      "at": "2026-09-02T12:02:10+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Run acceptance right-sizing and scoping against the verified CLI cold-start seam."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T12:03:05+00:00",
+      "phase": "design",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Publish one App Server-confirmed launch-pinned model/effort pair before the first Happy message without starting inference.",
+      "acceptanceSeam": "AC1-AC8: launch options, supported App Server configuration, eager thread/start response, Session metadata, daemon projection, first turn, explicit override, and fail-closed compatibility.",
+      "dependencies": "Consumes existing runCodex launch options, App Server thread configuration, Issue #80 atomic effective-route projection, and Issue #99 omission semantics; no blocking implementation dependency.",
+      "reviewBoundary": "The CLI App Server configuration, eager fresh-thread orchestration, authority publication, and complete cold-path tests are accepted or rejected together.",
+      "rollbackBoundary": "Revert optional thread effort configuration and eager fresh-thread orchestration; no schema, migration, server deployment, or persisted-data rewrite.",
+      "contextBoundary": "One serial Sol Medium current-root session in the exact registered Issue #103 worktree; no writer delegation or downstream ai-coding-template work.",
+      "consequence": "Medium workflow consequence because false success can silently downgrade effort or create inference before intent; complete-pair, no-turn, one-thread, failure, and independent-review controls are mandatory.",
+      "evidence": "Live Issue #103, origin/dev code, specs for Issues #80/#99, and deterministic route current-root with confirmed fresh-session binding; current code waits until first message to thread/start and carries no launch effort in thread config.",
+      "contractFingerprint": "4457cfcd91a60bb23fccf3d2f22f0b6573b2bcf84b09d411329d41d64c8645cc",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T12:03:05+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current Root owns the exact confirmed fresh-session Issue #103 worktree; topology=current-root serial; Sol Medium confirmed; TDD seams are App Server thread config and runCodex eager fresh-thread orchestration; protected paths untouched; risk controls passed."
+    },
+    {
+      "at": "2026-09-02T12:03:16+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD T1: prove launch effort reaches thread configuration and fresh initialization creates one authoritative thread with no turn."
+    },
+    {
+      "at": "2026-09-02T12:20:11+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD complete: launch effort reaches supported thread config; fresh thread starts before message wait without a turn; pending state suppresses false Medium; complete App Server evidence atomically updates Session and awaited daemon projection. Focused CLI 73/73, App 42/42, full CLI 1011/1011, both typechecks, and diff check pass."
+    },
+    {
+      "at": "2026-09-02T12:20:11+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete accepted candidate and run the applicable structured check family."
+    },
+    {
+      "at": "2026-09-02T12:24:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 134189d0-012e-4629-b2c1-d9eb02e66e55"
+    },
+    {
+      "at": "2026-09-02T12:26:41+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Eight of nine configured commands passed. Index 5 fails only three unchanged core.autocrlf=true merge/archive fixtures; workflow inputs match origin/dev, isolated failure reproduces, and LF/autocrlf-disabled control passes.; structured run: 134189d0-012e-4629-b2c1-d9eb02e66e55; accepted command indexes: 5; approval: User explicitly accepted the candidate-external core.autocrlf=true workflow-runtime fixture failures and requested continued review on 2026-09-02."
+    },
+    {
+      "at": "2026-09-02T12:31:28+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "First independent two-axis review blocked on five accepted-contract gaps: pending UI default leak, missing runCodex cold-path evidence, unawaited metadata publication, stale launch confirmation race, and swallowed daemon rejection."
+    },
+    {
+      "at": "2026-09-02T12:31:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Blocked dual review requires candidate remediation and a fresh complete staged check."
+    },
+    {
+      "at": "2026-09-02T12:34:26+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Blocked candidate review is preserved in history; reopen the review gate for remediation and a fresh candidate-bound dual-axis review."
+    },
+    {
+      "at": "2026-09-02T12:34:40+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD-remediate pending-display fallback, launch publication ordering, pre-message route serialization, daemon rejection, and cold-path orchestration evidence."
+    },
+    {
+      "at": "2026-09-02T12:47:02+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "First-review remediation complete through TDD: production launch barrier blocks pre-arriving messages; one cold-start thread is created only when no restored thread exists; Session metadata and daemon projection are awaited and reject fail-closed; first explicit Terra/High override is preserved; SessionView pending null no longer falls through. Focused CLI 64/64, full CLI 1021/1021, full App 1951/1951, CLI/App typechecks, and diff check pass."
+    },
+    {
+      "at": "2026-09-02T12:47:02+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage the remediated candidate, run a fresh candidate-bound structured check, and dispatch fresh Spec and Standards reviews."
+    },
+    {
+      "at": "2026-09-02T12:51:15+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: bb53ef8f-7edd-4a0c-9327-b9af5511f620"
+    },
+    {
+      "at": "2026-09-02T12:51:42+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Fresh remediated candidate c82e6190 passed eight of nine commands: App 1951/1951, Server 112/112, App/Server typechecks, state upgrade, validators, and strict audit passed; index 5 reproduced only the same three unchanged core.autocrlf=true merge/archive fixture failures.; structured run: bb53ef8f-7edd-4a0c-9327-b9af5511f620; accepted command indexes: 5; approval: User explicitly accepted the candidate-external core.autocrlf=true workflow-runtime fixture failures and requested continued review on 2026-09-02; the fresh remediated run reproduced exactly the same three failures and all other commands passed."
+    },
+    {
+      "at": "2026-09-02T12:59:38+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Second independent dual-axis review blocked candidate c82e6190 on actual runCodex cold-path integration evidence and terminal metadata-rejection retry classification."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T13:00:32+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep the accepted Issue #103 slice intact and add only terminal metadata-rejection classification plus actual runCodex cold-path integration coverage.",
+      "acceptanceSeam": "A production-equivalent rejection test proves permanent update-metadata refusal escapes retry and fails launch; an actual runCodex harness proves Luna/Max thread configuration, zero pre-message turns, awaited Session/daemon publication, one-thread first-turn reuse, and explicit override.",
+      "dependencies": "Existing ApiSessionClient metadata lock/backoff, runCodex launch options, App Server client transport, daemon control projection, and message queue; no new protocol or product dependency.",
+      "reviewBoundary": "Two focused TDD seams are reviewed together with the unchanged Issue #103 candidate, followed by a fresh complete staged check and fresh independent Spec/Standards review.",
+      "rollbackBoundary": "Revert the terminal metadata error classification and runCodex test seam with the launch barrier changes; no schema, migration, server deployment, or persisted-data rewrite.",
+      "contextBoundary": "Current human-facing Issue #103 Root remains the single implementation owner; no separable remainder or writer delegation is needed.",
+      "consequence": "Permanent publication refusal must fail promptly rather than hang, and AC8 needs direct orchestration proof; both controls reduce false-success risk without expanding scope.",
+      "evidence": "Two blocked review boundaries now exist. The second Standards review isolated unbounded retry of terminal server refusal; the second Spec review repeated the precise actual-runCodex integration-evidence gap. Both are narrow, causally understood, and testable in the current slice.",
+      "contractFingerprint": "fabc93279228521d5a24b7e12549a56056a345992f6d0e00414ca6ccd46c93f3",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T13:00:33+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD-classify terminal metadata refusal outside retry and add actual runCodex cold-path integration coverage."
+    },
+    {
+      "at": "2026-09-02T13:07:20+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Second-review remediation complete: terminal update-metadata refusal exits unbounded backoff and rejects after one attempt; a test invoking actual runCodex proves Luna/Max launch wiring, zero pre-publication turns, awaited Session then daemon route, one eager thread, and first-message Terra/High override. Focused 55/55, full CLI 1022/1022, App typecheck, and diff check pass."
+    },
+    {
+      "at": "2026-09-02T13:07:20+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage the second-remediated candidate, rerun the complete candidate-bound check, and dispatch a third fresh independent dual-axis review."
+    },
+    {
+      "at": "2026-09-02T13:11:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 557f1dca-49c1-49b6-b336-7f9a10ee35a8"
+    },
+    {
+      "at": "2026-09-02T13:12:02+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Second-remediated candidate e3277565 passed eight of nine commands: App 1951/1951, Server 112/112, App/Server typechecks, state upgrade, validators, and strict audit passed; index 5 reproduced only the same three unchanged core.autocrlf=true merge/archive fixture failures.; structured run: 557f1dca-49c1-49b6-b336-7f9a10ee35a8; accepted command indexes: 5; approval: User explicitly accepted the candidate-external core.autocrlf=true workflow-runtime fixture failures and requested continued review on 2026-09-02; this third complete run reproduced exactly the same three failures and all other commands passed."
+    },
+    {
+      "at": "2026-09-02T13:17:19+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Third dual-axis review of candidate e3277565: Spec accepted; Standards blocked one offline hot-reconnection compatibility gap."
+    },
+    {
+      "at": "2026-09-02T13:17:25+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD-preserve offline hot reconnection while launch publication waits for a real durable Session client."
+    },
+    {
+      "at": "2026-09-02T13:24:34+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Third-review offline remediation preserves hot reconnection, waits for the real Session before Codex launch, passes focused 57/57 and full CLI 1024/1024 with git diff --check."
+    },
+    {
+      "at": "2026-09-02T13:24:34+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage the complete candidate, run the fourth candidate-bound check, and dispatch fresh dual-axis review."
+    },
+    {
+      "at": "2026-09-02T13:30:03+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 0a7cd37f-2a20-43a5-9fca-250cc01dab4e"
+    },
+    {
+      "at": "2026-09-02T13:30:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "8/9 configured commands passed for candidate b987a7a26efe; command index 5 failed only test_committed_merge_auto_detects_second_parent_as_source, test_committed_merge_preserves_explicit_first_parent_source, and test_pending_merge_can_archive_fresh_reviewed_integration_task with the same stale bound configuration under core.autocrlf=true.; structured run: 0a7cd37f-2a20-43a5-9fca-250cc01dab4e; accepted command indexes: 5; approval: User explicitly accepted this pre-existing gap on 2026-09-02 and reconfirmed continuation; fourth run reproduced the identical three core.autocrlf=true fixtures and no others."
+    },
+    {
+      "at": "2026-09-02T13:36:34+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Candidate b987a7a26efe: Spec accepted; Standards blocked on terminal/cancel settlement and cleanup ownership, with required boundary tests."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T13:36:57+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep Issue #103 as one accepted slice and complete the offline readiness terminal-state contract plus its exported orchestration coverage.",
+      "acceptanceSeam": "A typed readiness promise settles exactly once on successful Session creation, terminal authentication refusal, or cancellation; runCodex owns cleanup while waiting; untouched Luna/Max and explicit-override first-turn paths both reuse the eager thread.",
+      "dependencies": "Shared startOfflineReconnection lifecycle callbacks, setupOfflineReconnection Session swap, runCodex resource cleanup, and existing launch barrier; no protocol, schema, or product-scope expansion.",
+      "reviewBoundary": "Terminal/cancel semantics and the three actual runCodex paths are reviewed together with the unchanged Issue #103 candidate after a fresh staged check and dual-axis review.",
+      "rollbackBoundary": "Revert readiness terminal callbacks and move back to lazy launch behavior with the existing Issue #103 changes; no migration, persisted-data rewrite, or server deployment.",
+      "contextBoundary": "Current human-facing Root remains the sole implementation owner; the remediation is one narrow shared-utility/orchestration seam and needs no writer delegation.",
+      "consequence": "Without settlement and cleanup ownership, offline authentication failure can leave a stuck launch; typed terminal rejection and cancellation tests restore the frozen fail-closed guarantee while preserving unlimited transient retries.",
+      "evidence": "Fourth Standards review isolated an unhandled terminal/cancel state after the prior transient reconnect fix; Spec accepted candidate b987a7a2, proving requirements remain stable and remediation is narrow and causally understood.",
+      "contractFingerprint": "d447244e777d4260f8c7efc186482e66e163aadd2d2806189675b16564a1a78a",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T13:36:58+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD-settle offline readiness on success, permanent auth failure, and cancellation; place the wait under cleanup ownership; prove untouched Luna/Max and explicit override."
+    },
+    {
+      "at": "2026-09-02T13:46:17+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Fourth-review remediation complete: typed authentication/cancellation terminal events settle readySession exactly once; runCodex owns and cancels the pre-resource reconnection wait on rejection; actual orchestration proves terminal/cancel no-thread/no-turn cleanup and untouched Luna/Max plus explicit Terra/High first-turn reuse. Focused 92/92, full CLI 1031/1031, setup cancellation public-boundary 3/3, and diff check pass."
+    },
+    {
+      "at": "2026-09-02T13:46:17+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage the terminal/cancel-remediated candidate, run the fifth candidate-bound check, and dispatch fresh dual-axis review."
+    },
+    {
+      "at": "2026-09-02T13:51:21+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: afbfd0e4-4292-4718-a439-83ec7f794979"
+    },
+    {
+      "at": "2026-09-02T13:51:41+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "8/9 configured commands passed for candidate 5c0d3a1577b4; command index 5 failed only test_committed_merge_auto_detects_second_parent_as_source, test_committed_merge_preserves_explicit_first_parent_source, and test_pending_merge_can_archive_fresh_reviewed_integration_task with the same stale bound configuration under core.autocrlf=true.; structured run: afbfd0e4-4292-4718-a439-83ec7f794979; accepted command indexes: 5; approval: User explicitly accepted this pre-existing gap on 2026-09-02 and reconfirmed continuation; fifth run reproduced the identical three core.autocrlf=true fixtures and no others."
+    },
+    {
+      "at": "2026-09-02T13:57:23+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 5c0d3a1577b4: Spec accepted; Standards accepted with only the previously user-accepted candidate-external workflow fixture gap and a non-blocking absence of real-server E2E."
+    },
+    {
+      "at": "2026-09-02T13:57:43+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, tracker recommendation, terminal archive projection, and combined staged CI without external mutation."
+    },
+    {
+      "at": "2026-09-02T13:59:43+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence complete: AC1-AC7 verified and AC8 accepted gap; CLI 1031/1031; check 8/9 with explicit user acceptance; fifth Spec accepted and Standards accepted gaps; rollback, operational notes, follow-up classifications, session summary, and tracker recommendation recorded without mutation."
+    },
+    {
+      "at": "2026-09-02T14:02:45+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence complete for unchanged reviewed candidate 5c0d3a1577b4: AC1-AC7 verified and AC8 accepted gap; CLI 1031/1031; check 8/9 with explicit user acceptance; fifth Spec accepted and Standards accepted gaps; rollback, operational notes, follow-up classifications, and tracker recommendation recorded without mutation. The single Root session summary remains the originally reviewed durable record; detailed completion evidence is in finish.md and validation.md."
+    },
+    {
+      "at": "2026-09-02T14:03:18+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #103 launch-pinned Codex model/effort publication completed; candidate 5c0d3a1577b4 passed fifth independent review with the explicit core.autocrlf fixture gap.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-02T14:03:18+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/103",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-02T12:03:05+00:00",
+      "phase": "design",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Publish one App Server-confirmed launch-pinned model/effort pair before the first Happy message without starting inference.",
+      "acceptanceSeam": "AC1-AC8: launch options, supported App Server configuration, eager thread/start response, Session metadata, daemon projection, first turn, explicit override, and fail-closed compatibility.",
+      "dependencies": "Consumes existing runCodex launch options, App Server thread configuration, Issue #80 atomic effective-route projection, and Issue #99 omission semantics; no blocking implementation dependency.",
+      "reviewBoundary": "The CLI App Server configuration, eager fresh-thread orchestration, authority publication, and complete cold-path tests are accepted or rejected together.",
+      "rollbackBoundary": "Revert optional thread effort configuration and eager fresh-thread orchestration; no schema, migration, server deployment, or persisted-data rewrite.",
+      "contextBoundary": "One serial Sol Medium current-root session in the exact registered Issue #103 worktree; no writer delegation or downstream ai-coding-template work.",
+      "consequence": "Medium workflow consequence because false success can silently downgrade effort or create inference before intent; complete-pair, no-turn, one-thread, failure, and independent-review controls are mandatory.",
+      "evidence": "Live Issue #103, origin/dev code, specs for Issues #80/#99, and deterministic route current-root with confirmed fresh-session binding; current code waits until first message to thread/start and carries no launch effort in thread config.",
+      "contractFingerprint": "4457cfcd91a60bb23fccf3d2f22f0b6573b2bcf84b09d411329d41d64c8645cc",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T13:00:32+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep the accepted Issue #103 slice intact and add only terminal metadata-rejection classification plus actual runCodex cold-path integration coverage.",
+      "acceptanceSeam": "A production-equivalent rejection test proves permanent update-metadata refusal escapes retry and fails launch; an actual runCodex harness proves Luna/Max thread configuration, zero pre-message turns, awaited Session/daemon publication, one-thread first-turn reuse, and explicit override.",
+      "dependencies": "Existing ApiSessionClient metadata lock/backoff, runCodex launch options, App Server client transport, daemon control projection, and message queue; no new protocol or product dependency.",
+      "reviewBoundary": "Two focused TDD seams are reviewed together with the unchanged Issue #103 candidate, followed by a fresh complete staged check and fresh independent Spec/Standards review.",
+      "rollbackBoundary": "Revert the terminal metadata error classification and runCodex test seam with the launch barrier changes; no schema, migration, server deployment, or persisted-data rewrite.",
+      "contextBoundary": "Current human-facing Issue #103 Root remains the single implementation owner; no separable remainder or writer delegation is needed.",
+      "consequence": "Permanent publication refusal must fail promptly rather than hang, and AC8 needs direct orchestration proof; both controls reduce false-success risk without expanding scope.",
+      "evidence": "Two blocked review boundaries now exist. The second Standards review isolated unbounded retry of terminal server refusal; the second Spec review repeated the precise actual-runCodex integration-evidence gap. Both are narrow, causally understood, and testable in the current slice.",
+      "contractFingerprint": "fabc93279228521d5a24b7e12549a56056a345992f6d0e00414ca6ccd46c93f3",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T13:36:57+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Keep Issue #103 as one accepted slice and complete the offline readiness terminal-state contract plus its exported orchestration coverage.",
+      "acceptanceSeam": "A typed readiness promise settles exactly once on successful Session creation, terminal authentication refusal, or cancellation; runCodex owns cleanup while waiting; untouched Luna/Max and explicit-override first-turn paths both reuse the eager thread.",
+      "dependencies": "Shared startOfflineReconnection lifecycle callbacks, setupOfflineReconnection Session swap, runCodex resource cleanup, and existing launch barrier; no protocol, schema, or product-scope expansion.",
+      "reviewBoundary": "Terminal/cancel semantics and the three actual runCodex paths are reviewed together with the unchanged Issue #103 candidate after a fresh staged check and dual-axis review.",
+      "rollbackBoundary": "Revert readiness terminal callbacks and move back to lazy launch behavior with the existing Issue #103 changes; no migration, persisted-data rewrite, or server deployment.",
+      "contextBoundary": "Current human-facing Root remains the sole implementation owner; the remediation is one narrow shared-utility/orchestration seam and needs no writer delegation.",
+      "consequence": "Without settlement and cleanup ownership, offline authentication failure can leave a stuck launch; typed terminal rejection and cancellation tests restore the frozen fail-closed guarantee while preserving unlimited transient retries.",
+      "evidence": "Fourth Standards review isolated an unhandled terminal/cancel state after the prior transient reconnect fix; Spec accepted candidate b987a7a2, proving requirements remain stable and remediation is narrow and causally understood.",
+      "contractFingerprint": "d447244e777d4260f8c7efc186482e66e163aadd2d2806189675b16564a1a78a",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "afbfd0e4-4292-4718-a439-83ec7f794979",
+  "checkRunFingerprint": "cb5f945f51e6a3dc312aff3700124a785b30d75bb3c68435df62c9f54a2af88c",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+    "candidateFingerprint": "5c0d3a1577b4c3fd5d42af109bfb5ce10881bc8ceea0644884160190097bbb5c"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      5
+    ],
+    "approval": "User explicitly accepted this pre-existing gap on 2026-09-02 and reconfirmed continuation; fifth run reproduced the identical three core.autocrlf=true fixtures and no others."
+  },
+  "checkAcceptedFailuresFingerprint": "09526738db6118d59b74929a55603de64c706e817302f12a1385c6f18acec5b5",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+      "candidateFingerprint": "5c0d3a1577b4c3fd5d42af109bfb5ce10881bc8ceea0644884160190097bbb5c"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Fifth-round independent Spec review accepted candidate 5c0d3a1577b4 with no findings; AC1-AC8, offline terminal/cancel behavior, one eager thread, and untouched/explicit first-turn routes are covered."
+      },
+      "standards-review": {
+        "status": "accepted_gaps",
+        "evidence": "Fifth-round independent Standards review found no candidate-blocking issues. Candidate 5c0d3a1577b4 has typed terminal/cancel settlement, owned cleanup, unlimited transient retry, durable launch gating, and strong tests. Only the already user-accepted core.autocrlf=true check gap remains; no real-server E2E was recorded but this is non-blocking."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish evidence, tracker recommendation, terminal archive projection, and combined staged CI without external mutation.",
+    "prearchiveUpdated": "2026-09-02T14:02:45+00:00",
+    "prearchiveActive": {
+      "feature": "publish-launch-pinned-codex-effort",
+      "phase": "finish",
+      "updated": "2026-09-02",
+      "next": "Complete finish evidence, tracker recommendation, terminal archive projection, and combined staged CI without external mutation.",
+      "branch / worktree": "issue/103-publish-launch-pinned-codex-effort-before-the-fi"
+    },
+    "prearchiveArchiveObject": "060c801ca67baea6abe5f4e94e583a859fcff70b",
+    "fingerprint": "3def72435eacae41d2b2fb7fc131d10b7ce320ffa8d8d9d00cec5379228a230f"
+  },
+  "archivedAt": "2026-09-02T14:03:18+00:00",
+  "archiveDate": "2026-09-02",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #103 launch-pinned Codex model/effort publication completed; candidate 5c0d3a1577b4 passed fifth independent review with the explicit core.autocrlf fixture gap.",
+  "archiveFollowUp": "None"
+}
