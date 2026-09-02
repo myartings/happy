@@ -1,5 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SandboxConfig } from '@/persistence';
+import { projectCodexEffectiveRoute } from './codexRuntimeModelMetadata';
+import { CodexRemoteModeState, codexMessageRoute } from './remoteModeState';
 
 const {
     mockExecSync,
@@ -166,6 +168,107 @@ describe('CodexAppServerClient sandbox integration', () => {
             threadId: 'thread-luna',
             model: 'gpt-5.6-luna',
             reasoningEffort: 'max',
+        });
+        await client.disconnect();
+    });
+
+    it('preserves a launch-pinned route through the first message, thread settings, and daemon projection', async () => {
+        const requests: MockRpcMessage[] = [];
+        const proc = createMockProcess({
+            onRequest: (msg, stdout) => {
+                requests.push(msg);
+                if (msg.method === 'thread/start' && msg.id != null) {
+                    setTimeout(() => pushJsonLine(stdout, {
+                        id: msg.id,
+                        result: {
+                            thread: { id: 'thread-launch-route', path: '/tmp/thread-launch-route' },
+                            model: 'gpt-5.6-luna',
+                            modelProvider: 'openai',
+                            cwd: '/tmp/project',
+                            approvalPolicy: 'never',
+                            sandbox: { type: 'readOnly' },
+                            reasoningEffort: 'max',
+                        },
+                    }), 0);
+                }
+                if (msg.method === 'turn/start' && msg.id != null) {
+                    setTimeout(() => {
+                        pushJsonLine(stdout, {
+                            id: msg.id,
+                            result: {
+                                turn: { id: 'turn-launch-route', items: [], status: 'inProgress', error: null },
+                            },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'thread/settings/updated',
+                            params: {
+                                threadId: 'thread-launch-route',
+                                threadSettings: { model: 'gpt-5.6-luna', effort: 'max' },
+                            },
+                        });
+                        pushJsonLine(stdout, {
+                            method: 'turn/completed',
+                            params: {
+                                threadId: 'thread-launch-route',
+                                turn: { id: 'turn-launch-route', items: [], status: 'completed', error: null },
+                            },
+                        });
+                    }, 0);
+                }
+            },
+        });
+        mockSpawn.mockImplementation(() => proc);
+        const { CodexAppServerClient } = await import('./codexAppServerClient');
+        const client = new CodexAppServerClient();
+        const launchState = new CodexRemoteModeState({
+            permissionMode: 'auto',
+            model: 'gpt-5.6-luna',
+            effort: 'max',
+        });
+        const firstMessage = launchState.resolve({ permissionMode: 'auto' });
+        const route = codexMessageRoute(firstMessage);
+        let settingsProjection: ReturnType<typeof projectCodexEffectiveRoute> = null;
+        client.setEventHandler((event) => {
+            if (event.type === 'thread_settings_updated') {
+                settingsProjection = projectCodexEffectiveRoute({} as any, {
+                    model: event.model,
+                    reasoningEffort: event.reasoningEffort,
+                });
+            }
+        });
+
+        await client.connect();
+        const started = await client.startThread({
+            model: route.model,
+            cwd: '/tmp/project',
+            approvalPolicy: 'never',
+            sandbox: 'read-only',
+        });
+        const startProjection = projectCodexEffectiveRoute({} as any, started);
+        await client.sendTurnAndWait('first Happy message', {
+            model: route.model,
+            effort: route.effort,
+            serviceTier: route.serviceTier,
+        });
+
+        expect(firstMessage).toMatchObject({
+            modelResolution: { kind: 'retained', value: 'gpt-5.6-luna' },
+            effortResolution: { kind: 'retained', value: 'max' },
+        });
+        expect(requests.find((msg) => msg.method === 'thread/start')?.params).toMatchObject({
+            model: 'gpt-5.6-luna',
+        });
+        expect(requests.find((msg) => msg.method === 'turn/start')?.params).toMatchObject({
+            model: 'gpt-5.6-luna',
+            effort: 'max',
+        });
+        expect(startProjection).toEqual({
+            effectiveModel: 'gpt-5.6-luna',
+            effectiveReasoningEffort: 'max',
+        });
+        expect(settingsProjection).toEqual({
+            effectiveModel: 'gpt-5.6-luna',
+            effectiveReasoningEffort: 'max',
         });
         await client.disconnect();
     });

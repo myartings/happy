@@ -58,6 +58,27 @@ describe('CodexRemoteModeState', () => {
         expect(state.currentPermissionModeExplicitlySet).toBe(true);
     });
 
+    it('preserves each launch route field until that field is explicitly changed', () => {
+        const state = new CodexRemoteModeState({
+            permissionMode: 'auto',
+            model: 'gpt-5.6-luna',
+            effort: 'max',
+        });
+
+        expect(state.resolve({ model: 'gpt-5.6-terra' })).toMatchObject({
+            model: 'gpt-5.6-terra',
+            effort: 'max',
+            modelResolution: { kind: 'updated' },
+            effortResolution: { kind: 'retained' },
+        });
+        expect(state.resolve({ effort: 'high' })).toMatchObject({
+            model: 'gpt-5.6-terra',
+            effort: 'high',
+            modelResolution: { kind: 'retained' },
+            effortResolution: { kind: 'updated' },
+        });
+    });
+
     it('keeps model and effort sticky during the abort safety reset', () => {
         const state = new CodexRemoteModeState({
             permissionMode: 'safe-yolo',
