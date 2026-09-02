@@ -5,7 +5,9 @@
 Accepted on 2026-08-06; amended by ADR 0006 on 2026-08-19 so no-task delivery
 needs no lifecycle receipt, amended on 2026-08-24 by Issue #50 for the historical
 two-commit protocol, and prospectively amended on 2026-08-29 by Issue #88 for
-one atomic archived delivery commit.
+one atomic archived delivery commit. Issue #116 prospectively extends that
+atomic boundary to one accepted integration Workspace delivered by its normal
+two-parent merge commit.
 
 ## Context
 
@@ -47,6 +49,14 @@ canonical terminal projection. Combined staged CI revalidates the engineering
 candidate and terminal state/row/ACTIVE synchronization. A supplied invalid
 non-zero base fails closed rather than silently narrowing the inspected range.
 
+In a pending normal two-parent integration, exactly one new accepted Workspace
+may supply the current check/review/finish evidence. Its identity is structural:
+the sole Workspace absent from both parents and named by canonical ACTIVE before
+archive or by the sole row beyond the exact parent-row union afterward. Every
+inherited lifecycle Git entry remains unchanged. The merge commit itself first
+introduces the row, and committed-range validation requires the exact target
+merge parent rather than an arbitrary common ancestor.
+
 ## Consequences
 
 - New submissions cannot reuse a stale archive or omit completion evidence.
@@ -70,6 +80,9 @@ non-zero base fails closed rather than silently narrowing the inspected range.
   tag events also report a zero `before` and cannot be safely distinguished from
   a first branch push by the checker input alone.
 - Generated projects inherit the checker, tests, CI, and finish ordering.
+- A normal two-parent integration needs no lifecycle-only child commit when its
+  one new integration Workspace and terminal row satisfy the same candidate,
+  review, finish, retry, and outgoing-range proof.
 - The downstream sync allowlist distributes the complete enforcement surface
   while preserving project-local configuration and workflow state.
 - A terminal archived candidate must contain exactly the canonical empty

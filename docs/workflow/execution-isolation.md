@@ -54,6 +54,14 @@ Low-risk changes and ordinary single-slice Feature work may stay in the main
 session when direct editing is lower overhead than creating a child worktree.
 The agent records the routing reason instead of asking the user to choose.
 
+The primary Git checkout normally stays on the repository default branch so it
+remains a predictable foreground and integration point. When a new independent
+Agent task benefits from isolation, prefer the client's native worktree flow.
+This preference does not prohibit a deliberate branch switch and does not
+create an Issue, Trellis Workspace, branch, worktree, session, handoff, script,
+gate, receipt, or other lifecycle evidence. Single-foreground, single-session,
+normal-risk work may remain in the current checkout.
+
 ## Human-facing Session Boundary
 
 A fresh human-facing session is an operator workspace in Codex, Claude Code,
@@ -172,13 +180,13 @@ sustained implementation in the target. Per-command shell or tool `workdir`
 overrides do not rebind the session and are not a substitute for either
 boundary.
 
-This rule does not require a new session for a branch created in the current
-checkout or after a successful native handoff. Bounded writer-child worktrees,
-read-only inspection, and temporary merge, integration, or deterministic
-verification are exempt only while their results return to the current owner
-and they do not transfer sustained Root implementation. If the runtime cannot
-prove a native rebind, treat the target worktree as a separate session boundary
-and fail closed before edits.
+The primary-checkout preference does not require a new session for a deliberate
+branch created in the current checkout or after a successful native handoff.
+Bounded writer-child worktrees, read-only inspection, and temporary merge,
+integration, or deterministic verification are exempt only while their results
+return to the current owner and they do not transfer sustained Root
+implementation. If the runtime cannot prove a native rebind, treat the target
+worktree as a separate session boundary and fail closed before edits.
 
 For an accepted named-Issue route, a session-root path, branch, process working
 directory, or caller assertion alone cannot prove ownership. `current-root`

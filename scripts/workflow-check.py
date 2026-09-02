@@ -24,6 +24,19 @@ MINIMUM_PYTHON = (3, 11)
 DEFAULT_GROUPS = ("format", "lint", "typecheck", "test", "build", "check")
 CHECKS_START = "<!-- WORKFLOW_CHECKS_START -->"
 CHECKS_END = "<!-- WORKFLOW_CHECKS_END -->"
+COMMIT_ID = re.compile(r"[0-9a-fA-F]{40,64}")
+SAFE_PROFILE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,127}")
+SHADOW_REASONS = {
+    "none", "empty-range", "zero-revision", "invalid-revision",
+    "uncovered-scope", "conflicting-scope", "malformed-configuration",
+    "ambiguous-scope", "ambiguous-range",
+}
+
+
+class ShadowRangeError(RuntimeError):
+    def __init__(self, reason: str):
+        super().__init__(reason)
+        self.reason = reason
 
 
 def load_candidate_module():
@@ -164,7 +177,9 @@ def candidate_worktree_divergence(
     )
 
 
-def select_applicable_profiles(config: dict, paths: list[str]) -> tuple[str, ...]:
+def classify_applicable_profiles(
+    config: dict, paths: list[str],
+) -> tuple[tuple[str, ...], str]:
     selection = config.get("checkSelection")
     profiles = config.get("checkProfiles")
     if not isinstance(selection, dict) or not isinstance(profiles, dict):
@@ -206,13 +221,13 @@ def select_applicable_profiles(config: dict, paths: list[str]) -> tuple[str, ...
             raise SystemExit(f"checkSelection rule {name} has invalid trigger patterns")
         validated.append(rule)
     if not paths:
-        return (fallback,)
+        return (fallback,), "empty-range"
     primary_paths = [
         path for path in paths
         if not path.startswith("docs/tasks/")
     ]
     if not primary_paths:
-        return (fallback,)
+        return (fallback,), "ambiguous-scope"
     paths = primary_paths
     active: list[dict] = []
     for rule in validated:
@@ -235,13 +250,13 @@ def select_applicable_profiles(config: dict, paths: list[str]) -> tuple[str, ...
                 for pattern in rule["trigger"]
             )
             if triggered and not covered_triggered:
-                return (fallback,)
+                return (fallback,), "conflicting-scope"
         else:
             covered_triggered = bool(covered)
         if covered and covered_triggered:
             active.append(rule)
     if not active:
-        return (fallback,)
+        return (fallback,), "uncovered-scope"
     for path in paths:
         matching = [
             rule for rule in active
@@ -251,7 +266,7 @@ def select_applicable_profiles(config: dict, paths: list[str]) -> tuple[str, ...
             )
         ]
         if not matching:
-            return (fallback,)
+            return (fallback,), "uncovered-scope"
         # Trigger matches are primary ownership. Triggerless rules own every
         # path they cover; a path may be a shared companion only when none of
         # its matching rules claims primary ownership.
@@ -263,18 +278,150 @@ def select_applicable_profiles(config: dict, paths: list[str]) -> tuple[str, ...
         }
         matching_profiles = {rule["profile"] for rule in matching}
         if len(owners) > 1 or (owners and matching_profiles != owners):
-            return (fallback,)
+            return (fallback,), "conflicting-scope"
     selected = tuple(dict.fromkeys(rule["profile"] for rule in active))
-    return selected or (fallback,)
+    return (selected, "none") if selected else ((fallback,), "ambiguous-scope")
+
+
+def select_applicable_profiles(config: dict, paths: list[str]) -> tuple[str, ...]:
+    return classify_applicable_profiles(config, paths)[0]
 
 
 def applicable_profile_identity(profiles: tuple[str, ...]) -> str:
     return "+".join(profiles)
 
 
+def validate_shadow_configuration(config: dict) -> None:
+    commands = config.get("commands")
+    profiles = config.get("checkProfiles")
+    selection = config.get("checkSelection")
+    if not isinstance(commands, dict) or not isinstance(profiles, dict):
+        raise SystemExit("commands and checkProfiles must be objects")
+    if not isinstance(selection, dict):
+        raise SystemExit("checkSelection must be an object")
+    for group, configured in commands.items():
+        if (
+            not isinstance(group, str) or not group.strip()
+            or not isinstance(configured, list)
+            or any(
+                not isinstance(command, str) or not command.strip()
+                for command in configured
+            )
+        ):
+            raise SystemExit("configured command groups must contain command lists")
+    for profile, groups in profiles.items():
+        if (
+            not isinstance(profile, str) or not profile.strip()
+            or not isinstance(groups, list) or not groups
+            or any(
+                not isinstance(group, str) or not group.strip()
+                or group not in commands
+                for group in groups
+            )
+        ):
+            raise SystemExit("check profiles must contain known non-empty group lists")
+    rules = selection.get("rules")
+    if not isinstance(rules, list) or not rules:
+        raise SystemExit("checkSelection.rules must be a non-empty list")
+    # Reuse the selector's rule validation so reporting cannot accept a second,
+    # weaker configuration shape. The probe is never rendered or executed.
+    classify_applicable_profiles(config, ["__shadow_configuration_probe__"])
+
+
+def committed_range_paths(base: str, head: str) -> list[str]:
+    for revision in (base, head):
+        if revision and set(revision) == {"0"}:
+            raise ShadowRangeError("zero-revision")
+        if not COMMIT_ID.fullmatch(revision):
+            raise ShadowRangeError("invalid-revision")
+        resolved = subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", f"{revision}^{{commit}}"],
+            cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+        )
+        if resolved.returncode:
+            raise ShadowRangeError("invalid-revision")
+    completed = subprocess.run(
+        [
+            "git", "diff", "--no-renames", "--name-only", "-z",
+            f"{base}...{head}",
+        ],
+        cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+    )
+    if completed.returncode:
+        raise ShadowRangeError("ambiguous-range")
+    return sorted(
+        value.decode("utf-8", errors="surrogateescape")
+        for value in completed.stdout.split(b"\0")
+        if value
+    )
+
+
+def shadow_summary(
+    profile: str, command_count: int | None, reason: str = "none",
+) -> str:
+    if not SAFE_PROFILE.fullmatch(profile) or reason not in SHADOW_REASONS:
+        raise ValueError("unsafe shadow summary value")
+    count = str(command_count) if command_count is not None else "unavailable"
+    rendered = (
+        "## Hosted check selection (shadow)\n\n"
+        "| Field | Value |\n"
+        "| --- | --- |\n"
+        f"| Selection | `{profile}` |\n"
+        f"| Command count | `{count}` |\n"
+        f"| Fallback reason | `{reason}` |\n\n"
+        "Observation only: all configured hosted checks continue to run.\n"
+    )
+    if len(rendered.encode("utf-8")) > 512:
+        raise ValueError("shadow summary exceeds byte bound")
+    return rendered
+
+
+def report_committed_range(
+    base: str, head: str, summary_file: Path,
+) -> None:
+    try:
+        config = json.loads(CONFIG.read_text(encoding="utf-8"))
+        if not isinstance(config, dict):
+            raise SystemExit("project configuration must be an object")
+        validate_shadow_configuration(config)
+        selection = config.get("checkSelection")
+        fallback = selection.get("fallbackProfile") if isinstance(selection, dict) else None
+        if not isinstance(fallback, str):
+            raise SystemExit("invalid fallback profile")
+        fallback_commands = selected_union_commands(config, (fallback,))
+        try:
+            paths = committed_range_paths(base, head)
+        except ShadowRangeError as exc:
+            profile = fallback
+            command_count: int | None = len(fallback_commands)
+            reason = exc.reason
+        else:
+            profiles, reason = classify_applicable_profiles(config, paths)
+            profile = applicable_profile_identity(profiles)
+            command_count = len(selected_union_commands(config, profiles))
+        if not SAFE_PROFILE.fullmatch(profile):
+            raise SystemExit("unsafe profile identity")
+    except (OSError, json.JSONDecodeError, SystemExit, TypeError, ValueError):
+        profile = "full"
+        command_count = None
+        reason = "malformed-configuration"
+    summary_file.write_text(
+        shadow_summary(profile, command_count, reason), encoding="utf-8"
+    )
+    count = str(command_count) if command_count is not None else "unavailable"
+    print(f"shadow check selection: {profile} ({count} commands)")
+
+
 def digest_json(value: object) -> str:
     return hashlib.sha256(
         json.dumps(value, ensure_ascii=False, sort_keys=True).encode()
+    ).hexdigest()
+
+
+def config_fingerprint() -> str:
+    """Bind JSON bytes independently of platform checkout line endings."""
+    return hashlib.sha256(
+        CONFIG.read_bytes().replace(b"\r\n", b"\n")
     ).hexdigest()
 
 
@@ -701,7 +848,7 @@ def formal_run_errors(
             errors.append("bound structured check run commands do not match its profile")
         if (
             run[0].get("configFingerprint")
-            != hashlib.sha256(CONFIG.read_bytes()).hexdigest()
+            != config_fingerprint()
         ):
             errors.append("bound structured check run configuration is stale")
     if current_scope:
@@ -793,6 +940,34 @@ def formal_run_fingerprint(slug: str, run_id: str) -> str:
     return digest.hexdigest()
 
 
+def formal_run_binding_errors(
+    slug: str,
+    run_id: str,
+    fingerprint: str,
+    *,
+    current_scope: bool = True,
+    current_config: bool = True,
+    accepted_failure_indexes: tuple[int, ...] = (),
+) -> list[str]:
+    errors = formal_run_errors(
+        slug, run_id,
+        current_scope=current_scope,
+        current_config=current_config,
+        accepted_failure_indexes=accepted_failure_indexes,
+    )
+    try:
+        if formal_run_fingerprint(slug, run_id) != fingerprint:
+            errors.append("bound structured check run content changed")
+        records = evidence_records(
+            ROOT / "docs" / "workspace" / slug / "evidence" / "checks.jsonl"
+        )
+        if not records or records[-1].get("runId") != run_id:
+            errors.append("bound structured check run is not the final evidence run")
+    except (OSError, SystemExit) as exc:
+        errors.append(f"cannot validate bound structured check run: {exc}")
+    return errors
+
+
 def main() -> int:
     require_supported_python()
     parser = argparse.ArgumentParser()
@@ -804,8 +979,23 @@ def main() -> int:
     parser.add_argument("--reuse", action="store_true")
     parser.add_argument("--staged", action="store_true")
     parser.add_argument("--base", default="")
+    parser.add_argument("--report-range", nargs=2, metavar=("BASE", "HEAD"))
+    parser.add_argument("--summary-file")
     args = parser.parse_args()
 
+    if bool(args.report_range) != bool(args.summary_file):
+        parser.error("--report-range and --summary-file must be provided together")
+    if args.report_range:
+        incompatible = (
+            args.only or args.profile or args.applicable or args.record or args.list
+            or args.reuse or args.staged or args.base
+        )
+        if incompatible:
+            parser.error("--report-range cannot be combined with check execution options")
+        report_committed_range(
+            args.report_range[0], args.report_range[1], Path(args.summary_file),
+        )
+        return 0
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
     commands = config.get("commands", {})
     if sum(bool(value) for value in (args.only, args.profile, args.applicable)) > 1:
@@ -880,10 +1070,25 @@ def main() -> int:
                 f"found {state.get('phase')}"
             )
         if args.staged:
-            if state.get("gates", {}).get("review", {}).get("status") != "pending":
+            review_status = state.get("gates", {}).get("review", {}).get("status")
+            if review_status not in ("pending", "passed", "accepted_gaps"):
                 raise SystemExit(
-                    "final staged candidate check must precede final review"
+                    "final staged candidate check must precede an incomplete review"
                 )
+            if review_status in ("passed", "accepted_gaps"):
+                final_review = state.get("finalReview")
+                current_candidate = {
+                    "identityKind": "staged-candidate-v1",
+                    "baseCommit": candidate["baseCommit"],
+                    "candidateFingerprint": candidate["candidateFingerprint"],
+                }
+                if (
+                    not isinstance(final_review, dict)
+                    or final_review.get("candidate") != current_candidate
+                ):
+                    raise SystemExit(
+                        "post-review staged check requires the exact reviewed candidate"
+                    )
             try:
                 divergent = candidate_worktree_divergence(
                     paths, list(candidate["entries"]),
@@ -911,7 +1116,7 @@ def main() -> int:
         }
         if candidate is not None else {}
     )
-    config_identity = hashlib.sha256(CONFIG.read_bytes()).hexdigest()
+    config_identity = config_fingerprint()
     command_identity = digest_json(selected)
     if args.reuse and slug:
         evidence = ROOT / "docs" / "workspace" / slug / "evidence" / "checks.jsonl"
