@@ -10,6 +10,7 @@
   CLI/App tests, devtools smoke tests, independent review, and authorized real
   macOS forced refresh.
 - Task checklist: `docs/tasks/dev-desktop-cli-rpc-compatibility-tasks.md`.
-- Pull request: none; not authorized.
+- Pull request: https://github.com/myartings/happy/pull/101 (merged to `dev` as
+  `87c6aa7ef4fb0d1c7415368cfccb764669ae31b2`).
 - Branch/worktree: `issue/98-keep-happy-dev-desktop-and-local-cli-daemon-rpc`
   at `/Users/myartings/workspace/.worktrees/happy-issue-98`.

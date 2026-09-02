@@ -39,7 +39,7 @@ fixtures. No writer delegation or batch topology is selected.
 - [x] App Saved Projects/New Session focused tests pass.
 - [x] `python3 scripts/workflow-check.py --applicable` completed for the reviewed source candidate with only explicitly accepted exact gaps.
 - [x] Independent Spec and Standards review accepted the reviewed source candidate.
-- [ ] The authorized real macOS forced refresh and runtime observation pass.
+- [x] The authorized real macOS forced refresh and runtime observation pass.
 
 ## Progress
 
@@ -86,26 +86,27 @@ fixtures. No writer delegation or batch topology is selected.
 
 ## Finish
 
-Status: `pending`
+Status: `complete`
 
 ### Outcome
 
-- Source implementation, candidate-bound check, and independent review are
-  complete. Authorized delivery and DC-09 runtime evidence remain.
+- PR #101 merged the reviewed source to `dev@87c6aa7e`; the authorized real
+  refresh then installed and launched the verified CLI/daemon/Desktop set.
 
 ### Evidence
 
 | Command or review | Result | Notes |
 | --- | --- | --- |
 | Focused checks | passed | Devtools smokes, CLI build/20 tests, App focused 16 tests, and diff check passed. |
-| Applicable check | accepted gaps | Candidate `fda888a69164`, run `9f0f8494-e96f-4778-ab5f-a5f1bd7ebd9c`; only the two user-accepted exact gaps remain. |
+| Applicable check | accepted gaps | Candidate `68ea8f22fca5`, run `e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9`; only the accepted CRLF/LF workflow fixture gap remained, while App 245/1946 and Server 112 passed. |
 | Independent review | passed | Fresh capable Spec and Standards axes accepted with no findings. |
-| Real forced refresh | pending | User authorized delivery and consequential runtime mutation; execute after merge to `dev`. |
+| Real forced refresh | passed | Report `20260902-165849-refresh-desktop.md`: daemon 49414 -> 61895, HTTP `/list` 200, RPC registration in reachable `types-FRle7Gof.mjs`, signed app installed/launched, New Session UI observed. |
 
 ### Remaining limits
 
-- Terminal candidate check/review must be rebound after this required session
-  and task-state documentation is added.
+- Accepted exact gaps remain external to Issue #98: three CRLF/LF workflow
+  merge/archive fingerprint fixtures; the earlier App blob timeout passed in
+  the final run but remains a nonblocking harness follow-up candidate.
 
 ### Reusable learning
 

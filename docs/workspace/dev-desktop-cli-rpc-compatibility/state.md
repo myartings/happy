@@ -1,6 +1,6 @@
 # Workflow State: `dev-desktop-cli-rpc-compatibility`
 
-**Phase**: finish
+**Phase**: archived
 **Intensity**: feature
 **Layout**: standard
 **Right-sizing**: continuation / continue
@@ -10,7 +10,7 @@
 
 ## Next action
 
-- [ ] Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence
+- [ ] Recommend closing Issue #98 after separate tracker-mutation authorization; repair CRLF LF workflow fixtures in a separate slice
 
 ## Gate summary
 
@@ -20,10 +20,10 @@
 | decisions | passed | docs/workspace/dev-desktop-cli-rpc-compatibility/decisions.md D1-D6 resolve workspace source, installed-bundle probe, fail-closed order, installer reuse, platform boundary, and reporting |
 | scoping | passed | ready; owner=current Root; topology=current-root/fresh-session serial; no independent ready units; Feature with required risk controls; TDD devtools shell seam then focused CLI/App and applicable checks |
 | risk | passed | docs/workspace/dev-desktop-cli-rpc-compatibility/risk.md; cleared-with-controls for local CLI link, daemon restart, Desktop replacement, staged reporting, backup, and stop conditions |
-| implementation | passed | Converged review remediation TDD complete: happyctl requires replacement-state PID/control-port /list HTTP 200 with valid children payload; live PID plus HTTP 503 fails, health status 33 propagates; AST graph realpath rejects symlink escape; focused/CLI build/adjacent smokes pass. |
-| check | accepted_gaps | Candidate 68ea8f22fca5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; affirmative HTTP health adds no new failure. |
-| review | passed | Fresh capable Spec and Standards reviews both accepted candidate 68ea8f22fca5 with no actionable findings. |
-| finish | pending |  |
+| implementation | passed | Terminal-only documentation update records merged PR #101 and authorized real refresh evidence; no engineering source changed after candidate 68ea8f22fca5. |
+| check | accepted_gaps | Candidate 67ab188b4349: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduced the same three accepted merge/archive configuration-fingerprint fixtures; no new failure. |
+| review | accepted_gaps | Fresh capable Spec and Standards terminal reviews both accepted candidate 67ab188b4349 with no actionable findings and only the exact pre-accepted workflow fixture gap. |
+| finish | passed | PR #101 merged to dev@87c6aa7e; authorized refresh-desktop --force succeeded; replacement daemon PID 61895 returned HTTP 200 with children array; installed AST graph reached types-FRle7Gof.mjs; signed Happy (dev).app launched and New Session UI was usable; docs/workspace/dev-desktop-cli-rpc-compatibility/finish.md |
 
 ## Phase history
 
@@ -113,3 +113,20 @@
 | 2026-09-02 | gate | check | Candidate 68ea8f22fca5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; affirmative HTTP health adds no new failure.; structured run: e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02. |
 | 2026-09-02 | gate | review | Fresh capable Spec and Standards reviews both accepted candidate 68ea8f22fca5 with no actionable findings. |
 | 2026-09-02 | transition | finish | Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence |
+| 2026-09-02 | gate | finish | PR #101 merged to dev@87c6aa7e; authorized refresh-desktop --force succeeded; replacement daemon PID 61895 returned HTTP 200 with children array; installed AST graph reached types-FRle7Gof.mjs; signed Happy (dev).app launched and New Session UI was usable; docs/workspace/dev-desktop-cli-rpc-compatibility/finish.md |
+| 2026-09-02 | transition | implementation | Bind post-merge runtime and delivery evidence into the terminal candidate |
+| 2026-09-02 | gate | implementation | Terminal-only documentation update records merged PR #101 and authorized real refresh evidence; no engineering source changed after candidate 68ea8f22fca5. |
+| 2026-09-02 | transition | verification | Run applicable checks and independent dual-axis review on the complete terminal candidate |
+| 2026-09-02 | gate | check | 9 configured commands; 1 failures; structured run: 25f668f2-e1cb-4fe4-8a3b-ab3998a3e4ae |
+| 2026-09-02 | gate | check | Candidate 67ab188b4349: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduced the same three accepted merge/archive configuration-fingerprint fixtures; no new failure.; structured run: 25f668f2-e1cb-4fe4-8a3b-ab3998a3e4ae; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02; terminal candidate reproduces only the same three named fixtures. |
+| 2026-09-02 | gate | review | Fresh capable Spec and Standards terminal reviews both accepted candidate 67ab188b4349 with no actionable findings and only the exact pre-accepted workflow fixture gap. |
+| 2026-09-02 | transition | finish | Record final terminal evidence and generate canonical archive projection |
+| 2026-09-02 | gate | finish | PR #101 merged to dev@87c6aa7e; authorized refresh-desktop --force succeeded; replacement daemon PID 61895 returned HTTP 200 with children array; installed AST graph reached types-FRle7Gof.mjs; signed Happy (dev).app launched and New Session UI was usable; docs/workspace/dev-desktop-cli-rpc-compatibility/finish.md |
+| 2026-09-02 | archived | archived | Issue #98 paired Desktop CLI daemon runtime delivered through PR #101 and verified by authorized real refresh; result identity: archive-introducing-commit; follow-up: Recommend closing Issue #98 after separate tracker-mutation authorization; repair CRLF LF workflow fixtures in a separate slice |
+
+## Archive
+
+- Archived at: `2026-09-02T09:15:58+00:00`
+- Result identity: `archive-introducing-commit`
+- Summary: Issue #98 paired Desktop CLI daemon runtime delivered through PR #101 and verified by authorized real refresh
+- Follow-up: Recommend closing Issue #98 after separate tracker-mutation authorization; repair CRLF LF workflow fixtures in a separate slice
