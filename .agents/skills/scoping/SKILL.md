@@ -84,7 +84,7 @@ Persist the result only for an active Trellis task:
 2. Record required decision and risk receipts through their owning skills.
 3. When batching, run `python3 scripts/workflow-state.py parallel-assessment
    <slug> batch-plan --ready-units <count> --reason <reason>`.
-4. Apply the simple starting recommendation after topology is fixed: Luna High
+4. Apply the simple starting recommendation after topology is fixed: Luna Max
    suits bounded deterministic work, while Root judgment, architecture,
    diagnosis, independent review, and High-risk boundaries use Sol Medium or a
    higher explicitly justified effort. If a Luna current Root crosses a Sol

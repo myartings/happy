@@ -46,7 +46,7 @@ without a native handoff or fresh human-facing session.
    judgment; it still obeys the complete isolated writer contract. Dispatch the
    direct `worker` agent type for ordinary accepted writing and the direct
    `mechanical` agent type only for that strict transform. Their static defaults
-   are Luna XHigh and Luna High respectively. High-risk writing uses the direct
+   are both Luna Max. High-risk writing uses the direct
    Sol `high_risk_worker` agent type. Topology and risk authority select the
    role before dispatch; model guidance never creates the writer or worktree.
    A writer child may not delegate.

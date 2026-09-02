@@ -9,9 +9,9 @@ specialist agents. Writer agents require isolated worktrees and bounded scope.
 
 The starting recommendation is deliberately small:
 
-- Use `gpt-5.6-luna` at High effort for bounded exploration, research,
+- Use `gpt-5.6-luna` at Max effort for bounded exploration, research,
   mechanical work, and other contract-pinned work with deterministic checks.
-  The isolated `worker` default uses Luna at XHigh.
+  Every static Luna Agent default uses the same Max effort.
 - Use `gpt-5.6-sol` at Medium effort for Root judgment, integration,
   architecture, unknown-root-cause diagnosis, High-risk boundaries, and both
   independent review axes. Raise Sol effort only when uncertainty or
@@ -20,6 +20,14 @@ The starting recommendation is deliberately small:
 The model defaults live directly in `.codex/config.toml` and
 `.codex/agents/*.toml`. They are starting defaults, not a selectable repository
 policy and not a reason to create a child context.
+
+For a human-selected manual Issue, `workflow-issue-route.py` may emit a
+versioned `manualIssueLaunchContract` from an explicit live-contract assessment.
+Its only executable classes are bounded (`gpt-5.6-luna` at Max) and
+Sol-required (`gpt-5.6-sol` at Medium unless a higher effort is visibly
+justified). Missing or non-executable input receives no model route. This
+client-neutral output always records `launchOccurred: false`; requested values
+are not proof of an effective model or a session launch.
 
 When work running on a Luna Root materially crosses a Sol boundary, state the
 reason and recommend the exact Sol model and effort. The operator performs
