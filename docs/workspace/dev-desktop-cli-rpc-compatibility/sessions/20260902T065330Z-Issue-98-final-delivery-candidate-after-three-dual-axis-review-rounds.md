@@ -71,6 +71,17 @@
 
 ## Next action
 
-- Rebind check/review to the final documented candidate, complete finish and
-  archive projection, deliver through a PR to `dev`, then run and verify
-  `devtools/happyctl refresh-desktop --force` for DC-09.
+- Generate the deterministic terminal archive projection and deliver its
+  evidence-only commit through a second PR to `dev`.
+
+## Delivery result
+
+- PR #101 merged source to `dev@87c6aa7e`.
+- Real `refresh-desktop --force` report:
+  `~/Library/Application Support/Happy Devtools/reports/20260902-165849-refresh-desktop.md`.
+- Global CLI resolves to `/Users/myartings/workspace/happy/packages/happy-cli`;
+  daemon PID changed `49414 -> 61895`, `/list` returned 200, and the AST verifier
+  found the reachable registration in `types-FRle7Gof.mjs`.
+- `/Applications/Happy (dev).app` passed signature/bundle verification and ran
+  as PID 62705. New Session opened at `tauri://localhost/new` with the Happy
+  workspace, Codex, GPT-5.6 Sol, Medium, Yolo, and new-worktree controls visible.

@@ -146,28 +146,39 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | 2026-09-02T08:50:23+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `5d54ab40f2d5` | 40 ms |
 | 2026-09-02T08:50:23+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `e53601f954b2` | 113 ms |
 | 2026-09-02T08:50:24+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | e63b8ccb5bb3; working tree `46e8af19351d` | 111 ms |
+| 2026-09-02T09:06:24+00:00 | full / typecheck | `pnpm --filter happy-app typecheck` | passed | 0 | 0fad5446e527; working tree `8e16e16bcae4` | 2904 ms |
+| 2026-09-02T09:06:26+00:00 | full / typecheck | `pnpm --filter happy-server typecheck` | passed | 0 | 0fad5446e527; working tree `725c112e769a` | 2135 ms |
+| 2026-09-02T09:06:38+00:00 | full / test | `pnpm --filter happy-app exec vitest run` | passed | 0 | 0fad5446e527; working tree `cbe6fcb679f5` | 11911 ms |
+| 2026-09-02T09:06:40+00:00 | full / test | `pnpm --filter happy-server test` | passed | 0 | 0fad5446e527; working tree `cb4d8d3dd5cd` | 1995 ms |
+| 2026-09-02T09:06:41+00:00 | full / check | `{python} scripts/test-happy-workflow-state-upgrade.py` | passed | 0 | 0fad5446e527; working tree `214bb4cf4e70` | 54 ms |
+| 2026-09-02T09:09:10+00:00 | full / check | `{python} scripts/test-happy-workflow-runtime.py` | failed (1) | 1 | 0fad5446e527; working tree `7510a44333b2` | 149101 ms |
+| 2026-09-02T09:09:10+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | 0fad5446e527; working tree `d8b0643fe140` | 28 ms |
+| 2026-09-02T09:09:10+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | 0fad5446e527; working tree `850c3a1e5c02` | 65 ms |
+| 2026-09-02T09:09:11+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | 0fad5446e527; working tree `9b28e2b0ea03` | 56 ms |
 <!-- WORKFLOW_CHECKS_END -->
 
 ## Acceptance coverage
 
 | Criterion | Status | Evidence |
 | --- | --- | --- |
-| DC-01 | verified in fixture | Success trace proves CLI build/install precede Desktop install. |
-| DC-02 | verified in fixture | Install failure matrix plus exact npm-linked executable invocation despite a PATH decoy, valid replacement PID, and same-PID rejection. |
-| DC-03 | verified in fixture | Real chunk-shaped missing-RPC fixture and public refresh block. |
-| DC-04 | verified in fixture | Build/install/daemon/RPC failures return nonzero and report exact failed stage. |
-| DC-05 | verified in fixture | Dry-run text passes and external report/backup paths remain absent. |
-| DC-06 | verified in fixture | Report assertions cover CLI build/install, daemon restart/PIDs, and compatibility. |
+| DC-01 | verified | Success trace proves CLI build/install precede Desktop install. |
+| DC-02 | verified | Exact npm-linked executable, replacement PID, same-PID rejection, required `/list` HTTP 200/payload; real PID `49414 -> 61895` and HTTP 200. |
+| DC-03 | verified | AST/realpath graph rejects orphan/pseudo/escaped markers; real installed graph reaches `types-FRle7Gof.mjs`. |
+| DC-04 | verified | Build/install/daemon/RPC failures return nonzero and report exact failed stage. |
+| DC-05 | verified | Dry-run text passes and external report/backup paths remain absent. |
+| DC-06 | verified | Report assertions cover CLI build/install, daemon restart/PIDs, and compatibility. |
 | DC-07 | verified | CLI build, generated-chunk probe, and 20 focused CLI tests passed. |
 | DC-08 | verified | Three focused App files, 16 tests passed. |
-| DC-09 | pending | Requires the checked/reviewed delivery on `dev` and authorized real forced refresh. |
+| DC-09 | verified | PR #101 merged to `dev@87c6aa7e`; report `20260902-165849-refresh-desktop.md` succeeded; CLI/daemon/App checks and New Session UI observation passed. |
 
 ## Remaining gaps
 
-- The remediated check no longer reproduces the previously accepted App blob
-  timeout. Run `80556492-c69f-410f-8e1e-e88856a66f2c` retains only command
+- The final check no longer reproduces the previously accepted App blob
+  timeout. Run `e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9` retains only command
   index 5: the same three accepted merge/archive fixtures whose configuration
   fingerprint compares CRLF working-tree bytes with an LF staged snapshot. The
   unrelated workflow defect remains outside Issue #98 and is recorded as the
   candidate-bound accepted gap.
-- Real forced refresh/runtime observation is pending the delivery and external-write boundary.
+- Real refresh and runtime observation passed on `dev@87c6aa7e`: global CLI
+  identity, daemon HTTP health, AST RPC registration, signed App install/launch,
+  and `tauri://localhost/new` controls were all observed.

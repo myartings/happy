@@ -4,8 +4,8 @@
   "intensity": "feature",
   "layout": "standard",
   "workspaceKind": "standard",
-  "phase": "finish",
-  "nextAction": "Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence",
+  "phase": "archived",
+  "nextAction": "Recommend closing Issue #98 after separate tracker-mutation authorization; repair CRLF LF workflow fixtures in a separate slice",
   "riskRequired": true,
   "decisionsRequired": true,
   "gates": {
@@ -31,28 +31,28 @@
     },
     "implementation": {
       "status": "passed",
-      "evidence": "Converged review remediation TDD complete: happyctl requires replacement-state PID/control-port /list HTTP 200 with valid children payload; live PID plus HTTP 503 fails, health status 33 propagates; AST graph realpath rejects symlink escape; focused/CLI build/adjacent smokes pass.",
-      "updated": "2026-09-02T08:45:33+00:00"
+      "evidence": "Terminal-only documentation update records merged PR #101 and authorized real refresh evidence; no engineering source changed after candidate 68ea8f22fca5.",
+      "updated": "2026-09-02T09:06:13+00:00"
     },
     "check": {
       "status": "accepted_gaps",
-      "evidence": "Candidate 68ea8f22fca5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; affirmative HTTP health adds no new failure.",
-      "updated": "2026-09-02T08:50:41+00:00"
+      "evidence": "Candidate 67ab188b4349: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduced the same three accepted merge/archive configuration-fingerprint fixtures; no new failure.",
+      "updated": "2026-09-02T09:09:33+00:00"
     },
     "review": {
-      "status": "passed",
-      "evidence": "Fresh capable Spec and Standards reviews both accepted candidate 68ea8f22fca5 with no actionable findings.",
-      "updated": "2026-09-02T08:54:25+00:00",
+      "status": "accepted_gaps",
+      "evidence": "Fresh capable Spec and Standards terminal reviews both accepted candidate 67ab188b4349 with no actionable findings and only the exact pre-accepted workflow fixture gap.",
+      "updated": "2026-09-02T09:15:43+00:00",
       "candidate": {
         "identityKind": "staged-candidate-v1",
         "baseCommit": "c9815af899908e7d9112c7b0ab5ac18ab55c2b4b",
-        "candidateFingerprint": "68ea8f22fca57c085df3c5dfeec36d2b61f4b045bee8c9595813dfa5e5ef5b15"
+        "candidateFingerprint": "67ab188b4349b4ac315582dbe341372582a5f251332c98aa33f1f6cfd01a09c0"
       }
     },
     "finish": {
-      "status": "pending",
-      "evidence": "",
-      "updated": "2026-09-02T08:42:13+00:00"
+      "status": "passed",
+      "evidence": "PR #101 merged to dev@87c6aa7e; authorized refresh-desktop --force succeeded; replacement daemon PID 61895 returned HTTP 200 with children array; installed AST graph reached types-FRle7Gof.mjs; signed Happy (dev).app launched and New Session UI was usable; docs/workspace/dev-desktop-cli-rpc-compatibility/finish.md",
+      "updated": "2026-09-02T09:15:44+00:00"
     }
   },
   "history": [
@@ -681,9 +681,75 @@
       "type": "transition",
       "phase": "finish",
       "evidence": "Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence"
+    },
+    {
+      "at": "2026-09-02T09:04:12+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "PR #101 merged to dev@87c6aa7e; authorized refresh-desktop --force succeeded; replacement daemon PID 61895 returned HTTP 200 with children array; installed AST graph reached types-FRle7Gof.mjs; signed Happy (dev).app launched and New Session UI was usable; docs/workspace/dev-desktop-cli-rpc-compatibility/finish.md"
+    },
+    {
+      "at": "2026-09-02T09:06:13+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Bind post-merge runtime and delivery evidence into the terminal candidate"
+    },
+    {
+      "at": "2026-09-02T09:06:13+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Terminal-only documentation update records merged PR #101 and authorized real refresh evidence; no engineering source changed after candidate 68ea8f22fca5."
+    },
+    {
+      "at": "2026-09-02T09:06:13+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run applicable checks and independent dual-axis review on the complete terminal candidate"
+    },
+    {
+      "at": "2026-09-02T09:09:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 25f668f2-e1cb-4fe4-8a3b-ab3998a3e4ae"
+    },
+    {
+      "at": "2026-09-02T09:09:33+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 67ab188b4349: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduced the same three accepted merge/archive configuration-fingerprint fixtures; no new failure.; structured run: 25f668f2-e1cb-4fe4-8a3b-ab3998a3e4ae; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02; terminal candidate reproduces only the same three named fixtures."
+    },
+    {
+      "at": "2026-09-02T09:15:43+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "accepted_gaps",
+      "evidence": "Fresh capable Spec and Standards terminal reviews both accepted candidate 67ab188b4349 with no actionable findings and only the exact pre-accepted workflow fixture gap."
+    },
+    {
+      "at": "2026-09-02T09:15:43+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record final terminal evidence and generate canonical archive projection"
+    },
+    {
+      "at": "2026-09-02T09:15:44+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "PR #101 merged to dev@87c6aa7e; authorized refresh-desktop --force succeeded; replacement daemon PID 61895 returned HTTP 200 with children array; installed AST graph reached types-FRle7Gof.mjs; signed Happy (dev).app launched and New Session UI was usable; docs/workspace/dev-desktop-cli-rpc-compatibility/finish.md"
+    },
+    {
+      "at": "2026-09-02T09:15:58+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #98 paired Desktop CLI daemon runtime delivered through PR #101 and verified by authorized real refresh; result identity: archive-introducing-commit; follow-up: Recommend closing Issue #98 after separate tracker-mutation authorization; repair CRLF LF workflow fixtures in a separate slice"
     }
   ],
-  "updated": "2026-09-02T08:54:27+00:00",
+  "updated": "2026-09-02T09:15:58+00:00",
   "deliverySourcePolicy": 1,
   "deliverySource": {
     "kind": "tracker",
@@ -792,36 +858,58 @@
   "rightSizingContractPolicy": 1,
   "rightSizingContractPolicyStart": 0,
   "checkEvidencePolicy": 1,
-  "checkRunId": "e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9",
-  "checkRunFingerprint": "af007ba0b071e38a1fe150b3e4d5da6548517adb196c1473980d8842f755f661",
+  "checkRunId": "25f668f2-e1cb-4fe4-8a3b-ab3998a3e4ae",
+  "checkRunFingerprint": "73b334d1b3583a722ab9683c02b5717846854df85a77824c471a3e0999f516ea",
   "checkedCandidate": {
     "identityKind": "staged-candidate-v1",
     "baseCommit": "c9815af899908e7d9112c7b0ab5ac18ab55c2b4b",
-    "candidateFingerprint": "68ea8f22fca57c085df3c5dfeec36d2b61f4b045bee8c9595813dfa5e5ef5b15"
+    "candidateFingerprint": "67ab188b4349b4ac315582dbe341372582a5f251332c98aa33f1f6cfd01a09c0"
   },
   "checkAcceptedFailures": {
     "policyVersion": 1,
     "commandIndexes": [
       5
     ],
-    "approval": "User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02."
+    "approval": "User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02; terminal candidate reproduces only the same three named fixtures."
   },
-  "checkAcceptedFailuresFingerprint": "dcb1dc792dd986b917e239fe9f38fba7b5a7659cf5da89085e671df23cf1b8e8",
+  "checkAcceptedFailuresFingerprint": "233bdba49fb6497310c7a05b28f907d060b1b6a9efb39de685a300832d525846",
   "finalReview": {
     "candidate": {
       "identityKind": "staged-candidate-v1",
       "baseCommit": "c9815af899908e7d9112c7b0ab5ac18ab55c2b4b",
-      "candidateFingerprint": "68ea8f22fca57c085df3c5dfeec36d2b61f4b045bee8c9595813dfa5e5ef5b15"
+      "candidateFingerprint": "67ab188b4349b4ac315582dbe341372582a5f251332c98aa33f1f6cfd01a09c0"
     },
     "outcomes": {
       "spec-review": {
-        "status": "accepted",
-        "evidence": "Fresh final Spec review accepted candidate 68ea8f22fca5 with no actionable findings; DC-01..DC-08 satisfied and DC-09 remains post-merge."
+        "status": "accepted_gaps",
+        "evidence": "Fresh capable Spec review of immutable terminal package accepted DC-01..DC-09 with no actionable findings; only the explicitly accepted command-index-5 CRLF/LF fixtures remain."
       },
       "standards-review": {
-        "status": "accepted",
-        "evidence": "Fresh final Standards review accepted candidate 68ea8f22fca5 with no actionable findings; HTTP health, AST realpath graph, identity/status, risk, and rollback controls verified."
+        "status": "accepted_gaps",
+        "evidence": "Fresh capable Standards review of immutable terminal package found no actionable findings; delivered dev blob identities and live CLI/daemon/App evidence match, with only the accepted command-index-5 CRLF/LF fixtures remaining."
       }
     }
-  }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Record final terminal evidence and generate canonical archive projection",
+    "prearchiveUpdated": "2026-09-02T09:15:44+00:00",
+    "prearchiveActive": {
+      "feature": "dev-desktop-cli-rpc-compatibility",
+      "phase": "finish",
+      "updated": "2026-09-02",
+      "next": "Record final terminal evidence and generate canonical archive projection",
+      "branch / worktree": "issue/98-keep-happy-dev-desktop-and-local-cli-daemon-rpc"
+    },
+    "prearchiveArchiveObject": "e2751895f14402f2a699bcbfbc3bb2c19b225226",
+    "fingerprint": "6d2d47f0f8cd4d1c6b278f6e582eef8ace77153d4a5922937527e636ef85f2db"
+  },
+  "archivedAt": "2026-09-02T09:15:58+00:00",
+  "archiveDate": "2026-09-02",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #98 paired Desktop CLI daemon runtime delivered through PR #101 and verified by authorized real refresh",
+  "archiveFollowUp": "Recommend closing Issue #98 after separate tracker-mutation authorization; repair CRLF LF workflow fixtures in a separate slice"
 }

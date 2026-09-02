@@ -2,56 +2,59 @@
 
 ## Summary
 
-- Source implementation, candidate-bound checks, and whole-diff review are
-  complete for Issue #98 candidate `fda888a69164`.
-- Finish remains pending at the delivery/runtime boundary: DC-09 requires an
-  authorized delivery to `dev` followed by a real forced refresh.
+- Issue #98 source was checked, independently reviewed, merged through PR #101,
+  and integrated at `dev@87c6aa7ef4fb0d1c7415368cfccb764669ae31b2`.
+- The authorized real forced refresh completed successfully and DC-01 through
+  DC-09 now have evidence.
 
 ## Verification
 
-- Focused devtools compatibility, refresh-guard, and macOS-signing smokes pass.
-- CLI build and 20 Saved Projects tests pass; App focused 16 tests pass.
-- Applicable run `9f0f8494-e96f-4778-ab5f-a5f1bd7ebd9c` is
-  `accepted_gaps`: seven commands passed and only the user-accepted 1 MB App
-  blob timeout plus three CRLF/LF workflow fixtures failed.
-- DC-01 through DC-08 are verified. DC-09 is pending authorized delivery and
-  runtime observation.
+- Final staged check run `e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9`, candidate
+  `68ea8f22fca5`, passed 8/9 configured groups. App 245 files / 1946 tests and
+  Server 112 tests passed; only the explicitly accepted three CRLF/LF workflow
+  merge/archive fingerprint fixtures failed.
+- Focused compatibility, HTTP-health, AST/realpath graph, refresh-guard,
+  macOS-signing, CLI build, and diff checks passed.
+- Final independent capable Spec and Standards reviews both accepted the same
+  immutable candidate with no actionable findings.
+- Real report `20260902-165849-refresh-desktop.md` records success at commit
+  `87c6aa7e`, daemon replacement `49414 -> 61895`, CLI compatibility true, and
+  verified Desktop install/launch.
+- Post-refresh checks confirmed global CLI realpath, HTTP `/list` 200 with a
+  valid children payload, reachable `types-FRle7Gof.mjs` registration, bundle
+  ID `com.slopus.happy.dev`, strict signature verification, and App PID 62705.
+- New Session opened at `tauri://localhost/new` with the expected Happy
+  workspace, Codex, GPT-5.6 Sol, Medium, Yolo, and new-worktree controls.
 
 ## Whole-diff review
 
-- Final immutable candidate: `fda888a6916419a8bdc08ea7d47b7ce2653174171a5f552539254eaed90facf0`.
-- Final diff fingerprint: `972ea4a638de359236888286a3a4903f64a05ef481db5feaf15bb9cb182801f8`.
-- Fresh independent capable Spec and Standards axes both accepted with no
-  actionable findings.
+- Final candidate fingerprint: `68ea8f22fca57c085df3c5dfeec36d2b61f4b045bee8c9595813dfa5e5ef5b15`.
+- Both final review axes: `accepted`; actionable findings: none.
+- Earlier review findings were closed with direct regression coverage for exact
+  npm-link identity, exit statuses, report failures, AST registration evidence,
+  realpath containment, replacement PID, and affirmative HTTP health.
 
 ## Rollback or mitigation
 
-- Before delivery, the staged source candidate is locally reversible and has
-  made no CLI, daemon, app, tracker, or remote mutation.
-- After delivery, rerunning workspace `cli:install` repairs the global link;
-  `rollback-desktop` restores the retained app backup.
-- Refresh fails before Desktop replacement on build, link, daemon identity,
-  RPC compatibility, or push failure. A later Desktop failure preserves the
-  compatible new CLI and existing Desktop backup.
+- `rollback-desktop` can restore the retained pre-refresh app backup at
+  `~/Library/Application Support/Happy Devtools/backups/Happy (dev)-20260902-165848.app`.
+- `npm unlink -g happy && npm i -g happy@latest` restores the published CLI;
+  rerunning workspace `cli:install` repairs the personal link.
+- The refresh remains fail-closed before Desktop replacement for build, link,
+  daemon health, or RPC compatibility failures.
 
 ## Lessons promoted
 
-- `CONTEXT.md`: none; the result is Issue-specific and already captured in the
-  accepted spec and decisions.
-- `docs/ARCHITECTURE.md` or ADR: none; no reusable architecture change beyond
-  the local refresh transaction.
-- Skill/workflow rule: none; no repeated workflow learning attributable to
-  this Slice.
+- `CONTEXT.md`, architecture/ADR, and skill changes: none. The reusable behavior
+  is already captured by the Issue-specific spec, decisions, and devtools docs.
 
 ## Follow-up
 
-- Required, not optional follow-up: authorized delivery to `dev`, real
-  `refresh-desktop --force`, installed bundle/daemon/App verification, and New
-  Session observation for DC-09.
-- `blocking-prerequisite-defect` outside Issue #98: workflow merge/archive
-  fixtures compare CRLF worktree configuration bytes against an LF staged
-  snapshot. It was explicitly accepted for this candidate and should receive a
-  separate Slice rather than expanding this contract.
-- Non-blocking test-harness follow-up candidate: the App 1 MB blob test can
-  exceed its fixed five-second timeout under load despite passing targeted
-  reruns. It does not affect the changed subsystem.
+- `blocking-prerequisite-defect`, separate Slice: three workflow merge/archive
+  fixtures compare CRLF worktree configuration bytes with LF staged snapshots.
+  The user explicitly accepted this exact gap for Issue #98.
+- `non-blocking test-harness follow-up`: the App 1 MB blob case can exceed its
+  fixed five-second timeout under load. It passed the final run and does not
+  affect this subsystem.
+- Tracker recommendation: close Issue #98 after terminal archive PR delivery;
+  no Issue mutation is performed without separate tracker authorization.
