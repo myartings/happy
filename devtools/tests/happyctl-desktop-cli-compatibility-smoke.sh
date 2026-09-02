@@ -3,7 +3,15 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TEMP_ROOT="$(mktemp -d -t happyctl-desktop-cli-compatibility-XXXXXX)"
-trap 'rm -rf "$TEMP_ROOT"' EXIT
+HEALTH_SERVER_PID=""
+cleanup() {
+  if [[ -n "$HEALTH_SERVER_PID" ]]; then
+    kill "$HEALTH_SERVER_PID" 2>/dev/null || true
+    wait "$HEALTH_SERVER_PID" 2>/dev/null || true
+  fi
+  rm -rf "$TEMP_ROOT"
+}
+trap cleanup EXIT
 
 # Load the public command without running an operational action.
 # shellcheck disable=SC1091
@@ -11,6 +19,7 @@ source "$REPO_ROOT/devtools/happyctl" help >/dev/null
 ORIGINAL_VERIFY_RPC="$(declare -f verify_workspace_cli_rpc_compatibility)"
 ORIGINAL_VERIFY_DAEMON="$(declare -f verify_workspace_cli_daemon)"
 ORIGINAL_VERIFY_IDENTITY="$(declare -f verify_workspace_cli_install_identity)"
+ORIGINAL_INSTALLED_PACKAGE="$(declare -f installed_happy_cli_package_path)"
 ORIGINAL_INSTALLED_BUNDLE="$(declare -f installed_happy_cli_bundle_path)"
 ORIGINAL_INSTALLED_EXECUTABLE="$(declare -f installed_happy_cli_executable_path)"
 
@@ -41,6 +50,7 @@ TRACE_FILE="$TEMP_ROOT/trace"
 REPORT_ARGS="$TEMP_ROOT/report-args"
 RPC_COMPATIBLE=1
 FAIL_STAGE=""
+REPORT_FAILURE_CODE=0
 
 trace() { printf '%s\n' "$1" >>"$TRACE_FILE"; }
 report_value() {
@@ -76,7 +86,10 @@ install_desktop() { trace desktop-install; }
 remove_old_desktop_backups() { trace backup-retention; }
 verify_desktop() { trace desktop-verify; }
 launch_desktop() { trace desktop-launch; }
-write_update_report() { printf '%s\n' "$@" >"$REPORT_ARGS"; }
+write_update_report() {
+  printf '%s\n' "$@" >"$REPORT_ARGS"
+  [[ "$REPORT_FAILURE_CODE" -eq 0 ]] || return "$REPORT_FAILURE_CODE"
+}
 
 : >"$TRACE_FILE"
 refresh_desktop --force
@@ -128,6 +141,33 @@ rpc|verify CLI compatibility|25
 EOF
 
 : >"$TRACE_FILE"
+FAIL_STAGE=cli-install
+REPORT_FAILURE_CODE=29
+set +e
+(refresh_desktop --force >/dev/null 2>&1)
+report_failure_rc=$?
+set -e
+if [[ "$report_failure_rc" -ne 23 ]]; then
+  echo "report failure overrode operational exit 23 with $report_failure_rc" >&2
+  exit 1
+fi
+[[ "$(report_value 'Failed stage')" == "install workspace CLI" ]]
+REPORT_FAILURE_CODE=0
+
+: >"$TRACE_FILE"
+FAIL_STAGE=""
+REPORT_FAILURE_CODE=29
+set +e
+(refresh_desktop --force >/dev/null 2>&1)
+successful_report_failure_rc=$?
+set -e
+if [[ "$successful_report_failure_rc" -ne 29 ]]; then
+  echo "successful refresh did not expose report failure 29 (got $successful_report_failure_rc)" >&2
+  exit 1
+fi
+REPORT_FAILURE_CODE=0
+
+: >"$TRACE_FILE"
 FAIL_STAGE=""
 RPC_COMPATIBLE=0
 if (refresh_desktop --force >/dev/null 2>&1); then
@@ -153,9 +193,11 @@ compatible_dist="$TEMP_ROOT/compatible-dist"
 incompatible_dist="$TEMP_ROOT/incompatible-dist"
 mkdir -p "$compatible_dist" "$incompatible_dist"
 printf "export * from './rpc-chunk.mjs';\n" >"$compatible_dist/index.mjs"
-printf "registerHandler('list-saved-projects', handler);\n" >"$compatible_dist/rpc-chunk.mjs"
+printf "rpcHandlerManager.registerHandler('list-saved-projects', handler);\n" >"$compatible_dist/rpc-chunk.mjs"
 printf "export * from './rpc-chunk.mjs';\n" >"$incompatible_dist/index.mjs"
-printf "registerHandler('list-workspace-projects', handler);\n" >"$incompatible_dist/rpc-chunk.mjs"
+printf "const marker = 'list-saved-projects';\nregisterHandler('list-workspace-projects', handler);\n" >"$incompatible_dist/rpc-chunk.mjs"
+printf "rpcHandlerManager.registerHandler('list-saved-projects', orphan);\n" >"$incompatible_dist/orphan-rpc-chunk.mjs"
+printf "// import './orphan-rpc-chunk.mjs';\nconst pseudoImport = \"import('./orphan-rpc-chunk.mjs')\";\n" >>"$incompatible_dist/index.mjs"
 eval "$ORIGINAL_VERIFY_RPC"
 installed_happy_cli_bundle_path() { printf '%s/index.mjs\n' "$FIXTURE_DIST"; }
 
@@ -169,20 +211,32 @@ if verify_workspace_cli_rpc_compatibility >"$TEMP_ROOT/missing-rpc.out" 2>&1; th
 fi
 grep -F 'list-saved-projects is missing' "$TEMP_ROOT/missing-rpc.out" >/dev/null
 
-find_failure_bin="$TEMP_ROOT/find-failure-bin"
-mkdir -p "$find_failure_bin"
-cat >"$find_failure_bin/find" <<'EOF'
-#!/usr/bin/env bash
-exit 26
-EOF
-chmod +x "$find_failure_bin/find"
-FIXTURE_DIST="$compatible_dist"
+broken_dist="$TEMP_ROOT/broken-dist"
+mkdir -p "$broken_dist"
+printf "export * from './missing-chunk.mjs';\n" >"$broken_dist/index.mjs"
+FIXTURE_DIST="$broken_dist"
 set +e
-PATH="$find_failure_bin:$PATH" verify_workspace_cli_rpc_compatibility >/dev/null 2>&1
-find_failure_rc=$?
+verify_workspace_cli_rpc_compatibility >/dev/null 2>&1
+graph_failure_rc=$?
 set -e
-if [[ "$find_failure_rc" -ne 26 ]]; then
-  echo "RPC verifier did not preserve find exit 26 (got $find_failure_rc)" >&2
+if [[ "$graph_failure_rc" -ne 2 ]]; then
+  echo "RPC verifier did not preserve reachable-graph failure exit 2 (got $graph_failure_rc)" >&2
+  exit 1
+fi
+
+escape_dist="$TEMP_ROOT/escape-dist"
+escape_module="$TEMP_ROOT/escape-rpc.mjs"
+mkdir -p "$escape_dist"
+printf "export * from './escape.mjs';\n" >"$escape_dist/index.mjs"
+printf "rpcHandlerManager.registerHandler('list-saved-projects', escaped);\n" >"$escape_module"
+ln -s "$escape_module" "$escape_dist/escape.mjs"
+FIXTURE_DIST="$escape_dist"
+set +e
+verify_workspace_cli_rpc_compatibility >/dev/null 2>&1
+escape_graph_rc=$?
+set -e
+if [[ "$escape_graph_rc" -ne 2 ]]; then
+  echo "RPC verifier accepted a symlink escaping installed dist (got $escape_graph_rc)" >&2
   exit 1
 fi
 
@@ -206,7 +260,64 @@ for npm_root_consumer in \
   fi
 done
 
+mkdir -p "$HAPPY_REPO/packages/happy-cli" "$TEMP_ROOT/mismatched-cli"
+installed_happy_cli_package_path() { printf '%s\n' "$TEMP_ROOT/mismatched-cli"; }
+if verify_workspace_cli_install_identity >"$TEMP_ROOT/mismatched-cli.out" 2>&1; then
+  echo "install identity verifier accepted a mismatched npm-linked package" >&2
+  exit 1
+fi
+grep -F 'does not resolve to the workspace package' "$TEMP_ROOT/mismatched-cli.out" >/dev/null
+eval "$ORIGINAL_INSTALLED_PACKAGE"
+
 eval "$ORIGINAL_VERIFY_DAEMON"
+health_home="$TEMP_ROOT/health-home"
+health_port_file="$TEMP_ROOT/health-port"
+mkdir -p "$health_home"
+HAPPY_HOME_DIR="$health_home"
+start_health_server() {
+  local mode="$1" attempt port
+  : >"$health_port_file"
+  node -e '
+const fs = require("node:fs");
+const http = require("node:http");
+const mode = process.argv[1];
+const portFile = process.argv[2];
+const server = http.createServer((_request, response) => {
+  if (mode === "healthy") {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ children: [] }));
+  } else {
+    response.writeHead(503, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ error: "not ready" }));
+  }
+});
+server.listen(0, "127.0.0.1", () => fs.writeFileSync(portFile, String(server.address().port)));
+' "$mode" "$health_port_file" &
+  HEALTH_SERVER_PID=$!
+  for attempt in $(seq 1 100); do
+    [[ -s "$health_port_file" ]] && break
+    sleep 0.02
+  done
+  port="$(cat "$health_port_file")"
+  [[ -n "$port" ]]
+  printf '{"pid":%s,"httpPort":%s}\n' "$HEALTH_SERVER_PID" "$port" >"$health_home/daemon.state.json"
+}
+stop_health_server() {
+  kill "$HEALTH_SERVER_PID" 2>/dev/null || true
+  wait "$HEALTH_SERVER_PID" 2>/dev/null || true
+  HEALTH_SERVER_PID=""
+}
+
+start_health_server healthy
+verify_happy_daemon_http_health "$HEALTH_SERVER_PID" >/dev/null
+stop_health_server
+start_health_server unhealthy
+if verify_happy_daemon_http_health "$HEALTH_SERVER_PID" >/dev/null 2>&1; then
+  echo "daemon HTTP health verifier accepted a non-success control response" >&2
+  exit 1
+fi
+stop_health_server
+
 require_cmd() { :; }
 exact_cli="$TEMP_ROOT/npm-root/happy/bin/happy.mjs"
 mkdir -p "${exact_cli%/*}" "$TEMP_ROOT/decoy-bin"
@@ -217,6 +328,31 @@ PATH="$TEMP_ROOT/decoy-bin:$PATH"
 DAEMON_COMMANDS="$TEMP_ROOT/daemon-commands"
 CURRENT_DAEMON_PID=303
 installed_happy_cli_executable_path() { printf '%s\n' "$exact_cli"; }
+verify_happy_daemon_http_health() { return 0; }
+run() {
+  [[ "$*" != *' daemon stop' ]] || return 31
+}
+set +e
+verify_workspace_cli_daemon >/dev/null 2>&1
+daemon_stop_rc=$?
+set -e
+if [[ "$daemon_stop_rc" -ne 31 ]]; then
+  echo "daemon verifier did not preserve stop exit 31 (got $daemon_stop_rc)" >&2
+  exit 1
+fi
+
+run() {
+  [[ "$*" != *' daemon start' ]] || return 32
+}
+set +e
+verify_workspace_cli_daemon >/dev/null 2>&1
+daemon_start_rc=$?
+set -e
+if [[ "$daemon_start_rc" -ne 32 ]]; then
+  echo "daemon verifier did not preserve start exit 32 (got $daemon_start_rc)" >&2
+  exit 1
+fi
+
 run() {
   printf '%s\n' "$*" >>"$DAEMON_COMMANDS"
   if [[ "$*" == *' daemon start' ]]; then
@@ -232,6 +368,36 @@ if grep -Eq '(^| )happy daemon' "$DAEMON_COMMANDS"; then
   echo "daemon verifier used the PATH-resolved decoy Happy CLI" >&2
   exit 1
 fi
+
+CURRENT_DAEMON_PID=303
+run() {
+  if [[ "$*" == *' daemon start' ]]; then
+    CURRENT_DAEMON_PID=406
+  fi
+}
+verify_happy_daemon_http_health() { return 33; }
+set +e
+verify_workspace_cli_daemon >/dev/null 2>&1
+daemon_health_rc=$?
+set -e
+if [[ "$daemon_health_rc" -ne 33 ]]; then
+  echo "daemon verifier did not preserve health exit 33 (got $daemon_health_rc)" >&2
+  exit 1
+fi
+
+CURRENT_DAEMON_PID=303
+run() {
+  if [[ "$*" == *' daemon start' ]]; then
+    CURRENT_DAEMON_PID=405
+  fi
+}
+verify_happy_daemon_http_health() { return 1; }
+if verify_workspace_cli_daemon >"$TEMP_ROOT/dead-daemon.out" 2>&1; then
+  echo "daemon verifier accepted a changed but unhealthy PID" >&2
+  exit 1
+fi
+grep -F 'did not confirm live PID 405' "$TEMP_ROOT/dead-daemon.out" >/dev/null
+verify_happy_daemon_http_health() { return 0; }
 
 CURRENT_DAEMON_PID=303
 run() { printf '%s\n' "$*" >>"$DAEMON_COMMANDS"; }

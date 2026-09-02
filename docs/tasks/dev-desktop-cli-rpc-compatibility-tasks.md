@@ -63,13 +63,26 @@ fixtures. No writer delegation or batch topology is selected.
   same Slice; link-only installation plus distinctive 23/24 failure fixtures
   now prove atomic stages, exact executable use, and original status retention.
 - 2026-09-02: terminal documented-candidate Spec review found the same status
-  contract also applies inside the RPC compatibility stage. A RED-to-GREEN
-  fake-`find` fixture now proves exit 26 is preserved; npm-root and `grep`
-  command failures are handled equivalently while no marker remains exit 1.
+  contract also applies inside the RPC compatibility stage. That intermediate
+  scanner preserved `find`/`grep` statuses; the final AST verifier supersedes
+  it and preserves graph-analysis status 2 while ordinary incompatibility is 1.
 - 2026-09-02: delivery-candidate Spec review found upper package-derived
   helpers could still coerce `npm root -g` failure. Full-chain fault injection
   now proves exit 27 across install identity, bundle, executable, daemon, and
   RPC consumers.
+- 2026-09-02: integrated-candidate Spec review found report writing could
+  override an earlier operational failure. The transaction now retains the
+  primary status, with direct stop/start and npm-link realpath mismatch
+  regression coverage.
+- 2026-09-02: final Standards review found the all-dist scan could accept an
+  orphan chunk. An orphan-marker RED fixture now stays rejected while the
+  actual built `dist/index.mjs` graph reaches the Saved Projects registration.
+- 2026-09-02: final Spec review tightened evidence again: Acorn now identifies
+  actual reachable imports and `registerHandler` calls, rejecting pseudo-import
+  comments/strings and marker-only constants; exact-CLI status confirms the
+  replacement PID. A following dual-axis review exposed that CLI status treats
+  HTTP failure as inconclusive, so the final gate now performs its own required
+  successful `/list` probe tied to the replacement state PID and control port.
 
 ## Finish
 

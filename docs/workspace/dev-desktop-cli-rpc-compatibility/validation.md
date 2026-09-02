@@ -35,6 +35,12 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | `2026-09-02` | Compatibility, refresh-guard, and macOS-signing smokes plus syntax/diff checks after final-review remediation | passed | npm-root, `find`, and `grep` command errors retain their status; no-marker remains ordinary incompatibility 1; fake `find` 26 propagates through the verifier. |
 | `2026-09-02` | npm-root full helper-chain fixture before delivery-review remediation | expected RED (exit 1) | `verify_workspace_cli_install_identity` converted fake `npm root -g` exit 27 to 1, exposing equivalent coercion at package-derived helper boundaries. |
 | `2026-09-02` | Compatibility and adjacent devtools smokes after delivery-review remediation | passed | Fresh subshell fault injection proves npm-root exit 27 propagates through install identity, bundle, executable, daemon, and RPC helpers; find 26, PATH decoy, and status 23/24 cases remain green. |
+| `2026-09-02` | Report-write failure fixture before integrated-review remediation | expected RED (exit 1) | A report writer failure 29 overrode the original install failure 23, violating the frozen operational exit-status contract. |
+| `2026-09-02` | Compatibility and adjacent devtools smokes after integrated-review remediation | passed | Operational failure 23 survives report failure 29; direct daemon stop/start failures preserve 31/32; realpath mismatch, npm-root 27, find 26, and prior stage fixtures remain green. |
+| `2026-09-02` | Orphan compiled RPC chunk fixture before final Standards remediation | expected RED (exit 1) | The all-dist scan accepted `list-saved-projects` in an unreferenced chunk even though `index.mjs` reached only an incompatible chunk. |
+| `2026-09-02` | Entrypoint-reachable graph compatibility smoke and workspace CLI build | passed | Orphan marker is rejected; missing reachable modules preserve graph error 2; the real built `dist/index.mjs` reaches `types-FRle7Gof.mjs`; report failure 29 is also exposed after otherwise successful operations. |
+| `2026-09-02` | Syntax-aware registration and daemon-status fixtures after final Spec remediation | passed, then superseded | AST traversal rejects comment/string pseudo-imports and marker-only constants; the status fixture exposed error 33, but later review showed CLI status was not affirmative HTTP health evidence. |
+| `2026-09-02` | Affirmative daemon HTTP health fixture after converged dual-axis review | passed | A live PID with a 200 `/list` response and valid children payload passes; the same live/state-tied PID with HTTP 503 is rejected; injected health error 33 remains preserved. |
 
 ## Automated check evidence
 
@@ -95,6 +101,51 @@ and state the consequence under Remaining gaps; unavailable is not a pass.
 | 2026-09-02T07:27:22+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | 03936270022b; working tree `b3d026828c36` | 114 ms |
 | 2026-09-02T07:27:22+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | 03936270022b; working tree `789324f080bf` | 98 ms |
 | 2026-09-02T07:27:22+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | 03936270022b; working tree `fb78e26c120a` | 79 ms |
+| 2026-09-02T07:36:16+00:00 | full / typecheck | `pnpm --filter happy-app typecheck` | passed | 0 | e63b8ccb5bb3; working tree `818ca34c7745` | 10817 ms |
+| 2026-09-02T07:36:21+00:00 | full / typecheck | `pnpm --filter happy-server typecheck` | passed | 0 | e63b8ccb5bb3; working tree `69c40d879395` | 4739 ms |
+| 2026-09-02T07:36:48+00:00 | full / test | `pnpm --filter happy-app exec vitest run` | failed (1) | 1 | e63b8ccb5bb3; working tree `7948aae67e57` | 27179 ms |
+| 2026-09-02T07:36:53+00:00 | full / test | `pnpm --filter happy-server test` | passed | 0 | e63b8ccb5bb3; working tree `d804dd51078f` | 4506 ms |
+| 2026-09-02T07:36:54+00:00 | full / check | `{python} scripts/test-happy-workflow-state-upgrade.py` | passed | 0 | e63b8ccb5bb3; working tree `f9c797a234b6` | 71 ms |
+| 2026-09-02T07:41:17+00:00 | full / check | `{python} scripts/test-happy-workflow-runtime.py` | failed (1) | 1 | e63b8ccb5bb3; working tree `c17de039a8bd` | 262661 ms |
+| 2026-09-02T07:41:17+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `2fda438b79da` | 35 ms |
+| 2026-09-02T07:41:17+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `5eb7b45c2eee` | 79 ms |
+| 2026-09-02T07:41:18+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | e63b8ccb5bb3; working tree `1cacf1496814` | 77 ms |
+| 2026-09-02T07:56:12+00:00 | full / typecheck | `pnpm --filter happy-app typecheck` | passed | 0 | e63b8ccb5bb3; working tree `225414d532f1` | 4791 ms |
+| 2026-09-02T07:56:17+00:00 | full / typecheck | `pnpm --filter happy-server typecheck` | passed | 0 | e63b8ccb5bb3; working tree `a66ed563e051` | 5137 ms |
+| 2026-09-02T07:56:38+00:00 | full / test | `pnpm --filter happy-app exec vitest run` | passed | 0 | e63b8ccb5bb3; working tree `4ca5b809169f` | 20196 ms |
+| 2026-09-02T07:56:42+00:00 | full / test | `pnpm --filter happy-server test` | passed | 0 | e63b8ccb5bb3; working tree `5ff73e45b879` | 3987 ms |
+| 2026-09-02T07:56:43+00:00 | full / check | `{python} scripts/test-happy-workflow-state-upgrade.py` | passed | 0 | e63b8ccb5bb3; working tree `326ab87120b3` | 103 ms |
+| 2026-09-02T08:00:59+00:00 | full / check | `{python} scripts/test-happy-workflow-runtime.py` | failed (1) | 1 | e63b8ccb5bb3; working tree `0521f853a262` | 255669 ms |
+| 2026-09-02T08:00:59+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `7d70dfdc17c7` | 47 ms |
+| 2026-09-02T08:00:59+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `2d689d2a1b11` | 101 ms |
+| 2026-09-02T08:01:00+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | e63b8ccb5bb3; working tree `b7d02f864c32` | 98 ms |
+| 2026-09-02T08:15:03+00:00 | full / typecheck | `pnpm --filter happy-app typecheck` | passed | 0 | e63b8ccb5bb3; working tree `71b292c783f0` | 3742 ms |
+| 2026-09-02T08:15:07+00:00 | full / typecheck | `pnpm --filter happy-server typecheck` | passed | 0 | e63b8ccb5bb3; working tree `f51516e3c9f7` | 3774 ms |
+| 2026-09-02T08:15:29+00:00 | full / test | `pnpm --filter happy-app exec vitest run` | passed | 0 | e63b8ccb5bb3; working tree `55a4d64a2126` | 21729 ms |
+| 2026-09-02T08:15:33+00:00 | full / test | `pnpm --filter happy-server test` | passed | 0 | e63b8ccb5bb3; working tree `93145755329d` | 3533 ms |
+| 2026-09-02T08:15:34+00:00 | full / check | `{python} scripts/test-happy-workflow-state-upgrade.py` | passed | 0 | e63b8ccb5bb3; working tree `5708c0d1555d` | 66 ms |
+| 2026-09-02T08:18:20+00:00 | full / check | `{python} scripts/test-happy-workflow-runtime.py` | failed (1) | 1 | e63b8ccb5bb3; working tree `e010d073d7b0` | 165879 ms |
+| 2026-09-02T08:18:20+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `56b3dd101945` | 41 ms |
+| 2026-09-02T08:18:21+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `396b5d3fcb30` | 87 ms |
+| 2026-09-02T08:18:21+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | e63b8ccb5bb3; working tree `729583cac304` | 75 ms |
+| 2026-09-02T08:29:08+00:00 | full / typecheck | `pnpm --filter happy-app typecheck` | passed | 0 | e63b8ccb5bb3; working tree `7c9315dd0020` | 4460 ms |
+| 2026-09-02T08:29:13+00:00 | full / typecheck | `pnpm --filter happy-server typecheck` | passed | 0 | e63b8ccb5bb3; working tree `940fe08e0bed` | 4307 ms |
+| 2026-09-02T08:29:36+00:00 | full / test | `pnpm --filter happy-app exec vitest run` | passed | 0 | e63b8ccb5bb3; working tree `b2b53fae1f22` | 22880 ms |
+| 2026-09-02T08:29:42+00:00 | full / test | `pnpm --filter happy-server test` | passed | 0 | e63b8ccb5bb3; working tree `ab5d216f268b` | 4697 ms |
+| 2026-09-02T08:29:42+00:00 | full / check | `{python} scripts/test-happy-workflow-state-upgrade.py` | passed | 0 | e63b8ccb5bb3; working tree `b75a3a907140` | 96 ms |
+| 2026-09-02T08:35:57+00:00 | full / check | `{python} scripts/test-happy-workflow-runtime.py` | failed (1) | 1 | e63b8ccb5bb3; working tree `7ed9743bdb1c` | 374233 ms |
+| 2026-09-02T08:35:57+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `457399af32ec` | 41 ms |
+| 2026-09-02T08:35:58+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `1791126e3050` | 99 ms |
+| 2026-09-02T08:35:58+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | e63b8ccb5bb3; working tree `0ff7d903b02e` | 107 ms |
+| 2026-09-02T08:45:49+00:00 | full / typecheck | `pnpm --filter happy-app typecheck` | passed | 0 | e63b8ccb5bb3; working tree `fa473576dcb2` | 4464 ms |
+| 2026-09-02T08:45:53+00:00 | full / typecheck | `pnpm --filter happy-server typecheck` | passed | 0 | e63b8ccb5bb3; working tree `ec0802ac3585` | 4284 ms |
+| 2026-09-02T08:46:12+00:00 | full / test | `pnpm --filter happy-app exec vitest run` | passed | 0 | e63b8ccb5bb3; working tree `72aaece48a38` | 18764 ms |
+| 2026-09-02T08:46:16+00:00 | full / test | `pnpm --filter happy-server test` | passed | 0 | e63b8ccb5bb3; working tree `ac938333a961` | 3374 ms |
+| 2026-09-02T08:46:17+00:00 | full / check | `{python} scripts/test-happy-workflow-state-upgrade.py` | passed | 0 | e63b8ccb5bb3; working tree `1085f874fb1b` | 82 ms |
+| 2026-09-02T08:50:22+00:00 | full / check | `{python} scripts/test-happy-workflow-runtime.py` | failed (1) | 1 | e63b8ccb5bb3; working tree `877495acd57f` | 245480 ms |
+| 2026-09-02T08:50:23+00:00 | full / check | `{python} scripts/validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `5d54ab40f2d5` | 40 ms |
+| 2026-09-02T08:50:23+00:00 | full / check | `{python} scripts/test-validate-happy-workflow.py` | passed | 0 | e63b8ccb5bb3; working tree `e53601f954b2` | 113 ms |
+| 2026-09-02T08:50:24+00:00 | full / check | `{python} scripts/workflow-audit.py --all --strict` | passed | 0 | e63b8ccb5bb3; working tree `46e8af19351d` | 111 ms |
 <!-- WORKFLOW_CHECKS_END -->
 
 ## Acceptance coverage

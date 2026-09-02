@@ -1726,6 +1726,37 @@ process.stdout.write(String(state.pid));
 ' "$state_file"
 }
 
+verify_happy_daemon_http_health() {
+  local state_file
+  state_file="$(happy_daemon_state_path)"
+  node - "$state_file" "$1" <<'NODE'
+const fs = require("node:fs");
+
+async function main() {
+  const state = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+  const expectedPid = Number(process.argv[3]);
+  if (state.pid !== expectedPid || !Number.isSafeInteger(state.httpPort) || state.httpPort <= 0) {
+    throw new Error("daemon state does not match the replacement PID and control port");
+  }
+  process.kill(expectedPid, 0);
+  const response = await fetch(`http://127.0.0.1:${state.httpPort}/list`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+    signal: AbortSignal.timeout(2000),
+  });
+  if (!response.ok) throw new Error(`daemon control probe returned HTTP ${response.status}`);
+  const payload = await response.json();
+  if (!Array.isArray(payload.children)) throw new Error("daemon control probe returned an invalid payload");
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});
+NODE
+}
+
 verify_workspace_cli_daemon() {
   local cli_entry previous_pid replacement_pid rc
   linux_only_build_notice
@@ -1764,6 +1795,13 @@ verify_workspace_cli_daemon() {
     echo "Happy CLI daemon was not replaced; PID is still $replacement_pid." >&2
     return 1
   fi
+  if verify_happy_daemon_http_health "$replacement_pid"; then
+    :
+  else
+    rc=$?
+    echo "Happy CLI daemon health check did not confirm live PID $replacement_pid." >&2
+    return "$rc"
+  fi
   log "Verified replacement Happy CLI daemon PID: $replacement_pid"
 }
 
@@ -1789,10 +1827,15 @@ installed_happy_cli_executable_path() {
   printf '%s/bin/happy.mjs\n' "$package_path"
 }
 
+installed_happy_cli_reachable_rpc_bundle() {
+  node "$SCRIPT_DIR/verify-cli-rpc.cjs" "$1"
+}
+
 verify_workspace_cli_rpc_compatibility() {
   linux_only_build_notice
   require_cmd npm
-  local entry_bundle dist_dir candidate candidates rc
+  require_cmd node
+  local entry_bundle candidate rc
   if entry_bundle="$(installed_happy_cli_bundle_path)"; then
     :
   else
@@ -1804,27 +1847,17 @@ verify_workspace_cli_rpc_compatibility() {
     echo "Installed Happy CLI bundle not found: $entry_bundle" >&2
     return 1
   fi
-  dist_dir="${entry_bundle%/*}"
-  if candidates="$(find "$dist_dir" -type f -name '*.mjs' -print)"; then
-    :
+  if candidate="$(installed_happy_cli_reachable_rpc_bundle "$entry_bundle")"; then
+    log "Verified installed Happy CLI Saved Projects RPC in entrypoint-reachable bundle: $candidate"
+    return 0
   else
     rc=$?
-    return "$rc"
-  fi
-  while IFS= read -r candidate; do
-    [[ -n "$candidate" ]] || continue
-    if grep -Fq 'list-saved-projects' "$candidate"; then
-      log "Verified installed Happy CLI Saved Projects RPC: $candidate"
-      return 0
-    else
-      rc=$?
-      if [[ "$rc" -ne 1 ]]; then
-        return "$rc"
-      fi
+    if [[ "$rc" -ne 1 ]]; then
+      return "$rc"
     fi
-  done <<<"$candidates"
-  echo "Installed Happy CLI is incompatible: list-saved-projects is missing from compiled bundles under $dist_dir" >&2
-  return 1
+  fi
+  echo "Installed Happy CLI is incompatible: list-saved-projects is missing from entrypoint-reachable compiled bundles" >&2
+  return "$rc"
 }
 
 require_github_issues_build_configuration() {
@@ -2300,7 +2333,7 @@ linux_refresh_desktop() {
   before_desktop="$(linux_deb_installed_version "$LINUX_PACKAGE_NAME")"
   before_desktop="${before_desktop:-not installed}"
 
-  local rc=0
+  local rc=0 report_rc=0
   set +e
   log "Starting Linux Happy Desktop refresh"
   (doctor)
@@ -2952,6 +2985,7 @@ refresh_desktop() {
   after_commit="$(current_happy_commit 2>/dev/null || echo "repo not found")"
   after_cli="$(happy_cli_version_without_exec)"
   duration="$(( $(date +%s) - started_at ))"
+  set +e
   write_update_report "refresh-desktop" \
     "Status" "$status" \
     "Error" "$error_message" \
@@ -2980,6 +3014,20 @@ refresh_desktop() {
     "Install app" "$INSTALL_APP" \
     "Keep backups" "$keep_backups" \
     "Duration seconds" "$duration" >/dev/null
+  report_rc=$?
+  set -e
+
+  if [[ "$report_rc" -ne 0 ]]; then
+    if [[ "$rc" -eq 0 ]]; then
+      rc="$report_rc"
+      failed_stage="write update report"
+      status="failed"
+      error_message="refresh failed at $failed_stage with exit code $rc"
+      echo "$error_message" >&2
+    else
+      echo "Additionally failed to write refresh report with exit code $report_rc; preserving $failed_stage exit code $rc." >&2
+    fi
+  fi
 
   if [[ "$rc" -ne 0 ]]; then
     exit "$rc"

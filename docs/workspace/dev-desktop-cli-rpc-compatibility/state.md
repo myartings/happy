@@ -10,7 +10,7 @@
 
 ## Next action
 
-- [ ] Deliver reviewed source PR to dev, run authorized DC-09 refresh, then archive terminal evidence
+- [ ] Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence
 
 ## Gate summary
 
@@ -20,9 +20,9 @@
 | decisions | passed | docs/workspace/dev-desktop-cli-rpc-compatibility/decisions.md D1-D6 resolve workspace source, installed-bundle probe, fail-closed order, installer reuse, platform boundary, and reporting |
 | scoping | passed | ready; owner=current Root; topology=current-root/fresh-session serial; no independent ready units; Feature with required risk controls; TDD devtools shell seam then focused CLI/App and applicable checks |
 | risk | passed | docs/workspace/dev-desktop-cli-rpc-compatibility/risk.md; cleared-with-controls for local CLI link, daemon restart, Desktop replacement, staged reporting, backup, and stop conditions |
-| implementation | passed | Delivery-review TDD remediation complete: npm-root exit 27 propagates through install identity, bundle, executable, daemon, and RPC helper chains; existing find 26 and stage fixtures pass. |
-| check | accepted_gaps | Candidate 637c664a560a: 7/9 commands passed; exact accepted indexes 2 and 5 only; npm-root exit 27 and find 26 focused coverage plus adjacent smokes pass. |
-| review | passed | Release-bound capable Spec and Standards reviews both accepted candidate 637c664a560a / diff 9fc5cb17e6d3 with no actionable findings. |
+| implementation | passed | Converged review remediation TDD complete: happyctl requires replacement-state PID/control-port /list HTTP 200 with valid children payload; live PID plus HTTP 503 fails, health status 33 propagates; AST graph realpath rejects symlink escape; focused/CLI build/adjacent smokes pass. |
+| check | accepted_gaps | Candidate 68ea8f22fca5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; affirmative HTTP health adds no new failure. |
+| review | passed | Fresh capable Spec and Standards reviews both accepted candidate 68ea8f22fca5 with no actionable findings. |
 | finish | pending |  |
 
 ## Phase history
@@ -78,3 +78,38 @@
 | 2026-09-02 | gate | check | Candidate 637c664a560a: 7/9 commands passed; exact accepted indexes 2 and 5 only; npm-root exit 27 and find 26 focused coverage plus adjacent smokes pass.; structured run: 63be68be-7af4-4d7f-b697-1479d11df482; accepted command indexes: 2, 5; approval: User explicitly accepted these exact two gaps on 2026-09-02: nondeterministic 1MB App blob timeout and three same-root workflow CRLF/LF configuration-fingerprint fixtures; npm-root remediation candidate reproduces only them. |
 | 2026-09-02 | gate | review | Release-bound capable Spec and Standards reviews both accepted candidate 637c664a560a / diff 9fc5cb17e6d3 with no actionable findings. |
 | 2026-09-02 | transition | finish | Deliver reviewed source PR to dev, run authorized DC-09 refresh, then archive terminal evidence |
+| 2026-09-02 | gate | check | origin/dev advanced via PR #100 and was merged conflict-free; integration candidate requires rebinding against new base c9815af8. |
+| 2026-09-02 | gate | review | Fresh integrated-candidate review required after origin/dev merge. |
+| 2026-09-02 | transition | implementation | Rebind conflict-free origin/dev integration candidate |
+| 2026-09-02 | gate | implementation | Origin/dev PR #100 merged without conflict or overlap in Issue #98 files; focused compatibility smoke and relative diff check pass. |
+| 2026-09-02 | transition | verification | Run applicable check and fresh review against updated origin/dev |
+| 2026-09-02 | gate | check | 9 configured commands; 2 failures; structured run: 53fac10b-f6d5-4339-8234-d7c2446aa024 |
+| 2026-09-02 | gate | check | Integrated candidate 118e7eea1751: 7/9 commands passed; exact accepted indexes 2 and 5 only; conflict-free origin/dev merge and focused Issue #98 smoke pass.; structured run: 53fac10b-f6d5-4339-8234-d7c2446aa024; accepted command indexes: 2, 5; approval: User explicitly accepted exact App blob timeout and workflow CRLF/LF fixture gaps; integrated candidate against origin/dev reproduces only them. |
+| 2026-09-02 | gate | review | Spec blocked on report-write status overriding original operational rc; Standards accepted with nonblocking coverage suggestions. |
+| 2026-09-02 | transition | implementation | TDD preserve operational exit code across report-write failure |
+| 2026-09-02 | gate | implementation | Integrated-review TDD remediation complete: primary operational status survives report-write failure; direct daemon stop/start 31/32 and npm-link realpath mismatch fixtures pass with focused and adjacent devtools smokes. |
+| 2026-09-02 | transition | verification | Bind report-status-preserving integrated candidate through applicable check and fresh dual-axis review |
+| 2026-09-02 | gate | check | 9 configured commands; 1 failures; structured run: 2d5ae93d-8dd9-4f62-b899-c3da2688d39f |
+| 2026-09-02 | gate | check | Candidate 5a89b3fa002e: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures, with no new failure.; structured run: 2d5ae93d-8dd9-4f62-b899-c3da2688d39f; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02. |
+| 2026-09-02 | gate | review | Spec accepted; Standards blocked on orphan compiled chunk false-positive at the fail-closed RPC compatibility boundary. |
+| 2026-09-02 | right_sizing_assessment | verification | Repeated review found a new same-root false-positive within the frozen fail-closed RPC compatibility contract: orphan dist chunks must not satisfy the gate |
+| 2026-09-02 | transition | implementation | TDD entrypoint-reachable compiled RPC bundle graph |
+| 2026-09-02 | gate | implementation | Final Standards remediation TDD complete: orphan marker RED fixture is rejected by entrypoint-reachable local module graph; real built CLI graph reaches Saved Projects marker; missing graph module returns 2; successful-operation report failure returns 29; focused and adjacent smokes pass. |
+| 2026-09-02 | transition | verification | Bind entrypoint-reachable RPC candidate through applicable check and fresh dual-axis review |
+| 2026-09-02 | gate | check | 9 configured commands; 1 failures; structured run: 2aa7be87-f8ca-4ed3-9822-eb4ea8e3e474 |
+| 2026-09-02 | gate | check | Candidate 4f41a3f7be51: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; orphan-chunk remediation introduces no new failure.; structured run: 2aa7be87-f8ca-4ed3-9822-eb4ea8e3e474; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02. |
+| 2026-09-02 | gate | review | Spec blocked on syntax-aware reachable registration evidence and live daemon health; Standards accepted. |
+| 2026-09-02 | transition | implementation | TDD syntax-aware reachable RPC registration and exact CLI daemon health |
+| 2026-09-02 | gate | implementation | Final Spec remediation TDD complete: Acorn syntax graph accepts only reachable registerHandler registration; pseudo-import/marker negatives pass; exact installed CLI daemon status confirms live replacement PID, preserves health exit 33, and rejects unhealthy changed PID; CLI build and adjacent smokes pass. |
+| 2026-09-02 | transition | verification | Bind syntax-aware RPC and live-daemon candidate through applicable check and fresh dual-axis review |
+| 2026-09-02 | gate | check | 9 configured commands; 1 failures; structured run: 23518581-3345-4e7f-9c06-eb9805e27731 |
+| 2026-09-02 | gate | check | Candidate 66dab695eea5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; AST and live-daemon remediation adds no new failure.; structured run: 23518581-3345-4e7f-9c06-eb9805e27731; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02. |
+| 2026-09-02 | gate | review | Both axes blocked only on affirmative daemon control-server health; all prior blockers closed. |
+| 2026-09-02 | right_sizing_assessment | verification | Repeated review converged on one frozen daemon-health false-positive: CLI status preserves state on failed HTTP probe and cannot serve as affirmative health evidence |
+| 2026-09-02 | transition | implementation | TDD affirmative replacement-daemon HTTP health and realpath graph containment |
+| 2026-09-02 | gate | implementation | Converged review remediation TDD complete: happyctl requires replacement-state PID/control-port /list HTTP 200 with valid children payload; live PID plus HTTP 503 fails, health status 33 propagates; AST graph realpath rejects symlink escape; focused/CLI build/adjacent smokes pass. |
+| 2026-09-02 | transition | verification | Bind affirmative HTTP health and realpath AST candidate through applicable check and fresh dual-axis review |
+| 2026-09-02 | gate | check | 9 configured commands; 1 failures; structured run: e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9 |
+| 2026-09-02 | gate | check | Candidate 68ea8f22fca5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; affirmative HTTP health adds no new failure.; structured run: e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02. |
+| 2026-09-02 | gate | review | Fresh capable Spec and Standards reviews both accepted candidate 68ea8f22fca5 with no actionable findings. |
+| 2026-09-02 | transition | finish | Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence |

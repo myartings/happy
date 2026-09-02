@@ -26,12 +26,25 @@
   bundle Saved Projects RPC gate, dry-run semantics, and stage reports.
 - Added behavior coverage for PATH decoys, distinctive install/daemon exit
   codes, same-PID rejection, chunked bundles, missing RPC, and fail-before-app.
-- Final Spec feedback extended original-status preservation through npm-root,
-  `find`, and `grep` failures inside the compatibility stage; a fake `find`
-  exit 26 fixture proves the public helper no longer coerces that error to 1.
+- Final Spec feedback extended original-status preservation through npm-root
+  and compatibility-analysis failures. The intermediate `find`/`grep` scanner
+  was later superseded by syntax-aware graph analysis with status 2.
 - Delivery review then traced npm-root status through every package-derived
   caller; fresh-subshell exit 27 fixtures cover install identity, bundle,
   executable, daemon, and RPC helper chains.
+- Integrated review found that a secondary report-write failure could replace
+  the primary operational status. The remediation preserves the original
+  status and directly covers daemon stop/start failures plus mismatched
+  npm-linked package identity.
+- Final Standards review found the compatibility scan could accept an orphan
+  chunk. The gate now follows only local modules reachable from the installed
+  `dist/index.mjs`; an orphan-marker fixture is rejected and the real built
+  workspace graph resolves the Saved Projects registration.
+- Final Spec review required stronger evidence than regex reachability and a
+  changed state PID. The verifier now parses imports and handler calls with
+  Acorn. A converged later review showed CLI status preserves ownership on an
+  inconclusive HTTP probe, so `happyctl` now requires its own successful
+  state/PID/port-bound `/list` response before Desktop replacement.
 
 ## Decisions
 

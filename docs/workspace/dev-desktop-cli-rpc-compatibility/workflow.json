@@ -5,7 +5,7 @@
   "layout": "standard",
   "workspaceKind": "standard",
   "phase": "finish",
-  "nextAction": "Deliver reviewed source PR to dev, run authorized DC-09 refresh, then archive terminal evidence",
+  "nextAction": "Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence",
   "riskRequired": true,
   "decisionsRequired": true,
   "gates": {
@@ -31,28 +31,28 @@
     },
     "implementation": {
       "status": "passed",
-      "evidence": "Delivery-review TDD remediation complete: npm-root exit 27 propagates through install identity, bundle, executable, daemon, and RPC helper chains; existing find 26 and stage fixtures pass.",
-      "updated": "2026-09-02T07:21:59+00:00"
+      "evidence": "Converged review remediation TDD complete: happyctl requires replacement-state PID/control-port /list HTTP 200 with valid children payload; live PID plus HTTP 503 fails, health status 33 propagates; AST graph realpath rejects symlink escape; focused/CLI build/adjacent smokes pass.",
+      "updated": "2026-09-02T08:45:33+00:00"
     },
     "check": {
       "status": "accepted_gaps",
-      "evidence": "Candidate 637c664a560a: 7/9 commands passed; exact accepted indexes 2 and 5 only; npm-root exit 27 and find 26 focused coverage plus adjacent smokes pass.",
-      "updated": "2026-09-02T07:27:50+00:00"
+      "evidence": "Candidate 68ea8f22fca5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; affirmative HTTP health adds no new failure.",
+      "updated": "2026-09-02T08:50:41+00:00"
     },
     "review": {
       "status": "passed",
-      "evidence": "Release-bound capable Spec and Standards reviews both accepted candidate 637c664a560a / diff 9fc5cb17e6d3 with no actionable findings.",
-      "updated": "2026-09-02T07:34:33+00:00",
+      "evidence": "Fresh capable Spec and Standards reviews both accepted candidate 68ea8f22fca5 with no actionable findings.",
+      "updated": "2026-09-02T08:54:25+00:00",
       "candidate": {
         "identityKind": "staged-candidate-v1",
-        "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
-        "candidateFingerprint": "637c664a560adbb27722ede621ef754a8649d24205e37139913748d13acb1f26"
+        "baseCommit": "c9815af899908e7d9112c7b0ab5ac18ab55c2b4b",
+        "candidateFingerprint": "68ea8f22fca57c085df3c5dfeec36d2b61f4b045bee8c9595813dfa5e5ef5b15"
       }
     },
     "finish": {
       "status": "pending",
       "evidence": "",
-      "updated": "2026-09-02T07:17:24+00:00"
+      "updated": "2026-09-02T08:42:13+00:00"
     }
   },
   "history": [
@@ -421,9 +421,269 @@
       "type": "transition",
       "phase": "finish",
       "evidence": "Deliver reviewed source PR to dev, run authorized DC-09 refresh, then archive terminal evidence"
+    },
+    {
+      "at": "2026-09-02T07:36:03+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "origin/dev advanced via PR #100 and was merged conflict-free; integration candidate requires rebinding against new base c9815af8."
+    },
+    {
+      "at": "2026-09-02T07:36:03+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh integrated-candidate review required after origin/dev merge."
+    },
+    {
+      "at": "2026-09-02T07:36:03+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Rebind conflict-free origin/dev integration candidate"
+    },
+    {
+      "at": "2026-09-02T07:36:03+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Origin/dev PR #100 merged without conflict or overlap in Issue #98 files; focused compatibility smoke and relative diff check pass."
+    },
+    {
+      "at": "2026-09-02T07:36:04+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run applicable check and fresh review against updated origin/dev"
+    },
+    {
+      "at": "2026-09-02T07:41:18+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 53fac10b-f6d5-4339-8234-d7c2446aa024"
+    },
+    {
+      "at": "2026-09-02T07:41:56+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Integrated candidate 118e7eea1751: 7/9 commands passed; exact accepted indexes 2 and 5 only; conflict-free origin/dev merge and focused Issue #98 smoke pass.; structured run: 53fac10b-f6d5-4339-8234-d7c2446aa024; accepted command indexes: 2, 5; approval: User explicitly accepted exact App blob timeout and workflow CRLF/LF fixture gaps; integrated candidate against origin/dev reproduces only them."
+    },
+    {
+      "at": "2026-09-02T07:48:05+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec blocked on report-write status overriding original operational rc; Standards accepted with nonblocking coverage suggestions."
+    },
+    {
+      "at": "2026-09-02T07:48:06+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD preserve operational exit code across report-write failure"
+    },
+    {
+      "at": "2026-09-02T07:55:56+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Integrated-review TDD remediation complete: primary operational status survives report-write failure; direct daemon stop/start 31/32 and npm-link realpath mismatch fixtures pass with focused and adjacent devtools smokes."
+    },
+    {
+      "at": "2026-09-02T07:55:56+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Bind report-status-preserving integrated candidate through applicable check and fresh dual-axis review"
+    },
+    {
+      "at": "2026-09-02T08:01:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 2d5ae93d-8dd9-4f62-b899-c3da2688d39f"
+    },
+    {
+      "at": "2026-09-02T08:01:24+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 5a89b3fa002e: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures, with no new failure.; structured run: 2d5ae93d-8dd9-4f62-b899-c3da2688d39f; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02."
+    },
+    {
+      "at": "2026-09-02T08:09:19+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec accepted; Standards blocked on orphan compiled chunk false-positive at the fail-closed RPC compatibility boundary."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T08:09:56+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One refresh proves the Saved Projects marker is in the installed CLI entrypoint-reachable compiled module graph before Desktop replacement",
+      "acceptanceSeam": "Orphan-marker RED fixture, reachable static/dynamic import graph verifier, focused smoke, complete check, and fresh dual-axis review",
+      "dependencies": "Existing installed dist/index.mjs entrypoint, local compiled .mjs chunks, Node runtime, and fail-closed compatibility stage",
+      "reviewBoundary": "One bounded compatibility-probe correction; no product or delivery scope expansion",
+      "rollbackBoundary": "Same Issue #98 devtools helper and smoke fixture; locally reversible before delivery",
+      "contextBoundary": "Current Root serial TDD remediation followed by fresh independent Spec and Standards contexts",
+      "consequence": "No local runtime mutation during remediation; authorized delivery remains gated on accepted final candidate",
+      "evidence": "Repeated review found a new same-root false-positive within the frozen fail-closed RPC compatibility contract: orphan dist chunks must not satisfy the gate",
+      "contractFingerprint": "30852ae85697d362effa6ae83d4673de289f3f409e70d8fd31756c365b9496fe",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T08:09:57+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD entrypoint-reachable compiled RPC bundle graph"
+    },
+    {
+      "at": "2026-09-02T08:14:51+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final Standards remediation TDD complete: orphan marker RED fixture is rejected by entrypoint-reachable local module graph; real built CLI graph reaches Saved Projects marker; missing graph module returns 2; successful-operation report failure returns 29; focused and adjacent smokes pass."
+    },
+    {
+      "at": "2026-09-02T08:14:51+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Bind entrypoint-reachable RPC candidate through applicable check and fresh dual-axis review"
+    },
+    {
+      "at": "2026-09-02T08:18:22+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 2aa7be87-f8ca-4ed3-9822-eb4ea8e3e474"
+    },
+    {
+      "at": "2026-09-02T08:18:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 4f41a3f7be51: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; orphan-chunk remediation introduces no new failure.; structured run: 2aa7be87-f8ca-4ed3-9822-eb4ea8e3e474; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02."
+    },
+    {
+      "at": "2026-09-02T08:24:11+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec blocked on syntax-aware reachable registration evidence and live daemon health; Standards accepted."
+    },
+    {
+      "at": "2026-09-02T08:24:32+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD syntax-aware reachable RPC registration and exact CLI daemon health"
+    },
+    {
+      "at": "2026-09-02T08:28:57+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Final Spec remediation TDD complete: Acorn syntax graph accepts only reachable registerHandler registration; pseudo-import/marker negatives pass; exact installed CLI daemon status confirms live replacement PID, preserves health exit 33, and rejects unhealthy changed PID; CLI build and adjacent smokes pass."
+    },
+    {
+      "at": "2026-09-02T08:28:57+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Bind syntax-aware RPC and live-daemon candidate through applicable check and fresh dual-axis review"
+    },
+    {
+      "at": "2026-09-02T08:35:59+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 23518581-3345-4e7f-9c06-eb9805e27731"
+    },
+    {
+      "at": "2026-09-02T08:36:18+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 66dab695eea5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; AST and live-daemon remediation adds no new failure.; structured run: 23518581-3345-4e7f-9c06-eb9805e27731; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02."
+    },
+    {
+      "at": "2026-09-02T08:41:58+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Both axes blocked only on affirmative daemon control-server health; all prior blockers closed."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T08:42:12+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One refresh requires an affirmative replacement-daemon HTTP control probe and syntax/realpath-contained RPC registration before Desktop replacement",
+      "acceptanceSeam": "Failed/inconclusive HTTP health fixture, successful replacement-state probe, realpath-contained AST graph, focused smoke, complete check, fresh review",
+      "dependencies": "Daemon state pid/httpPort, local /list control endpoint, installed CLI start, Acorn graph verifier",
+      "reviewBoundary": "One same-root live-health evidence correction plus compatible path hardening; no product scope expansion",
+      "rollbackBoundary": "Issue #98 devtools health helper/parser and fixtures; locally reversible before delivery",
+      "contextBoundary": "Current Root serial TDD remediation followed by fresh independent capable reviews",
+      "consequence": "No real runtime mutation during remediation; authorized delivery remains gated",
+      "evidence": "Repeated review converged on one frozen daemon-health false-positive: CLI status preserves state on failed HTTP probe and cannot serve as affirmative health evidence",
+      "contractFingerprint": "c343beea6d0410353ce9d0b7bdeebcece62c927372954e76aff5b6909972a246",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T08:42:13+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD affirmative replacement-daemon HTTP health and realpath graph containment"
+    },
+    {
+      "at": "2026-09-02T08:45:33+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Converged review remediation TDD complete: happyctl requires replacement-state PID/control-port /list HTTP 200 with valid children payload; live PID plus HTTP 503 fails, health status 33 propagates; AST graph realpath rejects symlink escape; focused/CLI build/adjacent smokes pass."
+    },
+    {
+      "at": "2026-09-02T08:45:33+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Bind affirmative HTTP health and realpath AST candidate through applicable check and fresh dual-axis review"
+    },
+    {
+      "at": "2026-09-02T08:50:25+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9"
+    },
+    {
+      "at": "2026-09-02T08:50:41+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Candidate 68ea8f22fca5: 8/9 configured commands passed, including App 245/1946 and Server 112; index 5 alone reproduces the same three accepted merge/archive configuration-fingerprint fixtures; affirmative HTTP health adds no new failure.; structured run: e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9; accepted command indexes: 5; approval: User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02."
+    },
+    {
+      "at": "2026-09-02T08:54:25+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh capable Spec and Standards reviews both accepted candidate 68ea8f22fca5 with no actionable findings."
+    },
+    {
+      "at": "2026-09-02T08:54:27+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Deliver source PR to dev, run authorized DC-09 refresh, then record/archive terminal evidence"
     }
   ],
-  "updated": "2026-09-02T07:34:34+00:00",
+  "updated": "2026-09-02T08:54:27+00:00",
   "deliverySourcePolicy": 1,
   "deliverySource": {
     "kind": "tracker",
@@ -488,42 +748,79 @@
       "remainderSlices": null,
       "dependencyInterfaces": null,
       "safeStop": null
+    },
+    {
+      "at": "2026-09-02T08:09:56+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One refresh proves the Saved Projects marker is in the installed CLI entrypoint-reachable compiled module graph before Desktop replacement",
+      "acceptanceSeam": "Orphan-marker RED fixture, reachable static/dynamic import graph verifier, focused smoke, complete check, and fresh dual-axis review",
+      "dependencies": "Existing installed dist/index.mjs entrypoint, local compiled .mjs chunks, Node runtime, and fail-closed compatibility stage",
+      "reviewBoundary": "One bounded compatibility-probe correction; no product or delivery scope expansion",
+      "rollbackBoundary": "Same Issue #98 devtools helper and smoke fixture; locally reversible before delivery",
+      "contextBoundary": "Current Root serial TDD remediation followed by fresh independent Spec and Standards contexts",
+      "consequence": "No local runtime mutation during remediation; authorized delivery remains gated on accepted final candidate",
+      "evidence": "Repeated review found a new same-root false-positive within the frozen fail-closed RPC compatibility contract: orphan dist chunks must not satisfy the gate",
+      "contractFingerprint": "30852ae85697d362effa6ae83d4673de289f3f409e70d8fd31756c365b9496fe",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T08:42:12+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "One refresh requires an affirmative replacement-daemon HTTP control probe and syntax/realpath-contained RPC registration before Desktop replacement",
+      "acceptanceSeam": "Failed/inconclusive HTTP health fixture, successful replacement-state probe, realpath-contained AST graph, focused smoke, complete check, fresh review",
+      "dependencies": "Daemon state pid/httpPort, local /list control endpoint, installed CLI start, Acorn graph verifier",
+      "reviewBoundary": "One same-root live-health evidence correction plus compatible path hardening; no product scope expansion",
+      "rollbackBoundary": "Issue #98 devtools health helper/parser and fixtures; locally reversible before delivery",
+      "contextBoundary": "Current Root serial TDD remediation followed by fresh independent capable reviews",
+      "consequence": "No real runtime mutation during remediation; authorized delivery remains gated",
+      "evidence": "Repeated review converged on one frozen daemon-health false-positive: CLI status preserves state on failed HTTP probe and cannot serve as affirmative health evidence",
+      "contractFingerprint": "c343beea6d0410353ce9d0b7bdeebcece62c927372954e76aff5b6909972a246",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
     }
   ],
   "rightSizingAcceptanceRequired": true,
   "rightSizingContractPolicy": 1,
   "rightSizingContractPolicyStart": 0,
   "checkEvidencePolicy": 1,
-  "checkRunId": "63be68be-7af4-4d7f-b697-1479d11df482",
-  "checkRunFingerprint": "1047bfe5a78a0853f0f5f5b1fe15916b1855f54dfffbac5703502f55bc5f39a5",
+  "checkRunId": "e7d66ca0-279b-4a9c-9aeb-e6ed2a327ad9",
+  "checkRunFingerprint": "af007ba0b071e38a1fe150b3e4d5da6548517adb196c1473980d8842f755f661",
   "checkedCandidate": {
     "identityKind": "staged-candidate-v1",
-    "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
-    "candidateFingerprint": "637c664a560adbb27722ede621ef754a8649d24205e37139913748d13acb1f26"
+    "baseCommit": "c9815af899908e7d9112c7b0ab5ac18ab55c2b4b",
+    "candidateFingerprint": "68ea8f22fca57c085df3c5dfeec36d2b61f4b045bee8c9595813dfa5e5ef5b15"
   },
   "checkAcceptedFailures": {
     "policyVersion": 1,
     "commandIndexes": [
-      2,
       5
     ],
-    "approval": "User explicitly accepted these exact two gaps on 2026-09-02: nondeterministic 1MB App blob timeout and three same-root workflow CRLF/LF configuration-fingerprint fixtures; npm-root remediation candidate reproduces only them."
+    "approval": "User explicitly accepted the exact workflow CRLF/LF configuration-fingerprint gap on 2026-09-02."
   },
-  "checkAcceptedFailuresFingerprint": "4baabb0d9c36ce56f89507503d513df7836bfdfe642ae94419a7ed039461e2a9",
+  "checkAcceptedFailuresFingerprint": "dcb1dc792dd986b917e239fe9f38fba7b5a7659cf5da89085e671df23cf1b8e8",
   "finalReview": {
     "candidate": {
       "identityKind": "staged-candidate-v1",
-      "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
-      "candidateFingerprint": "637c664a560adbb27722ede621ef754a8649d24205e37139913748d13acb1f26"
+      "baseCommit": "c9815af899908e7d9112c7b0ab5ac18ab55c2b4b",
+      "candidateFingerprint": "68ea8f22fca57c085df3c5dfeec36d2b61f4b045bee8c9595813dfa5e5ef5b15"
     },
     "outcomes": {
       "spec-review": {
         "status": "accepted",
-        "evidence": "Candidate 637c664a560a / diff 9fc5cb17e6d3: accepted, no findings; npm-root 27 full chain, find 26, grep errors, missing marker 1, public report/exit, and terminal docs verified."
+        "evidence": "Fresh final Spec review accepted candidate 68ea8f22fca5 with no actionable findings; DC-01..DC-08 satisfied and DC-09 remains post-merge."
       },
       "standards-review": {
         "status": "accepted",
-        "evidence": "Candidate 637c664a560a / diff 9fc5cb17e6d3: accepted, no findings; shell status handling, exact identity, atomic ordering, fault injection, rollback, and docs verified."
+        "evidence": "Fresh final Standards review accepted candidate 68ea8f22fca5 with no actionable findings; HTTP health, AST realpath graph, identity/status, risk, and rollback controls verified."
       }
     }
   }
