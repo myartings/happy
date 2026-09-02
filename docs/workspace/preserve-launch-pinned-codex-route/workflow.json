@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 3,
+  "slug": "preserve-launch-pinned-codex-route",
+  "intensity": "feature",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "After explicit delivery authorization, create the archived delivery commit and PR, link Issue #99, and recommend closure; validator centralization remains a non-blocking maintenance observation.",
+  "riskRequired": true,
+  "decisionsRequired": false,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User accepted Issue #99 continuation in the exact fresh Issue session; docs/specs/preserve-launch-pinned-codex-route.md freezes one independently deliverable Slice with AC1-AC8.",
+      "updated": "2026-09-02T05:32:55+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D4 record complete-pair authority, explicit per-session picks, omission semantics, and legacy compatibility; no material product decision remains open.",
+      "updated": "2026-09-02T05:32:55+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: current Root owns the exact confirmed fresh-session Issue #99 worktree; topology=current-root serial; Sol Medium confirmed; TDD seams are shared App resolver plus CLI remote-mode/projection tests; protected paths untouched; risk controls passed.",
+      "updated": "2026-09-02T05:34:11+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "Cleared-with-controls: complete effective-pair gating, partial-pair compatibility, explicit-pick precedence, focused negative fixtures, reversible resolver-only production change, and independent review required.",
+      "updated": "2026-09-02T05:32:56+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Review remediation complete: App consumer mirrors strict concrete-model/effort authority validation; malformed RED cases now pass 37/37; candidate-bound actual App Server thread/turn/settings/daemon route fixture passes within focused CLI 68/68; App/CLI typechecks pass.",
+      "updated": "2026-09-02T06:07:36+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Seven of nine configured commands passed. Index 2 isolated blob suite passed 9/9; index 5 reproduces only in unchanged autocrlf=true fixtures while the LF control passes.",
+      "updated": "2026-09-02T06:15:25+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Fresh pinned candidate received independent parallel Spec and Standards PASS conclusions; no actionable or blocking findings.",
+      "updated": "2026-09-02T06:22:21+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
+        "candidateFingerprint": "72584382a61fadafeb0669d7517969181c6ff13a29802d1bf57577de7590ee41"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish summary, exact verification and accepted gaps, dual PASS review, rollback, lessons decision, tracker recommendation, and non-blocking validator-parity observation are complete; AC1-AC8 are verified.",
+      "updated": "2026-09-02T06:24:34+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-02T05:30:03+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-02T05:30:03+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/99"
+    },
+    {
+      "at": "2026-09-02T05:32:55+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User accepted Issue #99 continuation in the exact fresh Issue session; docs/specs/preserve-launch-pinned-codex-route.md freezes one independently deliverable Slice with AC1-AC8."
+    },
+    {
+      "at": "2026-09-02T05:32:55+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D4 record complete-pair authority, explicit per-session picks, omission semantics, and legacy compatibility; no material product decision remains open."
+    },
+    {
+      "at": "2026-09-02T05:32:56+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "Cleared-with-controls: complete effective-pair gating, partial-pair compatibility, explicit-pick precedence, focused negative fixtures, reversible resolver-only production change, and independent review required."
+    },
+    {
+      "at": "2026-09-02T05:32:56+00:00",
+      "type": "transition",
+      "phase": "design",
+      "evidence": "Run acceptance right-sizing and scoping against the verified App/CLI route seam."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T05:34:11+00:00",
+      "phase": "design",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Preserve one known per-session Codex model/effort route across the first Happy message unless the user explicitly changes either field.",
+      "acceptanceSeam": "AC1-AC8: complete effective pair, outbound first-message metadata, CLI sticky launch state, explicit per-field overrides, runtime projection, and compatibility.",
+      "dependencies": "Consumes existing synced per-session picks, CodexRemoteModeState sticky route semantics, and Issue #80 atomic effective-route projection; no blocking implementation dependency.",
+      "reviewBoundary": "The shared App resolver predicate, CLI retention evidence, projection evidence, and compatibility tests are accepted or rejected together.",
+      "rollbackBoundary": "Revert the resolver predicate and focused tests; no schema, migration, persisted-data rewrite, or server deployment.",
+      "contextBoundary": "One serial Sol Medium current-root session in the exact registered Issue #99 worktree; no writer delegation or downstream launcher work.",
+      "consequence": "Medium workflow consequence because a false route silently changes automation model or reasoning effort; complete-pair and negative-fixture controls are mandatory.",
+      "evidence": "Live Issue #99 and origin/dev code revalidated; route planner returns current-root with confirmed fresh-session binding; the App resolver injects defaults while the CLI already retains launch state when keys are absent.",
+      "contractFingerprint": "ba9240e8a1fa92fec21b79504a7962c742a8fb82e804850328e7d0eeb1a67a37",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T05:34:11+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current Root owns the exact confirmed fresh-session Issue #99 worktree; topology=current-root serial; Sol Medium confirmed; TDD seams are shared App resolver plus CLI remote-mode/projection tests; protected paths untouched; risk controls passed."
+    },
+    {
+      "at": "2026-09-02T05:34:11+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD T1: prove complete effective-route sessions omit unselected model/effort metadata."
+    },
+    {
+      "at": "2026-09-02T05:40:18+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented complete effective-pair gating in the shared App resolver; focused App suite 29/29, CLI route/projection suite 32/32, and App/CLI typechecks pass."
+    },
+    {
+      "at": "2026-09-02T05:40:18+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Freeze the complete candidate and run the applicable structured check family."
+    },
+    {
+      "at": "2026-09-02T05:42:14+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Implemented complete effective-pair gating in the shared App resolver; exact Luna/Max reproduction and App suite 30/30, CLI route/projection suite 32/32, and App/CLI typechecks pass."
+    },
+    {
+      "at": "2026-09-02T05:49:22+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: e0d065c4-4780-4c3d-ab99-b3bfcc87f947"
+    },
+    {
+      "at": "2026-09-02T05:54:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Seven of nine configured commands passed. Index 2 isolated 9/9; index 5 reproduces only in unchanged autocrlf=true fixtures while the LF control passes.; structured run: e0d065c4-4780-4c3d-ab99-b3bfcc87f947; accepted command indexes: 2, 5; approval: User explicitly accepted both candidate-external gaps on 2026-09-02: the App large-blob parallel-load timeout and the unchanged autocrlf raw-byte workflow fixture failures."
+    },
+    {
+      "at": "2026-09-02T05:58:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Blocked dual review requires candidate remediation and a fresh structured staged check."
+    },
+    {
+      "at": "2026-09-02T05:58:01+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate strict effective-route validation and cross-boundary first-message thread/projection coverage."
+    },
+    {
+      "at": "2026-09-02T06:07:36+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation complete: App consumer mirrors strict concrete-model/effort authority validation; malformed RED cases now pass 37/37; candidate-bound actual App Server thread/turn/settings/daemon route fixture passes within focused CLI 68/68; App/CLI typechecks pass."
+    },
+    {
+      "at": "2026-09-02T06:07:36+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the remediated candidate and run a fresh complete applicable check before fresh dual review."
+    },
+    {
+      "at": "2026-09-02T06:14:19+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 2 failures; structured run: 417d33d9-b69b-4166-9c92-922a397e31a2"
+    },
+    {
+      "at": "2026-09-02T06:15:25+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Seven of nine configured commands passed. Index 2 isolated blob suite passed 9/9; index 5 reproduces only in unchanged autocrlf=true fixtures while the LF control passes.; structured run: 417d33d9-b69b-4166-9c92-922a397e31a2; accepted command indexes: 2, 5; approval: User explicitly accepted both candidate-external gaps on 2026-09-02: the App large-blob parallel-load timeout and the unchanged autocrlf raw-byte workflow fixture failures."
+    },
+    {
+      "at": "2026-09-02T06:22:21+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh pinned candidate received independent parallel Spec and Standards PASS conclusions; no actionable or blocking findings."
+    },
+    {
+      "at": "2026-09-02T06:23:31+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, staged CI, and deterministic terminal archive projection; stop before unauthorized commit/push/PR/tracker mutation."
+    },
+    {
+      "at": "2026-09-02T06:24:34+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish summary, exact verification and accepted gaps, dual PASS review, rollback, lessons decision, tracker recommendation, and non-blocking validator-parity observation are complete; AC1-AC8 are verified."
+    },
+    {
+      "at": "2026-09-02T06:25:11+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #99 preserves a complete valid launch-pinned Codex model/effort route across the first Happy message and actual App Server/daemon projection, with explicit per-message overrides retained.; result identity: archive-introducing-commit; follow-up: After explicit delivery authorization, create the archived delivery commit and PR, link Issue #99, and recommend closure; validator centralization remains a non-blocking maintenance observation."
+    }
+  ],
+  "updated": "2026-09-02T06:25:11+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/99",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-02T05:34:11+00:00",
+      "phase": "design",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Preserve one known per-session Codex model/effort route across the first Happy message unless the user explicitly changes either field.",
+      "acceptanceSeam": "AC1-AC8: complete effective pair, outbound first-message metadata, CLI sticky launch state, explicit per-field overrides, runtime projection, and compatibility.",
+      "dependencies": "Consumes existing synced per-session picks, CodexRemoteModeState sticky route semantics, and Issue #80 atomic effective-route projection; no blocking implementation dependency.",
+      "reviewBoundary": "The shared App resolver predicate, CLI retention evidence, projection evidence, and compatibility tests are accepted or rejected together.",
+      "rollbackBoundary": "Revert the resolver predicate and focused tests; no schema, migration, persisted-data rewrite, or server deployment.",
+      "contextBoundary": "One serial Sol Medium current-root session in the exact registered Issue #99 worktree; no writer delegation or downstream launcher work.",
+      "consequence": "Medium workflow consequence because a false route silently changes automation model or reasoning effort; complete-pair and negative-fixture controls are mandatory.",
+      "evidence": "Live Issue #99 and origin/dev code revalidated; route planner returns current-root with confirmed fresh-session binding; the App resolver injects defaults while the CLI already retains launch state when keys are absent.",
+      "contractFingerprint": "ba9240e8a1fa92fec21b79504a7962c742a8fb82e804850328e7d0eeb1a67a37",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "417d33d9-b69b-4166-9c92-922a397e31a2",
+  "checkRunFingerprint": "1987f9a5ea11193f0911edc0c80b5a02f788a6f2788cf169257491840154ac61",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
+    "candidateFingerprint": "72584382a61fadafeb0669d7517969181c6ff13a29802d1bf57577de7590ee41"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      2,
+      5
+    ],
+    "approval": "User explicitly accepted both candidate-external gaps on 2026-09-02: the App large-blob parallel-load timeout and the unchanged autocrlf raw-byte workflow fixture failures."
+  },
+  "checkAcceptedFailuresFingerprint": "1ba4cb7641acf29a51e0f45cd4ee741066ae63bf068685113282e0647d5c185d",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "03936270022bdbb635f66a0cbab647a7b9e9b92b",
+      "candidateFingerprint": "72584382a61fadafeb0669d7517969181c6ff13a29802d1bf57577de7590ee41"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "PASS: no actionable Spec findings; strict valid-pair authority and candidate-bound first-message through actual thread/turn and daemon projection evidence satisfy AC1-AC8."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "PASS: no blocking findings; malformed route authority is fail-closed, sticky route and projection remain consistent, and rollback is direct. Non-blocking: duplicated App/CLI validators require future parity discipline."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Complete finish evidence, staged CI, and deterministic terminal archive projection; stop before unauthorized commit/push/PR/tracker mutation.",
+    "prearchiveUpdated": "2026-09-02T06:24:34+00:00",
+    "prearchiveActive": {
+      "feature": "preserve-launch-pinned-codex-route",
+      "phase": "finish",
+      "updated": "2026-09-02",
+      "next": "Complete finish evidence, staged CI, and deterministic terminal archive projection; stop before unauthorized commit/push/PR/tracker mutation.",
+      "branch / worktree": "issue/99-preserve-launch-pinned-codex-reasoning-effort-on"
+    },
+    "prearchiveArchiveObject": "04aa5c09b50cd1816404717c39d2ac14a4829556",
+    "fingerprint": "2e31d523e27db61eab298da2f0326feda0eca8858919b2f936eb90c900b68b2c"
+  },
+  "archivedAt": "2026-09-02T06:25:11+00:00",
+  "archiveDate": "2026-09-02",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #99 preserves a complete valid launch-pinned Codex model/effort route across the first Happy message and actual App Server/daemon projection, with explicit per-message overrides retained.",
+  "archiveFollowUp": "After explicit delivery authorization, create the archived delivery commit and PR, link Issue #99, and recommend closure; validator centralization remains a non-blocking maintenance observation."
+}

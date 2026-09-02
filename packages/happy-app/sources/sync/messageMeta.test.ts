@@ -31,6 +31,134 @@ describe('resolveMessageModeMeta', () => {
         });
     });
 
+    it('preserves a complete runtime-confirmed Codex route when no session route was selected', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: {
+                flavor: 'codex',
+                effectiveModel: 'gpt-5.6-luna',
+                effectiveReasoningEffort: 'max',
+            },
+        } as any, {
+            agentDefaultOverrides: {
+                codex: {
+                    modelMode: 'gpt-5.6-terra',
+                    effortLevel: 'high',
+                },
+            },
+        } as any);
+
+        expect(meta).toEqual({
+            permissionMode: 'auto',
+            serviceTier: 'default',
+        });
+    });
+
+    it('does not replace a launch-pinned Luna Max route with the client Sol Medium default', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: 'gpt-5.6-luna',
+            effortLevel: null,
+            metadata: {
+                flavor: 'codex',
+                modelMode: 'gpt-5.6-luna',
+                effectiveModel: 'gpt-5.6-luna',
+                effectiveReasoningEffort: 'max',
+            },
+        } as any);
+
+        expect(meta).toEqual({
+            permissionMode: 'auto',
+            model: 'gpt-5.6-luna',
+            serviceTier: 'default',
+        });
+    });
+
+    it('sends only an explicitly selected model when a confirmed effort already exists', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: 'gpt-5.6-terra',
+            effortLevel: null,
+            metadata: {
+                flavor: 'codex',
+                effectiveModel: 'gpt-5.6-luna',
+                effectiveReasoningEffort: 'max',
+            },
+        } as any);
+
+        expect(meta).toEqual({
+            permissionMode: 'auto',
+            model: 'gpt-5.6-terra',
+            serviceTier: 'default',
+        });
+    });
+
+    it('sends only an explicitly selected effort when a confirmed model already exists', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: 'high',
+            metadata: {
+                flavor: 'codex',
+                effectiveModel: 'gpt-5.6-luna',
+                effectiveReasoningEffort: 'max',
+            },
+        } as any);
+
+        expect(meta).toEqual({
+            permissionMode: 'auto',
+            effort: 'high',
+            serviceTier: 'default',
+        });
+    });
+
+    it.each([
+        { effectiveModel: 'gpt-5.6-luna' },
+        { effectiveReasoningEffort: 'max' },
+        { effectiveModel: '', effectiveReasoningEffort: 'max' },
+        { effectiveModel: 'gpt-5.6-luna', effectiveReasoningEffort: '' },
+    ])('keeps Codex defaults when effective route evidence is incomplete: %j', (effectiveRoute) => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: { flavor: 'codex', ...effectiveRoute },
+        } as any);
+
+        expect(meta).toEqual({
+            permissionMode: 'auto',
+            model: 'gpt-5.6-sol',
+            effort: 'medium',
+            serviceTier: 'default',
+        });
+    });
+
+    it.each([
+        { effectiveModel: 'default', effectiveReasoningEffort: 'medium' },
+        { effectiveModel: 'null', effectiveReasoningEffort: 'medium' },
+        { effectiveModel: 'garbage', effectiveReasoningEffort: 'medium' },
+        { effectiveModel: 'gpt-5.6-sol\nspoofed', effectiveReasoningEffort: 'medium' },
+        { effectiveModel: ' gpt-5.6-sol ', effectiveReasoningEffort: 'medium' },
+        { effectiveModel: 'gpt-5.6-sol', effectiveReasoningEffort: 'turbo' },
+        { effectiveModel: 'gpt-5.6-sol', effectiveReasoningEffort: ' medium ' },
+    ])('keeps Codex defaults when effective route evidence is malformed: %j', (effectiveRoute) => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: null,
+            effortLevel: null,
+            metadata: { flavor: 'codex', ...effectiveRoute },
+        } as any);
+
+        expect(meta).toEqual({
+            permissionMode: 'auto',
+            model: 'gpt-5.6-sol',
+            effort: 'medium',
+            serviceTier: 'default',
+        });
+    });
+
     it('uses Default for an unset Codex code default on an old CLI', () => {
         const meta = resolveMessageModeMeta({
             permissionMode: null,
@@ -172,7 +300,11 @@ describe('resolveMessageModeMeta', () => {
             permissionMode: 'read-only',
             modelMode: 'gpt-5.6-terra',
             effortLevel: 'high',
-            metadata: { flavor: 'codex' },
+            metadata: {
+                flavor: 'codex',
+                effectiveModel: 'gpt-5.6-luna',
+                effectiveReasoningEffort: 'max',
+            },
         } as any);
 
         expect(meta).toEqual({

@@ -5,6 +5,11 @@ export type CodexEffectiveRouteEvidence = {
     reasoningEffort?: unknown;
 } | null | undefined;
 
+export type CodexEffectiveRouteProjection = {
+    effectiveModel: string;
+    effectiveReasoningEffort: string;
+};
+
 export const CODEX_REASONING_EFFORTS = [
     'none',
     'minimal',
@@ -98,5 +103,20 @@ export function withCodexEffectiveRouteMetadata(
         ...metadata,
         effectiveModel: evidence.model,
         effectiveReasoningEffort: evidence.reasoningEffort,
+    };
+}
+
+export function projectCodexEffectiveRoute(
+    metadata: Metadata,
+    evidence: CodexEffectiveRouteEvidence,
+): CodexEffectiveRouteProjection | null {
+    const projected = withCodexEffectiveRouteMetadata(metadata, evidence);
+    if (!isConcreteCodexModel(projected.effectiveModel)
+        || !isCodexReasoningEffort(projected.effectiveReasoningEffort)) {
+        return null;
+    }
+    return {
+        effectiveModel: projected.effectiveModel,
+        effectiveReasoningEffort: projected.effectiveReasoningEffort,
     };
 }
