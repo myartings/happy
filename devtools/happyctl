@@ -1651,6 +1651,215 @@ update_cli() {
   log "After: $(happy_cli_version_without_exec)"
 }
 
+build_workspace_cli() {
+  linux_only_build_notice
+  log "Building workspace Happy CLI"
+  run_pnpm -C "$HAPPY_REPO" --filter happy run build
+}
+
+install_workspace_cli() {
+  local rc
+  linux_only_build_notice
+  require_cmd npm
+  require_cmd node
+  log "Linking the built workspace Happy CLI"
+  run_pnpm -C "$HAPPY_REPO" --filter happy run cli:install -- --link-only
+  rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    return "$rc"
+  fi
+  verify_workspace_cli_install_identity
+}
+
+installed_happy_cli_package_path() {
+  local npm_root rc
+  if npm_root="$(npm root -g 2>/dev/null)"; then
+    :
+  else
+    rc=$?
+    return "$rc"
+  fi
+  [[ -n "$npm_root" ]] || return 1
+  printf '%s/happy\n' "$npm_root"
+}
+
+verify_workspace_cli_install_identity() {
+  local installed_package expected_package rc
+  if installed_package="$(installed_happy_cli_package_path)"; then
+    :
+  else
+    rc=$?
+    echo "Could not resolve the globally installed Happy CLI package." >&2
+    return "$rc"
+  fi
+  expected_package="$HAPPY_REPO/packages/happy-cli"
+  installed_package="$(node -e 'const fs=require("node:fs"); process.stdout.write(fs.realpathSync(process.argv[1]))' "$installed_package" 2>/dev/null)" || {
+    echo "Could not resolve installed Happy CLI package identity." >&2
+    return 1
+  }
+  expected_package="$(node -e 'const fs=require("node:fs"); process.stdout.write(fs.realpathSync(process.argv[1]))' "$expected_package" 2>/dev/null)" || return 1
+  if [[ "$installed_package" != "$expected_package" ]]; then
+    echo "Installed Happy CLI does not resolve to the workspace package: $installed_package" >&2
+    return 1
+  fi
+  log "Verified workspace Happy CLI install identity: $installed_package"
+}
+
+happy_daemon_state_path() {
+  local happy_home="${HAPPY_HOME_DIR:-$HOME/.happy}"
+  case "$happy_home" in
+    "~") happy_home="$HOME" ;;
+    "~/"*) happy_home="$HOME/${happy_home:2}" ;;
+  esac
+  printf '%s/daemon.state.json\n' "$happy_home"
+}
+
+happy_daemon_pid() {
+  local state_file
+  state_file="$(happy_daemon_state_path)"
+  [[ -f "$state_file" ]] || return 1
+  node -e '
+const fs = require("node:fs");
+const state = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+if (!Number.isSafeInteger(state.pid) || state.pid <= 0) process.exit(1);
+process.stdout.write(String(state.pid));
+' "$state_file"
+}
+
+verify_happy_daemon_http_health() {
+  local state_file
+  state_file="$(happy_daemon_state_path)"
+  node - "$state_file" "$1" <<'NODE'
+const fs = require("node:fs");
+
+async function main() {
+  const state = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+  const expectedPid = Number(process.argv[3]);
+  if (state.pid !== expectedPid || !Number.isSafeInteger(state.httpPort) || state.httpPort <= 0) {
+    throw new Error("daemon state does not match the replacement PID and control port");
+  }
+  process.kill(expectedPid, 0);
+  const response = await fetch(`http://127.0.0.1:${state.httpPort}/list`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+    signal: AbortSignal.timeout(2000),
+  });
+  if (!response.ok) throw new Error(`daemon control probe returned HTTP ${response.status}`);
+  const payload = await response.json();
+  if (!Array.isArray(payload.children)) throw new Error("daemon control probe returned an invalid payload");
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});
+NODE
+}
+
+verify_workspace_cli_daemon() {
+  local cli_entry previous_pid replacement_pid rc
+  linux_only_build_notice
+  require_cmd node
+  if cli_entry="$(installed_happy_cli_executable_path)"; then
+    :
+  else
+    rc=$?
+    echo "Could not resolve the installed Happy CLI executable." >&2
+    return "$rc"
+  fi
+  if [[ ! -f "$cli_entry" ]]; then
+    echo "Installed Happy CLI executable not found: $cli_entry" >&2
+    return 1
+  fi
+  previous_pid="$(happy_daemon_pid 2>/dev/null || true)"
+  log "Restarting the daemon with the exact installed Happy CLI: $cli_entry"
+  # Stop may safely decline when daemon identity cannot be established. The
+  # post-start PID comparison below turns that case into a hard failure instead
+  # of accepting an unrelated still-running daemon.
+  run node "$cli_entry" daemon stop
+  rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    return "$rc"
+  fi
+  run node "$cli_entry" daemon start
+  rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    return "$rc"
+  fi
+  replacement_pid="$(happy_daemon_pid 2>/dev/null)" || {
+    echo "Happy CLI daemon did not publish a valid running PID after restart." >&2
+    return 1
+  }
+  if [[ -n "$previous_pid" && "$replacement_pid" == "$previous_pid" ]]; then
+    echo "Happy CLI daemon was not replaced; PID is still $replacement_pid." >&2
+    return 1
+  fi
+  if verify_happy_daemon_http_health "$replacement_pid"; then
+    :
+  else
+    rc=$?
+    echo "Happy CLI daemon health check did not confirm live PID $replacement_pid." >&2
+    return "$rc"
+  fi
+  log "Verified replacement Happy CLI daemon PID: $replacement_pid"
+}
+
+installed_happy_cli_bundle_path() {
+  local package_path rc
+  if package_path="$(installed_happy_cli_package_path)"; then
+    :
+  else
+    rc=$?
+    return "$rc"
+  fi
+  printf '%s/dist/index.mjs\n' "$package_path"
+}
+
+installed_happy_cli_executable_path() {
+  local package_path rc
+  if package_path="$(installed_happy_cli_package_path)"; then
+    :
+  else
+    rc=$?
+    return "$rc"
+  fi
+  printf '%s/bin/happy.mjs\n' "$package_path"
+}
+
+installed_happy_cli_reachable_rpc_bundle() {
+  node "$SCRIPT_DIR/verify-cli-rpc.cjs" "$1"
+}
+
+verify_workspace_cli_rpc_compatibility() {
+  linux_only_build_notice
+  require_cmd npm
+  require_cmd node
+  local entry_bundle candidate rc
+  if entry_bundle="$(installed_happy_cli_bundle_path)"; then
+    :
+  else
+    rc=$?
+    echo "Could not resolve the globally installed Happy CLI bundle." >&2
+    return "$rc"
+  fi
+  if [[ ! -f "$entry_bundle" ]]; then
+    echo "Installed Happy CLI bundle not found: $entry_bundle" >&2
+    return 1
+  fi
+  if candidate="$(installed_happy_cli_reachable_rpc_bundle "$entry_bundle")"; then
+    log "Verified installed Happy CLI Saved Projects RPC in entrypoint-reachable bundle: $candidate"
+    return 0
+  else
+    rc=$?
+    if [[ "$rc" -ne 1 ]]; then
+      return "$rc"
+    fi
+  fi
+  echo "Installed Happy CLI is incompatible: list-saved-projects is missing from entrypoint-reachable compiled bundles" >&2
+  return "$rc"
+}
+
 require_github_issues_build_configuration() {
   local name
   for name in EXPO_PUBLIC_HAPPY_GITHUB_ISSUES_CLIENT_ID EXPO_PUBLIC_HAPPY_GITHUB_ISSUES_APP_SLUG; do
@@ -2124,7 +2333,7 @@ linux_refresh_desktop() {
   before_desktop="$(linux_deb_installed_version "$LINUX_PACKAGE_NAME")"
   before_desktop="${before_desktop:-not installed}"
 
-  local rc=0
+  local rc=0 report_rc=0
   set +e
   log "Starting Linux Happy Desktop refresh"
   (doctor)
@@ -2604,7 +2813,9 @@ refresh_desktop() {
     echo "Would fetch official and personal remotes, then update this integration chain:"
     echo "  $HAPPY_DEVTOOLS_BASE_UPSTREAM -> $HAPPY_DEVTOOLS_BASE_BRANCH -> $HAPPY_DEVTOOLS_PATCH_BRANCHES"
     echo "Would always build from: $HAPPY_DEVTOOLS_FINAL_BRANCH"
-    echo "After a conflict-free merge it would build .app, push synchronized main and dev, install, verify, launch, and write a report."
+    echo "After a conflict-free merge it would build the .app and workspace Happy CLI, then push synchronized main and dev."
+    echo "It would install the workspace Happy CLI, restart the local daemon, and verify the installed bundle exposes list-saved-projects before replacing the Desktop app."
+    echo "It would then install, verify, and launch the Desktop app and write a paired-runtime report."
     echo "A dirty worktree, diverged main/remote branch, merge conflict, build failure, or push failure stops before replacing the installed app."
     if [[ "$force" -eq 1 ]]; then
       echo "Force: would rebuild and reinstall dev even without source changes."
@@ -2614,12 +2825,14 @@ refresh_desktop() {
     return
   fi
 
-  local started_at status error_message state upstream ahead behind has_update pulled built installed verified pushed
+  local started_at status error_message failed_stage state upstream ahead behind has_update pulled built installed verified pushed
+  local cli_built cli_installed daemon_restarted cli_compatible daemon_pid_before daemon_pid_after
   local before_commit before_cli before_desktop after_commit after_cli duration
   local base_ahead base_behind final_ahead final_behind branch_remote_delta needs_sync final_before_sync
   started_at="$(date +%s)"
   status="failed"
   error_message=""
+  failed_stage="preflight"
   upstream="n/a"
   ahead="n/a"
   behind="n/a"
@@ -2629,6 +2842,12 @@ refresh_desktop() {
   installed="false"
   verified="false"
   pushed="false"
+  cli_built="false"
+  cli_installed="false"
+  daemon_restarted="false"
+  cli_compatible="false"
+  daemon_pid_before="$(happy_daemon_pid 2>/dev/null || true)"
+  daemon_pid_after=""
   before_commit="$(current_happy_commit 2>/dev/null || echo "repo not found")"
   before_cli="$(happy_cli_version_without_exec)"
   before_desktop="$(defaults read "$INSTALL_APP/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "not installed")"
@@ -2636,10 +2855,12 @@ refresh_desktop() {
   local rc=0
   set +e
   log "Starting macOS Happy Desktop refresh"
+  failed_stage="doctor"
   (doctor)
   rc=$?
 
   if [[ "$rc" -eq 0 ]]; then
+    failed_stage="fetch and inspect integration branches"
     state="$(happy_patch_stack_state fetch)"
     rc=$?
     if [[ "$rc" -eq 0 ]]; then
@@ -2648,6 +2869,7 @@ refresh_desktop() {
       upstream="$HAPPY_DEVTOOLS_BASE_UPSTREAM"
       ahead="$final_ahead"
       behind="$final_behind"
+      failed_stage="validate base branch"
       if ! validate_base_branch_for_refresh; then
         rc=1
       fi
@@ -2662,21 +2884,25 @@ refresh_desktop() {
       fi
       if [[ "$needs_sync" -eq 0 && "$force" -eq 0 ]]; then
         status="skipped-no-upstream-update"
+        failed_stage=""
         log "Happy dev integration is already synchronized; skipping desktop build/update. Use --force to rebuild anyway."
         echo "Official main and personal dev are already synchronized. Skipping desktop refresh."
       else
         final_before_sync="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
+        failed_stage="synchronize integration branches"
         sync_patch_stack_locally
         rc=$?
         if [[ "$rc" -eq 0 ]]; then
           pulled="true"
           after_commit="$(git -C "$HAPPY_REPO" rev-parse "$HAPPY_DEVTOOLS_FINAL_BRANCH")"
           if [[ "$after_commit" == "$final_before_sync" && "$force" -eq 0 ]]; then
+            failed_stage="push synchronized branches"
             push_patch_stack
             rc=$?
             if [[ "$rc" -eq 0 ]]; then
               pushed="true"
               status="synced-no-desktop-change"
+              failed_stage=""
               log "Updated/published main and dev; final desktop source did not change, so build/install is not needed."
             fi
           fi
@@ -2686,34 +2912,66 @@ refresh_desktop() {
   fi
 
   if [[ "$rc" -eq 0 && "$status" != "skipped-no-upstream-update" && "$status" != "synced-no-desktop-change" ]]; then
+    failed_stage="build Desktop"
     (build_desktop)
     rc=$?
     if [[ "$rc" -eq 0 ]]; then
       built="true"
+      failed_stage="build workspace CLI"
+      (build_workspace_cli)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      cli_built="true"
+      failed_stage="push synchronized branches"
       push_patch_stack
       rc=$?
     fi
     if [[ "$rc" -eq 0 ]]; then
       pushed="true"
+      failed_stage="install workspace CLI"
+      (install_workspace_cli)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      cli_installed="true"
+      failed_stage="restart local daemon"
+      (verify_workspace_cli_daemon)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      daemon_restarted="true"
+      daemon_pid_after="$(happy_daemon_pid 2>/dev/null || true)"
+      failed_stage="verify CLI compatibility"
+      (verify_workspace_cli_rpc_compatibility)
+      rc=$?
+    fi
+    if [[ "$rc" -eq 0 ]]; then
+      cli_compatible="true"
+      failed_stage="install Desktop"
       (install_desktop)
       rc=$?
     fi
     if [[ "$rc" -eq 0 ]]; then
       installed="true"
+      failed_stage="prune Desktop backups"
       remove_old_desktop_backups "$keep_backups"
       rc=$?
     fi
     if [[ "$rc" -eq 0 ]]; then
+      failed_stage="verify Desktop"
       (verify_desktop)
       rc=$?
     fi
     if [[ "$rc" -eq 0 ]]; then
       verified="true"
+      failed_stage="launch Desktop"
       (launch_desktop)
       rc=$?
     fi
     if [[ "$rc" -eq 0 ]]; then
       status="success"
+      failed_stage=""
       log "macOS Happy Desktop refresh completed"
     fi
   fi
@@ -2721,15 +2979,17 @@ refresh_desktop() {
 
   if [[ "$rc" -ne 0 ]]; then
     status="failed"
-    error_message="refresh failed with exit code $rc"
+    error_message="refresh failed at ${failed_stage:-unknown stage} with exit code $rc"
   fi
 
   after_commit="$(current_happy_commit 2>/dev/null || echo "repo not found")"
   after_cli="$(happy_cli_version_without_exec)"
   duration="$(( $(date +%s) - started_at ))"
+  set +e
   write_update_report "refresh-desktop" \
     "Status" "$status" \
     "Error" "$error_message" \
+    "Failed stage" "$failed_stage" \
     "Force" "$force" \
     "Upstream" "$upstream" \
     "Ahead" "$ahead" \
@@ -2738,6 +2998,12 @@ refresh_desktop() {
     "Pulled upstream" "$pulled" \
     "Pushed main and dev" "$pushed" \
     "Built desktop" "$built" \
+    "Built workspace CLI" "$cli_built" \
+    "Installed workspace CLI" "$cli_installed" \
+    "Daemon restarted" "$daemon_restarted" \
+    "Daemon PID before" "$daemon_pid_before" \
+    "Daemon PID after" "$daemon_pid_after" \
+    "CLI compatibility" "$cli_compatible" \
     "Installed desktop" "$installed" \
     "Verified desktop" "$verified" \
     "Happy commit before" "$before_commit" \
@@ -2748,6 +3014,20 @@ refresh_desktop() {
     "Install app" "$INSTALL_APP" \
     "Keep backups" "$keep_backups" \
     "Duration seconds" "$duration" >/dev/null
+  report_rc=$?
+  set -e
+
+  if [[ "$report_rc" -ne 0 ]]; then
+    if [[ "$rc" -eq 0 ]]; then
+      rc="$report_rc"
+      failed_stage="write update report"
+      status="failed"
+      error_message="refresh failed at $failed_stage with exit code $rc"
+      echo "$error_message" >&2
+    else
+      echo "Additionally failed to write refresh report with exit code $report_rc; preserving $failed_stage exit code $rc." >&2
+    fi
+  fi
 
   if [[ "$rc" -ne 0 ]]; then
     exit "$rc"
