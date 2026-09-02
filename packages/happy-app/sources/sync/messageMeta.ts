@@ -20,6 +20,28 @@ export type MessageModeMeta = {
     serviceTier?: 'default' | 'fast';
 };
 
+const CODEX_REASONING_EFFORTS = new Set([
+    'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra',
+]);
+
+// Keep this consumer-side authority check equivalent to happy-cli's
+// codexRuntimeModelMetadata validators. Session metadata is transport data;
+// two merely non-empty strings are not runtime-confirmed route evidence.
+function isConcreteCodexModel(value: unknown): value is string {
+    if (typeof value !== 'string' || value.length > 128 || value !== value.trim()) {
+        return false;
+    }
+    const normalized = value.toLowerCase();
+    if (normalized === 'default' || normalized === 'null' || normalized === 'undefined') {
+        return false;
+    }
+    return /^(?:o\d[A-Za-z0-9._-]*|[A-Za-z][A-Za-z0-9._]*[-/:][A-Za-z0-9][A-Za-z0-9._:/-]*)$/.test(value);
+}
+
+function isCodexReasoningEffort(value: unknown): value is string {
+    return typeof value === 'string' && CODEX_REASONING_EFFORTS.has(value);
+}
+
 /**
  * The session or a saved default carries a permission mode the session's CLI
  * cannot parse. Thrown instead of substituting another mode: swapping in the
@@ -93,20 +115,29 @@ export function resolveMessageModeMeta(
     };
 
     // Codex app-server turns always run with a concrete permission, model, and
-    // effort. Send the same effective defaults the composer displays instead
-    // of omitting them: the CLI resets permission to its launch mode during an
-    // abort safety window, and legacy/unset session fields previously made a
-    // visible app fallback silently execute as a different mode or effort.
-    // Keep this Codex-only so fixing that app-server invariant does not change
-    // the established default semantics of other harnesses.
+    // effort. Reassert the displayed permission because the CLI resets it to
+    // launch mode during an abort safety window. For model and effort, a
+    // complete App Server-confirmed route proves the existing Session already
+    // owns concrete values: omit unselected fields so a client/global default
+    // cannot replace a launch-pinned route. Legacy or partial metadata keeps
+    // receiving the displayed defaults for compatibility. Keep this
+    // Codex-only so other harnesses retain their established semantics.
     if (flavor === 'codex') {
         const defaults = resolveAgentDefaultConfig(settings?.agentDefaultOverrides, flavor, cliVersion);
         meta.permissionMode = supported(retirePermissionMode(session.permissionMode ?? defaults.permissionMode));
 
-        const modelMode = session.modelMode ?? defaults.modelMode;
-        meta.model = modelMode === 'default' ? null : modelMode;
+        const hasEffectiveRoute = isConcreteCodexModel(session.metadata?.effectiveModel)
+            && isCodexReasoningEffort(session.metadata?.effectiveReasoningEffort);
 
-        meta.effort = session.effortLevel ?? defaults.effortLevel;
+        const modelMode = session.modelMode ?? (hasEffectiveRoute ? undefined : defaults.modelMode);
+        if (modelMode !== undefined) {
+            meta.model = modelMode === 'default' ? null : modelMode;
+        }
+
+        const effort = session.effortLevel ?? (hasEffectiveRoute ? undefined : defaults.effortLevel);
+        if (effort !== undefined) {
+            meta.effort = effort;
+        }
         meta.serviceTier = session.serviceTier === 'fast' ? 'fast' : 'default';
         return meta;
     }

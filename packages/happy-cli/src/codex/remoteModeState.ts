@@ -23,13 +23,29 @@ export type CodexRemoteModeResolution = {
     serviceTierResolution: Resolution<CodexServiceTier>;
 };
 
+export type CodexMessageRoute = {
+    model?: string;
+    effort?: ReasoningEffort;
+    serviceTier: CodexServiceTier;
+};
+
+export function codexMessageRoute(
+    mode: CodexMessageRoute,
+): CodexMessageRoute {
+    return {
+        model: mode.model,
+        effort: mode.effort,
+        serviceTier: mode.serviceTier,
+    };
+}
+
 /**
  * Mutable per-session mode state for remote Codex turns.
  *
  * The launch policy is restored immediately after abort for the approval
- * handler's safety window. Model and effort stay sticky for compatibility
- * with older apps, while current apps reassert every selected value on
- * every message.
+ * handler's safety window. Model and effort stay sticky: current apps omit
+ * unselected fields when a runtime-confirmed route exists and reassert only
+ * explicit per-session selections.
  */
 export class CodexRemoteModeState {
     readonly initialPermissionMode: PermissionMode;

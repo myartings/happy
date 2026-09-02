@@ -44,6 +44,7 @@ import { resolveCodexUncertainDelivery, routeCodexUserText } from './codexUserMe
 import { downloadCodexFileEventAttachment } from './utils/attachmentEvents';
 import { prepareCodexImageInputItems } from './utils/imageInput';
 import {
+    projectCodexEffectiveRoute,
     withCodexEffectiveRouteMetadata,
     withCodexRuntimeModelMetadata,
     withCodexUnconfirmedRouteRequestMetadata,
@@ -56,7 +57,7 @@ import {
     type CodexEnhancedMode,
 } from './codexPrompt';
 import { discoverCodexSkillCommands } from './codexSkills';
-import { CodexRemoteModeState } from './remoteModeState';
+import { CodexRemoteModeState, codexMessageRoute } from './remoteModeState';
 import {
     CodexLivePermissionModeController,
     registerCodexLivePermissionModeRpcForSession,
@@ -292,17 +293,10 @@ export async function runCodex(opts: {
         reasoningEffort?: unknown;
     } | null) => {
         if (!response) return;
-        const projectedMetadata = withCodexEffectiveRouteMetadata(
+        const route = projectCodexEffectiveRoute(
             session.getMetadata() ?? metadata,
             evidence,
         );
-        const route = projectedMetadata.effectiveModel
-            && projectedMetadata.effectiveReasoningEffort
-            ? {
-                effectiveModel: projectedMetadata.effectiveModel,
-                effectiveReasoningEffort: projectedMetadata.effectiveReasoningEffort,
-            }
-            : null;
         publishDaemonEffectiveRoute(route);
     };
 
@@ -1141,12 +1135,13 @@ export async function runCodex(opts: {
                     sandboxManagedByHappy,
                 );
                 activeTurnPermissionMode = message.mode.permissionMode;
+                const messageRoute = codexMessageRoute(message.mode);
 
                 // Start thread on first turn (thread persists across mode changes)
                 let activeThreadId = client.threadId;
                 if (!client.hasActiveThread() || !activeThreadId) {
                     const startedThread = await client.startThread({
-                        model: message.mode.model,
+                        model: messageRoute.model,
                         cwd: process.cwd(),
                         approvalPolicy: executionPolicy.approvalPolicy,
                         sandbox: executionPolicy.sandbox,
@@ -1193,11 +1188,11 @@ export async function runCodex(opts: {
                 const result = await client.sendTurnAndWait(turnPromptResult.prompt, {
                     clientUserMessageId: message.clientUserMessageId,
                     startAckTimeoutMs: 5_000,
-                    model: message.mode.model,
+                    model: messageRoute.model,
                     approvalPolicy: executionPolicy.approvalPolicy,
                     sandbox: executionPolicy.sandbox,
-                    effort: message.mode.effort,
-                    serviceTier: message.mode.serviceTier,
+                    effort: messageRoute.effort,
+                    serviceTier: messageRoute.serviceTier,
                     extraInputItems: imageInputs.inputItems,
                 });
                 first = false;
