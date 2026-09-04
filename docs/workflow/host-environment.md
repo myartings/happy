@@ -22,13 +22,21 @@ workflow semantics, evidence contracts, and fail-closed submission gates.
   `actions/setup-python` and the native default shell for platform-sensitive
   public seams. First-class native Windows support does not require a real
   Windows device evidence matrix for every delivery, and it does not duplicate
-  the full suite on macOS or Windows.
+  the full suite on macOS or Windows. The Ubuntu lane runs both complete
+  Unattended Issue Campaign contract and runner suites when that feature is
+  present; the Windows lane keeps only its explicit platform-bound smoke.
 
 Core native-Windows support covers clean checkouts, linked worktrees,
 configured validation and workflow tests, task/workflow state and review
 tooling, and `workflow-ci.py --staged` / `--base <ref>`. It does not implement
 the privileged `sync-template.py --apply` transaction on Windows; that remains
 an explicitly unsupported operation rather than a partially executed one.
+The optional Unattended Issue Campaign contract, manifest preparation, and
+deterministic planning surfaces remain portable, but its POSIX-durable
+`CampaignStore` is likewise unavailable on native Windows: construction fails
+before writing any state because native Windows lacks the required
+parent-directory fsync contract. The hosted Windows smoke verifies this explicit
+boundary.
 
 ## Mandatory host-neutral invariants
 

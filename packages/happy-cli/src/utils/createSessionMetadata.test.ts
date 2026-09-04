@@ -131,6 +131,25 @@ describe('createSessionMetadata', () => {
         expect(metadata.archivedBy).toBeUndefined();
     });
 
+    it('drops a previous confirmed Codex route while reconnect launch confirmation is pending', () => {
+        const metadata = mergeSessionMetadataForReconnect({
+            ...createSessionMetadata({ flavor: 'codex', machineId: 'old-machine' }).metadata,
+            effectiveModel: 'gpt-5.6-sol',
+            effectiveReasoningEffort: 'high',
+            permissionMode: 'yolo',
+            permissionModeRevision: 7,
+        }, {
+            ...createSessionMetadata({ flavor: 'codex', machineId: 'new-machine' }).metadata,
+            codexLaunchRoutePending: true,
+        });
+
+        expect(metadata.codexLaunchRoutePending).toBe(true);
+        expect(metadata.effectiveModel).toBeUndefined();
+        expect(metadata.effectiveReasoningEffort).toBeUndefined();
+        expect(metadata.permissionMode).toBe('yolo');
+        expect(metadata.permissionModeRevision).toBe(7);
+    });
+
     it('sets fork lineage metadata when provided', () => {
         const { metadata } = createSessionMetadata({
             flavor: 'codex',

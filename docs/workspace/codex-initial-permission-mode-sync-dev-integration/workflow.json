@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 3,
+  "slug": "codex-initial-permission-mode-sync-dev-integration",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User-authorized local-only source is bound; spec freezes two parents, two conflict files, five criteria, and no-history-rewrite boundary.",
+      "updated": "2026-09-04T09:42:03+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "Conflict resolution and target branch decisions are recorded and user-authorized.",
+      "updated": "2026-09-04T09:41:39+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: current Root serially owns the two-file resolution; novel files limited to one integration lifecycle; material growth routes separately.",
+      "updated": "2026-09-04T09:41:39+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "High-risk session-protocol integration cleared with candidate-bound checks, capable dual review, fail-closed publication, and ordinary revert controls.",
+      "updated": "2026-09-04T09:41:39+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Resolved only runCodex.ts and apiSession.test.ts; preserved both parent intents; focused 92 tests, CLI typecheck, and full 103-file/1045-test CLI suite passed.",
+      "updated": "2026-09-04T09:42:24+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "9 configured commands; 0 failures",
+      "updated": "2026-09-04T10:00:55+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards axes accepted the same remediated candidate fingerprint 916195c27349.",
+      "updated": "2026-09-04T10:04:41+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+        "candidateFingerprint": "916195c27349b2db2d5847308072bcca9433f71ac6c1586eca65cc24227582bd"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Validation and finish records complete; no product gap remains; rollback and ordered archive/commit/push/PR actions documented.",
+      "updated": "2026-09-04T10:05:14+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-04T09:39:03+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-04T09:41:39+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "Conflict resolution and target branch decisions are recorded and user-authorized."
+    },
+    {
+      "at": "2026-09-04T09:41:39+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "High-risk session-protocol integration cleared with candidate-bound checks, capable dual review, fail-closed publication, and ordinary revert controls."
+    },
+    {
+      "at": "2026-09-04T09:41:39+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User authorized merge-local lifecycle; spec freezes two parents, two conflict files, five criteria, and no-history-rewrite boundary."
+    },
+    {
+      "at": "2026-09-04T09:41:39+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current Root serially owns the two-file resolution; novel files limited to one integration lifecycle; material growth routes separately."
+    },
+    {
+      "at": "2026-09-04T09:42:03+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "pending",
+      "evidence": "Temporarily reopen acceptance to bind the approved local-only delivery source."
+    },
+    {
+      "at": "2026-09-04T09:42:03+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: approved local-only — Bounded merge integration of an already reviewed local feature commit into personal dev; no external Issue is required. (approval: User authorized the required merge-local lifecycle and continuation on 2026-09-04.)"
+    },
+    {
+      "at": "2026-09-04T09:42:03+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User-authorized local-only source is bound; spec freezes two parents, two conflict files, five criteria, and no-history-rewrite boundary."
+    },
+    {
+      "at": "2026-09-04T09:42:03+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Record and verify the completed two-file semantic merge resolution"
+    },
+    {
+      "at": "2026-09-04T09:42:24+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Resolved only runCodex.ts and apiSession.test.ts; preserved both parent intents; focused 92 tests, CLI typecheck, and full 103-file/1045-test CLI suite passed."
+    },
+    {
+      "at": "2026-09-04T09:42:24+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run candidate-bound applicable checks and independent capable review"
+    },
+    {
+      "at": "2026-09-04T09:45:01+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "9 configured commands; 0 failures; structured run: b63d893a-0bc3-4d1c-9195-504dded4ca12"
+    },
+    {
+      "at": "2026-09-04T09:52:47+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Pre-remediation Standards review found a candidate-introduced stale effective route fail-closed regression; TDD remediation required."
+    },
+    {
+      "at": "2026-09-04T09:54:57+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Candidate remediated after blocked Standards review; fresh check and review required."
+    },
+    {
+      "at": "2026-09-04T09:58:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 47f16e7c-6910-4e72-8701-dbea0288b96e"
+    },
+    {
+      "at": "2026-09-04T09:58:22+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Candidate changed during Standards remediation; discard stale pre-remediation check binding and require a fresh final run."
+    },
+    {
+      "at": "2026-09-04T09:58:22+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Fresh post-remediation check and dual review required."
+    },
+    {
+      "at": "2026-09-04T10:00:55+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "9 configured commands; 0 failures; structured run: 2815704c-735c-4824-94a1-96651ea0e7f8"
+    },
+    {
+      "at": "2026-09-04T10:04:41+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards axes accepted the same remediated candidate fingerprint 916195c27349."
+    },
+    {
+      "at": "2026-09-04T10:05:13+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Run staged CI, archive, commit, publish PR, and reconcile dev"
+    },
+    {
+      "at": "2026-09-04T10:05:14+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Validation and finish records complete; no product gap remains; rollback and ordered archive/commit/push/PR actions documented."
+    },
+    {
+      "at": "2026-09-04T10:09:08+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Integrated current dev with Codex initial permission-mode synchronization and cleared stale reconnect route evidence; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-04T10:09:08+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "local-only",
+    "reason": "Bounded merge integration of an already reviewed local feature commit into personal dev; no external Issue is required.",
+    "approval": "User authorized the required merge-local lifecycle and continuation on 2026-09-04."
+  },
+  "checkEvidencePolicy": 1,
+  "checkRunId": "2815704c-735c-4824-94a1-96651ea0e7f8",
+  "checkRunFingerprint": "22bd557f90e887a9eecdedd56631836caa175e8f6f7afd3d2a1230ed5e44d70a",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+    "candidateFingerprint": "916195c27349b2db2d5847308072bcca9433f71ac6c1586eca65cc24227582bd"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+      "candidateFingerprint": "916195c27349b2db2d5847308072bcca9433f71ac6c1586eca65cc24227582bd"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Package fingerprint 916195c27349: Spec accepted the remediated frozen two-parent candidate with no gaps."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Package fingerprint 916195c27349: Standards confirmed stale route clearing, permission revision preservation, and no blocker."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Run staged CI, archive, commit, publish PR, and reconcile dev",
+    "prearchiveUpdated": "2026-09-04T10:05:14+00:00",
+    "prearchiveActive": {
+      "feature": "codex-initial-permission-mode-sync-dev-integration",
+      "phase": "finish",
+      "updated": "2026-09-04",
+      "next": "Run staged CI, archive, commit, publish PR, and reconcile dev",
+      "branch / worktree": "fix/codex-initial-permission-mode-sync"
+    },
+    "prearchiveArchiveObject": "9316bba2de1476cd03290f9ef6442447cc01c4c0",
+    "fingerprint": "2a72bbb2f3cb42deb0a36c545f18586e987447764ea33aa4775edace6afcc95b"
+  },
+  "archivedAt": "2026-09-04T10:09:08+00:00",
+  "archiveDate": "2026-09-04",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Integrated current dev with Codex initial permission-mode synchronization and cleared stale reconnect route evidence",
+  "archiveFollowUp": "None"
+}

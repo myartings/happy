@@ -252,6 +252,50 @@ describe('ApiSessionClient v3 messages API migration', () => {
         });
     });
 
+    it('exposes an awaitable metadata update that resolves only after server acceptance', async () => {
+        let releaseAck!: () => void;
+        const ackReady = new Promise<void>((resolve) => {
+            releaseAck = resolve;
+        });
+        mockSocket.emitWithAck.mockImplementation(async (event: string, payload: any) => {
+            expect(event).toBe('update-metadata');
+            await ackReady;
+            return {
+                result: 'success',
+                metadata: payload.metadata,
+                version: 1,
+            };
+        });
+        const client = new ApiSessionClient('fake-token', session);
+        let resolved = false;
+
+        const updating = client.updateMetadataAndWait((metadata) => ({
+            ...metadata,
+            effectiveModel: 'gpt-5.6-luna',
+            effectiveReasoningEffort: 'max',
+        })).then(() => {
+            resolved = true;
+        });
+        await waitForCheck(() => expect(mockSocket.emitWithAck).toHaveBeenCalledOnce());
+        expect(resolved).toBe(false);
+
+        releaseAck();
+        await updating;
+        expect(client.getMetadata()).toMatchObject({
+            effectiveModel: 'gpt-5.6-luna',
+            effectiveReasoningEffort: 'max',
+        });
+    });
+
+    it('rejects an awaited metadata update when the server refuses publication', async () => {
+        mockSocket.emitWithAck.mockResolvedValue({ result: 'error' });
+        const client = new ApiSessionClient('fake-token', session);
+
+        await expect(client.updateMetadataAndWait((metadata) => metadata))
+            .rejects.toThrow('Session metadata update was rejected');
+        expect(mockSocket.emitWithAck).toHaveBeenCalledOnce();
+    });
+
     it('retries after initial socket connection error', async () => {
         vi.useFakeTimers();
         mockSocket.connected = false;

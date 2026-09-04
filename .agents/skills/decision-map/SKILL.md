@@ -24,10 +24,26 @@ description: Identify and resolve project, architecture, research, prototype, or
 6. Route the smallest evidence-producing action: repository inspection, primary
    source research, user choice through `grilling`, or bounded throwaway
    prototype.
-   When research or a prototype materially affects the decision, persist a
-   small completion contract: question, source identity/input and date,
-   conclusion, limits, and prototype disposal status. Ordinary factual lookup
-   needs no research artifact, and a prototype is never production evidence.
+   Close research with an explicit disposition when it materially changes a
+   project decision, produces a durable follow-up Slice, crosses a real session
+   boundary, or the user explicitly requests preservation. Elapsed time is not
+   a trigger. Ordinary factual lookup, transient source browsing, and
+   inspection with no material finding need no report, Workspace, receipt, or
+   closeout ceremony, and a prototype is never production evidence.
+   For a triggered disposition:
+   - name the exact durable repository path, recoverable revision, Issue URL,
+     or approved knowledge-base destination that contains the completion
+     contract; or
+   - state that the result is not yet durable, why it could not be persisted,
+     and the narrowest proposed destination or authorization needed.
+   A read-only request performs no repository, tracker, or knowledge-base
+   write; material output therefore uses the pending disposition unless an
+   exact durable reference already exists. Do not describe chat text, temporary
+   handoffs, untracked files, or local-only artifacts without a recoverable
+   covering revision as durable archives.
+   Keep the completion contract small: question, source identity/input and
+   date, conclusion, limits, and prototype disposal status when applicable.
+   Do not save full transcripts, copied source pages, or raw search output.
 7. Resolve decisions only when evidence supports a choice; record uncertainty.
 8. Propagate accepted decisions into PRD, architecture, spec, or tasks. Offer an
    ADR only when all three are true:

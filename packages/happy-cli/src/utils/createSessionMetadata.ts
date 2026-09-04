@@ -61,13 +61,22 @@ export interface SessionMetadataResult {
  * mirror and other reconnect-only fields from the current encrypted snapshot.
  */
 export function mergeSessionMetadataForReconnect(existing: Metadata, launch: Metadata): Metadata {
-    return {
+    const merged = {
         ...existing,
         ...launch,
         archivedBy: undefined,
         permissionMode: existing.permissionMode,
         permissionModeRevision: existing.permissionModeRevision,
     };
+    if (launch.codexLaunchRoutePending !== true) {
+        return merged;
+    }
+    const {
+        effectiveModel: _effectiveModel,
+        effectiveReasoningEffort: _effectiveReasoningEffort,
+        ...pendingMetadata
+    } = merged;
+    return pendingMetadata;
 }
 
 function getGitBranch(cwd: string): string | undefined {

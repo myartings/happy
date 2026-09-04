@@ -56,6 +56,25 @@ describe('resolveMessageModeMeta', () => {
         });
     });
 
+    it('does not enqueue the global effort while launch route confirmation is pending', () => {
+        const meta = resolveMessageModeMeta({
+            permissionMode: null,
+            modelMode: 'gpt-5.6-luna',
+            effortLevel: null,
+            metadata: {
+                flavor: 'codex',
+                modelMode: 'gpt-5.6-luna',
+                codexLaunchRoutePending: true,
+            },
+        } as any);
+
+        expect(meta).toEqual({
+            permissionMode: 'auto',
+            model: 'gpt-5.6-luna',
+            serviceTier: 'default',
+        });
+    });
+
     it('does not replace a launch-pinned Luna Max route with the client Sol Medium default', () => {
         const meta = resolveMessageModeMeta({
             permissionMode: null,

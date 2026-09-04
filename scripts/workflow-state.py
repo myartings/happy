@@ -699,7 +699,7 @@ def check_binding_errors(
         return errors + [
             f"check={status} requires a bound structured workflow-check run"
         ]
-    if version != CHECK_EVIDENCE_POLICY_VERSION:
+    if type(version) is not int or version != CHECK_EVIDENCE_POLICY_VERSION:
         errors.append(
             f"checkEvidencePolicy must be {CHECK_EVIDENCE_POLICY_VERSION}"
         )
@@ -710,8 +710,8 @@ def check_binding_errors(
     try:
         check_module = load_check_module()
         errors.extend(
-            check_module.formal_run_errors(
-                state.get("slug", ""), run_id,
+            check_module.formal_run_binding_errors(
+                state.get("slug", ""), run_id, fingerprint,
                 current_scope=(
                     state.get("phase") != "archived"
                     if current_scope is None else current_scope
@@ -1976,34 +1976,55 @@ def completion_evidence_errors(state: dict[str, Any], slug: str) -> list[str]:
         r"(?:[0-9a-f]{40}|[0-9a-f]{64})", archive_object,
     ):
         errors.append("completion evidence pre-archive archive object is invalid")
-    else:
-        blob = subprocess.run(
+    elif state.get("phase") == "finish":
+        current_object = worktree_index_object_id(
+            ARCHIVE.relative_to(ROOT).as_posix(), "100644", ARCHIVE.read_bytes(),
+        )
+        if current_object != archive_object:
+            errors.append("workflow archive differs from its bound pre-archive object")
+    elif state.get("phase") == "archived":
+        row = (
+            f"| {state.get('archiveDate')} | {slug} | {RESULT_IDENTITY_KIND} | "
+            f"{state.get('archiveSummary')} | {state.get('archiveFollowUp')} |\n"
+        ).encode("utf-8")
+        archive_relative = ARCHIVE.relative_to(ROOT).as_posix()
+        current_object = worktree_index_object_id(
+            archive_relative, "100644", ARCHIVE.read_bytes(),
+        )
+        prearchive_blob = subprocess.run(
             ["git", "cat-file", "blob", archive_object], cwd=GIT_ROOT,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
         )
-        if blob.returncode:
-            errors.append("completion evidence pre-archive archive object is missing")
-        elif state.get("phase") == "finish":
-            current_object = worktree_index_object_id(
-                ARCHIVE.relative_to(ROOT).as_posix(), "100644", ARCHIVE.read_bytes(),
+        projection_matches = False
+        if not prearchive_blob.returncode:
+            separator = (
+                b"" if not prearchive_blob.stdout
+                or prearchive_blob.stdout.endswith(b"\n") else b"\n"
             )
-            if current_object != archive_object:
-                errors.append("workflow archive differs from its bound pre-archive object")
-        elif state.get("phase") == "archived":
-            separator = b"" if not blob.stdout or blob.stdout.endswith(b"\n") else b"\n"
-            row = (
-                f"| {state.get('archiveDate')} | {slug} | {RESULT_IDENTITY_KIND} | "
-                f"{state.get('archiveSummary')} | {state.get('archiveFollowUp')} |\n"
-            ).encode("utf-8")
-            archive_relative = ARCHIVE.relative_to(ROOT).as_posix()
             expected_object = worktree_index_object_id(
-                archive_relative, "100644", blob.stdout + separator + row,
+                archive_relative, "100644",
+                prearchive_blob.stdout + separator + row,
             )
-            current_object = worktree_index_object_id(
-                archive_relative, "100644", ARCHIVE.read_bytes(),
+            projection_matches = expected_object == current_object
+        else:
+            current_blob = subprocess.run(
+                ["git", "cat-file", "blob", current_object or ""], cwd=GIT_ROOT,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
             )
-            if expected_object is None or current_object != expected_object:
-                errors.append("workflow archive is not the bound canonical projection")
+            prearchive_candidates: list[bytes] = []
+            if not current_blob.returncode and current_blob.stdout.endswith(row):
+                prefix = current_blob.stdout[:-len(row)]
+                prearchive_candidates.append(prefix)
+                if prefix.endswith(b"\n"):
+                    prearchive_candidates.append(prefix[:-1])
+            projection_matches = any(
+                worktree_index_object_id(
+                    archive_relative, "100644", candidate,
+                ) == archive_object
+                for candidate in prearchive_candidates
+            )
+        if not projection_matches:
+            errors.append("workflow archive is not the bound canonical projection")
     fingerprint = identity.get("fingerprint")
     if not isinstance(fingerprint, str) or not re.fullmatch(r"[0-9a-f]{64}", fingerprint):
         errors.append("completion evidence fingerprint is invalid")
@@ -2167,9 +2188,10 @@ def record_check_receipt(args: argparse.Namespace) -> None:
             f"found {state['phase']}"
         )
     review_status = state.get("gates", {}).get("review", {}).get("status")
-    if review_status != "pending":
+    if review_status not in ("pending", "passed", "accepted_gaps"):
         raise SystemExit(
-            "structured check receipt requires review=pending, "
+            "structured check receipt requires review=pending or a completed "
+            "same-candidate review, "
             f"found {review_status}"
         )
     evidence = args.evidence.strip()
@@ -2224,23 +2246,38 @@ def record_check_receipt(args: argparse.Namespace) -> None:
                 "check=accepted_gaps requires a staged-candidate-v1 run"
             )
         if identity.get("identityKind") == "staged-candidate-v1":
-            candidate = {
+            checked_candidate = {
                 "identityKind": "staged-candidate-v1",
                 "baseCommit": identity["candidateBaseCommit"],
                 "candidateFingerprint": identity["candidateFingerprint"],
             }
         else:
-            candidate = {
+            checked_candidate = {
                 "identityKind": "worktree-candidate-v1",
                 "baseCommit": str(identity.get("head", "")),
                 "candidateFingerprint": identity["scopeFingerprint"],
             }
+        final_review = state.get("finalReview")
+        complete_same_candidate_review = (
+            isinstance(final_review, dict)
+            and final_review.get("candidate") == checked_candidate
+            and isinstance(final_review.get("outcomes"), dict)
+            and set(final_review["outcomes"]) == set(REVIEW_AXES)
+            and state.get("gates", {}).get("review", {}).get("status")
+            in ("passed", "accepted_gaps")
+        )
+        if review_status in ("passed", "accepted_gaps") and not complete_same_candidate_review:
+            raise SystemExit(
+                "structured check receipt after review requires the exact reviewed candidate"
+            )
         fingerprint = check_module.formal_run_fingerprint(slug, run_id)
         clear_check_binding(state)
+        if complete_same_candidate_review:
+            state["finalReview"] = final_review
         state["checkEvidencePolicy"] = CHECK_EVIDENCE_POLICY_VERSION
         state["checkRunId"] = run_id
         state["checkRunFingerprint"] = fingerprint
-        state["checkedCandidate"] = candidate
+        state["checkedCandidate"] = checked_candidate
         if args.status == "accepted_gaps":
             state["checkAcceptedFailures"] = {
                 "policyVersion": CHECK_ACCEPTED_FAILURES_POLICY_VERSION,
@@ -2252,6 +2289,18 @@ def record_check_receipt(args: argparse.Namespace) -> None:
             )
     else:
         clear_check_binding(state)
+        if review_status in ("passed", "accepted_gaps"):
+            reset_evidence = "completed review invalidated by blocked recheck"
+            state["gates"]["review"] = gate("pending", reset_evidence)
+            state["history"].append(
+                {
+                    "at": timestamp(),
+                    "type": "gate",
+                    "gate": "review",
+                    "status": "pending",
+                    "evidence": reset_evidence,
+                }
+            )
     state["gates"]["check"] = gate(args.status, evidence)
     history_evidence = f"{evidence}; structured run: {run_id}"
     if args.status == "accepted_gaps":

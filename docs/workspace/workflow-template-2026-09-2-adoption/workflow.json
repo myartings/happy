@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 3,
+  "slug": "workflow-template-2026-09-2-adoption",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "User said continue in the prepared Issue #104 session after the live Issue, exact registered worktree, origin/dev base, Project locator, and gpt-5.6-sol/medium runtime were re-verified; accepted one selective workflow-2026.09.2 adoption Slice with no delivery mutations",
+      "updated": "2026-09-02T12:22:59+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "D1-D7 resolve exact .2 source/cohort, selective-only synchronization, preserved Happy authority, superseded-but-untouched .1 boundary, serial current-root topology, and local-only delivery stop",
+      "updated": "2026-09-02T12:30:56+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "Ready: current confirmed Issue Root owns exact registered worktree; topology=current-root serial; gpt-5.6-sol/medium runtime confirmed; AC1-AC9, decisions, risk controls, test authority, material-growth route, and delivery stop are fixed",
+      "updated": "2026-09-02T12:31:28+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "High-risk workflow/session and commit-enforcement adoption cleared with pinned clean source, dry-run classification, transactional selective apply, preservation checks, zero drift, complete configured checks, capable dual review, and one-diff rollback controls",
+      "updated": "2026-09-02T12:30:56+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "Terminal evidence now avoids prior candidate identity and preclaiming reviewer outcomes; authoritative completion is bound to post-review workflow receipts.",
+      "updated": "2026-09-02T13:58:23+00:00"
+    },
+    "check": {
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures",
+      "updated": "2026-09-02T14:03:52+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Fresh capable Spec and Standards axes independently accepted the exact terminal candidate 40c18354 with no gaps.",
+      "updated": "2026-09-02T14:06:00+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+        "candidateFingerprint": "40c1835490b8363b4be805b3d83cf4efa736ac14c4ebc33c7c0ccde426d85ebf"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "AC1-AC9 complete; five configured checks and fresh terminal dual review passed without gaps; rollback, learning disposition, follow-up, and delivery stop are documented.",
+      "updated": "2026-09-02T14:06:03+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-02T12:22:59+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-02T12:22:59+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/104"
+    },
+    {
+      "at": "2026-09-02T12:22:59+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "User said continue in the prepared Issue #104 session after the live Issue, exact registered worktree, origin/dev base, Project locator, and gpt-5.6-sol/medium runtime were re-verified; accepted one selective workflow-2026.09.2 adoption Slice with no delivery mutations"
+    },
+    {
+      "at": "2026-09-02T12:30:56+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "D1-D7 resolve exact .2 source/cohort, selective-only synchronization, preserved Happy authority, superseded-but-untouched .1 boundary, serial current-root topology, and local-only delivery stop"
+    },
+    {
+      "at": "2026-09-02T12:30:56+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "High-risk workflow/session and commit-enforcement adoption cleared with pinned clean source, dry-run classification, transactional selective apply, preservation checks, zero drift, complete configured checks, capable dual review, and one-diff rollback controls"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T12:31:28+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Adopt the pinned workflow-2026.09.2 selective workflow core while preserving Happy authority and reaching zero drift",
+      "acceptanceSeam": "Pinned tag/plan identity, classified pre-apply and zero-drift final dry-runs, configured checks, staged CI, and capable dual review",
+      "dependencies": "Exact .2 tag/commit, Happy schema-2 manifest, clean origin/dev base, and current confirmed Issue session",
+      "reviewBoundary": "Accept or reject the complete selective-adoption diff as one candidate; any unsafe surface or preserved-authority drift rejects it",
+      "rollbackBoundary": "One local diff before commit and one revert after any separately authorized atomic commit",
+      "contextBoundary": "One dedicated high-risk Issue Workspace and current Sol Medium Root; serial internal tasks share one manifest and candidate",
+      "consequence": "Mixed workflow/session routing or commit enforcement could falsely validate delivery; no product/data/deployment change is allowed",
+      "evidence": "Live Issue #104 one-Slice assessment revalidated against current base, exact .2 Canary plan, 23-update dry-run precedent, shared zero-drift seam, and single rollback unit",
+      "contractFingerprint": "68c1d5e1ae82361d6bd60c535c0b5a436d36546e17e536c9375187531c1a1bba",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T12:31:28+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "Ready: current confirmed Issue Root owns exact registered worktree; topology=current-root serial; gpt-5.6-sol/medium runtime confirmed; AC1-AC9, decisions, risk controls, test authority, material-growth route, and delivery stop are fixed"
+    },
+    {
+      "at": "2026-09-02T12:32:12+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Classify the pinned selective dry-run, apply canonical allowlisted artifacts, and reconcile Happy-owned translations"
+    },
+    {
+      "at": "2026-09-02T13:01:42+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Pinned .2 selective apply and five-file Happy translation completed; final dry-run zero; validator 9/9, upgrader 2/2, runtime 38/38, strict all audit pass; no product/protected/delivery surface changed"
+    },
+    {
+      "at": "2026-09-02T13:01:42+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Stage the complete accepted candidate and run the applicable recorded check before capable dual review"
+    },
+    {
+      "at": "2026-09-02T13:07:31+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 013c9552-855a-4c04-a510-1fd14fb884b8"
+    },
+    {
+      "at": "2026-09-02T13:14:26+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Independent Spec and Standards axes both blocked the candidate; remediation required."
+    },
+    {
+      "at": "2026-09-02T13:14:47+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate blocked Spec and Standards review findings."
+    },
+    {
+      "at": "2026-09-02T13:25:49+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Blocked review findings remediated: unsupported dependency references translated to Happy-owned boundaries; post-review checks now preflight exact candidate and preserve passed/accepted-gap reviews; targeted regressions and zero-drift dry-run pass."
+    },
+    {
+      "at": "2026-09-02T13:25:49+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Restage the remediated candidate and run the complete applicable check before fresh dual review."
+    },
+    {
+      "at": "2026-09-02T13:31:32+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 6b5ba7da-1a91-4329-ad0f-1fa930596409"
+    },
+    {
+      "at": "2026-09-02T13:34:04+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Fresh Spec accepted; Standards blocked on failed post-review recheck state coherence."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-02T13:34:58+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue the same accepted slice with one bounded state-coherence fix and two regression cases.",
+      "acceptanceSeam": "Original AC1-AC9 remain unchanged; failed post-review rechecks must leave an auditable check=blocked and review=pending state.",
+      "dependencies": "No new dependency or capability surface; only Happy-owned workflow-state runtime and fixture tests change.",
+      "reviewBoundary": "Fresh staged full check and fresh capable Spec plus Standards review over the complete candidate.",
+      "rollbackBoundary": "The uncommitted Issue #104 candidate remains one reversible local diff.",
+      "contextBoundary": "Current confirmed Root remains owner; the fix is serial and overlaps the existing workflow runtime.",
+      "consequence": "Without the fix a failed post-review recheck can leave contradictory lifecycle truth; no product or external mutation is involved.",
+      "evidence": "Second blocked review identified one adjacent atomicity case after the successful-recheck fix; Spec accepted and Standards found no other defects.",
+      "contractFingerprint": "ba984725d36bbf1a782d759d49ff0914c99751589b9ca2e03f8663abf4f777e7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T13:34:59+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Make failed post-review rechecks atomically reset review and cover both completed review statuses."
+    },
+    {
+      "at": "2026-09-02T13:37:06+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Failed post-review rechecks now atomically clear stale check/finalReview binding and reset review=pending for both previously passed and accepted-gap reviews; three focused behavior tests and strict audits pass."
+    },
+    {
+      "at": "2026-09-02T13:37:06+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run the final complete staged check and fresh dual review for the coherent recheck state machine."
+    },
+    {
+      "at": "2026-09-02T13:43:08+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: b1cfcc75-31d9-4927-aebc-69b20b2d7069"
+    },
+    {
+      "at": "2026-09-02T13:45:21+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh capable Spec and Standards reviews independently accepted the exact staged candidate with no remaining findings."
+    },
+    {
+      "at": "2026-09-02T13:46:12+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize acceptance evidence, stage the reviewed work candidate, and run pre-archive CI."
+    },
+    {
+      "at": "2026-09-02T13:46:29+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Acceptance coverage complete; final staged check and capable dual review passed without gaps; rollback, reusable-learning disposition, tracker recommendation, and delivery stop documented."
+    },
+    {
+      "at": "2026-09-02T13:47:21+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Engineering implementation is unchanged; only complete finish/acceptance evidence was added after the prior accepted candidate."
+    },
+    {
+      "at": "2026-09-02T13:47:52+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Final review must be rerun because finish evidence changed the staged candidate fingerprint."
+    },
+    {
+      "at": "2026-09-02T13:47:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "Pre-archive CI rejected stale check/review binding after finish evidence entered the staged candidate."
+    },
+    {
+      "at": "2026-09-02T13:47:53+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Engineering implementation is unchanged; the only new candidate bytes complete finish and acceptance evidence."
+    },
+    {
+      "at": "2026-09-02T13:48:05+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "pending",
+      "evidence": "Finish will be re-recorded after the complete evidence candidate passes fresh check and review."
+    },
+    {
+      "at": "2026-09-02T13:48:05+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Bind completed finish and validation evidence into a fresh final checked/reviewed candidate."
+    },
+    {
+      "at": "2026-09-02T13:48:05+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Engineering implementation is unchanged; the only new candidate bytes complete finish and acceptance evidence."
+    },
+    {
+      "at": "2026-09-02T13:48:05+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run the final staged check over the complete work and finish-evidence candidate."
+    },
+    {
+      "at": "2026-09-02T13:54:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 06d3daad-85d3-4e3a-98ba-28194a4a17c8"
+    },
+    {
+      "at": "2026-09-02T13:57:53+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Both terminal reviewers blocked only stale/preclaimed review wording; formal check and engineering remain sound."
+    },
+    {
+      "at": "2026-09-02T13:57:54+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Make terminal evidence candidate-neutral and authoritative through post-review workflow receipts."
+    },
+    {
+      "at": "2026-09-02T13:58:23+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Terminal evidence now avoids prior candidate identity and preclaiming reviewer outcomes; authoritative completion is bound to post-review workflow receipts."
+    },
+    {
+      "at": "2026-09-02T13:58:23+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Check the candidate-neutral terminal evidence and obtain fresh capable review receipts."
+    },
+    {
+      "at": "2026-09-02T14:03:52+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "passed",
+      "evidence": "5 configured commands; 0 failures; structured run: 8b69724e-8425-4f7f-aa04-ee61e38f0c6c"
+    },
+    {
+      "at": "2026-09-02T14:06:00+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Fresh capable Spec and Standards axes independently accepted the exact terminal candidate 40c18354 with no gaps."
+    },
+    {
+      "at": "2026-09-02T14:06:02+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Record final finish receipt and run pre-archive staged CI without changing static candidate bytes."
+    },
+    {
+      "at": "2026-09-02T14:06:03+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "AC1-AC9 complete; five configured checks and fresh terminal dual review passed without gaps; rollback, learning disposition, follow-up, and delivery stop are documented."
+    },
+    {
+      "at": "2026-09-02T14:06:44+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Adopted pinned workflow-2026.09.2 selective core with zero drift, preserved Happy authority, coherent post-review rechecks, five passing configured checks, and accepted capable dual review.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-02T14:06:44+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/104",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-02T12:31:28+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Adopt the pinned workflow-2026.09.2 selective workflow core while preserving Happy authority and reaching zero drift",
+      "acceptanceSeam": "Pinned tag/plan identity, classified pre-apply and zero-drift final dry-runs, configured checks, staged CI, and capable dual review",
+      "dependencies": "Exact .2 tag/commit, Happy schema-2 manifest, clean origin/dev base, and current confirmed Issue session",
+      "reviewBoundary": "Accept or reject the complete selective-adoption diff as one candidate; any unsafe surface or preserved-authority drift rejects it",
+      "rollbackBoundary": "One local diff before commit and one revert after any separately authorized atomic commit",
+      "contextBoundary": "One dedicated high-risk Issue Workspace and current Sol Medium Root; serial internal tasks share one manifest and candidate",
+      "consequence": "Mixed workflow/session routing or commit enforcement could falsely validate delivery; no product/data/deployment change is allowed",
+      "evidence": "Live Issue #104 one-Slice assessment revalidated against current base, exact .2 Canary plan, 23-update dry-run precedent, shared zero-drift seam, and single rollback unit",
+      "contractFingerprint": "68c1d5e1ae82361d6bd60c535c0b5a436d36546e17e536c9375187531c1a1bba",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-02T13:34:58+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue the same accepted slice with one bounded state-coherence fix and two regression cases.",
+      "acceptanceSeam": "Original AC1-AC9 remain unchanged; failed post-review rechecks must leave an auditable check=blocked and review=pending state.",
+      "dependencies": "No new dependency or capability surface; only Happy-owned workflow-state runtime and fixture tests change.",
+      "reviewBoundary": "Fresh staged full check and fresh capable Spec plus Standards review over the complete candidate.",
+      "rollbackBoundary": "The uncommitted Issue #104 candidate remains one reversible local diff.",
+      "contextBoundary": "Current confirmed Root remains owner; the fix is serial and overlaps the existing workflow runtime.",
+      "consequence": "Without the fix a failed post-review recheck can leave contradictory lifecycle truth; no product or external mutation is involved.",
+      "evidence": "Second blocked review identified one adjacent atomicity case after the successful-recheck fix; Spec accepted and Standards found no other defects.",
+      "contractFingerprint": "ba984725d36bbf1a782d759d49ff0914c99751589b9ca2e03f8663abf4f777e7",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "8b69724e-8425-4f7f-aa04-ee61e38f0c6c",
+  "checkRunFingerprint": "02e2adfa73c5e10487356d5025af832b28f79dd306c16287864079837ada05ae",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+    "candidateFingerprint": "40c1835490b8363b4be805b3d83cf4efa736ac14c4ebc33c7c0ccde426d85ebf"
+  },
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+      "candidateFingerprint": "40c1835490b8363b4be805b3d83cf4efa736ac14c4ebc33c7c0ccde426d85ebf"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Terminal Spec review accepted candidate 40c18354: candidate-neutral finish/validation/task evidence is accurate and complete with no scope drift."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Terminal Standards review accepted candidate 40c18354: five bound checks pass, terminal sequencing is coherent, and no actionable finding remains."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Record final finish receipt and run pre-archive staged CI without changing static candidate bytes.",
+    "prearchiveUpdated": "2026-09-02T14:06:03+00:00",
+    "prearchiveActive": {
+      "feature": "workflow-template-2026-09-2-adoption",
+      "phase": "finish",
+      "updated": "2026-09-02",
+      "next": "Record final finish receipt and run pre-archive staged CI without changing static candidate bytes.",
+      "branch / worktree": "issue/104-adopt-workflow-2026-09-2-selective-workflow-core"
+    },
+    "prearchiveArchiveObject": "060c801ca67baea6abe5f4e94e583a859fcff70b",
+    "fingerprint": "cd5726a586a8259e9b2cd9d6c972e3705d69afffa23a81fd54f83256fd2d4c4d"
+  },
+  "archivedAt": "2026-09-02T14:06:44+00:00",
+  "archiveDate": "2026-09-02",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Adopted pinned workflow-2026.09.2 selective core with zero drift, preserved Happy authority, coherent post-review rechecks, five passing configured checks, and accepted capable dual review.",
+  "archiveFollowUp": "None"
+}
