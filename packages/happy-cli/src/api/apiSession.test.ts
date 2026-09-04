@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiSessionClient } from './apiSession';
 import { decodeBase64, decrypt, decryptBlob, encodeBase64, encrypt } from './encryption';
-import type { Update } from './types';
+import type { Metadata, Session, Update } from './types';
 import { logger } from '@/ui/logger';
+import { mergeSessionMetadataForReconnect } from '@/utils/createSessionMetadata';
 
 const {
     mockIo,
@@ -81,7 +82,7 @@ vi.mock('@/utils/lidState', () => ({
 type SocketHandler = (...args: any[]) => void;
 type SocketHandlers = Record<string, SocketHandler[]>;
 
-function makeSession() {
+function makeSession(): Session {
     return {
         id: 'test-session-id',
         seq: 0,
@@ -205,6 +206,50 @@ describe('ApiSessionClient v3 messages API migration', () => {
         expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
         expect(mockSocket.on).toHaveBeenCalledWith('update', expect.any(Function));
         expect(mockSocket.connect).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries a reconnect metadata update from the latest permission revision', async () => {
+        session.metadata = {
+            ...session.metadata,
+            hostPid: 100,
+            permissionMode: 'auto',
+            permissionModeRevision: 2,
+        };
+        session.metadataVersion = 5;
+        const serverMetadata: Metadata = {
+            ...session.metadata,
+            permissionMode: 'yolo',
+            permissionModeRevision: 9,
+        };
+        const { permissionMode: _mode, permissionModeRevision: _revision, ...launchMetadata } = session.metadata;
+        launchMetadata.hostPid = 200;
+        mockSocket.emitWithAck
+            .mockResolvedValueOnce({
+                result: 'version-mismatch',
+                version: 6,
+                metadata: encryptContent(session, serverMetadata),
+            })
+            .mockImplementationOnce(async (_event: string, payload: { metadata: string }) => ({
+                result: 'success',
+                version: 7,
+                metadata: payload.metadata,
+            }));
+        const client = new ApiSessionClient('fake-token', session);
+
+        client.updateMetadata((currentMetadata) =>
+            mergeSessionMetadataForReconnect(currentMetadata, launchMetadata));
+
+        await waitForCheck(() => expect(mockSocket.emitWithAck).toHaveBeenCalledTimes(2));
+        const retriedMetadata = decrypt(
+            session.encryptionKey,
+            session.encryptionVariant,
+            decodeBase64(mockSocket.emitWithAck.mock.calls[1][1].metadata),
+        );
+        expect(retriedMetadata).toMatchObject({
+            hostPid: 200,
+            permissionMode: 'yolo',
+            permissionModeRevision: 9,
+        });
     });
 
     it('exposes an awaitable metadata update that resolves only after server acceptance', async () => {

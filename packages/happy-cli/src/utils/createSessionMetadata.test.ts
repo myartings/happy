@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SandboxConfig } from '@/persistence';
-import { createSessionMetadata } from './createSessionMetadata';
+import { createSessionMetadata, mergeSessionMetadataForReconnect } from './createSessionMetadata';
 
 vi.mock('node:child_process', () => ({
     execSync: vi.fn(),
@@ -82,6 +82,72 @@ describe('createSessionMetadata', () => {
         });
 
         expect(metadata.dangerouslySkipPermissions).toBe(true);
+    });
+
+    it('publishes the initial permission mode with the initial revision', () => {
+        const { metadata } = createSessionMetadata({
+            flavor: 'codex',
+            machineId: 'machine-permission-mode',
+            initialPermissionMode: 'yolo',
+        });
+
+        expect(metadata.permissionMode).toBe('yolo');
+        expect(metadata.permissionModeRevision).toBe(0);
+    });
+
+    it('omits permission mode metadata when no initial mode is provided', () => {
+        const { metadata } = createSessionMetadata({
+            flavor: 'codex',
+            machineId: 'machine-without-permission-mode',
+        });
+
+        expect(metadata.permissionMode).toBeUndefined();
+        expect(metadata.permissionModeRevision).toBeUndefined();
+    });
+
+    it('refreshes launch metadata without replacing the reconnect permission revision', () => {
+        const metadata = mergeSessionMetadataForReconnect({
+            ...createSessionMetadata({ flavor: 'codex', machineId: 'old-machine' }).metadata,
+            hostPid: 100,
+            lifecycleState: 'archived',
+            archivedBy: 'user',
+            codexThreadId: 'thread-existing',
+            permissionMode: 'yolo',
+            permissionModeRevision: 7,
+        }, {
+            ...createSessionMetadata({ flavor: 'codex', machineId: 'new-machine' }).metadata,
+            hostPid: 200,
+            lifecycleState: 'running',
+        });
+
+        expect(metadata).toMatchObject({
+            machineId: 'new-machine',
+            hostPid: 200,
+            lifecycleState: 'running',
+            codexThreadId: 'thread-existing',
+            permissionMode: 'yolo',
+            permissionModeRevision: 7,
+        });
+        expect(metadata.archivedBy).toBeUndefined();
+    });
+
+    it('drops a previous confirmed Codex route while reconnect launch confirmation is pending', () => {
+        const metadata = mergeSessionMetadataForReconnect({
+            ...createSessionMetadata({ flavor: 'codex', machineId: 'old-machine' }).metadata,
+            effectiveModel: 'gpt-5.6-sol',
+            effectiveReasoningEffort: 'high',
+            permissionMode: 'yolo',
+            permissionModeRevision: 7,
+        }, {
+            ...createSessionMetadata({ flavor: 'codex', machineId: 'new-machine' }).metadata,
+            codexLaunchRoutePending: true,
+        });
+
+        expect(metadata.codexLaunchRoutePending).toBe(true);
+        expect(metadata.effectiveModel).toBeUndefined();
+        expect(metadata.effectiveReasoningEffort).toBeUndefined();
+        expect(metadata.permissionMode).toBe('yolo');
+        expect(metadata.permissionModeRevision).toBe(7);
     });
 
     it('sets fork lineage metadata when provided', () => {

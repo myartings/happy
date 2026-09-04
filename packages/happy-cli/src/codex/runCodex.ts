@@ -16,7 +16,7 @@ import packageJson from '../../package.json';
 import { MessageQueue2, type PendingAttachment } from '@/utils/MessageQueue2';
 import { projectPath } from '@/projectPath';
 import { join } from 'node:path';
-import { createSessionMetadata } from '@/utils/createSessionMetadata';
+import { createSessionMetadata, mergeSessionMetadataForReconnect } from '@/utils/createSessionMetadata';
 import { startHappyServer } from '@/claude/utils/startHappyServer';
 import { MessageBuffer } from "@/ui/ink/messageBuffer";
 import { CodexDisplay } from "@/ui/ink/CodexDisplay";
@@ -64,6 +64,7 @@ import {
 } from './codexPrompt';
 import { discoverCodexSkillCommands } from './codexSkills';
 import { CodexRemoteModeState, codexMessageRoute } from './remoteModeState';
+import { resolveCodexReconnectCredentials } from './reconnectCredentials';
 import {
     CodexLivePermissionModeController,
     registerCodexLivePermissionModeRpcForSession,
@@ -173,6 +174,9 @@ export async function runCodex(opts: {
     //
 
     const initialPermissionMode = opts.permissionMode ?? DEFAULT_CODEX_PERMISSION_MODE;
+    // Reconnected Happy sessions already own their revisioned permission-mode
+    // metadata. Only a fresh session publishes the launch mode at revision 0.
+    const reconnectCredentials = resolveCodexReconnectCredentials(process.env);
     // Lineage from the daemon's spawn RPC (set by app-side fork / duplicate).
     const forkedFromSessionId = process.env.HAPPY_FORKED_FROM_SESSION_ID;
     const forkedFromMessageId = process.env.HAPPY_FORKED_FROM_MESSAGE_ID;
@@ -186,6 +190,7 @@ export async function runCodex(opts: {
         startedBy: opts.startedBy,
         sandbox: sandboxConfig,
         dangerouslySkipPermissions: initialPermissionMode === 'yolo' || initialPermissionMode === 'bypassPermissions',
+        ...(!reconnectCredentials ? { initialPermissionMode } : {}),
         ...(forkedFromSessionId ? { parentSessionId: forkedFromSessionId } : {}),
         ...(forkedFromMessageId ? { forkedFromMessageId } : {}),
         ...(isSideChat ? { isSideChat: true } : {}),
@@ -199,30 +204,25 @@ export async function runCodex(opts: {
         metadata.slashCommands = Array.from(new Set([...(metadata.slashCommands ?? []), ...skillCommands]));
     }
 
-    // Check for session reconnection env vars (set by daemon for resume-in-place)
-    const reconnectSessionId = process.env.HAPPY_RECONNECT_SESSION_ID;
-    const reconnectKeyBase64 = process.env.HAPPY_RECONNECT_ENCRYPTION_KEY;
-    const reconnectVariant = process.env.HAPPY_RECONNECT_ENCRYPTION_VARIANT as 'legacy' | 'dataKey' | undefined;
-    const reconnectSeq = process.env.HAPPY_RECONNECT_SEQ;
-    const reconnectMetadataVersion = process.env.HAPPY_RECONNECT_METADATA_VERSION;
-    const reconnectAgentStateVersion = process.env.HAPPY_RECONNECT_AGENT_STATE_VERSION;
-
     let response: ApiSession | null;
-    if (reconnectSessionId && reconnectKeyBase64 && reconnectVariant) {
-        logger.debug(`[START] Reconnecting to existing session ${reconnectSessionId}`);
+    if (reconnectCredentials) {
+        logger.debug(`[START] Reconnecting to existing session ${reconnectCredentials.sessionId}`);
+        const existingSession = await api.getSession({
+            sessionId: reconnectCredentials.sessionId,
+            encryptionKey: decodeBase64(reconnectCredentials.keyBase64),
+            encryptionVariant: reconnectCredentials.variant,
+        });
+        if (!existingSession) {
+            throw new Error(`Cannot reconnect Happy session ${reconnectCredentials.sessionId}: the server session was not found.`);
+        }
         response = {
-            id: reconnectSessionId,
-            seq: parseInt(reconnectSeq || '0', 10),
-            encryptionKey: decodeBase64(reconnectKeyBase64),
-            encryptionVariant: reconnectVariant,
-            metadata,
-            metadataVersion: parseInt(reconnectMetadataVersion || '0', 10),
-            agentState: state,
-            agentStateVersion: parseInt(reconnectAgentStateVersion || '0', 10),
+            ...existingSession,
+            metadata: mergeSessionMetadataForReconnect(existingSession.metadata, metadata),
         };
     } else {
         response = await api.getOrCreateSession({ tag: sessionTag, metadata, state });
     }
+    const sessionMetadata = response?.metadata ?? metadata;
 
     // Handle server unreachable case - create offline stub with hot reconnection
     let session: ApiSessionClient;
@@ -236,7 +236,7 @@ export async function runCodex(opts: {
     const { session: initialSession, reconnectionHandle, readySession } = setupOfflineReconnection({
         api,
         sessionTag,
-        metadata,
+        metadata: sessionMetadata,
         state,
         response,
         onSessionSwap: (newSession) => {
@@ -269,21 +269,18 @@ export async function runCodex(opts: {
     }
 
     // On reconnect, un-archive the session and skip replaying old messages.
-    if (reconnectSessionId) {
+    if (reconnectCredentials) {
         session.suppressNextArchiveSignal();
         session.skipExistingMessages();
-        session.updateMetadata((meta) => ({
-            ...meta,
-            lifecycleState: 'running',
-            archivedBy: undefined,
-        }));
+        session.updateMetadata((currentMetadata) =>
+            mergeSessionMetadataForReconnect(currentMetadata, metadata));
     }
 
     // Always report to daemon if it exists (skip if offline)
     if (response) {
         try {
             logger.debug(`[START] Reporting session ${response.id} to daemon`);
-            const result = await notifyDaemonSessionStarted(response.id, metadata, {
+            const result = await notifyDaemonSessionStarted(response.id, sessionMetadata, {
                 encryptionKey: encodeBase64(response.encryptionKey),
                 encryptionVariant: response.encryptionVariant,
                 seq: response.seq,
@@ -1024,7 +1021,7 @@ export async function runCodex(opts: {
                 }
 
                 const forkCodexThreadId = process.env.HAPPY_FORK_CODEX_THREAD_ID;
-                if (!reconnectSessionId && !opts.resumeThreadId && forkCodexThreadId) {
+                if (!reconnectCredentials && !opts.resumeThreadId && forkCodexThreadId) {
                     // Side chats inherit the forked thread's context inside the model
                     // (thread/fork copies it), but we deliberately do NOT replay the
                     // pre-fork history into the UI: a side chat starts empty from the
