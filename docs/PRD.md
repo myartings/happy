@@ -241,6 +241,64 @@ RPC calls either complete or return a bounded failure when their target dies.
   timeouts and must not require production infrastructure.
 - Changes must be locally reversible and require no data rollback.
 
+## Daemon Bundle Handoff Session Continuity
+
+### Problem
+
+When the Happy daemon runs as a systemd user service with
+`KillMode=control-group`, daemon-spawned Sessions remain in the daemon service's
+cgroup even though they use a detached POSIX process group. Replacing the CLI
+bundle makes the daemon exit for handoff; systemd then terminates every process
+left in that service cgroup, interrupting all active Sessions at once.
+
+### Desired outcome
+
+A daemon bundle replacement changes the daemon generation without interrupting
+active daemon-spawned Sessions. The replacement daemon keeps those Sessions
+manageable with the same Happy Session identifiers and Agent-native thread
+identifiers.
+
+### Product requirements
+
+1. A systemd-managed daemon starts each daemon-owned Session outside the daemon
+   service's kill domain while retaining explicit per-Session stop control.
+2. Bundle handoff may replace the daemon PID without stopping, duplicating, or
+   silently resuming an active Session under a different identity.
+3. The replacement daemon safely adopts surviving daemon-owned Sessions so
+   list and stop operations remain accurate after handoff.
+4. Session isolation or adoption that cannot be proven safe fails explicitly;
+   it must not report a protected or adopted Session on best-effort evidence.
+5. Non-systemd platforms and directly launched terminal Sessions retain their
+   existing process-lifecycle behavior.
+6. A deterministic two-concurrent-Session scenario verifies one daemon
+   generation handoff and preservation of both Happy and Agent identities.
+
+### Scope
+
+- Happy CLI daemon Session spawning, bounded local persistence needed for safe
+  adoption, focused process-lifecycle tests, and controlled Linux/systemd
+  acceptance evidence.
+
+### Non-goals
+
+- Changing the Happy Server, wire format, App UI, Agent protocol, systemd unit,
+  authentication, or stored conversation data.
+- Automatically recovering Sessions that actually crashed or were explicitly
+  stopped.
+- Publishing, deploying, or replacing the live installed CLI as part of the
+  implementation workflow.
+
+### Constraints
+
+- Isolation must preserve the Session process as a signalable process-group
+  leader and must not depend on shell command construction.
+- Adoption must verify a persisted daemon-owned process identity strongly
+  enough to reject stale records and PID reuse.
+- Tests must not rebuild or replace the live source-linked daemon bundle while
+  unrelated Sessions are active.
+- Rollback is a source revert; no data migration or external configuration
+  rollback is required.
+
 ## Workspace Project Discovery
 
 ### Problem

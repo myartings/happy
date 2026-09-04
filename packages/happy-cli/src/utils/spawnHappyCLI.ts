@@ -57,6 +57,12 @@ import { logger } from '@/ui/logger';
 import { existsSync } from 'node:fs';
 import { isBun } from './runtime';
 
+export type SpawnHappyCLIExecution = {
+  systemdScope?: boolean;
+};
+
+let systemdScopeSequence = 0;
+
 /**
  * Spawn the Happy CLI with the given arguments in a cross-platform way.
  * 
@@ -68,7 +74,11 @@ import { isBun } from './runtime';
  * @param options - Spawn options (same as child_process.spawn)
  * @returns ChildProcess instance
  */
-export function spawnHappyCLI(args: string[], options: SpawnOptions = {}): ChildProcess {
+export function spawnHappyCLI(
+  args: string[],
+  options: SpawnOptions = {},
+  execution: SpawnHappyCLIExecution = {},
+): ChildProcess {
   const projectRoot = projectPath();
   const entrypoint = join(projectRoot, 'dist', 'index.mjs');
 
@@ -106,8 +116,28 @@ export function spawnHappyCLI(args: string[], options: SpawnOptions = {}): Child
   // Since Node's CVE-2024-27980 hardening, child_process.spawn('node', ...)
   // on Windows no longer falls back to appending `.exe`, producing ENOENT
   // even when node is on PATH (issue #1082).
-  return crossSpawn(runtime, nodeArgs, {
+  const command = execution.systemdScope ? 'systemd-run' : runtime;
+  const commandArgs = execution.systemdScope
+    ? [
+        '--user',
+        '--scope',
+        '--quiet',
+        `--unit=happy-session-${process.pid}-${++systemdScopeSequence}`,
+        '--',
+        runtime,
+        ...nodeArgs,
+      ]
+    : nodeArgs;
+
+  const child = crossSpawn(command, commandArgs, {
     windowsHide: true,
     ...options,
   });
+  // cross-spawn reports a missing executable asynchronously with pid unset.
+  // Install a listener before returning so callers can inspect pid and return
+  // a bounded launch error without leaving an unhandled EventEmitter error.
+  child.once('error', (error) => {
+    logger.debug(`[SPAWN HAPPY CLI] ${error instanceof Error ? error.message : error}`);
+  });
+  return child;
 }

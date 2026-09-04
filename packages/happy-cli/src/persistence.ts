@@ -910,6 +910,7 @@ export type PersistedSession = {
   metadataVersion: number;
   agentStateVersion: number;
   metadata: Metadata;
+  daemonProcess?: import('./daemon/sessionProcessIdentity').ProtectedDaemonProcessRecord;
   savedAt: number;
 };
 

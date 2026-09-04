@@ -35,6 +35,15 @@ import {
 } from './sessionEnvironment';
 import { startHappyTerminalDaemon } from './happyTerminalBoot';
 import { appendDaemonSpawnModeArgs, shouldForwardDaemonPermissionMode } from './spawnModeArgs';
+import { daemonSessionExecution } from './sessionProcessIsolation';
+import {
+  createProtectedProcessRecord,
+  getAdoptableProcessIdentity,
+  getMatchingProtectedProcessIdentity,
+  readLinuxProcessIdentity,
+  signalProtectedProcessGroup,
+  type ProtectedDaemonProcessRecord,
+} from './sessionProcessIdentity';
 
 /** Shell-escape a string for safe interpolation into tmux commands. */
 function shellescape(s: string): string {
@@ -62,6 +71,10 @@ export async function startDaemon(): Promise<void> {
   // environment, but never let session lineage or reconnect state reach a
   // later, unrelated child session.
   const ambientEnvironment = sanitizeSessionEnvironment(process.env);
+  const regularSessionExecution = daemonSessionExecution();
+  const daemonProcessIdentity = process.platform === 'linux'
+    ? readLinuxProcessIdentity(process.pid)
+    : null;
 
   // We don't have cleanup function at the time of server construction
   // Control flow is:
@@ -182,7 +195,7 @@ export async function startDaemon(): Promise<void> {
     const sessionIdToFinishedSession = new Map<string, TrackedSession>();
     const persisted = readPersistedSessions();
     for (const [id, s] of Object.entries(persisted)) {
-      sessionIdToFinishedSession.set(id, {
+      const baseSession: TrackedSession = {
         startedBy: 'persisted',
         happySessionId: id,
         happySessionMetadataFromLocalWebhook: s.metadata,
@@ -194,14 +207,30 @@ export async function startDaemon(): Promise<void> {
           agentStateVersion: s.agentStateVersion,
         },
         pid: 0,
-      });
+      };
+      const adoptableIdentity = daemonProcessIdentity && s.metadata.startedBy === 'daemon'
+        ? getAdoptableProcessIdentity(s.daemonProcess, daemonProcessIdentity)
+        : null;
+      if (adoptableIdentity) {
+        pidToTrackedSession.set(adoptableIdentity.pid, {
+          ...baseSession,
+          startedBy: 'daemon',
+          pid: adoptableIdentity.pid,
+          systemdScopeRequired: true,
+          systemdScopeProtected: true,
+          daemonProcess: s.daemonProcess,
+        });
+        logger.debug(`[DAEMON RUN] Adopted protected session ${id} with PID ${adoptableIdentity.pid}`);
+      } else {
+        sessionIdToFinishedSession.set(id, baseSession);
+      }
     }
     if (Object.keys(persisted).length > 0) {
       logger.debug(`[DAEMON RUN] Loaded ${Object.keys(persisted).length} persisted sessions from disk`);
     }
 
     // Session spawning awaiter system
-    const pidToAwaiter = new Map<number, (session: TrackedSession) => void>();
+    const pidToAwaiter = new Map<number, (result: SpawnSessionResult) => void>();
 
     // Helper functions
     const getCurrentChildren = () => Array.from(pidToTrackedSession.values());
@@ -219,7 +248,41 @@ export async function startDaemon(): Promise<void> {
       logger.debug(`[DAEMON RUN] Session webhook: ${sessionId}, PID: ${pid}, started by: ${sessionMetadata.startedBy || 'unknown'}, hasEncryption: ${!!encryption}`);
       logger.debug(`[DAEMON RUN] Current tracked sessions before webhook: ${Array.from(pidToTrackedSession.keys()).join(', ')}`);
 
-      // Persist encryption data to disk so it survives daemon restarts
+      // Check if we already have this PID (daemon-spawned)
+      const existingSession = pidToTrackedSession.get(pid);
+      let daemonProcess: ProtectedDaemonProcessRecord | undefined;
+
+      if (existingSession?.startedBy === 'daemon' && existingSession.systemdScopeRequired) {
+        const sessionIdentity = readLinuxProcessIdentity(pid);
+        daemonProcess = sessionIdentity && daemonProcessIdentity
+          ? createProtectedProcessRecord(sessionIdentity, daemonProcessIdentity) ?? undefined
+          : undefined;
+        if (!daemonProcess) {
+          const errorMessage = `Session PID ${pid} was not isolated from the systemd daemon service`;
+          logger.warn(`[DAEMON RUN] ${errorMessage}`);
+          const awaiter = pidToAwaiter.get(pid);
+          if (awaiter) {
+            pidToAwaiter.delete(pid);
+            awaiter({ type: 'error', errorMessage });
+          }
+          try {
+            process.kill(-pid, 'SIGTERM');
+          } catch {
+            try {
+              process.kill(pid, 'SIGTERM');
+            } catch {
+              // The failed launcher may already have exited.
+            }
+          }
+          pidToTrackedSession.delete(pid);
+          return;
+        }
+        existingSession.systemdScopeProtected = true;
+        existingSession.daemonProcess = daemonProcess;
+      }
+
+      // Persist encryption data only after any required process protection has
+      // been proved, so a replacement daemon cannot adopt a false-positive PID.
       if (encryption) {
         persistSession(sessionId, {
           encryptionKey: encodeBase64(encryption.encryptionKey),
@@ -228,12 +291,10 @@ export async function startDaemon(): Promise<void> {
           metadataVersion: encryption.metadataVersion,
           agentStateVersion: encryption.agentStateVersion,
           metadata: sessionMetadata,
+          daemonProcess,
           savedAt: Date.now(),
         });
       }
-
-      // Check if we already have this PID (daemon-spawned)
-      const existingSession = pidToTrackedSession.get(pid);
 
       if (existingSession && existingSession.startedBy === 'daemon') {
         // Update daemon-spawned session with reported data
@@ -246,7 +307,7 @@ export async function startDaemon(): Promise<void> {
         const awaiter = pidToAwaiter.get(pid);
         if (awaiter) {
           pidToAwaiter.delete(pid);
-          awaiter(existingSession);
+          awaiter({ type: 'success', sessionId });
           logger.debug(`[DAEMON RUN] Resolved session awaiter for PID ${pid}`);
         }
       } else if (!existingSession) {
@@ -501,13 +562,10 @@ export async function startDaemon(): Promise<void> {
               }, 15_000); // Same timeout as regular sessions
 
               // Register awaiter for tmux session (exact same as regular flow)
-              pidToAwaiter.set(tmuxResult.pid!, (completedSession) => {
+              pidToAwaiter.set(tmuxResult.pid!, (result) => {
                 clearTimeout(timeout);
-                logger.debug(`[DAEMON RUN] Session ${completedSession.happySessionId} fully spawned with webhook (tmux)`);
-                resolve({
-                  type: 'success',
-                  sessionId: completedSession.happySessionId!
-                });
+                logger.debug(`[DAEMON RUN] Session startup for PID ${tmuxResult.pid} settled as ${result.type} (tmux)`);
+                resolve(result);
               });
             });
           } else {
@@ -605,7 +663,7 @@ export async function startDaemon(): Promise<void> {
         detached: true,
         stdio: 'ignore',
         env,
-      });
+      }, regularSessionExecution);
 
       if (!happyProcess.pid) {
         logger.debug('[DAEMON RUN] Failed to spawn process - no PID returned');
@@ -623,6 +681,7 @@ export async function startDaemon(): Promise<void> {
         childProcess: happyProcess,
         directoryCreated,
         message,
+        systemdScopeRequired: regularSessionExecution.systemdScope === true,
       };
 
       pidToTrackedSession.set(happyProcess.pid, trackedSession);
@@ -644,21 +703,37 @@ export async function startDaemon(): Promise<void> {
       logger.debug(`[DAEMON RUN] Waiting for session webhook for PID ${happyProcess.pid}`);
 
       return new Promise((resolve) => {
-        const timeout = setTimeout(() => {
+        let settled = false;
+        const settle = (result: SpawnSessionResult) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
           pidToAwaiter.delete(happyProcess.pid!);
+          resolve(result);
+        };
+        const timeout = setTimeout(() => {
           logger.debug(`[DAEMON RUN] Session webhook timeout for PID ${happyProcess.pid}`);
-          resolve({
+          settle({
             type: 'error',
             errorMessage: `Session webhook timeout for PID ${happyProcess.pid}`
           });
         }, 15_000);
 
-        pidToAwaiter.set(happyProcess.pid!, (completedSession) => {
-          clearTimeout(timeout);
-          logger.debug(`[DAEMON RUN] Session ${completedSession.happySessionId} fully spawned with webhook`);
-          resolve({
-            type: 'success',
-            sessionId: completedSession.happySessionId!
+        pidToAwaiter.set(happyProcess.pid!, (result) => {
+          logger.debug(`[DAEMON RUN] Session startup for PID ${happyProcess.pid} settled as ${result.type}`);
+          settle(result);
+        });
+
+        happyProcess.once('exit', (code, signal) => {
+          settle({
+            type: 'error',
+            errorMessage: `Session process exited before startup completed (code ${code}, signal ${signal})`,
+          });
+        });
+        happyProcess.once('error', (error) => {
+          settle({
+            type: 'error',
+            errorMessage: `Failed to start Session process: ${error.message}`,
           });
         });
       });
@@ -671,13 +746,20 @@ export async function startDaemon(): Promise<void> {
       return sessionIdToFinishedSession.get(happySessionId);
     };
 
+    type EncryptedServerSessionMetadata = { id: string; metadata: string };
+    const fetchEncryptedServerSessionMetadata = async (
+      timeout: number = 10_000,
+    ): Promise<EncryptedServerSessionMetadata[]> => {
+      const response = await axios.get(`${configuration.serverUrl}/v1/sessions`, {
+        headers: { Authorization: `Bearer ${credentials.token}` },
+        timeout,
+      });
+      return (response.data as { sessions: EncryptedServerSessionMetadata[] }).sessions;
+    };
+
     const fetchServerSessionMetadata = async (sessionId: string, encryptionKey: Uint8Array, encryptionVariant: 'legacy' | 'dataKey'): Promise<Metadata | null> => {
       try {
-        const response = await axios.get(`${configuration.serverUrl}/v1/sessions`, {
-          headers: { Authorization: `Bearer ${credentials.token}` },
-          timeout: 10_000,
-        });
-        const sessions = (response.data as { sessions: { id: string; metadata: string }[] }).sessions;
+        const sessions = await fetchEncryptedServerSessionMetadata();
         const matched = sessions.find(s => s.id === sessionId);
         if (!matched) return null;
         const decrypted = decrypt(encryptionKey, encryptionVariant, decodeBase64(matched.metadata));
@@ -686,6 +768,49 @@ export async function startDaemon(): Promise<void> {
         logger.debug(`[DAEMON RUN] Failed to fetch session metadata from server: ${error instanceof Error ? error.message : error}`);
         return null;
       }
+    };
+
+    let agentIdentityRefreshInFlight: Promise<void> | null = null;
+    let nextAgentIdentityRefreshAt = 0;
+    const scheduleAdoptedAgentIdentityRefresh = (children: TrackedSession[]): void => {
+      const targets = children.filter((tracked) => {
+        const metadata = tracked.happySessionMetadataFromLocalWebhook;
+        const needsFetch = metadata?.flavor === 'codex'
+          ? !metadata.codexThreadId
+          : (!metadata?.flavor || metadata.flavor === 'claude') && !metadata?.claudeSessionId;
+        return Boolean(tracked.daemonProcess)
+          && !tracked.childProcess
+          && needsFetch
+          && Boolean(tracked.happySessionId)
+          && Boolean(tracked.encryption);
+      });
+      const now = Date.now();
+      if (targets.length === 0 || agentIdentityRefreshInFlight || now < nextAgentIdentityRefreshAt) return;
+
+      nextAgentIdentityRefreshAt = now + 5_000;
+      agentIdentityRefreshInFlight = (async () => {
+        try {
+          const sessions = await fetchEncryptedServerSessionMetadata(1_000);
+          const metadataById = new Map(sessions.map((session) => [session.id, session.metadata]));
+          for (const tracked of targets) {
+            const encryptedMetadata = metadataById.get(tracked.happySessionId!);
+            if (!encryptedMetadata) continue;
+            try {
+              tracked.happySessionMetadataFromLocalWebhook = decrypt(
+                tracked.encryption!.encryptionKey,
+                tracked.encryption!.encryptionVariant,
+                decodeBase64(encryptedMetadata),
+              ) as Metadata;
+            } catch (error) {
+              logger.debug(`[DAEMON RUN] Failed to decrypt refreshed metadata for ${tracked.happySessionId}: ${error instanceof Error ? error.message : error}`);
+            }
+          }
+        } catch (error) {
+          logger.debug(`[DAEMON RUN] Background Agent identity refresh failed: ${error instanceof Error ? error.message : error}`);
+        } finally {
+          agentIdentityRefreshInFlight = null;
+        }
+      })();
     };
 
     const resumeSession = async (happySessionId: string, options?: { model?: string; permissionMode?: string }): Promise<SpawnSessionResult> => {
@@ -761,7 +886,7 @@ export async function startDaemon(): Promise<void> {
         if (session.happySessionId === sessionId ||
           (sessionId.startsWith('PID-') && pid === parseInt(sessionId.replace('PID-', '')))) {
 
-          if (session.startedBy === 'daemon' && session.childProcess) {
+          if (session.startedBy === 'daemon') {
             // Signal the whole process group, not just the Happy CLI parent.
             // The harness runs its own backend as a grandchild — Codex spawns
             // `codex app-server` (codexAppServerClient.ts:647) and only kills it
@@ -771,7 +896,16 @@ export async function startDaemon(): Promise<void> {
             // `detached: true` (see spawnSession above), which makes the parent
             // a group leader, so the negative pid covers every descendant.
             let signalled = false;
-            if (process.platform !== 'win32') {
+            if (session.daemonProcess) {
+              signalled = signalProtectedProcessGroup(session.daemonProcess, 'SIGTERM');
+              if (signalled) {
+                logger.debug(`[DAEMON RUN] Revalidated and sent SIGTERM to protected process group of session ${sessionId}`);
+              } else {
+                logger.warn(`[DAEMON RUN] Refusing to signal session ${sessionId}: protected process identity no longer matches`);
+                pidToTrackedSession.delete(pid);
+                return false;
+              }
+            } else if (process.platform !== 'win32') {
               try {
                 process.kill(-pid, 'SIGTERM');
                 signalled = true;
@@ -783,12 +917,19 @@ export async function startDaemon(): Promise<void> {
             // Windows has no process groups to signal, and a group kill can
             // still fail if the child already exited or never led a group.
             // Either way the parent is worth killing on its own.
-            if (!signalled) {
+            if (!signalled && session.childProcess) {
               try {
                 session.childProcess.kill('SIGTERM');
                 logger.debug(`[DAEMON RUN] Sent SIGTERM to daemon-spawned session ${sessionId}`);
               } catch (error) {
                 logger.debug(`[DAEMON RUN] Failed to kill session ${sessionId}:`, error);
+              }
+            } else if (!signalled) {
+              try {
+                process.kill(pid, 'SIGTERM');
+                logger.debug(`[DAEMON RUN] Sent SIGTERM to adopted daemon session ${sessionId}`);
+              } catch (error) {
+                logger.debug(`[DAEMON RUN] Failed to kill adopted session ${sessionId}:`, error);
               }
             }
           } else {
@@ -827,6 +968,7 @@ export async function startDaemon(): Promise<void> {
     const { port: controlPort, stop: stopControlServer } = await startDaemonControlServer({
       ownerToken: daemonLockHandle.ownerToken,
       getChildren: getCurrentChildren,
+      prepareChildrenForList: scheduleAdoptedAgentIdentityRefresh,
       stopSession,
       spawnSession,
       requestShutdown: () => requestShutdown('happy-cli'),
@@ -911,7 +1053,14 @@ export async function startDaemon(): Promise<void> {
       }
 
       // Prune stale sessions
-      for (const [pid, _] of pidToTrackedSession.entries()) {
+      for (const [pid, session] of pidToTrackedSession.entries()) {
+        if (session.daemonProcess) {
+          if (!getMatchingProtectedProcessIdentity(session.daemonProcess)) {
+            logger.debug(`[DAEMON RUN] Removing stale protected session with PID ${pid} (process identity no longer matches)`);
+            pidToTrackedSession.delete(pid);
+          }
+          continue;
+        }
         try {
           // Check if process is still alive (signal 0 doesn't kill, just checks)
           process.kill(pid, 0);

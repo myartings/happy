@@ -19,6 +19,7 @@ import {
 export function startDaemonControlServer({
   ownerToken,
   getChildren,
+  prepareChildrenForList,
   stopSession,
   spawnSession,
   requestShutdown,
@@ -26,6 +27,7 @@ export function startDaemonControlServer({
 }: {
   ownerToken: string;
   getChildren: () => TrackedSession[];
+  prepareChildrenForList?: (children: TrackedSession[]) => void | Promise<void>;
   stopSession: (sessionId: string) => boolean;
   spawnSession: (options: SpawnSessionOptions) => Promise<SpawnSessionResult>;
   requestShutdown: () => void;
@@ -150,6 +152,8 @@ export function startDaemonControlServer({
               startedBy: z.string(),
               happySessionId: z.string(),
               pid: z.number(),
+              codexThreadId: z.string().optional(),
+              claudeSessionId: z.string().optional(),
               metadata: z.object({
                 effectiveModel: z.string(),
                 effectiveReasoningEffort: z.string(),
@@ -160,6 +164,13 @@ export function startDaemonControlServer({
       }
     }, async () => {
       const children = getChildren();
+      if (prepareChildrenForList) {
+        void Promise.resolve()
+          .then(() => prepareChildrenForList(children))
+          .catch((error) => {
+            logger.debug(`[CONTROL SERVER] Background Session metadata refresh failed: ${error instanceof Error ? error.message : error}`);
+          });
+      }
       logger.debug(`[CONTROL SERVER] Listing ${children.length} sessions`);
       return { 
         children: children
@@ -172,6 +183,8 @@ export function startDaemonControlServer({
               startedBy: child.startedBy,
               happySessionId: child.happySessionId!,
               pid: child.pid,
+              ...(metadata?.codexThreadId ? { codexThreadId: metadata.codexThreadId } : {}),
+              ...(metadata?.claudeSessionId ? { claudeSessionId: metadata.claudeSessionId } : {}),
               ...(hasConfirmedRoute ? {
                 metadata: {
                   effectiveModel: metadata.effectiveModel!,

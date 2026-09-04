@@ -1,0 +1,534 @@
+{
+  "schemaVersion": 3,
+  "slug": "daemon-bundle-handoff-sessions",
+  "intensity": "high-risk",
+  "layout": "standard",
+  "workspaceKind": "standard",
+  "phase": "archived",
+  "nextAction": "None",
+  "riskRequired": true,
+  "decisionsRequired": true,
+  "gates": {
+    "acceptance": {
+      "status": "passed",
+      "evidence": "Issue #108 and docs/PRD.md daemon handoff outcome; docs/specs/daemon-bundle-handoff-sessions.md AC1-AC8",
+      "updated": "2026-09-04T08:27:57+00:00"
+    },
+    "decisions": {
+      "status": "passed",
+      "evidence": "docs/workspace/daemon-bundle-handoff-sessions/decisions.md D1-D4",
+      "updated": "2026-09-04T08:27:57+00:00"
+    },
+    "scoping": {
+      "status": "passed",
+      "evidence": "ready: user-authorized named-Issue isolation opt-out; workflow-issue-route returned current-root for Issue #108 in this exact worktree; current Root serially owns T1-T4; high-risk Sol/root boundary retained; daemon spawn/adoption/list/stop and disposable systemd probe are test authority; protected paths excluded",
+      "updated": "2026-09-04T08:35:01+00:00"
+    },
+    "risk": {
+      "status": "passed",
+      "evidence": "docs/specs/daemon-bundle-handoff-sessions.md risk assessment: fail-closed isolation, exact identity adoption, controlled tests, rollback, independent review",
+      "updated": "2026-09-04T08:27:57+00:00"
+    },
+    "implementation": {
+      "status": "passed",
+      "evidence": "No production behavior changed after accepted implementation; only task completion and finish/session evidence were reconciled. Existing CLI typecheck, 16 focused tests, 1019 unit tests, and authenticated systemd handoff remain current.",
+      "updated": "2026-09-04T10:26:44+00:00"
+    },
+    "check": {
+      "status": "accepted_gaps",
+      "evidence": "Accepted gap: command index 5 reproduced the same three stale structured-check merge fixture failures as clean dev. Other 8 configured commands passed. Candidate remains 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499 at fixed base 1e03026a5febe5815a47687c7b220aa6c6dba758.",
+      "updated": "2026-09-04T10:28:55+00:00"
+    },
+    "review": {
+      "status": "passed",
+      "evidence": "Independent terminal Spec and Standards reviews accepted exact candidate 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499; package verified current; no actionable findings.",
+      "updated": "2026-09-04T10:29:14+00:00",
+      "candidate": {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+        "candidateFingerprint": "35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499"
+      }
+    },
+    "finish": {
+      "status": "passed",
+      "evidence": "Finish evidence complete: AC1-AC8 covered, final exact-candidate check bound with user-accepted baseline gap, terminal dual-axis review accepted, rollback and tracker recommendation recorded, no follow-up candidates.",
+      "updated": "2026-09-04T10:29:20+00:00"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-04T08:22:56+00:00",
+      "type": "created",
+      "phase": "planning",
+      "evidence": "Workflow created"
+    },
+    {
+      "at": "2026-09-04T08:22:56+00:00",
+      "type": "delivery_source",
+      "phase": "planning",
+      "evidence": "Delivery source: GitHub Issue https://github.com/myartings/happy/issues/108"
+    },
+    {
+      "at": "2026-09-04T08:27:57+00:00",
+      "type": "gate",
+      "gate": "acceptance",
+      "status": "passed",
+      "evidence": "Issue #108 and docs/PRD.md daemon handoff outcome; docs/specs/daemon-bundle-handoff-sessions.md AC1-AC8"
+    },
+    {
+      "at": "2026-09-04T08:27:57+00:00",
+      "type": "gate",
+      "gate": "decisions",
+      "status": "passed",
+      "evidence": "docs/workspace/daemon-bundle-handoff-sessions/decisions.md D1-D4"
+    },
+    {
+      "at": "2026-09-04T08:27:57+00:00",
+      "type": "gate",
+      "gate": "risk",
+      "status": "passed",
+      "evidence": "docs/specs/daemon-bundle-handoff-sessions.md risk assessment: fail-closed isolation, exact identity adoption, controlled tests, rollback, independent review"
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-04T08:27:57+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Preserve one tightly coupled invariant cluster: active daemon-owned Session continuity and manageability across one daemon bundle handoff",
+      "acceptanceSeam": "AC1-AC8 with focused spawn/adoption tests and one two-concurrent-Session systemd handoff scenario",
+      "dependencies": "Issue #108 runtime evidence and existing daemon spawn, persistence, webhook, control, and bundle-mtime handoff seams; no external blocker",
+      "reviewBoundary": "One bounded Happy CLI daemon lifecycle diff plus directly required docs/tests; reject together if continuity or safe adoption fails",
+      "rollbackBoundary": "Revert the single CLI/docs/tests candidate; optional persisted fields remain backward-readable and require no cleanup",
+      "contextBoundary": "One dedicated Issue worktree and owning Root through implementation, verification, and delivery preparation",
+      "consequence": "High consequence because false success terminates all service-cgroup Sessions and false adoption can signal a reused PID; controls are specified and independently reviewable",
+      "evidence": "Issue #108; docs/PRD.md; docs/specs/daemon-bundle-handoff-sessions.md; docs/tasks/daemon-bundle-handoff-sessions-tasks.md; decisions.md",
+      "contractFingerprint": "95e2952489dea6a5294a218fa67a4122e3426ac84a5b3a4ab6c296a07097e825",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-04T08:28:19+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: current Root owns serial T1-T4 in the exact registered Issue #108 worktree; fresh-session binding is evidenced by the platform session root plus handoff.md launch/resume capsule and matching branch; high-risk Sol/root judgment retained; public test seams are daemon spawn/adoption/list/stop plus disposable systemd probe; protected paths excluded"
+    },
+    {
+      "at": "2026-09-04T08:29:17+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "blocked",
+      "evidence": "workflow-issue-route.py returned manual-start-required: live Issue title canonicalizes to issue/108-daemon-bundle-handoff-terminates-daemon-spawned at /home/myartings/workspace/.worktrees/happy-issue-108, while this session is bound only by an unverified handoff capsule to issue/108-daemon-bundle-handoff-sessions; explicit current-checkout isolation opt-out or a freshly bound canonical Issue session is required before code edits"
+    },
+    {
+      "at": "2026-09-04T08:35:01+00:00",
+      "type": "gate",
+      "gate": "scoping",
+      "status": "passed",
+      "evidence": "ready: user-authorized named-Issue isolation opt-out; workflow-issue-route returned current-root for Issue #108 in this exact worktree; current Root serially owns T1-T4; high-risk Sol/root boundary retained; daemon spawn/adoption/list/stop and disposable systemd probe are test authority; protected paths excluded"
+    },
+    {
+      "at": "2026-09-04T08:35:01+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "TDD T1: systemd Session transient-scope isolation"
+    },
+    {
+      "at": "2026-09-04T09:01:49+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "TDD RED/GREEN for scope launch and exact process adoption; CLI typecheck; 1014 unit tests; disposable nested systemd probe; authenticated two-Session KillMode=control-group bundle handoff passed; docs/workspace/daemon-bundle-handoff-sessions/validation.md"
+    },
+    {
+      "at": "2026-09-04T09:01:49+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run applicable check and independent high-risk review"
+    },
+    {
+      "at": "2026-09-04T09:05:03+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 411dc749-8454-43d9-93f8-198bcfef8f9a"
+    },
+    {
+      "at": "2026-09-04T09:09:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Accepted gap: command index 5, scripts/test-happy-workflow-runtime.py, fails three merge fixture tests with bound structured check run configuration is stale; the same isolated failure reproduced on clean dev outside the Issue #108 candidate. All other 8 configured commands passed; Issue #108 focused, full CLI, and authenticated systemd handoff checks passed.; structured run: 411dc749-8454-43d9-93f8-198bcfef8f9a; accepted command indexes: 5; approval: User explicitly accepted the evidenced pre-existing workflow baseline gap on 2026-09-04 and authorized continuing to independent review."
+    },
+    {
+      "at": "2026-09-04T09:12:58+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Pinned dual-axis review blocked: Spec found Agent-native list identity and expiry contract gaps; Standards found protected-Session cleanup leakage and post-adoption PID-reuse signalling risk."
+    },
+    {
+      "at": "2026-09-04T09:13:35+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate pinned Spec and Standards review findings with focused RED-to-GREEN tests"
+    },
+    {
+      "at": "2026-09-04T09:40:05+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Review remediation complete: expiry bound; exact post-adoption heartbeat/stop revalidation; Agent-native list projection with authenticated metadata refresh; leak-free systemd test cleanup. Typecheck, 53 focused tests, 1017 full CLI unit tests, and authenticated two-Session systemd handoff passed."
+    },
+    {
+      "at": "2026-09-04T09:40:06+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run fresh candidate-bound applicable check and independent high-risk re-review"
+    },
+    {
+      "at": "2026-09-04T09:42:14+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 6de3bf05-4955-4173-a8c8-a3971952a426"
+    },
+    {
+      "at": "2026-09-04T09:42:28+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Accepted gap: command index 5, scripts/test-happy-workflow-runtime.py, reproduced the same three merge fixture failures with bound structured check run configuration is stale as the clean dev baseline. All other 8 configured commands passed; remediated Issue #108 candidate additionally passed CLI typecheck, 1017 CLI unit tests, and authenticated systemd handoff acceptance.; structured run: 6de3bf05-4955-4173-a8c8-a3971952a426; accepted command indexes: 5; approval: User explicitly accepted the evidenced pre-existing workflow baseline gap on 2026-09-04 and authorized continuing to independent review; the fresh run reproduced the identical three baseline fixture failures."
+    },
+    {
+      "at": "2026-09-04T09:46:15+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Second pinned dual-axis review blocked on three in-contract remediation items: strict recordedAt runtime type validation, partial-spawn cleanup, and bounded/coalesced non-blocking Agent-identity refresh."
+    },
+    {
+      "type": "right_sizing_assessment",
+      "at": "2026-09-04T09:46:35+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one bounded remediation pass for three tightly coupled review findings; no independent remainder or contract change.",
+      "acceptanceSeam": "AC4 Agent-native list continuity and local manageability; AC5 malformed-record fail-closed validation; systemd acceptance cleanup.",
+      "dependencies": "Existing protected identity helpers, daemon list preparation seam, authenticated metadata fixture, and disposable systemd test unit.",
+      "reviewBoundary": "One repinned full Issue #108 candidate; both Spec and Standards must re-review the complete diff.",
+      "rollbackBoundary": "Revert the same CLI/docs/tests candidate; no migration or external state remains.",
+      "contextBoundary": "Current authorized Issue #108 root retains serial ownership; no writer delegation.",
+      "consequence": "Without the narrow fixes, malformed timestamps may adopt invalid records, partial test failure may leak a process, and slow Server metadata can block local list management.",
+      "evidence": "Two consecutive blocked review boundaries; second review confirms prior core signal/adoption issues closed and identifies three concrete in-contract residuals.",
+      "contractFingerprint": "95e2952489dea6a5294a218fa67a4122e3426ac84a5b3a4ab6c296a07097e825",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-04T09:46:36+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Bounded continuation: strict timestamp validation, partial-spawn cleanup, bounded coalesced identity refresh"
+    },
+    {
+      "at": "2026-09-04T09:56:48+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Bounded continuation remediation complete: strict recordedAt runtime validation; non-blocking one-request/coalesced/timeout-bounded Agent identity refresh; allSettled plus list/persistence cleanup reconstruction. Typecheck, 12 focused tests, 1018 CLI unit tests, and authenticated systemd handoff passed."
+    },
+    {
+      "at": "2026-09-04T09:56:48+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run final check and third complete dual-axis review against fixed base 1e03026a5febe5815a47687c7b220aa6c6dba758"
+    },
+    {
+      "at": "2026-09-04T09:59:30+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 162d74b4-1b6d-41b1-b35f-e3a65f84a283"
+    },
+    {
+      "at": "2026-09-04T09:59:43+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Accepted gap: command index 5, scripts/test-happy-workflow-runtime.py, reproduced the same three merge fixture failures with bound structured check run configuration is stale as clean dev. Other 8 configured commands passed. Candidate is pinned to original base 1e03026a5febe5815a47687c7b220aa6c6dba758; CLI typecheck, 1018 unit tests, and authenticated systemd handoff acceptance passed.; structured run: 162d74b4-1b6d-41b1-b35f-e3a65f84a283; accepted command indexes: 5; approval: User explicitly accepted the evidenced pre-existing workflow baseline gap on 2026-09-04 and authorized continuing to independent review; this final fixed-base run reproduced the identical three baseline fixture failures."
+    },
+    {
+      "at": "2026-09-04T10:03:39+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "blocked",
+      "evidence": "Spec accepted; Standards blocked on two frozen failure-path gaps: asynchronous launcher error settlement and cleanup of pre-webhook transient scopes."
+    },
+    {
+      "at": "2026-09-04T10:03:39+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Remediate async launcher error and pre-webhook scope cleanup failure paths"
+    },
+    {
+      "at": "2026-09-04T10:11:16+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "Third-review remediation complete: immediate async launcher error listener; daemon-PID-prefixed transient scope names; pre-webhook scope enumeration cleanup. CLI typecheck, 16 focused tests, 1019 full CLI unit tests, and authenticated two-Session systemd handoff passed."
+    },
+    {
+      "at": "2026-09-04T10:11:16+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run fresh fixed-base applicable check and fourth complete dual-axis review"
+    },
+    {
+      "at": "2026-09-04T10:13:37+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 47e4bf4d-31d3-4900-a2cd-057de4c4da4a"
+    },
+    {
+      "at": "2026-09-04T10:13:50+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Accepted gap: command index 5, scripts/test-happy-workflow-runtime.py, reproduced the same three merge fixture failures with bound structured check run configuration is stale as clean dev. Other 8 configured commands passed. Candidate is pinned to original base 1e03026a5febe5815a47687c7b220aa6c6dba758; CLI typecheck, 1019 unit tests, and authenticated systemd handoff acceptance passed.; structured run: 47e4bf4d-31d3-4900-a2cd-057de4c4da4a; accepted command indexes: 5; approval: User explicitly accepted the evidenced pre-existing workflow baseline gap on 2026-09-04 and authorized continuing to independent review; this fresh fixed-base run reproduced the identical three baseline fixture failures."
+    },
+    {
+      "at": "2026-09-04T10:17:27+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent capable Spec and Standards reviews accepted the complete immutable candidate 51093b2e8aa9fd2328c48cdc1828c6558d965ac1fd1404e3295e23885713da5c (diff 6120218466e6ddd6581927394b28c02e97c7c65a794424225c2bad0dd8648ee2); no actionable findings; package verification current."
+    },
+    {
+      "at": "2026-09-04T10:18:12+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Task checklist completion changes the candidate; repin and rerun final whole-diff review."
+    },
+    {
+      "at": "2026-09-04T10:18:12+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Task checklist completion changes the staged candidate; run a fresh fixed-base check."
+    },
+    {
+      "at": "2026-09-04T10:20:06+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: dc5773e2-3b54-4813-84bb-5102ffe4910b"
+    },
+    {
+      "at": "2026-09-04T10:20:24+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Accepted gap: command index 5, scripts/test-happy-workflow-runtime.py, reproduced the same three merge fixture failures with bound structured check run configuration is stale as clean dev. Other 8 configured commands passed. Candidate 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499 is pinned to base 1e03026a5febe5815a47687c7b220aa6c6dba758; only task status changed since prior accepted review.; structured run: dc5773e2-3b54-4813-84bb-5102ffe4910b; accepted command indexes: 5; approval: User explicitly accepted the evidenced pre-existing workflow baseline gap on 2026-09-04 and authorized continuing to independent review; this final checklist-complete fixed-base run reproduced the identical three baseline fixture failures."
+    },
+    {
+      "at": "2026-09-04T10:23:49+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Terminal independent capable Spec and Standards reviews accepted candidate 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499 (diff b306e95a0b48a8239d4d62e17e1b823e023647ee081934c3857402547d4abdbd); no actionable findings; package current."
+    },
+    {
+      "at": "2026-09-04T10:23:49+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Complete finish evidence, staged CI, and terminal archive projection"
+    },
+    {
+      "at": "2026-09-04T10:25:11+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "pending",
+      "evidence": "Finish summary and journal updates changed candidate-bound documentation; run final exact-candidate check."
+    },
+    {
+      "at": "2026-09-04T10:25:11+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "pending",
+      "evidence": "Finish summary and journal updates changed candidate-bound documentation; run final exact-candidate review."
+    },
+    {
+      "at": "2026-09-04T10:26:44+00:00",
+      "type": "transition",
+      "phase": "implementation",
+      "evidence": "Rebind finish-updated candidate evidence before terminal archive"
+    },
+    {
+      "at": "2026-09-04T10:26:44+00:00",
+      "type": "gate",
+      "gate": "implementation",
+      "status": "passed",
+      "evidence": "No production behavior changed after accepted implementation; only task completion and finish/session evidence were reconciled. Existing CLI typecheck, 16 focused tests, 1019 unit tests, and authenticated systemd handoff remain current."
+    },
+    {
+      "at": "2026-09-04T10:26:44+00:00",
+      "type": "transition",
+      "phase": "verification",
+      "evidence": "Run exact finish-updated candidate check and terminal review"
+    },
+    {
+      "at": "2026-09-04T10:28:41+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "blocked",
+      "evidence": "9 configured commands; 1 failures; structured run: 6b90ea9d-7625-4772-86da-7d56d6b8b94e"
+    },
+    {
+      "at": "2026-09-04T10:28:55+00:00",
+      "type": "gate",
+      "gate": "check",
+      "status": "accepted_gaps",
+      "evidence": "Accepted gap: command index 5 reproduced the same three stale structured-check merge fixture failures as clean dev. Other 8 configured commands passed. Candidate remains 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499 at fixed base 1e03026a5febe5815a47687c7b220aa6c6dba758.; structured run: 6b90ea9d-7625-4772-86da-7d56d6b8b94e; accepted command indexes: 5; approval: User explicitly accepted the evidenced pre-existing workflow baseline gap on 2026-09-04 and authorized continuing to independent review; this terminal run reproduced the identical three baseline fixture failures."
+    },
+    {
+      "at": "2026-09-04T10:29:14+00:00",
+      "type": "gate",
+      "gate": "review",
+      "status": "passed",
+      "evidence": "Independent terminal Spec and Standards reviews accepted exact candidate 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499; package verified current; no actionable findings."
+    },
+    {
+      "at": "2026-09-04T10:29:14+00:00",
+      "type": "transition",
+      "phase": "finish",
+      "evidence": "Finalize evidence and archive exact reviewed candidate"
+    },
+    {
+      "at": "2026-09-04T10:29:20+00:00",
+      "type": "gate",
+      "gate": "finish",
+      "status": "passed",
+      "evidence": "Finish evidence complete: AC1-AC8 covered, final exact-candidate check bound with user-accepted baseline gap, terminal dual-axis review accepted, rollback and tracker recommendation recorded, no follow-up candidates."
+    },
+    {
+      "at": "2026-09-04T10:29:35+00:00",
+      "type": "archived",
+      "phase": "archived",
+      "evidence": "Issue #108 daemon-owned Sessions survive systemd bundle handoff with exact safe adoption; checks and independent review complete with one user-accepted pre-existing workflow fixture gap.; result identity: archive-introducing-commit; follow-up: None"
+    }
+  ],
+  "updated": "2026-09-04T10:29:35+00:00",
+  "deliverySourcePolicy": 1,
+  "deliverySource": {
+    "kind": "tracker",
+    "url": "https://github.com/myartings/happy/issues/108",
+    "target": "myartings/happy"
+  },
+  "rightSizingPolicy": 1,
+  "rightSizingAssessments": [
+    {
+      "at": "2026-09-04T08:27:57+00:00",
+      "phase": "planning",
+      "stage": "acceptance",
+      "route": "accept-slice",
+      "outcome": "Preserve one tightly coupled invariant cluster: active daemon-owned Session continuity and manageability across one daemon bundle handoff",
+      "acceptanceSeam": "AC1-AC8 with focused spawn/adoption tests and one two-concurrent-Session systemd handoff scenario",
+      "dependencies": "Issue #108 runtime evidence and existing daemon spawn, persistence, webhook, control, and bundle-mtime handoff seams; no external blocker",
+      "reviewBoundary": "One bounded Happy CLI daemon lifecycle diff plus directly required docs/tests; reject together if continuity or safe adoption fails",
+      "rollbackBoundary": "Revert the single CLI/docs/tests candidate; optional persisted fields remain backward-readable and require no cleanup",
+      "contextBoundary": "One dedicated Issue worktree and owning Root through implementation, verification, and delivery preparation",
+      "consequence": "High consequence because false success terminates all service-cgroup Sessions and false adoption can signal a reused PID; controls are specified and independently reviewable",
+      "evidence": "Issue #108; docs/PRD.md; docs/specs/daemon-bundle-handoff-sessions.md; docs/tasks/daemon-bundle-handoff-sessions-tasks.md; decisions.md",
+      "contractFingerprint": "95e2952489dea6a5294a218fa67a4122e3426ac84a5b3a4ab6c296a07097e825",
+      "trigger": null,
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    },
+    {
+      "at": "2026-09-04T09:46:35+00:00",
+      "phase": "verification",
+      "stage": "continuation",
+      "route": "continue",
+      "outcome": "Continue one bounded remediation pass for three tightly coupled review findings; no independent remainder or contract change.",
+      "acceptanceSeam": "AC4 Agent-native list continuity and local manageability; AC5 malformed-record fail-closed validation; systemd acceptance cleanup.",
+      "dependencies": "Existing protected identity helpers, daemon list preparation seam, authenticated metadata fixture, and disposable systemd test unit.",
+      "reviewBoundary": "One repinned full Issue #108 candidate; both Spec and Standards must re-review the complete diff.",
+      "rollbackBoundary": "Revert the same CLI/docs/tests candidate; no migration or external state remains.",
+      "contextBoundary": "Current authorized Issue #108 root retains serial ownership; no writer delegation.",
+      "consequence": "Without the narrow fixes, malformed timestamps may adopt invalid records, partial test failure may leak a process, and slow Server metadata can block local list management.",
+      "evidence": "Two consecutive blocked review boundaries; second review confirms prior core signal/adoption issues closed and identifies three concrete in-contract residuals.",
+      "contractFingerprint": "95e2952489dea6a5294a218fa67a4122e3426ac84a5b3a4ab6c296a07097e825",
+      "trigger": "no-progress",
+      "remainderSlices": null,
+      "dependencyInterfaces": null,
+      "safeStop": null
+    }
+  ],
+  "rightSizingAcceptanceRequired": true,
+  "rightSizingContractPolicy": 1,
+  "rightSizingContractPolicyStart": 0,
+  "checkEvidencePolicy": 1,
+  "checkRunId": "6b90ea9d-7625-4772-86da-7d56d6b8b94e",
+  "checkRunFingerprint": "403a13ebaa6c0efab5854c37c8f4ae2742f48f9558bf9e232f01baefbf705219",
+  "checkedCandidate": {
+    "identityKind": "staged-candidate-v1",
+    "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+    "candidateFingerprint": "35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499"
+  },
+  "checkAcceptedFailures": {
+    "policyVersion": 1,
+    "commandIndexes": [
+      5
+    ],
+    "approval": "User explicitly accepted the evidenced pre-existing workflow baseline gap on 2026-09-04 and authorized continuing to independent review; this terminal run reproduced the identical three baseline fixture failures."
+  },
+  "checkAcceptedFailuresFingerprint": "fda66307f0438e2d168cc9104c64ed68649cfcc017d72c7c68478c8f402d5fa4",
+  "finalReview": {
+    "candidate": {
+      "identityKind": "staged-candidate-v1",
+      "baseCommit": "1e03026a5febe5815a47687c7b220aa6c6dba758",
+      "candidateFingerprint": "35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499"
+    },
+    "outcomes": {
+      "spec-review": {
+        "status": "accepted",
+        "evidence": "Terminal review accepted exact unchanged candidate 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499, diff b306e95a0b48a8239d4d62e17e1b823e023647ee081934c3857402547d4abdbd; no actionable findings."
+      },
+      "standards-review": {
+        "status": "accepted",
+        "evidence": "Terminal review accepted exact unchanged candidate 35c96d0dd5fde28d5a1847502f609e8ea137d74816ae6db9feb9c349e633b499, diff b306e95a0b48a8239d4d62e17e1b823e023647ee081934c3857402547d4abdbd; all prior blockers closed; no actionable findings."
+      }
+    }
+  },
+  "completionEvidence": {
+    "kind": "prearchive-workspace-v1",
+    "prearchiveSchemaVersion": 3,
+    "prearchiveNextAction": "Finalize evidence and archive exact reviewed candidate",
+    "prearchiveUpdated": "2026-09-04T10:29:20+00:00",
+    "prearchiveActive": {
+      "feature": "daemon-bundle-handoff-sessions",
+      "phase": "finish",
+      "updated": "2026-09-04",
+      "next": "Finalize evidence and archive exact reviewed candidate",
+      "branch / worktree": "issue/108-daemon-bundle-handoff-sessions"
+    },
+    "prearchiveArchiveObject": "060c801ca67baea6abe5f4e94e583a859fcff70b",
+    "fingerprint": "6c2f7316e4ad53af65af027922cec7c0c2984dc33996df916b034316eaa990af"
+  },
+  "archivedAt": "2026-09-04T10:29:35+00:00",
+  "archiveDate": "2026-09-04",
+  "resultIdentity": {
+    "kind": "archive-introducing-commit"
+  },
+  "archiveSummary": "Issue #108 daemon-owned Sessions survive systemd bundle handoff with exact safe adoption; checks and independent review complete with one user-accepted pre-existing workflow fixture gap.",
+  "archiveFollowUp": "None"
+}
