@@ -11,7 +11,7 @@ import os from 'node:os';
 import { execSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-import type { AgentState, Metadata } from '@/api/types';
+import type { AgentState, Metadata, PermissionMode } from '@/api/types';
 import { configuration } from '@/configuration';
 import { projectPath } from '@/projectPath';
 import type { SandboxConfig } from '@/persistence';
@@ -36,6 +36,8 @@ export interface CreateSessionMetadataOptions {
     sandbox?: SandboxConfig;
     /** Whether the backend runs with "dangerously skip permissions" behavior */
     dangerouslySkipPermissions?: boolean;
+    /** Permission mode published when creating a fresh session. */
+    initialPermissionMode?: PermissionMode;
     /** Happy session id this session was forked from. */
     parentSessionId?: string;
     /** Happy message id used as the fork rewind point. */
@@ -52,6 +54,20 @@ export interface SessionMetadataResult {
     state: AgentState;
     /** Session metadata */
     metadata: Metadata;
+}
+
+/**
+ * Refresh process-local metadata while preserving the server-owned permission
+ * mirror and other reconnect-only fields from the current encrypted snapshot.
+ */
+export function mergeSessionMetadataForReconnect(existing: Metadata, launch: Metadata): Metadata {
+    return {
+        ...existing,
+        ...launch,
+        archivedBy: undefined,
+        permissionMode: existing.permissionMode,
+        permissionModeRevision: existing.permissionModeRevision,
+    };
 }
 
 function getGitBranch(cwd: string): string | undefined {
@@ -113,6 +129,10 @@ export function createSessionMetadata(opts: CreateSessionMetadataOptions): Sessi
         flavor: opts.flavor,
         sandbox: opts.sandbox?.enabled ? opts.sandbox : null,
         dangerouslySkipPermissions: opts.dangerouslySkipPermissions ?? null,
+        ...(opts.initialPermissionMode ? {
+            permissionMode: opts.initialPermissionMode,
+            permissionModeRevision: 0,
+        } : {}),
         ...(gitBranch ? { gitBranch } : {}),
         ...(opts.parentSessionId ? { parentSessionId: opts.parentSessionId } : {}),
         ...(opts.forkedFromMessageId ? { forkedFromMessageId: opts.forkedFromMessageId } : {}),

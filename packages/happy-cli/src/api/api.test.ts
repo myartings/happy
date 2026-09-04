@@ -4,13 +4,15 @@ import axios from 'axios';
 import { connectionState } from '@/utils/serverConnectionErrors';
 
 // Use vi.hoisted to ensure mock functions are available when vi.mock factory runs
-const { mockPost, mockIsAxiosError } = vi.hoisted(() => ({
+const { mockGet, mockPost, mockIsAxiosError } = vi.hoisted(() => ({
+    mockGet: vi.fn(),
     mockPost: vi.fn(),
     mockIsAxiosError: vi.fn(() => true)
 }));
 
 vi.mock('axios', () => ({
     default: {
+        get: mockGet,
         post: mockPost,
         isAxiosError: mockIsAxiosError
     },
@@ -27,12 +29,12 @@ vi.mock('@/ui/logger', () => ({
 vi.mock('./encryption', () => ({
     decodeBase64: vi.fn((data: string) => data),
     encodeBase64: vi.fn((data: any) => data),
-    decrypt: vi.fn((data: any) => data),
+    decrypt: vi.fn((_key: Uint8Array, _variant: string, data: any) => data),
     encrypt: vi.fn((data: any) => data)
 }));
 
 // Mock configuration
-vi.mock('./configuration', () => ({
+vi.mock('@/configuration', () => ({
     configuration: {
         serverUrl: 'https://api.example.com'
     }
@@ -234,6 +236,96 @@ describe('Api server error handling', () => {
                 expect.stringContaining('⚠️  Happy server unreachable')
             );
             consoleSpy.mockRestore();
+        });
+    });
+
+    describe('getSession', () => {
+        it('hydrates the current encrypted session record for reconnect', async () => {
+            const encryptionKey = new Uint8Array([1, 2, 3]);
+            mockGet.mockResolvedValueOnce({
+                data: {
+                    sessions: [{ id: 'newer-session' }],
+                    nextCursor: 'cursor_v1_older-page',
+                    hasNext: true,
+                },
+            }).mockResolvedValueOnce({
+                data: {
+                    sessions: [{
+                        id: 'session-reconnect',
+                        seq: 18,
+                        metadata: {
+                            ...testMetadata,
+                            permissionMode: 'yolo',
+                            permissionModeRevision: 7,
+                        },
+                        metadataVersion: 11,
+                        agentState: { controlledByUser: false },
+                        agentStateVersion: 4,
+                    }],
+                    nextCursor: null,
+                    hasNext: false,
+                },
+            });
+
+            await expect(api.getSession({
+                sessionId: 'session-reconnect',
+                encryptionKey,
+                encryptionVariant: 'dataKey',
+            })).resolves.toEqual({
+                id: 'session-reconnect',
+                seq: 18,
+                encryptionKey,
+                encryptionVariant: 'dataKey',
+                metadata: {
+                    ...testMetadata,
+                    permissionMode: 'yolo',
+                    permissionModeRevision: 7,
+                },
+                metadataVersion: 11,
+                agentState: { controlledByUser: false },
+                agentStateVersion: 4,
+            });
+            expect(mockGet).toHaveBeenNthCalledWith(2, 'https://api.example.com/v2/sessions', expect.objectContaining({
+                params: {
+                    cursor: 'cursor_v1_older-page',
+                    limit: 200,
+                },
+            }));
+        });
+
+        it('fails closed when pagination claims another page without a cursor', async () => {
+            mockGet.mockResolvedValue({
+                data: { sessions: [], nextCursor: null, hasNext: true },
+            });
+
+            await expect(api.getSession({
+                sessionId: 'session-missing',
+                encryptionKey: new Uint8Array([1]),
+                encryptionVariant: 'legacy',
+            })).rejects.toThrow('Session pagination cursor is missing');
+            expect(mockGet).toHaveBeenCalledTimes(1);
+        });
+
+        it('fails closed when a pagination cursor repeats', async () => {
+            mockGet.mockResolvedValue({
+                data: { sessions: [], nextCursor: 'cursor_v1_stalled', hasNext: true },
+            });
+
+            await expect(api.getSession({
+                sessionId: 'session-missing',
+                encryptionKey: new Uint8Array([1]),
+                encryptionVariant: 'legacy',
+            })).rejects.toThrow('Session pagination cursor did not advance');
+        });
+
+        it('fails closed when reconnect hydration cannot reach the server', async () => {
+            mockGet.mockRejectedValue(new Error('network unavailable'));
+
+            await expect(api.getSession({
+                sessionId: 'session-unavailable',
+                encryptionKey: new Uint8Array([1]),
+                encryptionVariant: 'legacy',
+            })).rejects.toThrow('Failed to load session for reconnect: network unavailable');
         });
     });
 
