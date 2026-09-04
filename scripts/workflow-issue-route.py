@@ -12,6 +12,13 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ISSUE_PATH = re.compile(r"^/([^/]+)/([^/]+)/issues/([1-9][0-9]*)/?$")
+MANUAL_LAUNCH_REQUIRED_KEYS = {
+    "schemaVersion", "specified", "rightSizing", "consequence", "risk",
+    "capability",
+}
+MANUAL_LAUNCH_OPTIONAL_KEYS = {
+    "solReasoningEffort", "solEffortJustification",
+}
 
 
 def run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -276,6 +283,7 @@ def is_descendant(root: Path, base: str, commit: str) -> bool:
 
 def blocked(result: dict[str, object], reason: str) -> dict[str, object]:
     result.pop("launchCapsule", None)
+    result.pop("manualIssueLaunchContract", None)
     result.update(
         status="blocked",
         preparation="stop-on-identity-collision",
@@ -283,6 +291,118 @@ def blocked(result: dict[str, object], reason: str) -> dict[str, object]:
         gitAction=None,
         failureReason=reason,
     )
+    return result
+
+
+def manual_launch_assessment(raw: str | None) -> dict[str, object]:
+    if raw is None:
+        return {"executable": False, "routeReason": "input-missing"}
+    try:
+        value = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return {"executable": False, "routeReason": "input-invalid"}
+    allowed = MANUAL_LAUNCH_REQUIRED_KEYS | MANUAL_LAUNCH_OPTIONAL_KEYS
+    if (
+        not isinstance(value, dict)
+        or set(value) - allowed
+        or not MANUAL_LAUNCH_REQUIRED_KEYS.issubset(value)
+        or not isinstance(value.get("schemaVersion"), int)
+        or isinstance(value.get("schemaVersion"), bool)
+        or value.get("schemaVersion") != 1
+        or not isinstance(value.get("specified"), bool)
+    ):
+        return {"executable": False, "routeReason": "input-invalid"}
+    if value["specified"] is False:
+        return {"executable": False, "routeReason": "issue-contract-incomplete"}
+    if not all(
+        isinstance(value[key], str)
+        for key in ("rightSizing", "consequence", "risk", "capability")
+    ):
+        return {"executable": False, "routeReason": "input-invalid"}
+    if value["rightSizing"] not in {"one-slice", "split-required", "incomplete"}:
+        return {"executable": False, "routeReason": "assessment-unknown"}
+    if value["rightSizing"] != "one-slice":
+        return {"executable": False, "routeReason": "right-sizing-not-executable"}
+    if (
+        value["consequence"] not in {"low", "medium", "high", "unknown"}
+        or value["risk"] not in {"none", "present", "unknown"}
+        or value["capability"] not in {"bounded", "sol-required", "ambiguous"}
+    ):
+        return {"executable": False, "routeReason": "assessment-unknown"}
+
+    if value["capability"] == "ambiguous":
+        route_reason = "capability-ambiguous"
+    elif value["risk"] == "unknown":
+        route_reason = "risk-unknown"
+    elif value["consequence"] == "unknown":
+        route_reason = "consequence-unknown"
+    elif value["risk"] == "present":
+        route_reason = "risk-present"
+    elif value["consequence"] in {"medium", "high"}:
+        route_reason = f"consequence-{value['consequence']}"
+    elif value["capability"] == "sol-required":
+        route_reason = "capability-sol-required"
+    else:
+        route_reason = "bounded-low-consequence"
+
+    route_class = (
+        "bounded" if route_reason == "bounded-low-consequence" else "sol-required"
+    )
+    effort = value.get("solReasoningEffort", "medium")
+    justification = value.get("solEffortJustification")
+    if not isinstance(effort, str) or effort not in {"medium", "high", "xhigh", "max"}:
+        return {"executable": False, "routeReason": "input-invalid"}
+    if justification is not None and (
+        not isinstance(justification, str) or not justification.strip()
+    ):
+        return {"executable": False, "routeReason": "input-invalid"}
+    if route_class == "sol-required" and effort != "medium" and justification is None:
+        return {
+            "executable": False,
+            "routeReason": "higher-sol-effort-requires-justification",
+        }
+    return {
+        "executable": True,
+        "routeClass": route_class,
+        "model": "gpt-5.6-luna" if route_class == "bounded" else "gpt-5.6-sol",
+        "reasoningEffort": "max" if route_class == "bounded" else effort,
+        "routeReason": route_reason,
+        "solEffortJustification": (
+            justification.strip()
+            if route_class == "sol-required" and isinstance(justification, str)
+            else None
+        ),
+    }
+
+
+def manual_launch_contract(
+    result: dict[str, object], raw: str | None,
+) -> dict[str, object]:
+    assessment = manual_launch_assessment(raw)
+    if not assessment["executable"]:
+        assessment.update(
+            routeClass="none",
+            model=None,
+            reasoningEffort=None,
+            solEffortJustification=None,
+        )
+    return {
+        "schemaVersion": 1,
+        "kind": "manual-issue-launch-route",
+        **assessment,
+        "issue": result["issue"],
+        "repository": result["repository"],
+        "branch": result["branch"],
+        "worktree": result["worktree"],
+        "verifiedBase": result["verifiedBase"],
+        "launchOccurred": False,
+    }
+
+
+def add_manual_launch_contract(
+    result: dict[str, object], raw: str | None,
+) -> dict[str, object]:
+    result["manualIssueLaunchContract"] = manual_launch_contract(result, raw)
     return result
 
 
@@ -443,7 +563,7 @@ def plan(args: argparse.Namespace) -> dict[str, object]:
         result["launchCapsule"] = launch_capsule(
             result, "current-checkout-explicit-opt-out", session_root, git_state
         )
-        return result
+        return add_manual_launch_contract(result, args.manual_launch_json)
 
     identity_rows = [
         row for row in rows
@@ -475,7 +595,7 @@ def plan(args: argparse.Namespace) -> dict[str, object]:
             ],
             failureReason=None,
         )
-        return result
+        return add_manual_launch_contract(result, args.manual_launch_json)
     if path_exists and not any(
         Path(row.get("worktree", "")).resolve() == planned_worktree.resolve()
         for row in rows
@@ -552,7 +672,7 @@ def plan(args: argparse.Namespace) -> dict[str, object]:
         result["launchCapsule"] = launch_capsule(
             result, f"{binding_source}-confirmed", planned_worktree
         )
-    return result
+    return add_manual_launch_contract(result, args.manual_launch_json)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -592,6 +712,13 @@ def parser() -> argparse.ArgumentParser:
     )
     result.add_argument("--isolation", choices=("default", "opt-out"), default="default")
     result.add_argument("--session-binding-json")
+    result.add_argument(
+        "--manual-launch-json",
+        help=(
+            "Versioned live-Issue assessment snapshot for the client-neutral "
+            "manual model launch contract; missing or invalid input emits no route."
+        ),
+    )
     return result
 
 

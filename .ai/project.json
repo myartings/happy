@@ -22,17 +22,17 @@
       "{python} scripts/validate-happy-workflow.py",
       "{python} scripts/workflow-audit.py --all --strict"
     ],
-  "workflow-targeted": [
-    "{python} scripts/test-happy-workflow-state-upgrade.py",
-    "{python} scripts/test-happy-workflow-runtime.py",
-    "{python} scripts/validate-happy-workflow.py",
+    "workflow-targeted": [
+      "{python} scripts/test-happy-workflow-state-upgrade.py",
+      "{python} scripts/test-happy-workflow-runtime.py",
+      "{python} scripts/validate-happy-workflow.py",
       "{python} scripts/test-validate-happy-workflow.py",
       "{python} scripts/workflow-audit.py --all --strict"
     ],
-  "check": [
-    "{python} scripts/test-happy-workflow-state-upgrade.py",
-    "{python} scripts/test-happy-workflow-runtime.py",
-    "{python} scripts/validate-happy-workflow.py",
+    "check": [
+      "{python} scripts/test-happy-workflow-state-upgrade.py",
+      "{python} scripts/test-happy-workflow-runtime.py",
+      "{python} scripts/validate-happy-workflow.py",
       "{python} scripts/test-validate-happy-workflow.py",
       "{python} scripts/workflow-audit.py --all --strict"
     ]
@@ -93,10 +93,10 @@
           "docs/workflow/**",
           "docs/workspace/**",
           "scripts/workflow-*.py",
-        "scripts/happy-workflow-state-upgrade.py",
-        "scripts/test-happy-workflow-state-upgrade.py",
-        "scripts/test-happy-workflow-runtime.py",
-        "scripts/validate-happy-workflow.py",
+          "scripts/happy-workflow-state-upgrade.py",
+          "scripts/test-happy-workflow-state-upgrade.py",
+          "scripts/test-happy-workflow-runtime.py",
+          "scripts/validate-happy-workflow.py",
           "scripts/test-validate-happy-workflow.py",
           "scripts/test-workflow.py",
           "scripts/test-workflow-ci.py",
@@ -115,10 +115,10 @@
           "docs/workflow/**",
           "docs/workspace/**",
           "scripts/workflow-*.py",
-        "scripts/happy-workflow-state-upgrade.py",
-        "scripts/test-happy-workflow-state-upgrade.py",
-        "scripts/test-happy-workflow-runtime.py",
-        "scripts/validate-happy-workflow.py",
+          "scripts/happy-workflow-state-upgrade.py",
+          "scripts/test-happy-workflow-state-upgrade.py",
+          "scripts/test-happy-workflow-runtime.py",
+          "scripts/validate-happy-workflow.py",
           "scripts/test-validate-happy-workflow.py"
         ]
       }
@@ -181,5 +181,8 @@
     "destructive operation",
     "session protocol",
     "cross-device synchronization"
-  ]
+  ],
+  "features": {
+    "unattendedIssueCampaign": false
+  }
 }

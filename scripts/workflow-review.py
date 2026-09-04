@@ -18,6 +18,13 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+CHECK_EVIDENCE_POLICY_VERSION = 1
+STAGED_REVIEW_PACKAGE_SCHEMA_VERSION = 3
+INTEGRATION_BINDING_SCHEMA_VERSION = 1
+INTEGRATION_LIFECYCLE_PATHS = (
+    "docs/workspace/ACTIVE.md",
+    "docs/workspace/archive.md",
+)
 
 
 def load_candidate_module():
@@ -25,6 +32,26 @@ def load_candidate_module():
     spec = importlib.util.spec_from_file_location("workflow_candidate_runtime", path)
     if spec is None or spec.loader is None:
         raise RuntimeError("cannot load staged candidate runtime")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_check_module():
+    path = ROOT / "scripts" / "workflow-check.py"
+    spec = importlib.util.spec_from_file_location("workflow_check_runtime", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load structured check runtime")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_state_module():
+    path = ROOT / "scripts" / "workflow-state.py"
+    spec = importlib.util.spec_from_file_location("workflow_state_runtime", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load workflow state runtime")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -177,6 +204,140 @@ def verify_diff_artifact(
         raise RuntimeError("review package is stale for the complete diff artifact")
 
 
+def current_check_binding(slug: str, state: dict, candidate: dict) -> dict:
+    if state.get("phase") != "verification":
+        raise RuntimeError("staged review package requires phase=verification")
+    check_status = state.get("gates", {}).get("check", {}).get("status")
+    if check_status not in ("passed", "accepted_gaps"):
+        raise RuntimeError(
+            "staged review package requires a current structured final check"
+        )
+    policy = state.get("checkEvidencePolicy")
+    run_id = state.get("checkRunId")
+    fingerprint = state.get("checkRunFingerprint")
+    if type(policy) is not int or policy != CHECK_EVIDENCE_POLICY_VERSION:
+        raise RuntimeError("staged review package check policy is missing or unsupported")
+    if not isinstance(run_id, str) or not run_id.strip():
+        raise RuntimeError("staged review package check run is missing")
+    if not isinstance(fingerprint, str) or not re.fullmatch(r"[0-9a-f]{64}", fingerprint):
+        raise RuntimeError("staged review package check fingerprint is missing or invalid")
+    checked_candidate = state.get("checkedCandidate")
+    expected_candidate = {
+        "identityKind": "staged-candidate-v1",
+        "baseCommit": candidate.get("baseCommit"),
+        "candidateFingerprint": candidate.get("candidateFingerprint"),
+    }
+    if checked_candidate != expected_candidate:
+        raise RuntimeError(
+            "staged review package candidate does not match the checked candidate"
+        )
+    accepted_failure_indexes = (
+        load_state_module().accepted_check_failure_indexes(state)
+        if check_status == "accepted_gaps" else ()
+    )
+    errors = load_check_module().formal_run_binding_errors(
+        slug, run_id, fingerprint, current_scope=True, current_config=True,
+        accepted_failure_indexes=accepted_failure_indexes,
+    )
+    if errors:
+        raise RuntimeError("staged review package check is invalid: " + "; ".join(errors))
+    return {
+        "policyVersion": policy,
+        "runId": run_id,
+        "formalRunFingerprint": fingerprint,
+    }
+
+
+def current_integration_binding() -> dict | None:
+    merge_head_path = Path(git("rev-parse", "--git-path", "MERGE_HEAD"))
+    if not merge_head_path.is_absolute():
+        merge_head_path = ROOT / merge_head_path
+    try:
+        merge_heads = [
+            line.strip() for line in merge_head_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+    except FileNotFoundError:
+        return None
+    if len(merge_heads) != 1:
+        raise RuntimeError(
+            "pending merge integration binding requires exactly one MERGE_HEAD"
+        )
+    merge_head = git("rev-parse", "--verify", f"{merge_heads[0]}^{{commit}}")
+    if merge_heads[0] != merge_head:
+        raise RuntimeError("pending merge integration binding requires an exact MERGE_HEAD")
+    unmerged = subprocess.run(
+        ["git", "ls-files", "--unmerged", "-z"], cwd=ROOT,
+        capture_output=True, check=False,
+    )
+    if unmerged.returncode:
+        raise RuntimeError(
+            unmerged.stderr.decode(errors="replace").strip()
+            or "cannot inspect pending merge unmerged entries"
+        )
+    if unmerged.stdout:
+        raise RuntimeError(
+            "pending merge integration binding requires zero unmerged entries"
+        )
+    candidate_module = load_candidate_module()
+    lifecycle_entries = [
+        candidate_module.index_entry(ROOT, path)
+        for path in INTEGRATION_LIFECYCLE_PATHS
+    ]
+    if any(entry.get("kind") != "blob" or not entry.get("object") for entry in lifecycle_entries):
+        raise RuntimeError(
+            "pending merge integration binding requires staged lifecycle blobs"
+        )
+    head = git("rev-parse", "HEAD")
+    return {
+        "schemaVersion": INTEGRATION_BINDING_SCHEMA_VERSION,
+        "headCommit": head,
+        "mergeHeadCommit": merge_head,
+        "mergeBaseCommit": git("merge-base", head, merge_head),
+        "unmergedEntries": [],
+        "lifecycleEntries": lifecycle_entries,
+    }
+
+
+def validate_integration_binding(binding: object) -> dict:
+    required = {
+        "schemaVersion", "headCommit", "mergeHeadCommit", "mergeBaseCommit",
+        "unmergedEntries", "lifecycleEntries",
+    }
+    if not isinstance(binding, dict) or set(binding) != required:
+        raise RuntimeError("review package integration binding is invalid")
+    if (
+        type(binding["schemaVersion"]) is not int
+        or binding["schemaVersion"] != INTEGRATION_BINDING_SCHEMA_VERSION
+    ):
+        raise RuntimeError("review package integration binding is invalid")
+    object_pattern = r"(?:[0-9a-f]{40}|[0-9a-f]{64})"
+    if any(
+        not isinstance(binding[field], str)
+        or not re.fullmatch(object_pattern, binding[field])
+        for field in ("headCommit", "mergeHeadCommit", "mergeBaseCommit")
+    ):
+        raise RuntimeError("review package integration binding is invalid")
+    if type(binding["unmergedEntries"]) is not list or binding["unmergedEntries"]:
+        raise RuntimeError("review package integration binding is invalid")
+    entries = binding["lifecycleEntries"]
+    if type(entries) is not list or len(entries) != len(INTEGRATION_LIFECYCLE_PATHS):
+        raise RuntimeError("review package integration binding is invalid")
+    for expected_path, entry in zip(INTEGRATION_LIFECYCLE_PATHS, entries):
+        if (
+            not isinstance(entry, dict)
+            or set(entry) != {"path", "mode", "kind", "object"}
+            or entry.get("path") != expected_path
+            or not isinstance(entry.get("mode"), str)
+            or not re.fullmatch(r"[0-7]{6}", entry["mode"])
+            or entry.get("kind") != "blob"
+            or not isinstance(entry.get("object"), str)
+            or not re.fullmatch(object_pattern, entry["object"])
+        ):
+            raise RuntimeError("review package integration binding is invalid")
+    return binding
+
+
 def verify_package(slug: str) -> dict:
     destination = temporary_review_root(slug) / "review-package.json"
     try:
@@ -205,6 +366,12 @@ def verify_package(slug: str) -> dict:
         raise RuntimeError("review package is stale: fixed point is not the merge-base")
     staged = package.get("identityKind") == "staged-candidate-v1"
     if staged:
+        schema_version = package.get("schemaVersion")
+        if (
+            type(schema_version) is not int
+            or schema_version != STAGED_REVIEW_PACKAGE_SCHEMA_VERSION
+        ):
+            raise RuntimeError("review package is stale: staged schema is unsupported")
         try:
             candidate = load_candidate_module().inspect_candidate(ROOT, resolved, slug)
         except RuntimeError as exc:
@@ -217,6 +384,32 @@ def verify_package(slug: str) -> dict:
             or package.get("changedPaths") != paths
         ):
             raise RuntimeError("review package is stale for the staged candidate")
+        binding = package.get("checkBinding")
+        if (
+            not isinstance(binding, dict)
+            or set(binding) != {
+                "policyVersion", "runId", "formalRunFingerprint",
+            }
+            or type(binding["policyVersion"]) is not int
+            or not isinstance(binding["runId"], str)
+            or not binding["runId"].strip()
+            or not isinstance(binding["formalRunFingerprint"], str)
+            or not re.fullmatch(
+                r"[0-9a-f]{64}", binding["formalRunFingerprint"],
+            )
+        ):
+            raise RuntimeError("review package is stale: check binding is invalid")
+        if binding != current_check_binding(slug, state_for(slug), candidate):
+            raise RuntimeError("review package is stale for the current final check")
+        current_integration = current_integration_binding()
+        if current_integration is None:
+            if "integrationBinding" in package:
+                raise RuntimeError("review package integration binding is invalid")
+        elif (
+            validate_integration_binding(package.get("integrationBinding"))
+            != current_integration
+        ):
+            raise RuntimeError("review package is stale for the integration binding")
     else:
         paths = changed_paths(resolved, slug)
         if package.get("changedPaths") != paths or package.get("scopeFingerprint") != scope_digest(paths):
@@ -270,10 +463,14 @@ def main() -> int:
         fixed_point = merge_base(requested_base)
         state = state_for(args.slug)
         candidate = None
+        check_binding = None
+        integration_binding = None
         if args.staged:
             candidate = load_candidate_module().inspect_candidate(
                 ROOT, fixed_point, args.slug,
             )
+            check_binding = current_check_binding(args.slug, state, candidate)
+            integration_binding = current_integration_binding()
             paths = list(candidate["changedPaths"])
         else:
             paths = changed_paths(fixed_point, args.slug)
@@ -316,7 +513,10 @@ def main() -> int:
         diff_artifact.write_bytes(diff_bytes)
         diff_artifact.chmod(0o600)
         package = {
-            "schemaVersion": 1,
+            "schemaVersion": (
+                STAGED_REVIEW_PACKAGE_SCHEMA_VERSION
+                if candidate is not None else 1
+            ),
             "generatedAt": dt.datetime.now(dt.timezone.utc).replace(
                 microsecond=0
             ).isoformat(),
@@ -355,7 +555,10 @@ def main() -> int:
                 "candidateBaseCommit": candidate["baseCommit"],
                 "candidateFingerprint": candidate["candidateFingerprint"],
                 "candidateEntries": candidate["entries"],
+                "checkBinding": check_binding,
             })
+            if integration_binding is not None:
+                package["integrationBinding"] = integration_binding
         destination = review_root / "review-package.json"
         destination.write_text(
             json.dumps(package, ensure_ascii=False, indent=2) + "\n",

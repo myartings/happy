@@ -1,6 +1,6 @@
 name = "explorer"
 description = "Map a bounded codebase question quickly and return repository evidence without editing."
 model = "gpt-5.6-luna"
-model_reasoning_effort = "high"
+model_reasoning_effort = "max"
 sandbox_mode = "read-only"
 developer_instructions = "Search narrowly, cite files and symbols, distinguish facts from inference, and do not propose or implement adjacent changes."

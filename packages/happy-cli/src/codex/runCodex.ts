@@ -16,7 +16,7 @@ import packageJson from '../../package.json';
 import { MessageQueue2, type PendingAttachment } from '@/utils/MessageQueue2';
 import { projectPath } from '@/projectPath';
 import { join } from 'node:path';
-import { createSessionMetadata } from '@/utils/createSessionMetadata';
+import { createSessionMetadata, mergeSessionMetadataForReconnect } from '@/utils/createSessionMetadata';
 import { startHappyServer } from '@/claude/utils/startHappyServer';
 import { MessageBuffer } from "@/ui/ink/messageBuffer";
 import { CodexDisplay } from "@/ui/ink/CodexDisplay";
@@ -38,6 +38,12 @@ import {
     mapCodexProcessorMessageToSessionEnvelopes,
 } from './utils/sessionProtocolMapper';
 import { resumeExistingThread } from './resumeExistingThread';
+import { startFreshThread } from './startFreshThread';
+import {
+    assertCodexDaemonRoutePublished,
+    createCodexLaunchInitialization,
+    initializeCodexBeforeMessages,
+} from './codexLaunchInitialization';
 import { emitReadyIfIdle } from './emitReadyIfIdle';
 import { isCodexClearText } from './codexClearCommand';
 import { resolveCodexUncertainDelivery, routeCodexUserText } from './codexUserMessageRouter';
@@ -46,7 +52,7 @@ import { prepareCodexImageInputItems } from './utils/imageInput';
 import {
     projectCodexEffectiveRoute,
     withCodexEffectiveRouteMetadata,
-    withCodexRuntimeModelMetadata,
+    withCodexPendingLaunchRouteMetadata,
     withCodexUnconfirmedRouteRequestMetadata,
 } from './codexRuntimeModelMetadata';
 import { createLatestAsyncHandler, createSerialAsyncHandler } from './utils/serialAsyncHandler';
@@ -58,6 +64,7 @@ import {
 } from './codexPrompt';
 import { discoverCodexSkillCommands } from './codexSkills';
 import { CodexRemoteModeState, codexMessageRoute } from './remoteModeState';
+import { resolveCodexReconnectCredentials } from './reconnectCredentials';
 import {
     CodexLivePermissionModeController,
     registerCodexLivePermissionModeRpcForSession,
@@ -167,23 +174,28 @@ export async function runCodex(opts: {
     //
 
     const initialPermissionMode = opts.permissionMode ?? DEFAULT_CODEX_PERMISSION_MODE;
+    // Reconnected Happy sessions already own their revisioned permission-mode
+    // metadata. Only a fresh session publishes the launch mode at revision 0.
+    const reconnectCredentials = resolveCodexReconnectCredentials(process.env);
     // Lineage from the daemon's spawn RPC (set by app-side fork / duplicate).
     const forkedFromSessionId = process.env.HAPPY_FORKED_FROM_SESSION_ID;
     const forkedFromMessageId = process.env.HAPPY_FORKED_FROM_MESSAGE_ID;
     const isSideChat = process.env.HAPPY_SIDE_CHAT === '1';
 
     const initialModel = opts.model ?? DEFAULT_CODEX_MODEL;
+    const initialEffort = opts.effort ?? DEFAULT_CODEX_EFFORT;
     const { state, metadata: baseMetadata } = createSessionMetadata({
         flavor: 'codex',
         machineId,
         startedBy: opts.startedBy,
         sandbox: sandboxConfig,
         dangerouslySkipPermissions: initialPermissionMode === 'yolo' || initialPermissionMode === 'bypassPermissions',
+        ...(!reconnectCredentials ? { initialPermissionMode } : {}),
         ...(forkedFromSessionId ? { parentSessionId: forkedFromSessionId } : {}),
         ...(forkedFromMessageId ? { forkedFromMessageId } : {}),
         ...(isSideChat ? { isSideChat: true } : {}),
     });
-    const metadata = withCodexRuntimeModelMetadata(baseMetadata, initialModel);
+    const metadata = withCodexPendingLaunchRouteMetadata(baseMetadata, initialModel);
     metadata.serviceTiers = ['default', 'fast'];
 
     const skillCommands = await discoverCodexSkillCommands();
@@ -192,30 +204,25 @@ export async function runCodex(opts: {
         metadata.slashCommands = Array.from(new Set([...(metadata.slashCommands ?? []), ...skillCommands]));
     }
 
-    // Check for session reconnection env vars (set by daemon for resume-in-place)
-    const reconnectSessionId = process.env.HAPPY_RECONNECT_SESSION_ID;
-    const reconnectKeyBase64 = process.env.HAPPY_RECONNECT_ENCRYPTION_KEY;
-    const reconnectVariant = process.env.HAPPY_RECONNECT_ENCRYPTION_VARIANT as 'legacy' | 'dataKey' | undefined;
-    const reconnectSeq = process.env.HAPPY_RECONNECT_SEQ;
-    const reconnectMetadataVersion = process.env.HAPPY_RECONNECT_METADATA_VERSION;
-    const reconnectAgentStateVersion = process.env.HAPPY_RECONNECT_AGENT_STATE_VERSION;
-
     let response: ApiSession | null;
-    if (reconnectSessionId && reconnectKeyBase64 && reconnectVariant) {
-        logger.debug(`[START] Reconnecting to existing session ${reconnectSessionId}`);
+    if (reconnectCredentials) {
+        logger.debug(`[START] Reconnecting to existing session ${reconnectCredentials.sessionId}`);
+        const existingSession = await api.getSession({
+            sessionId: reconnectCredentials.sessionId,
+            encryptionKey: decodeBase64(reconnectCredentials.keyBase64),
+            encryptionVariant: reconnectCredentials.variant,
+        });
+        if (!existingSession) {
+            throw new Error(`Cannot reconnect Happy session ${reconnectCredentials.sessionId}: the server session was not found.`);
+        }
         response = {
-            id: reconnectSessionId,
-            seq: parseInt(reconnectSeq || '0', 10),
-            encryptionKey: decodeBase64(reconnectKeyBase64),
-            encryptionVariant: reconnectVariant,
-            metadata,
-            metadataVersion: parseInt(reconnectMetadataVersion || '0', 10),
-            agentState: state,
-            agentStateVersion: parseInt(reconnectAgentStateVersion || '0', 10),
+            ...existingSession,
+            metadata: mergeSessionMetadataForReconnect(existingSession.metadata, metadata),
         };
     } else {
         response = await api.getOrCreateSession({ tag: sessionTag, metadata, state });
     }
+    const sessionMetadata = response?.metadata ?? metadata;
 
     // Handle server unreachable case - create offline stub with hot reconnection
     let session: ApiSessionClient;
@@ -226,10 +233,10 @@ export async function runCodex(opts: {
     let client!: CodexAppServerClient;
     let reasoningProcessor!: ReasoningProcessor;
     let abortInProgress: Promise<void> | null = null;
-    const { session: initialSession, reconnectionHandle } = setupOfflineReconnection({
+    const { session: initialSession, reconnectionHandle, readySession } = setupOfflineReconnection({
         api,
         sessionTag,
-        metadata,
+        metadata: sessionMetadata,
         state,
         response,
         onSessionSwap: (newSession) => {
@@ -245,22 +252,35 @@ export async function runCodex(opts: {
     });
     session = initialSession;
 
+    // A launch-pinned route cannot be durably published through the offline
+    // no-op stub. Keep the existing hot-reconnection loop alive and withhold
+    // Codex initialization/messages until it supplies a real Session client.
+    if (!response) {
+        try {
+            const reconnected = await readySession;
+            session = reconnected.session;
+            response = reconnected.response;
+        } catch (error) {
+            // No later resources exist yet, so this is the cleanup boundary
+            // that owns the reconnection handle while readiness is pending.
+            reconnectionHandle?.cancel();
+            throw error;
+        }
+    }
+
     // On reconnect, un-archive the session and skip replaying old messages.
-    if (reconnectSessionId) {
+    if (reconnectCredentials) {
         session.suppressNextArchiveSignal();
         session.skipExistingMessages();
-        session.updateMetadata((meta) => ({
-            ...meta,
-            lifecycleState: 'running',
-            archivedBy: undefined,
-        }));
+        session.updateMetadata((currentMetadata) =>
+            mergeSessionMetadataForReconnect(currentMetadata, metadata));
     }
 
     // Always report to daemon if it exists (skip if offline)
     if (response) {
         try {
             logger.debug(`[START] Reporting session ${response.id} to daemon`);
-            const result = await notifyDaemonSessionStarted(response.id, metadata, {
+            const result = await notifyDaemonSessionStarted(response.id, sessionMetadata, {
                 encryptionKey: encodeBase64(response.encryptionKey),
                 encryptionVariant: response.encryptionVariant,
                 seq: response.seq,
@@ -277,28 +297,35 @@ export async function runCodex(opts: {
         }
     }
 
-    const publishDaemonEffectiveRoute = createLatestAsyncHandler<{
+    const updateDaemonEffectiveRoute = async (route: {
         effectiveModel: string;
         effectiveReasoningEffort: string;
-    } | null>(async (route) => {
+    } | null) => {
+        if (!response) return;
         const result = await notifyDaemonCodexEffectiveRoute(response!.id, route);
-        if (result?.error) {
-            logger.debug('[Codex] Failed to update daemon effective-route projection:', result.error);
-        }
-    }, (error) => {
+        assertCodexDaemonRoutePublished(result);
+    };
+    const publishDaemonEffectiveRoute = createLatestAsyncHandler(updateDaemonEffectiveRoute, (error) => {
         logger.debug('[Codex] Failed to update daemon effective-route projection:', error);
     });
+    const resolveEffectiveRoute = (evidence: {
+        model?: unknown;
+        reasoningEffort?: unknown;
+    } | null) => projectCodexEffectiveRoute(
+        session.getMetadata() ?? metadata,
+        evidence,
+    );
     const publishEffectiveRouteToDaemon = (evidence: {
         model?: unknown;
         reasoningEffort?: unknown;
     } | null) => {
         if (!response) return;
-        const route = projectCodexEffectiveRoute(
-            session.getMetadata() ?? metadata,
-            evidence,
-        );
-        publishDaemonEffectiveRoute(route);
+        publishDaemonEffectiveRoute(resolveEffectiveRoute(evidence));
     };
+    const publishEffectiveRouteToDaemonAndWait = async (evidence: {
+        model?: unknown;
+        reasoningEffort?: unknown;
+    } | null) => updateDaemonEffectiveRoute(resolveEffectiveRoute(evidence));
 
     const messageQueue = new MessageQueue2<EnhancedMode>(hashCodexEnhancedMode);
 
@@ -316,9 +343,10 @@ export async function runCodex(opts: {
     const remoteModeState = new CodexRemoteModeState({
         permissionMode: initialPermissionMode,
         model: initialModel,
-        effort: opts.effort ?? DEFAULT_CODEX_EFFORT,
+        effort: initialEffort,
         serviceTier: 'default',
     });
+    const launchInitialization = createCodexLaunchInitialization();
     let currentAppendSystemPrompt: string | undefined = undefined;
 
     const resetCurrentModeDefaults = () => {
@@ -335,6 +363,7 @@ export async function runCodex(opts: {
     };
 
     const handleUserMessage = createSerialAsyncHandler<UserMessage>(async (message) => {
+        await launchInitialization.waitUntilReady();
         const attachmentsForThisMessage = await session.drainAttachmentsForUserMessage();
 
         const modeResolution = remoteModeState.resolve(message.meta);
@@ -968,66 +997,89 @@ export async function runCodex(opts: {
     let appendSystemPromptInjectedThreadId: string | null = null;
 
     try {
-        logger.debug('[codex]: client.connect begin');
-        await client.connect();
-        logger.debug('[codex]: client.connect done');
+        await initializeCodexBeforeMessages({
+            launch: launchInitialization,
+            connectAndRestore: async () => {
+                logger.debug('[codex]: client.connect begin');
+                await client.connect();
+                logger.debug('[codex]: client.connect done');
 
-        if (opts.resumeThreadId) {
-            await resumeExistingThread({
-                client,
-                session,
-                messageBuffer,
-                threadId: opts.resumeThreadId,
-                cwd: process.cwd(),
-                mcpServers,
-                // Side chats start empty — keep the resume notice out of the UI.
-                announce: !isSideChat,
-                onConfirmedRoute: publishEffectiveRouteToDaemon,
-            });
-            first = false;
-            appendSystemPromptInjectedThreadId = client.threadId;
-        }
-
-        const forkCodexThreadId = process.env.HAPPY_FORK_CODEX_THREAD_ID;
-        if (!reconnectSessionId && !opts.resumeThreadId && forkCodexThreadId) {
-            // Side chats inherit the forked thread's context inside the model
-            // (thread/fork copies it), but we deliberately do NOT replay the
-            // pre-fork history into the UI: a side chat starts empty from the
-            // moment it was opened, so the user only sees the aside they began.
-            if (!isSideChat) {
-                try {
-                    const { thread } = await client.readThread({
-                        threadId: forkCodexThreadId,
-                        includeTurns: true,
+                if (opts.resumeThreadId) {
+                    await resumeExistingThread({
+                        client,
+                        session,
+                        messageBuffer,
+                        threadId: opts.resumeThreadId,
+                        cwd: process.cwd(),
+                        mcpServers,
+                        // Side chats start empty — keep the resume notice out of the UI.
+                        announce: !isSideChat,
+                        onConfirmedRoute: publishEffectiveRouteToDaemon,
                     });
-                    const envelopes = await buildCodexThreadBackfillEnvelopes({
-                        thread,
-                        uploadLocalImage: (attachment, imageOpts) => (
-                            session.uploadLocalImageAttachmentEnvelope(attachment, imageOpts)
-                        ),
-                    });
-                    for (const envelope of envelopes) {
-                        session.sendSessionProtocolMessage(envelope);
-                    }
-                    logger.debug(`[CODEX FORK BACKFILL] Replayed ${envelopes.length} historical envelopes from thread ${forkCodexThreadId}`);
-                } catch (error) {
-                    logger.debug(`[CODEX FORK BACKFILL] Failed to read thread ${forkCodexThreadId}:`, error);
+                    first = false;
+                    appendSystemPromptInjectedThreadId = client.threadId;
                 }
-            }
-            await resumeExistingThread({
-                client,
-                session,
-                messageBuffer,
-                threadId: forkCodexThreadId,
-                cwd: process.cwd(),
-                mcpServers,
-                // Side chats start empty — keep the resume notice out of the UI.
-                announce: !isSideChat,
-                onConfirmedRoute: publishEffectiveRouteToDaemon,
-            });
-            first = false;
-            appendSystemPromptInjectedThreadId = client.threadId;
-        }
+
+                const forkCodexThreadId = process.env.HAPPY_FORK_CODEX_THREAD_ID;
+                if (!reconnectCredentials && !opts.resumeThreadId && forkCodexThreadId) {
+                    // Side chats inherit the forked thread's context inside the model
+                    // (thread/fork copies it), but we deliberately do NOT replay the
+                    // pre-fork history into the UI: a side chat starts empty from the
+                    // moment it was opened, so the user only sees the aside they began.
+                    if (!isSideChat) {
+                        try {
+                            const { thread } = await client.readThread({
+                                threadId: forkCodexThreadId,
+                                includeTurns: true,
+                            });
+                            const envelopes = await buildCodexThreadBackfillEnvelopes({
+                                thread,
+                                uploadLocalImage: (attachment, imageOpts) => (
+                                    session.uploadLocalImageAttachmentEnvelope(attachment, imageOpts)
+                                ),
+                            });
+                            for (const envelope of envelopes) {
+                                session.sendSessionProtocolMessage(envelope);
+                            }
+                            logger.debug(`[CODEX FORK BACKFILL] Replayed ${envelopes.length} historical envelopes from thread ${forkCodexThreadId}`);
+                        } catch (error) {
+                            logger.debug(`[CODEX FORK BACKFILL] Failed to read thread ${forkCodexThreadId}:`, error);
+                        }
+                    }
+                    await resumeExistingThread({
+                        client,
+                        session,
+                        messageBuffer,
+                        threadId: forkCodexThreadId,
+                        cwd: process.cwd(),
+                        mcpServers,
+                        // Side chats start empty — keep the resume notice out of the UI.
+                        announce: !isSideChat,
+                        onConfirmedRoute: publishEffectiveRouteToDaemon,
+                    });
+                    first = false;
+                    appendSystemPromptInjectedThreadId = client.threadId;
+                }
+            },
+            hasActiveThread: () => client.hasActiveThread(),
+            startFreshThread: async () => {
+                const initialExecutionPolicy = resolveCodexExecutionPolicy(
+                    initialPermissionMode,
+                    client.sandboxEnabled,
+                );
+                await startFreshThread({
+                    client,
+                    session,
+                    model: initialModel,
+                    effort: initialEffort,
+                    cwd: process.cwd(),
+                    approvalPolicy: initialExecutionPolicy.approvalPolicy,
+                    sandbox: initialExecutionPolicy.sandbox,
+                    mcpServers,
+                    onConfirmedRoute: publishEffectiveRouteToDaemonAndWait,
+                });
+            },
+        });
 
         let pending: { message: string; mode: EnhancedMode; isolate: boolean; hash: string; attachments?: PendingAttachment[]; clientUserMessageId?: string; deliveryUncertain?: boolean; messageDisplayed?: boolean } | null = null;
 

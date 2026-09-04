@@ -138,6 +138,76 @@ export class ApiClient {
   }
 
   /**
+   * Load and decrypt an existing session with its current server revisions.
+   * Reconnect callers use this before publishing any metadata updates so a
+   * stale local snapshot cannot replace newer encrypted session state.
+   */
+  async getSession(opts: {
+    sessionId: string,
+    encryptionKey: Uint8Array,
+    encryptionVariant: 'legacy' | 'dataKey',
+  }): Promise<Session | null> {
+    try {
+      type SessionPage = {
+        sessions: Array<{
+          id: string,
+          seq: number,
+          metadata: string,
+          metadataVersion: number,
+          agentState: string | null,
+          agentStateVersion: number,
+        }>,
+        nextCursor: string | null,
+        hasNext: boolean,
+      };
+      let cursor: string | undefined;
+      const seenCursors = new Set<string>();
+      while (true) {
+        const response = await axios.get<SessionPage>(`${configuration.serverUrl}/v2/sessions`, {
+          headers: {
+            'Authorization': `Bearer ${this.credential.token}`,
+            'X-Happy-Client': `cli-coding-session/${configuration.currentCliVersion}`,
+          },
+          params: {
+            ...(cursor ? { cursor } : {}),
+            limit: 200,
+          },
+          timeout: 60_000,
+        });
+        const raw = response.data.sessions.find((session) => session.id === opts.sessionId);
+        if (raw) {
+          return {
+            id: raw.id,
+            seq: raw.seq,
+            encryptionKey: opts.encryptionKey,
+            encryptionVariant: opts.encryptionVariant,
+            metadata: decrypt(opts.encryptionKey, opts.encryptionVariant, decodeBase64(raw.metadata)),
+            metadataVersion: raw.metadataVersion,
+            agentState: raw.agentState
+              ? decrypt(opts.encryptionKey, opts.encryptionVariant, decodeBase64(raw.agentState))
+              : null,
+            agentStateVersion: raw.agentStateVersion,
+          };
+        }
+        const nextCursor = response.data.nextCursor;
+        if (!response.data.hasNext) {
+          return null;
+        }
+        if (!nextCursor) {
+          throw new Error('Session pagination cursor is missing');
+        }
+        if (seenCursors.has(nextCursor)) {
+          throw new Error('Session pagination cursor did not advance');
+        }
+        seenCursors.add(nextCursor);
+        cursor = nextCursor;
+      }
+    } catch (error) {
+      throw new Error(`Failed to load session for reconnect: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Register or update machine with the server
    * Returns the current machine state from the server with decrypted metadata and daemonState
    */

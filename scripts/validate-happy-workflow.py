@@ -15,8 +15,8 @@ MANIFEST = Path(".ai/template-adoption.json")
 PROJECT = Path(".ai/project.json")
 
 SOURCE_REPOSITORY = "https://github.com/myartings/ai-coding-template.git"
-SOURCE_RELEASE = "workflow-2026.08.2"
-SOURCE_COMMIT = "8d07a74931f8dcf6a668c2a6a4dcaf9c490a2842"
+SOURCE_RELEASE = "workflow-2026.09.2"
+SOURCE_COMMIT = "40dc17d0d200370fd8c5498fb1da1bdd9ebde4e9"
 
 EXPECTED_INCLUDES = {
     ".gitattributes",
@@ -26,7 +26,6 @@ EXPECTED_INCLUDES = {
     ".agents/skills/create-prd",
     ".agents/skills/decision-map",
     ".agents/skills/diagnose",
-    ".agents/skills/finish-work",
     ".agents/skills/generate-spec",
     ".agents/skills/generate-tasks",
     ".agents/skills/grilling",
@@ -37,7 +36,6 @@ EXPECTED_INCLUDES = {
     ".agents/skills/scoping",
     ".agents/skills/start",
     ".agents/skills/tdd",
-    ".agents/skills/tracker-workflow",
     ".agents/skills/update-spec",
     ".agents/skills/workflow-audit",
     ".codex/README.md",
@@ -50,7 +48,6 @@ EXPECTED_INCLUDES = {
     "docs/adr/0004-commit-bound-workflow-enforcement.md",
     "docs/adr/0005-solo-developer-evidence-scaling.md",
     "docs/adr/0006-explicit-trellis-task-boundary.md",
-    "docs/workflow.md",
     "docs/workflow/capability-owners.json",
     "docs/workflow/discovered-work-scope-containment.md",
     "docs/workflow/execution-isolation.md",
@@ -58,17 +55,12 @@ EXPECTED_INCLUDES = {
     "docs/workflow/intensity-matrix.md",
     "docs/workflow/source-mapping.md",
     "docs/workflow/ticket-task-contract.md",
-    "docs/workflow/tracker-workflow.md",
     "docs/specs/template.md",
     "docs/tasks/template.md",
     "docs/workspace/template",
     "scripts/workflow-audit.py",
     "scripts/workflow-candidate.py",
-    "scripts/workflow-issue-route.py",
-    "scripts/workflow-state.py",
-    "scripts/workflow-ci.py",
     "scripts/workflow-parallel-report.py",
-    "scripts/workflow-review.py",
     "scripts/workflow-run.py",
 }
 
@@ -79,6 +71,7 @@ REQUIRED_PRESERVES = {
     ".ai/template-adoption.json",
     ".agents/skills/agent-browser",
     ".agents/skills/control-flow",
+    ".agents/skills/finish-work",
     ".agents/skills/dev",
     ".agents/skills/happy-desktop-official-release",
     ".agents/skills/happy-desktop-update",
@@ -89,15 +82,22 @@ REQUIRED_PRESERVES = {
     ".agents/skills/release",
     ".agents/skills/sessions",
     ".agents/skills/terminal-emulator",
+    ".agents/skills/tracker-workflow",
     ".claude",
     ".codex/config.toml",
     ".github/workflows",
     "devtools",
     "docs/PRD.md",
+    "docs/workflow.md",
+    "docs/workflow/tracker-workflow.md",
     "docs/workspace/ACTIVE.md",
     "docs/workspace/archive.md",
     "scripts/happy-workflow-state-upgrade.py",
     "scripts/workflow-check.py",
+    "scripts/workflow-state.py",
+    "scripts/workflow-review.py",
+    "scripts/workflow-issue-route.py",
+    "scripts/workflow-ci.py",
     "scripts/test-happy-workflow-state-upgrade.py",
     "scripts/test-happy-workflow-runtime.py",
     "scripts/validate-happy-workflow.py",

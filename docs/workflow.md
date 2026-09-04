@@ -164,6 +164,20 @@ relationship rather than its future SHA. Candidate and submission guards reject
 stale review/check evidence, noncanonical terminal bytes, unrelated or foreign
 lifecycle changes, and post-review engineering drift. See ADR 0004.
 
+### Post-archive delivery reconciliation
+
+After the authorized archive-introducing delivery commit exists, use
+`tracker-workflow` to observe hosted progress without changing local lifecycle
+truth. Happy does not adopt the template repository's delivery-audit runtime.
+
+Run it after publication, PR creation, hosted-check changes, merge, and Issue
+closure when an exact point-in-time delivery status is needed. `reconciled`
+requires one exact PR/head/base/check/merge identity and closure of the exact
+Issue by that PR. `unpublished`, open, incomplete, contradictory, unsupported,
+and observation-error results are not local gate failures and cannot rewrite a
+terminal Workspace or archive row. Every recommended push, PR, merge, Issue,
+Project, or cleanup mutation still requires its own authorization.
+
 ### Pre-push integration
 
 Staged CI proves one candidate before commit; it does not prove that several
@@ -180,13 +194,11 @@ git fetch origin main
 python3 scripts/workflow-ci.py --base origin/main
 ```
 
-Committed merge CI defaults to `WORKFLOW_SOURCE_PARENT=auto`: when the exact
-comparison base equals one parent, that parent is the target and the other is
-the submitted source. This matches hosted pull-request and main-push merge
-commits. For a local merge made while the feature branch is checked out, set
-`WORKFLOW_SOURCE_PARENT=1` explicitly because parent 1 is the submitted source;
-use `2` for the inverse explicit orientation. Do not guess parent orientation
-from ancestry alone.
+For a local merge made while the feature branch is checked out, committed CI
+defaults to parent 1 as the submitted source. Hosted pull-request and main-push
+merge commits set `WORKFLOW_SOURCE_PARENT=auto`: the exact event base parent is
+the target and the other parent is the submitted source. Do not guess parent
+orientation from ancestry alone.
 
 One hosted push range remains one delivery unit. When local history contains
 multiple independently completed deliveries, push their
@@ -258,7 +270,7 @@ does not alter the accepted product contract or its intensity.
 
 Scoping records implementation topology before applying model guidance.
 `current-root` or `isolated-writer` fixes the implementation owner; capability
-guidance cannot create delegation. Luna High is the starting recommendation for
+guidance cannot create delegation. Luna Max is the starting recommendation for
 bounded deterministic work. Root judgment, architecture, diagnosis, independent
 review, and High-risk boundaries use Sol Medium or a higher effort justified by
 uncertainty or consequence. A Git branch alone is not isolated-writer evidence.
@@ -276,7 +288,12 @@ Session–worktree affinity constrains Root execution topology without adding a
 lifecycle phase: sustained Root implementation remains in the current
 human-facing session root, or resumes after a native client handoff or a
 user-authorized fresh session binds the target worktree. Command-level working
-directory changes are not a session handoff. See
+directory changes are not a session handoff. The primary Git checkout normally
+stays on the repository default branch, and independent Agent tasks prefer
+client-native worktrees when isolation helps; this remains a routing preference
+that creates no Issue, Workspace, branch, worktree, session, script, gate,
+handoff, receipt, or other lifecycle evidence and does not prohibit deliberate
+foreground branch work. See
 `docs/workflow/execution-isolation.md`.
 
 ### External tracker adapter
@@ -324,6 +341,15 @@ acceptance coverage, substantive finish evidence, and the exact staged
 checked/reviewed candidate, then writes the deterministic immutable terminal
 projection. New state uses `archive-introducing-commit` result identity; legacy
 full-SHA and `pending` shapes remain passive history with no migration route.
+
+For a normal pending two-parent merge, the same sequence may create exactly one
+accepted integration Workspace absent from both parents. Pre-archive staged CI
+binds the exact merge candidate and permits only that canonical active Workspace
+over the exact parent lifecycle union. Archive then adds its one terminal row;
+archived staged CI permits only the reproducible terminal projection. The merge
+commit itself introduces the row, and committed-range CI requires the exact
+target merge parent as `--base`. Octopus merges and additional or rewritten
+lifecycle evidence remain rejected.
 
 Audit current repository authorities even when no task is active:
 
@@ -386,11 +412,19 @@ python3 scripts/workflow-release.py next
 python3 scripts/workflow-release.py plan --release workflow-YYYY.MM.N
 ```
 
-The plan partitions the ordered downstream registry into Canary and rollout
-targets. Accept Canary verification before rollout; deterministic matching
-updates use branch/CI automation, while AI handles only incompatible,
-customized, or failing targets. Planning is read-only and never creates a tag or
-starts downstream adoption.
+The default plan dereferences the requested tag and reads its
+`.ai/template-release.json` plus `scripts/downstream-projects.txt`; the reported
+`sourceCommit`, policy, ordered Canary/rollout cohorts, delivery, and escalation
+therefore share one immutable owner. Later checkout changes cannot rewrite an
+earlier tag's plan. Test fixtures may pass `--policy` and `--projects-file`
+together; either one alone is rejected, and plan JSON records whether both
+inputs came from the tag or explicit overrides. Successful plans use output
+schema version 2 because that provenance is required.
+
+Accept Canary verification before rollout; deterministic matching updates use
+branch/CI automation, while AI handles only incompatible, customized, or
+failing targets. Planning is read-only and never creates a tag or starts
+downstream adoption.
 
 ```bash
 python3 scripts/sync-template.py /path/to/project

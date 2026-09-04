@@ -976,7 +976,19 @@ export class ApiSessionClient extends EventEmitter {
     }
 
     updateMetadata(handler: (metadata: Metadata) => Metadata) {
-        this.metadataLock.inLock(async () => {
+        void this.updateMetadataAndWait(handler).catch((error) => {
+            logger.debug('[API] Failed to update session metadata:', error);
+        });
+    }
+
+    /**
+     * Update session metadata and resolve only after the server has accepted it.
+     * Callers that gate correctness on durable metadata publication must use
+     * this method instead of the legacy fire-and-forget wrapper above.
+     */
+    updateMetadataAndWait(handler: (metadata: Metadata) => Metadata): Promise<void> {
+        return this.metadataLock.inLock(async () => {
+            let terminalError: Error | null = null;
             await backoff(async () => {
                 let updated = handler(this.metadata!); // Weird state if metadata is null - should never happen but here we are
                 const answer = await this.socket.emitWithAck('update-metadata', { sid: this.sessionId, expectedVersion: this.metadataVersion, metadata: encodeBase64(encrypt(this.encryptionKey, this.encryptionVariant, updated)) });
@@ -990,9 +1002,15 @@ export class ApiSessionClient extends EventEmitter {
                     }
                     throw new Error('Metadata version mismatch');
                 } else if (answer.result === 'error') {
-                    // Hard error - ignore
+                    // A server-declared hard error is terminal. Return from the
+                    // retry callback and throw outside backoff so it cannot be
+                    // converted into an infinite retry loop.
+                    terminalError = new Error('Session metadata update was rejected');
                 }
             });
+            if (terminalError) {
+                throw terminalError;
+            }
         });
     }
 

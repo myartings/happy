@@ -32,6 +32,16 @@ description: Resume or begin repository work from durable project state. Use whe
    opt-out. A session-root path, branch, working-directory override, or caller
    assertion alone is not binding evidence. Preserve an inert launch capsule
    and stop at `manual-start-required` when proof or native capability is absent.
+   When the route carries a `manualIssueLaunchContract`, also require its
+   version/kind to be supported and its Issue, repository, branch, registered
+   worktree, and verified base to match the live route. An executable contract
+   must name exactly `bounded` with `gpt-5.6-luna`/`max` or `sol-required` with
+   `gpt-5.6-sol` and its justified effort. The operator confirms the effective
+   Root model and effort with `/status`; requested values, a launcher claim, or
+   a subagent result are not confirmation. A missing/non-executable contract,
+   stale identity, unsupported adapter, or model/effort mismatch returns one
+   visible manual-start/model-selection boundary before local acceptance or
+   Workspace creation.
    In a coordinator session, stop after authorized inert preparation,
    projection, and launch/recovery: do not create the Issue Workspace, pass a
    local gate, generate its detailed plan, edit its deliverable, run its

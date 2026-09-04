@@ -3,6 +3,7 @@ import type { Settings } from './settings';
 import { getAgentDefaultOverride, resolveAgentDefaultConfig, retirePermissionMode } from './agentDefaults';
 import { permissionModeSupportedByCli } from '@/components/modelModeOptions';
 import type { PermissionModeKey } from '@/components/PermissionModeSelector';
+import { getCodexEffectiveRoute } from './codexEffectiveRoute';
 import {
     getRigCurrentModel,
     getRigModels,
@@ -19,28 +20,6 @@ export type MessageModeMeta = {
     effort?: string | null;
     serviceTier?: 'default' | 'fast';
 };
-
-const CODEX_REASONING_EFFORTS = new Set([
-    'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra',
-]);
-
-// Keep this consumer-side authority check equivalent to happy-cli's
-// codexRuntimeModelMetadata validators. Session metadata is transport data;
-// two merely non-empty strings are not runtime-confirmed route evidence.
-function isConcreteCodexModel(value: unknown): value is string {
-    if (typeof value !== 'string' || value.length > 128 || value !== value.trim()) {
-        return false;
-    }
-    const normalized = value.toLowerCase();
-    if (normalized === 'default' || normalized === 'null' || normalized === 'undefined') {
-        return false;
-    }
-    return /^(?:o\d[A-Za-z0-9._-]*|[A-Za-z][A-Za-z0-9._]*[-/:][A-Za-z0-9][A-Za-z0-9._:/-]*)$/.test(value);
-}
-
-function isCodexReasoningEffort(value: unknown): value is string {
-    return typeof value === 'string' && CODEX_REASONING_EFFORTS.has(value);
-}
 
 /**
  * The session or a saved default carries a permission mode the session's CLI
@@ -126,15 +105,15 @@ export function resolveMessageModeMeta(
         const defaults = resolveAgentDefaultConfig(settings?.agentDefaultOverrides, flavor, cliVersion);
         meta.permissionMode = supported(retirePermissionMode(session.permissionMode ?? defaults.permissionMode));
 
-        const hasEffectiveRoute = isConcreteCodexModel(session.metadata?.effectiveModel)
-            && isCodexReasoningEffort(session.metadata?.effectiveReasoningEffort);
+        const suppressRouteDefaults = getCodexEffectiveRoute(session.metadata) !== null
+            || session.metadata?.codexLaunchRoutePending === true;
 
-        const modelMode = session.modelMode ?? (hasEffectiveRoute ? undefined : defaults.modelMode);
+        const modelMode = session.modelMode ?? (suppressRouteDefaults ? undefined : defaults.modelMode);
         if (modelMode !== undefined) {
             meta.model = modelMode === 'default' ? null : modelMode;
         }
 
-        const effort = session.effortLevel ?? (hasEffectiveRoute ? undefined : defaults.effortLevel);
+        const effort = session.effortLevel ?? (suppressRouteDefaults ? undefined : defaults.effortLevel);
         if (effort !== undefined) {
             meta.effort = effort;
         }

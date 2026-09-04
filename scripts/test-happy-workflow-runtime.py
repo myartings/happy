@@ -1165,13 +1165,55 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         self.assertIn("final evidence run", rejected.stderr)
         self.assertEqual(before, (workspace / "workflow.json").read_bytes())
 
-    def test_successful_receipt_rejects_completed_review_without_mutation(self) -> None:
-        slug = "receipt-after-review"
+    def test_post_review_check_preserves_exact_candidate_review(self) -> None:
+        for review_status in ("passed", "accepted_gaps"):
+            with self.subTest(review_status=review_status):
+                slug = f"post-review-check-{review_status.replace('_', '-')}"
+                self.prepare_checked_candidate(slug)
+                workspace = self.project / "docs" / "workspace" / slug
+                workflow = workspace / "workflow.json"
+                evidence = workspace / "evidence" / "checks.jsonl"
+                self.run_script(
+                    "workflow-review.py", "package", slug,
+                    "--base", self.base, "--staged",
+                )
+                for index, axis in enumerate(("spec-review", "standards-review")):
+                    axis_status = (
+                        "accepted_gaps"
+                        if review_status == "accepted_gaps" and index == 0
+                        else "accepted"
+                    )
+                    self.state(
+                        "review-conclusion", slug, "--axis", axis,
+                        "--status", axis_status,
+                        "--evidence", f"{axis} fixture {axis_status}",
+                    )
+                self.gate(slug, "review", review_status)
+                before = json.loads(workflow.read_text(encoding="utf-8"))
+                old_run_id = before["checkRunId"]
+
+                self.run_script(
+                    "workflow-check.py", "--applicable", "--record", slug,
+                    "--staged", "--base", self.base,
+                )
+
+                after = json.loads(workflow.read_text(encoding="utf-8"))
+                records = [
+                    json.loads(line)
+                    for line in evidence.read_text(encoding="utf-8").splitlines()
+                    if line.strip()
+                ]
+                self.assertNotEqual(old_run_id, after["checkRunId"])
+                self.assertEqual(after["checkRunId"], records[-1]["runId"])
+                self.assertEqual(before["finalReview"], after["finalReview"])
+                self.assertEqual(review_status, after["gates"]["review"]["status"])
+                self.run_script("workflow-audit.py", slug, "--strict")
+
+    def test_post_review_check_rejects_drift_before_recording(self) -> None:
+        slug = "post-review-check-drift"
         self.prepare_checked_candidate(slug)
         workspace = self.project / "docs" / "workspace" / slug
-        workflow = workspace / "workflow.json"
-        state = json.loads(workflow.read_text(encoding="utf-8"))
-        run_id = state["checkRunId"]
+        evidence = workspace / "evidence" / "checks.jsonl"
         self.run_script(
             "workflow-review.py", "package", slug,
             "--base", self.base, "--staged",
@@ -1182,14 +1224,63 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
                 "--status", "accepted", "--evidence", f"{axis} fixture accepted",
             )
         self.gate(slug, "review")
-        before = workflow.read_bytes()
-        rejected = self.state(
-            "check-receipt", slug, "passed", "--run-id", run_id,
-            "--evidence", "repeated receipt must fail", ok=False,
+        evidence_before = evidence.read_bytes()
+        (self.project / "delivery.txt").write_text("review drift\n", encoding="utf-8")
+        self.git("add", "delivery.txt")
+
+        rejected = self.run_script(
+            "workflow-check.py", "--applicable", "--record", slug,
+            "--staged", "--base", self.base, ok=False,
         )
-        self.assertIn("requires review=pending", rejected.stderr)
-        self.assertEqual(before, workflow.read_bytes())
-        self.run_script("workflow-audit.py", slug, "--strict")
+
+        self.assertIn("requires the exact reviewed candidate", rejected.stderr)
+        self.assertEqual(evidence_before, evidence.read_bytes())
+
+    def test_failed_post_review_check_resets_completed_review(self) -> None:
+        for review_status in ("passed", "accepted_gaps"):
+            with self.subTest(review_status=review_status):
+                slug = f"failed-post-review-{review_status.replace('_', '-')}"
+                config_path = self.project / ".ai" / "project.json"
+                config = json.loads(config_path.read_text(encoding="utf-8"))
+                config["commands"]["check"] = [
+                    "{python} -c \"import os,sys; "
+                    "sys.exit(7 if os.environ.get('FAIL_RECHECK') else 0)\""
+                ]
+                config_path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+                self.prepare_checked_candidate(slug)
+                workspace = self.project / "docs" / "workspace" / slug
+                workflow = workspace / "workflow.json"
+                self.run_script(
+                    "workflow-review.py", "package", slug,
+                    "--base", self.base, "--staged",
+                )
+                for index, axis in enumerate(("spec-review", "standards-review")):
+                    axis_status = (
+                        "accepted_gaps"
+                        if review_status == "accepted_gaps" and index == 0
+                        else "accepted"
+                    )
+                    self.state(
+                        "review-conclusion", slug, "--axis", axis,
+                        "--status", axis_status,
+                        "--evidence", f"{axis} fixture {axis_status}",
+                    )
+                self.gate(slug, "review", review_status)
+                environment = dict(os.environ)
+                environment["FAIL_RECHECK"] = "1"
+
+                failed = self.run_script(
+                    "workflow-check.py", "--applicable", "--record", slug,
+                    "--staged", "--base", self.base,
+                    ok=False, environment=environment,
+                )
+
+                self.assertIn("commands: 1, failures: 1", failed.stdout)
+                after = json.loads(workflow.read_text(encoding="utf-8"))
+                self.assertEqual("blocked", after["gates"]["check"]["status"])
+                self.assertEqual("pending", after["gates"]["review"]["status"])
+                self.assertNotIn("finalReview", after)
+                self.run_script("workflow-audit.py", slug, "--strict")
 
     def test_candidate_bound_accepted_gaps_pass_terminal_ci(self) -> None:
         slug = "accepted-gap-terminal"
@@ -1236,16 +1327,20 @@ class HappyWorkflowRuntimeTest(unittest.TestCase):
         )
         workflow.write_bytes(review_gate_state)
         self.gate(slug, "review")
-        reviewed_state = workflow.read_bytes()
-        repeated_receipt = self.state(
+        reviewed_state = json.loads(workflow.read_text(encoding="utf-8"))
+        self.state(
             "check-receipt", slug, "accepted_gaps", "--run-id", run_id,
             "--accepted-command-index", "1",
             "--accepted-command-index", "2",
             "--approval", "Fixture owner accepts command indexes 1 and 2",
-            "--evidence", "repeated receipt must fail", ok=False,
+            "--evidence", "same-candidate receipt remains valid after review",
         )
-        self.assertIn("requires review=pending", repeated_receipt.stderr)
-        self.assertEqual(reviewed_state, workflow.read_bytes())
+        repeated_state = json.loads(workflow.read_text(encoding="utf-8"))
+        self.assertEqual(reviewed_state["finalReview"], repeated_state["finalReview"])
+        self.assertEqual(
+            reviewed_state["gates"]["review"],
+            repeated_state["gates"]["review"],
+        )
         workspace = self.project / "docs" / "workspace" / slug
         (workspace / "validation.md").write_text(
             "# Validation\n\n## Acceptance coverage\n\n"
