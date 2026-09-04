@@ -104,6 +104,7 @@ describe('daemon control server ownership', () => {
         pid: 8100,
         happySessionMetadataFromLocalWebhook: {
           flavor: 'codex',
+          codexThreadId: 'thread-luna-max',
           effectiveModel: 'gpt-5.6-luna',
           effectiveReasoningEffort: 'max',
         } as any,
@@ -144,6 +145,7 @@ describe('daemon control server ownership', () => {
         startedBy: 'daemon',
         happySessionId: 'session-luna-max',
         pid: 8100,
+        codexThreadId: 'thread-luna-max',
         metadata: {
           effectiveModel: 'gpt-5.6-luna',
           effectiveReasoningEffort: 'max',
@@ -315,5 +317,46 @@ describe('daemon control server ownership', () => {
     await vi.advanceTimersByTimeAsync(60);
     expect(requestShutdown).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
+  });
+
+  it('returns the local Session list without waiting for background metadata refresh', async () => {
+    let releaseRefresh!: () => void;
+    const pendingRefresh = new Promise<void>((resolve) => {
+      releaseRefresh = resolve;
+    });
+    const server = await startDaemonControlServer({
+      ownerToken: 'generation-nonblocking-list',
+      getChildren: () => [{
+        startedBy: 'daemon',
+        happySessionId: 'session-adopted',
+        pid: 8300,
+      }],
+      prepareChildrenForList: async () => pendingRefresh,
+      stopSession: () => false,
+      spawnSession: vi.fn(),
+      requestShutdown: vi.fn(),
+      onHappySessionWebhook: vi.fn(),
+    });
+    stopServer = server.stop;
+
+    const responsePromise = fetch(`http://127.0.0.1:${server.port}/list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    const outcome = await Promise.race([
+      responsePromise.then(() => 'response' as const),
+      new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 100)),
+    ]);
+    releaseRefresh();
+
+    expect(outcome).toBe('response');
+    expect(await (await responsePromise).json()).toEqual({
+      children: [{
+        startedBy: 'daemon',
+        happySessionId: 'session-adopted',
+        pid: 8300,
+      }],
+    });
   });
 });

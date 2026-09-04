@@ -4,6 +4,7 @@
 
 import { Metadata } from '@/api/types';
 import { ChildProcess } from 'child_process';
+import type { ProtectedDaemonProcessRecord } from './sessionProcessIdentity';
 
 export interface SessionEncryptionData {
   encryptionKey: Uint8Array;
@@ -28,4 +29,10 @@ export interface TrackedSession {
   message?: string;
   /** tmux session identifier (format: session:window) */
   tmuxSessionId?: string;
+  /** This spawn must prove that systemd moved it outside the daemon service cgroup. */
+  systemdScopeRequired?: boolean;
+  /** This process has passed the systemd scope and process-identity checks. */
+  systemdScopeProtected?: boolean;
+  /** Exact protected identity retained for heartbeat and pre-signal revalidation. */
+  daemonProcess?: ProtectedDaemonProcessRecord;
 }

@@ -8,10 +8,12 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { execSync, spawn } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { execFileSync, execSync, spawn } from 'child_process';
+import { readFileSync, statSync, utimesSync, writeFileSync } from 'fs';
 import path from 'path';
 import type { Metadata } from '@/api/types';
+import { ApiClient } from '@/api/api';
+import { decodeBase64 } from '@/api/encryption';
 import { getIntegrationEnv } from '@/testing/currentIntegrationEnv';
 import { configuration } from '@/configuration';
 import {
@@ -22,9 +24,14 @@ import {
   stopDaemonHttp,
   stopDaemonSession,
 } from '@/daemon/controlClient';
-import { clearDaemonStateForTests, readDaemonState, readPersistedSessions } from '@/persistence';
+import { clearDaemonStateForTests, readCredentials, readDaemonState, readPersistedSessions } from '@/persistence';
 import { getLatestDaemonLog } from '@/ui/logger';
 import { spawnHappyCLI } from '@/utils/spawnHappyCLI';
+import {
+  getMatchingProtectedProcessIdentity,
+  signalProtectedProcessGroup,
+  type ProtectedDaemonProcessRecord,
+} from './sessionProcessIdentity';
 
 // Utility to wait for condition
 async function waitFor(
@@ -50,6 +57,52 @@ async function stopAllTrackedSessions(): Promise<void> {
       stopDaemonSession(session.happySessionId ?? `PID-${session.pid}`).catch(() => false)
     ),
   );
+}
+
+function listDaemonSessionScopes(daemonPid: number): string[] {
+  try {
+    return execFileSync('systemctl', [
+      '--user',
+      'list-units',
+      `happy-session-${daemonPid}-*.scope`,
+      '--all',
+      '--no-legend',
+      '--plain',
+    ], { encoding: 'utf8' })
+      .split(/\r?\n/)
+      .map((line) => line.trim().split(/\s+/)[0])
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+async function publishClaudeSessionIdentity(
+  happySessionId: string,
+  claudeSessionId: string,
+): Promise<void> {
+  const persisted = readPersistedSessions()[happySessionId];
+  const credentials = await readCredentials();
+  if (!persisted || !credentials) {
+    throw new Error(`Missing authenticated persistence for ${happySessionId}`);
+  }
+  const api = await ApiClient.create(credentials);
+  const session = api.sessionSyncClient({
+    id: happySessionId,
+    seq: persisted.seq,
+    metadata: persisted.metadata,
+    metadataVersion: persisted.metadataVersion,
+    agentState: null,
+    agentStateVersion: persisted.agentStateVersion,
+    encryptionKey: decodeBase64(persisted.encryptionKey),
+    encryptionVariant: persisted.encryptionVariant,
+  });
+  try {
+    session.updateMetadata((metadata) => ({ ...metadata, claudeSessionId }));
+    await waitFor(async () => session.getMetadata()?.claudeSessionId === claudeSessionId, 10_000, 100);
+  } finally {
+    await session.close();
+  }
 }
 
 describe('Daemon Integration Tests', { timeout: 180_000 }, () => {
@@ -154,6 +207,187 @@ describe('Daemon Integration Tests', { timeout: 180_000 }, () => {
       const stopResults = await Promise.all(sessionIds.map(sessionId => stopDaemonSession(sessionId)));
       expect(stopResults.every(Boolean), `round ${round + 1} did not stop every session`).toBe(true);
       await waitFor(async () => (await listDaemonSessions()).length === 0, 5_000);
+    }
+  });
+
+  it('keeps two daemon Sessions alive and adopted across a systemd bundle handoff', { timeout: 120_000 }, async () => {
+    if (process.platform !== 'linux') return;
+
+    const unit = `happy-issue108-${process.pid}-${Date.now()}.service`;
+    const bundlePath = path.join(process.cwd(), 'dist', 'index.mjs');
+    const originalBundleStat = statSync(bundlePath);
+    await stopDaemon();
+    await waitFor(async () => await readDaemonState() === null, 10_000);
+
+    const environmentKeys = [
+      'HAPPY_SERVER_URL',
+      'HAPPY_WEBAPP_URL',
+      'HAPPY_HOME_DIR',
+      'HAPPY_PROJECT_DIR',
+      'HAPPY_VARIANT',
+      'DEBUG',
+    ];
+    const systemdArgs = [
+      '--user',
+      `--unit=${unit}`,
+      '--collect',
+      '--quiet',
+      '--property=KillMode=control-group',
+      '--property=Restart=always',
+      '--property=RestartSec=250ms',
+      '--setenv=HAPPY_DAEMON_HEARTBEAT_INTERVAL=200',
+      ...environmentKeys.flatMap((key) => {
+        const value = process.env[key];
+        return value === undefined ? [] : [`--setenv=${key}=${value}`];
+      }),
+      process.execPath,
+      bundlePath,
+      'daemon',
+      'start-sync',
+    ];
+
+    let sessionIds: string[] = [];
+    let firstDaemonPid: number | undefined;
+    const protectedRecords = new Map<string, ProtectedDaemonProcessRecord>();
+    try {
+      execFileSync('systemd-run', systemdArgs, { stdio: 'pipe' });
+      await waitFor(async () => await readDaemonState() !== null, 30_000, 250);
+      const firstDaemon = (await readDaemonState())!;
+      firstDaemonPid = firstDaemon.pid;
+
+      const results = await Promise.allSettled([
+        spawnDaemonSession(integrationEnv.projectPath),
+        spawnDaemonSession(integrationEnv.projectPath),
+      ]);
+      sessionIds = results.flatMap((result) => (
+        result.status === 'fulfilled' && typeof result.value?.sessionId === 'string'
+          ? [result.value.sessionId]
+          : []
+      ));
+      expect(results.every((result) => result.status === 'fulfilled')).toBe(true);
+      expect(new Set(sessionIds).size).toBe(2);
+
+      const agentSessionIds = new Map(sessionIds.map((sessionId, index) => [
+        sessionId,
+        `issue-108-claude-${index + 1}`,
+      ]));
+      await Promise.all([...agentSessionIds].map(([sessionId, agentSessionId]) => (
+        publishClaudeSessionIdentity(sessionId, agentSessionId)
+      )));
+
+      const before = (await listDaemonSessions())
+        .filter((session) => sessionIds.includes(session.happySessionId));
+      expect(before).toHaveLength(2);
+      const pids = new Map(before.map((session) => [session.happySessionId, session.pid]));
+      for (const sessionId of sessionIds) {
+        const record = readPersistedSessions()[sessionId]?.daemonProcess;
+        expect(record).toMatchObject({
+          protection: 'systemd-scope',
+          identity: { pid: pids.get(sessionId) },
+        });
+        protectedRecords.set(sessionId, record!);
+      }
+
+      const daemonCgroup = readFileSync(`/proc/${firstDaemon.pid}/cgroup`, 'utf8');
+      for (const pid of pids.values()) {
+        const sessionCgroup = readFileSync(`/proc/${pid}/cgroup`, 'utf8');
+        expect(sessionCgroup).toContain('.scope');
+        expect(sessionCgroup).not.toBe(daemonCgroup);
+      }
+
+      utimesSync(
+        bundlePath,
+        originalBundleStat.atime,
+        new Date(originalBundleStat.mtimeMs + 2_000),
+      );
+
+      await waitFor(async () => {
+        const state = await readDaemonState();
+        return state !== null && state.pid !== firstDaemon.pid;
+      }, 30_000, 250);
+      await waitFor(async () => {
+        const adopted = await listDaemonSessions();
+        return sessionIds.every((sessionId) => adopted.some((session) => (
+          session.happySessionId === sessionId
+          && (session.codexThreadId ?? session.claudeSessionId) === agentSessionIds.get(sessionId)
+        )));
+      }, 30_000, 250);
+
+      const after = (await listDaemonSessions())
+        .filter((session) => sessionIds.includes(session.happySessionId));
+      expect(after).toHaveLength(2);
+      for (const session of after) {
+        expect(session.pid).toBe(pids.get(session.happySessionId));
+        expect(session.codexThreadId ?? session.claudeSessionId)
+          .toBe(agentSessionIds.get(session.happySessionId));
+        // The unchanged Happy process is the owner of the provider connection;
+        // preserving that exact PID proves this was continuity, not a duplicate
+        // provider resume under a new process.
+        expect(readPersistedSessions()[session.happySessionId]?.daemonProcess?.identity.pid)
+          .toBe(session.pid);
+        expect(() => process.kill(session.pid, 0)).not.toThrow();
+      }
+    } finally {
+      const stillTracked = await listDaemonSessions().catch(() => []);
+      sessionIds = [...new Set([
+        ...sessionIds,
+        ...stillTracked.flatMap((session) => (
+          session.startedBy === 'daemon' && typeof session.happySessionId === 'string'
+            ? [session.happySessionId]
+            : []
+        )),
+      ])];
+      for (const sessionId of sessionIds) {
+        const record = readPersistedSessions()[sessionId]?.daemonProcess;
+        if (record) protectedRecords.set(sessionId, record);
+      }
+      await Promise.all(
+        sessionIds.map((sessionId) => stopDaemonSession(sessionId).catch(() => false)),
+      );
+      for (const record of protectedRecords.values()) {
+        signalProtectedProcessGroup(record, 'SIGTERM');
+      }
+      if (firstDaemonPid) {
+        for (const scope of listDaemonSessionScopes(firstDaemonPid)) {
+          try {
+            execFileSync('systemctl', ['--user', 'stop', scope], { stdio: 'ignore' });
+          } catch {}
+          try {
+            execFileSync('systemctl', ['--user', 'reset-failed', scope], { stdio: 'ignore' });
+          } catch {}
+        }
+      }
+      try {
+        await waitFor(async () => [...protectedRecords.values()].every(
+          (record) => getMatchingProtectedProcessIdentity(record) === null,
+        ), 5_000, 100);
+      } catch {
+        for (const record of protectedRecords.values()) {
+          const current = getMatchingProtectedProcessIdentity(record);
+          if (current) {
+            try {
+              process.kill(-current.processGroupId, 'SIGKILL');
+            } catch {}
+          }
+        }
+        await waitFor(async () => [...protectedRecords.values()].every(
+          (record) => getMatchingProtectedProcessIdentity(record) === null,
+        ), 5_000, 100);
+      }
+      for (const record of protectedRecords.values()) {
+        expect(getMatchingProtectedProcessIdentity(record)).toBeNull();
+      }
+      if (firstDaemonPid) {
+        await waitFor(async () => listDaemonSessionScopes(firstDaemonPid!).length === 0, 5_000, 100);
+      }
+      try {
+        execFileSync('systemctl', ['--user', 'stop', unit], { stdio: 'ignore' });
+      } catch {}
+      try {
+        execFileSync('systemctl', ['--user', 'reset-failed', unit], { stdio: 'ignore' });
+      } catch {}
+      utimesSync(bundlePath, originalBundleStat.atime, originalBundleStat.mtime);
+      await clearDaemonStateForTests();
     }
   });
 

@@ -855,6 +855,16 @@ describe('daemon session persistence', () => {
                 machineId: 'machine-1',
                 codexThreadId: 'codex-thread-1',
             },
+            daemonProcess: {
+                protection: 'systemd-scope',
+                recordedAt: savedAt,
+                identity: {
+                    pid: 123,
+                    processGroupId: 123,
+                    startTimeTicks: '4567',
+                    cgroupPath: '/user.slice/run-p123-i1.scope',
+                },
+            },
             savedAt,
         });
 
@@ -870,6 +880,13 @@ describe('daemon session persistence', () => {
                 metadata: expect.objectContaining({
                     path: '/tmp/project',
                     codexThreadId: 'codex-thread-1',
+                }),
+                daemonProcess: expect.objectContaining({
+                    protection: 'systemd-scope',
+                    identity: expect.objectContaining({
+                        pid: 123,
+                        startTimeTicks: '4567',
+                    }),
                 }),
                 savedAt,
             }),
