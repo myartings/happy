@@ -1,89 +1,36 @@
 ---
 name: start
-description: Resume or begin repository work from durable project state. Use when starting a coding session, returning after a pause, switching agents or worktrees, or when the active task and next workflow gate are unclear.
+description: Start or resume repository work from a current request or a full GitHub Issue URL, loading a linked Task and its required documents when one exists.
 ---
 
 # Start Work
 
-## Workflow
+1. Read `AGENTS.md`, `.ai/project.json`, and `CONTEXT-MAP.md` or the applicable `CONTEXT.md`. Read relevant ADRs and architecture guidance.
+2. Inspect `git status --short` and preserve unrelated changes.
+3. For an immediate bounded current-Session request, inspect the current branch as needed and use Matt `implement` without creating a Task or Issue.
+4. For a full GitHub Issue URL, read the live Issue, labels, and relevant comments using `docs/agents/issue-tracker.md`. Do not scan `docs/tasks/` or infer a Task from a diff.
+5. Inspect the live Issue for its Task link before any Task-specific read or execution-environment check.
+6. If the Issue has no Task link, perform intake with `triage` and let the user choose. Immediate current-Session implementation uses the bounded Issue without a Task. Fresh-Session handoff uses `generate-tasks` to attach one Task to that same bounded Issue without creating a duplicate. Only when an incoming Issue is a broad coordination parent and the user accepts a split does `generate-tasks` create child Issue + Task pairs; the parent remains Task-less. Needs-info, duplicates, already-implemented, and wontfix items do not create Tasks.
+7. If the Issue has a Task link, follow that unique link. Read the Task, its optional Feature Spec and Research links, and any guidance those documents name. Verify the Task's Issue URL matches the live Issue. Then inspect the supplied current directory, branch, and `git worktree list`; confirm that the caller-prepared pair is dedicated to this launched Task and keep one writer in the worktree. The coordinating launch must start the fresh Happy Session in that directory with only its bounded launch inputs, wait until it is ready and waiting for messages, and then send the full Issue URL (`https://github.com/<owner>/<repository>/issues/<number>`) as the first user request. `start` consumes that request and is execution-side: it does not perform the initial model judgment, create or reuse the branch/worktree, or ask the launcher to do so. A replacement Session reuses the same Issue, Task, branch, and worktree and repeats only this native two-step sequence: it becomes ready and waiting for messages, then the coordinator sends the full Issue URL as its first user request. Ordinary resume does not repeat the launch or routing. Neither path introduces a second Issue-routing mechanism.
+8. Report the goal, loaded sources, Git state, blockers, and next action.
 
-1. Read `AGENTS.md` and `.ai/project.json`. If `CONTEXT-MAP.md` exists, resolve
-   and read the applicable bounded-context file; otherwise read root
-   `CONTEXT.md`. Do not load root context before consulting an existing map.
-2. Inspect `git status --short`; preserve unrelated or user-owned changes.
-3. Run `python3 scripts/workflow-state.py active` when the helper exists.
-   Treat `start` as recovery in the current user-facing session. Without the
-   explicit authorization defined in `docs/workflow/execution-isolation.md`,
-   continue here and never prepare a branch/worktree or invoke a client launcher.
-   Before preparing a named-Issue session, follow `tracker-workflow`'s visible
-   claim boundary. Generic continuation authorizes neither its external writes
-   nor client launch.
-   Confirm the current human-facing session root before sustained Root
-   implementation. If the accepted work selects a different linked worktree,
-   resume only after a platform-native handoff visibly rebinds this session or
-   a user-authorized fresh session starts in that worktree. Do not treat a tool
-   or shell `workdir` override as a session rebind; before the boundary completes,
-   this session may only perform the bounded preparation, handoff, read-only,
-   or temporary integration actions allowed by the isolation policy.
-   For an accepted named-Issue route, treat `workflow-issue-route.py` output as
-   implementation-ready only when it returns `current-root` from the exact
-   registered Issue worktree plus matching confirmed native-handoff or
-   fresh-session binding evidence, or from the explicit named-Issue isolation
-   opt-out. A session-root path, branch, working-directory override, or caller
-   assertion alone is not binding evidence. Preserve an inert launch capsule
-   and stop at `manual-start-required` when proof or native capability is absent.
-   When the route carries a `manualIssueLaunchContract`, also require its
-   version/kind to be supported and its Issue, repository, branch, registered
-   worktree, and verified base to match the live route. An executable contract
-   must name exactly `bounded` with `gpt-5.6-luna`/`max` or `sol-required` with
-   `gpt-5.6-sol` and its justified effort. The operator confirms the effective
-   Root model and effort with `/status`; requested values, a launcher claim, or
-   a subagent result are not confirmation. A missing/non-executable contract,
-   stale identity, unsupported adapter, or model/effort mismatch returns one
-   visible manual-start/model-selection boundary before local acceptance or
-   Workspace creation.
-   In a coordinator session, stop after authorized inert preparation,
-   projection, and launch/recovery: do not create the Issue Workspace, pass a
-   local gate, generate its detailed plan, edit its deliverable, run its
-   checks/review, or prepare delivery. The owning Root is either the exact
-   confirmed Issue session or the current Root selected by an explicit
-   named-Issue isolation opt-out. It re-reads the live Issue and repository,
-   then receives or confirms user acceptance before creating or accepting the
-   Workspace, and retains ownership through finish and delivery preparation.
-4. If a Trellis task is active, read `workflow.json`, generated `state.md`, and
-   `validation.md`, then read the linked context, decisions, task/spec links,
-   and latest indexed session evidence. If no indexed session exists, read only
-   the latest journal section; do not load the whole journal as a substitute.
-5. Confirm the selected task contract maps one accepted delivery slice to the
-   Workspace and still matches the codebase. For a tracker-backed task, require
-   the structured acceptance right-sizing receipt before implementation. Require
-   a tracker source only when the accepted task uses an external queue or
-   coordination boundary.
-6. If `task-links.md` names an external tracker item and fresh remote context is
-   required, route read-only discovery through `tracker-workflow`. Snapshot any
-   accepted remote change into local contracts; tracker state never substitutes
-   for local workflow gates. If the live Issue materially changed since the
-   owning session froze its contract, reconcile the delta explicitly before
-   continuing.
-7. If no task is active, do not create one from the diff. Continue a clear,
-   bounded, normal-risk single-session request through the matching Matt skill.
-   Ask before task creation only for complex, high-risk, cross-session,
-   durable-recovery, or coordination work.
-8. For an active task, classify the next action as planning, implementation,
-   verification, or finish. When repeated no-progress review evidence makes a
-   continuation reassessment due, route through `continue` before another broad
-   implementation attempt.
-9. For an accepted task, load only a role manifest that corresponds to actual
-   dispatch:
-   `contexts/implement.jsonl` for implementation or `contexts/check.jsonl` for
-   verification.
-   A manifest proves only declared structure and paths; relevance and actual
-   loading remain execution/review obligations.
-10. Report a short resume brief: goal, current phase when applicable, evidence,
-   blockers, and one
-   concrete next action.
+## Model escalation request
 
-Run `python3 scripts/workflow-audit.py --strict --require-active <slug>` before
-resuming implementation or finish for an active Trellis task. No-task work has
-no Workspace or delivery classifier. Historical workflow artifacts remain
-passive; never infer current state or success from them or from chat alone.
+During execution after a Luna Max launch, stop further implementation when
+there is clear evidence that the model cannot reliably understand or reason
+about the accepted work. Misunderstanding acceptance, failing to form a
+credible approach, disregarding established root-cause evidence, or being
+unable to follow critical repository constraints can indicate a Model
+capability failure. Ordinary test failures, syntax errors, and normal debugging
+are not.
+
+Send the user a Model escalation request that states the evidence, modified files,
+verification state, and recommends the repository's accepted stronger choice,
+Sol Medium, with its reasoning effort. Preserve partial work without
+automatically committing, reverting, or stashing it. The Agent must not claim to
+change its own model or launch a replacement automatically. Wait for the user to
+switch the current Session through client controls or request a replacement
+Session. An in-place switch needs no handoff; a real replacement uses `handoff`
+and reuses the same Issue, Task, branch, and worktree.
+
+An Issue, label, Task, worktree, or Session locates work but never authorizes implementation. A user's explicit request to implement the current request or selected Task authorizes the scoped local commit on the current or dedicated Task branch. It does not authorize push, PR, merge, release, Issue mutation, or destructive Git actions.

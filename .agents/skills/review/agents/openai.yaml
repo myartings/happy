@@ -1,4 +1,0 @@
-interface:
-  display_name: "Review Changes"
-  short_description: "Review a bounded diff for correctness and hidden risk"
-  default_prompt: "Use $review to inspect the current changes and report actionable findings."

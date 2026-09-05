@@ -1,20 +1,16 @@
 ---
 name: generate-spec
-description: Write or update an implementation-neutral, verifiable feature contract under `docs/specs/`. Use after project scope is accepted, before non-trivial implementation, or when behavior, interfaces, edge cases, and verification need a durable agreement.
+description: Create or update a detailed technical Feature Spec under docs/specs/ when accepted feature scope needs a durable implementation contract.
 ---
 
-# Generate Spec
+# Generate Feature Specification
 
-## Workflow
+1. Read the applicable PRD, context, ADRs, architecture, research, existing behavior, and tests.
+2. Write the applicable sections from the Guide model: Overview, User Stories, Acceptance Criteria, Technical Design, Architecture, Data Models, API Endpoints, Dependencies, UI/UX Design, Edge Cases, Testing Plan, Rollout Plan, and Open Questions.
+3. Adapt examples to the project's real stack. Omit sections that do not apply instead of filling them with placeholders.
+4. Make acceptance criteria observable and connect them to the testing plan.
+5. Preserve accepted technical choices and label unresolved decisions rather than inventing them.
+6. Save the contract as `docs/specs/<feature>.md`.
+7. When the accepted feature must leave this planning context, use `generate-tasks` to propose independently deliverable slices.
 
-1. Read the applicable PRD, architecture, decisions, existing behavior, and tests.
-2. Define one coherent feature boundary and its non-goals.
-3. Specify observable behavior, interfaces/data, state transitions, errors, edge
-   cases, compatibility, and operational constraints.
-4. Write acceptance criteria as individually verifiable statements.
-5. Map every criterion to a planned test, command, or inspection signal.
-6. Record accepted uncertainty explicitly; do not invent missing facts.
-7. Save to `docs/specs/<slug>.md` and link it from workflow state.
-8. Route accepted specifications to `generate-tasks`.
-
-Keep implementation choices out unless they are accepted architectural contracts.
+A Feature Spec is a detailed technical contract. It is not an implementation-neutral requirements document, Task checklist, or lifecycle record.

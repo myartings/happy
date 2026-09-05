@@ -1,43 +1,30 @@
 ---
 name: Agent work item
-about: A bounded, reviewable task suitable for an AI coding workflow
+about: One independently deliverable implementation slice
 title: ""
-labels: "needs-triage"
+labels: "ready-for-agent"
 assignees: ""
 ---
 
-## Problem
+## Local documents
 
-## Expected outcome
+- Task: [docs/tasks/<task>.md](<stable repository link>)
+- Feature Spec: [docs/specs/<feature>.md](<stable repository link>)
+
+## Parent
+
+- #<parent Issue>
+
+## What to build
+
+<one independently deliverable behavior>
 
 ## Acceptance criteria
 
-- [ ]
+- [ ] <criterion>
 
-## Scope
+## Blocked by
 
-### Allowed
+- None / #<blocking Issue>
 
-### Excluded
-
-## Verification
-
-## Dependencies
-
-Name exact prerequisite artifacts, interfaces, accepted outcomes, or commits;
-parent/child hierarchy alone is not a dependency edge.
-
-## Right-sizing assessment
-
-- Behavioral outcome / invariant cluster:
-- Acceptance or test seam:
-- Dependency inputs and outputs:
-- Review / rejection boundary:
-- Merge / rollback boundary:
-- Expected Agent-context boundary:
-- Consequence and size/complexity warning signals:
-- Disposition and evidence: one Slice / parent plus child Slices / same-shape batch
-
-## Local contract links
-
-## Risks
+Omit Parent and Feature Spec when they do not apply.

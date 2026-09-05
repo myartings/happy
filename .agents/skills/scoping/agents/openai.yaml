@@ -1,4 +1,0 @@
-interface:
-  display_name: "Scoping"
-  short_description: "Route scope, risk, context, ownership, and validation before edits"
-  default_prompt: "Use $scoping to verify this task is ready for implementation."

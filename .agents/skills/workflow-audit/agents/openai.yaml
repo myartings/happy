@@ -1,4 +1,0 @@
-interface:
-  display_name: "Audit Workflow"
-  short_description: "Audit whether repository evidence proves the workflow ran"
-  default_prompt: "Use $workflow-audit to audit this task's workflow evidence without modifying files."

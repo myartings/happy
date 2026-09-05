@@ -1,4 +1,4 @@
 interface:
   display_name: "Create PRD"
-  short_description: "Turn clarified product intent into durable requirements"
-  default_prompt: "Use $create-prd to create or update the product requirements for this work."
+  short_description: "Create durable product requirements"
+  default_prompt: "Use $create-prd to create or update docs/PRD.md from the accepted product intent."

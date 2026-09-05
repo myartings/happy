@@ -16,47 +16,36 @@ Personal-only features branch from `dev` and merge back through review;
 upstream-bound work branches from `upstream/main` or another verified clean
 official base.
 
-Do not infer a Trellis task from a repository diff. Clear, bounded,
-normal-risk single-session work may stay in the current context.
-No-task work needs no lifecycle receipt. Ask before creating durable task state
-when work is complex, high-risk, cross-session, coordination-heavy, or the user
-requests it.
+Matt Skills read tracker, triage-label, and domain configuration from
+`docs/agents/`. The canonical workflow is documented in `docs/workflow.md`.
 
-After explicit acceptance, every formal personal feature uses the
-repository-local lifecycle:
-
-```text
-Start -> Plan -> Scope -> Build -> Verify -> Review -> Finish -> Archive
-```
-
-- Read `.ai/project.json` for exact commands, protected paths, and tracker
-  configuration.
-- Create durable state under `docs/workspace/<slug>/` only for an accepted
-  task and use
-  `scripts/workflow-state.py` for phase transitions and gate receipts.
-- Run `python3 scripts/workflow-audit.py --strict --require-active` before
-  implementation and completion when a task is active. Run
-  `python3 scripts/workflow-audit.py --all --strict` for current repository
-  health. Historical Workspace and archive files are passive.
-- Run `python3 scripts/workflow-check.py --applicable` for accepted-task final
-  verification; ambiguous changed scope selects the complete configured family.
+- Immediate bounded work may stay in the current Session without a Task or
+  Issue. A Task exists only for an accepted slice that moves to a fresh
+  implementation Session, and it has exactly one Task File and one GitHub
+  Issue.
+- Historical `docs/workspace/` records and archive indexes are passive. Current
+  routing, checks, Skills, and generated projects must not read, execute, copy,
+  append, or create Workspace lifecycle state, receipts, or archives.
+- Use the Matt flow selected by the accepted request: implement with TDD where
+  applicable, run the configured full suite once on the final engineering diff,
+  and run parallel Spec and Standards review through `code-review` before the
+  scoped local commit. Task-bound work then uses `finish-work` to update only
+  Task status and reusable guidance in that same commit.
+- Read `.ai/project.json` for exact commands, protected paths, tracker
+  configuration, and risk triggers. `scripts/workflow-check.py` executes only
+  explicitly named command groups; `scripts/workflow-ci.py --staged` protects
+  the complete atomic candidate before commit.
 - Keep personal product code under explicit feature modules where possible;
   host integration files should contain only small, reviewable seams.
-- Before an authorized delivery commit, finish check and independent review,
-  stage the complete accepted candidate, generate the canonical terminal
-  archive projection for an active task, and pass
-  `python3 scripts/workflow-ci.py --staged`. No-task work still stages and
-  verifies its atomic candidate but creates no lifecycle evidence.
-- Root sustained implementation must stay in the current human-facing session root.
-  A command-level `workdir` override does not rebind the session; moving
-  sustained Root work to another linked worktree requires a visible native
-  handoff or a user-authorized fresh session there.
+- Root sustained implementation must stay in the current human-facing Session
+  root. Fresh-Session Task work uses one dedicated branch/worktree prepared by
+  ordinary Git before Happy is launched in that exact directory.
 - Do not run the upstream template's full synchronization manifest in this
   repository. Use the version-pinned schema-2 `.ai/template-adoption.json`
   allowlist from a clean accepted release checkout, dry-run before apply, and
-  preserve Happy-owned rules, project configuration, skills, CI, and release
-  behavior.
-- Codex workflow skills live in `.agents/skills/`. Treat `CLAUDE.md` and
+  preserve Happy-owned rules, project configuration, Skills, CI, release
+  behavior, and product customization.
+- Codex workflow Skills live in `.agents/skills/`. Treat `CLAUDE.md` and
   `.claude/` as frozen, unmanaged compatibility files: do not synchronize,
   validate, distribute, or delete them unless the user explicitly re-enables
   Claude maintenance.

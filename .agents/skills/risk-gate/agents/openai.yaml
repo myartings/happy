@@ -1,4 +1,4 @@
 interface:
-  display_name: "Assess Risk"
-  short_description: "Identify high-consequence changes and required controls"
-  default_prompt: "Use $risk-gate to assess this change and define required safeguards."
+  display_name: "Risk Gate"
+  short_description: "Define controls for consequential changes"
+  default_prompt: "Use $risk-gate to add proportionate controls to the existing work contract."

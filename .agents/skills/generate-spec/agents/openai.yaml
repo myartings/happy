@@ -1,4 +1,4 @@
 interface:
-  display_name: "Generate Spec"
-  short_description: "Write an implementation-neutral feature contract"
-  default_prompt: "Use $generate-spec to write a verifiable feature specification."
+  display_name: "Generate Feature Spec"
+  short_description: "Write a detailed technical feature contract"
+  default_prompt: "Use $generate-spec to create a detailed technical Feature Spec from the accepted scope."

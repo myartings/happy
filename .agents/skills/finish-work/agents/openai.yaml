@@ -1,4 +1,4 @@
 interface:
-  display_name: "Finish Work"
-  short_description: "Close validated work and promote reusable learning"
-  default_prompt: "Use $finish-work to perform the final review and close this workflow."
+  display_name: "Finish Task Work"
+  short_description: "Complete Task metadata and reusable guidance"
+  default_prompt: "Use $finish-work after final checks and code-review to complete the Task before the same local commit."

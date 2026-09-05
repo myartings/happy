@@ -23,9 +23,13 @@ automation lives in `devtools/` and is invoked through `happyctl`.
 
 ## Workflow adoption boundary
 
-The repository adopts only the execution core from `ai-coding-template`.
-Happy-owned root instructions, official skills, product CI, and release behavior
-remain authoritative and must not be replaced by template synchronization.
+The repository adopts only the selected Codex workflow core from
+`ai-coding-template`. Happy-owned root instructions, project configuration,
+official Skills, product CI, and release behavior remain authoritative and must
+not be replaced by template synchronization. Current work uses the Task/Issue
+and Matt engineering flow in `docs/workflow.md`; historical `docs/workspace/`
+records are passive and are never current execution state.
+
 Adoption is explicit, version-pinned, selective, and dry-run-first through
 `.ai/template-adoption.json`; a target-relative source checkout is never an
 authority. Codex workflow assets may advance through the accepted allowlist,

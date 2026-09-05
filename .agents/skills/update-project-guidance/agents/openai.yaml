@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Project Guidance"
+  short_description: "Promote evidenced reusable learning"
+  default_prompt: "Use $update-project-guidance to update the narrowest existing owner with an evidenced reusable learning."

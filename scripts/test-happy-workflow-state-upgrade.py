@@ -1,110 +1,50 @@
 #!/usr/bin/env python3
-"""Tests for the one-time Happy active Workspace schema upgrade."""
+"""Verify the workflow-2026.09.3 cutover leaves Workspaces passive."""
 
 from __future__ import annotations
 
+import subprocess
 import importlib.util
 import unittest
-from copy import deepcopy
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
-UPGRADER = ROOT / "scripts" / "happy-workflow-state-upgrade.py"
 
 
-def load_upgrader():
-    spec = importlib.util.spec_from_file_location("happy_state_upgrader", UPGRADER)
+def retired_runtime() -> set[str]:
+    path = ROOT / "scripts/validate-happy-workflow.py"
+    spec = importlib.util.spec_from_file_location("workspace_cutover_validator", path)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load Happy state upgrader")
+        raise RuntimeError("cannot load validate-happy-workflow.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module
+    return set(module.RETIRED)
 
 
-class HappyWorkflowStateUpgradeTest(unittest.TestCase):
-    def test_upgrade_preserves_evidence_and_adds_only_current_authority(self) -> None:
-        upgrader = load_upgrader()
-        gates = {
-            name: {"status": "passed", "evidence": name, "updated": "before"}
-            for name in ("acceptance", "decisions", "scoping", "risk")
-        }
-        gates.update(
-            {
-                name: {"status": "pending", "evidence": "", "updated": "before"}
-                for name in ("implementation", "check", "review", "finish")
-            }
+class WorkspaceCutoverTests(unittest.TestCase):
+    def test_workspace_mutation_runtime_is_absent(self) -> None:
+        self.assertEqual(
+            [relative for relative in retired_runtime() if (ROOT / relative).exists()],
+            [],
         )
-        original = {
-            "schemaVersion": 1,
-            "slug": "workflow-template-2026-08-2-adoption",
-            "intensity": "high-risk",
-            "phase": "implementation",
-            "nextAction": "Continue migration",
-            "riskRequired": True,
-            "decisionsRequired": True,
-            "legacyImport": False,
-            "gates": gates,
-            "history": [{"type": "created", "evidence": "real evidence"}],
-            "updated": "before",
-        }
-        source = {
-            "kind": "local-only",
-            "reason": "Current-session selective Happy workflow migration",
-            "approval": "User accepted the recommended migration in this session",
-        }
-        original_snapshot = deepcopy(original)
 
-        upgraded = upgrader.upgrade_state(original, source, "after")
-
-        self.assertEqual(original_snapshot, original)
-        self.assertEqual(3, upgraded["schemaVersion"])
-        self.assertNotIn("legacyImport", upgraded)
-        self.assertEqual("standard", upgraded["layout"])
-        self.assertEqual("standard", upgraded["workspaceKind"])
-        self.assertEqual(1, upgraded["deliverySourcePolicy"])
-        self.assertEqual(source, upgraded["deliverySource"])
-        self.assertEqual(original_snapshot["gates"], upgraded["gates"])
-        self.assertEqual(original_snapshot["history"], upgraded["history"][:-1])
-        self.assertEqual("downstream_active_schema_upgrade", upgraded["history"][-1]["type"])
-        self.assertEqual("after", upgraded["updated"])
-
-    def test_upgrade_rejects_malformed_history_without_mutating_input(self) -> None:
-        upgrader = load_upgrader()
-        gates = {
-            name: {"status": "passed", "evidence": name, "updated": "before"}
-            for name in ("acceptance", "decisions", "scoping", "risk")
-        }
-        gates.update(
-            {
-                name: {"status": "pending", "evidence": "", "updated": "before"}
-                for name in ("implementation", "check", "review", "finish")
-            }
+    def test_historical_workspace_indexes_are_unchanged(self) -> None:
+        completed = subprocess.run(
+            [
+                "git",
+                "diff",
+                "--quiet",
+                "HEAD",
+                "--",
+                "docs/workspace/ACTIVE.md",
+                "docs/workspace/archive.md",
+            ],
+            cwd=ROOT,
+            check=False,
         )
-        original = {
-            "schemaVersion": 1,
-            "slug": "workflow-template-2026-08-2-adoption",
-            "intensity": "high-risk",
-            "phase": "implementation",
-            "nextAction": "Continue migration",
-            "riskRequired": True,
-            "decisionsRequired": True,
-            "legacyImport": False,
-            "gates": gates,
-            "history": None,
-            "updated": "before",
-        }
-        source = {
-            "kind": "local-only",
-            "reason": "Current-session selective Happy workflow migration",
-            "approval": "User accepted the recommended migration in this session",
-        }
-        original_snapshot = deepcopy(original)
-
-        with self.assertRaisesRegex(ValueError, "structured history"):
-            upgrader.upgrade_state(original, source, "after")
-
-        self.assertEqual(original_snapshot, original)
+        self.assertEqual(completed.returncode, 0)
+        self.assertTrue((ROOT / "docs/workspace/ACTIVE.md").is_file())
+        self.assertTrue((ROOT / "docs/workspace/archive.md").is_file())
 
 
 if __name__ == "__main__":

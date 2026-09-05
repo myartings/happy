@@ -1,4 +1,3 @@
 interface:
-  display_name: "Frontier Grilling"
-  short_description: "Resolve the unblocked design frontier before building"
-  default_prompt: "Use $grilling to map this plan's design tree, ask the whole currently unblocked frontier, and recommend a default for each decision."
+  display_name: "Grilling"
+  short_description: "Stress-test thinking a round of questions at a time"
