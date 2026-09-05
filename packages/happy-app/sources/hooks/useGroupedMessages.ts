@@ -394,15 +394,16 @@ export function generateGroupSummary(messages: Message[]): string {
 
     const parts: string[] = [];
 
-    if (counts.edit) parts.push(t('toolGroup.editedFiles', { count: counts.edit }));
-    if (counts.read) parts.push(t('toolGroup.readFiles', { count: counts.read }));
-    if (counts.terminal) parts.push(t('toolGroup.ranCommands', { count: counts.terminal }));
-    if (counts.search) parts.push(t('toolGroup.searched', { count: counts.search }));
-    if (counts.web) parts.push(t('toolGroup.fetchedUrls', { count: counts.web }));
-    if (counts.task) parts.push(t('toolGroup.ranTasks', { count: counts.task }));
-    if (counts.other) parts.push(t('toolGroup.usedTools', { count: counts.other }));
+    const counted = (label: string, count: number) => count === 1 ? label : `${label} × ${count}`;
+    if (counts.edit) parts.push(counted(t('toolGroup.edited'), counts.edit));
+    if (counts.read) parts.push(counted(t('toolGroup.read'), counts.read));
+    if (counts.terminal) parts.push(counted(t('toolGroup.ran'), counts.terminal));
+    if (counts.search) parts.push(counted(t('toolGroup.searched'), counts.search));
+    if (counts.web) parts.push(counted(t('toolGroup.fetched'), counts.web));
+    if (counts.task) parts.push(counted(t('toolGroup.ranTask'), counts.task));
+    if (counts.other) parts.push(counted(t('tools.fullView.output'), counts.other));
 
-    return parts.join(', ') || t('toolGroup.usedTools', { count: messages.length });
+    return parts.join(', ') || counted(t('tools.fullView.output'), messages.length);
 }
 
 export function formatWorkDuration(durationMs: number): string {

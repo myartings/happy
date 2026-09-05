@@ -129,7 +129,7 @@ describe('actual ToolGroupView Studio activity wiring', () => {
             .map((node: any) => node.props.children)
             .flat(Infinity)
             .join('');
-        expect(text).toContain('toolGroup.ranCommands:2');
+        expect(text).toContain('toolGroup.ran × 2');
         expect(text).toContain('toolGroup.workedFor:2s');
         expect(text).toContain('toolGroup.failedTools:1');
     });
@@ -198,6 +198,24 @@ describe('actual ToolGroupView Studio activity wiring', () => {
         const labels = renderer.root.findAllByType('Text' as any)
             .filter((node: any) => flattenStyle(node.props.style).color === '#3F6B8F');
         expect(labels.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('highlights a compact tool summary without replacing its row representation', () => {
+        const read = message('Read');
+        const renderer = render(React.createElement(ToolGroupView, {
+            group: { type: 'tool-group', id: 'group-highlight', messages: [read], hasRunning: false, hasPendingPermission: false },
+            metadata: null, sessionId: 'session-1', expanded: true, onToggle: vi.fn(),
+            highlightedMessageId: read.id,
+        }));
+
+        expect(renderer.root.findAllByType('MessageView' as any)).toHaveLength(0);
+        expect(renderer.root.findAllByType('Pressable' as any).some(
+            (node: any) => node.props.nativeID === `message-target-${read.id}`,
+        )).toBe(true);
+        expect(renderer.root.findAllByType('Pressable' as any).some(
+            (node: any) => typeof node.props.style === 'function'
+                && flattenStyle(node.props.style({ pressed: false })).backgroundColor === 'rgba(139, 124, 255, 0.16)',
+        )).toBe(true);
     });
 
     it('lets failure state override the edit category and preserves Default colors', () => {

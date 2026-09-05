@@ -5,6 +5,7 @@ import {
     parseCurrentRequestAttentionRouteVersion,
     type CurrentRequestAttentionFocusHint,
 } from '@/features/needs-attention/currentRequestAttentionFocus';
+import { perfMark } from '@/utils/perfLog';
 
 
 export default React.memo(() => {
@@ -25,6 +26,7 @@ export default React.memo(() => {
         attentionSourceId?: string;
         attentionAgentStateVersion?: string;
     }>();
+    React.useMemo(() => perfMark(`session-open:${sessionId}`), [sessionId]);
     const targetCreatedAt = createdAt !== undefined ? Number(createdAt) : undefined;
     const attentionFocusHint: CurrentRequestAttentionFocusHint | undefined = (
         (attentionKind === 'permission_required' || attentionKind === 'answer_required')

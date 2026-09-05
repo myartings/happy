@@ -16,6 +16,7 @@ import {
     getDefaultModelKey,
     getEffortLevelsForModel,
     getDefaultPermissionModeKey,
+    groupModelModesByProvider,
     includeConfiguredModel,
     getOpenClawPermissionModes,
     mapMetadataOptions,
@@ -29,6 +30,23 @@ import { rigMetadataFixture } from '@/sync/__testdata__/rigMetadata';
 const translate = (key: string) => `tr:${key}`;
 
 describe('modelModeOptions', () => {
+    it('groups models by provider without sorting providers or rows', () => {
+        const groups = groupModelModesByProvider([
+            { key: 'codex:sol', name: 'Sol', providerId: 'codex', providerName: 'OpenAI Codex' },
+            { key: 'claude:opus', name: 'Opus', providerId: 'claude', providerName: 'Anthropic Claude' },
+            { key: 'codex:terra', name: 'Terra', providerId: 'codex', providerName: 'OpenAI Codex' },
+        ]);
+
+        expect(groups.map((group) => [
+            group.key,
+            group.title,
+            group.models.map((model) => model.key),
+        ])).toEqual([
+            ['codex', 'OpenAI Codex', ['codex:sol', 'codex:terra']],
+            ['claude', 'Anthropic Claude', ['claude:opus']],
+        ]);
+    });
+
     it('maps metadata option shape into mode options', () => {
         expect(mapMetadataOptions([
             { code: 'm1', value: 'Model One', description: 'Primary model' },
@@ -103,19 +121,20 @@ describe('modelModeOptions', () => {
         expect(keys).not.toContain('plan');
     });
 
-    it('only offers the curated codex harness models', () => {
+    it('only offers the curated codex harness models, most capable first', () => {
         const models = getCodexModelModes();
         expect(models.map((model) => model.key)).toEqual([
+            'gpt-6-astra',
             'gpt-5.6-sol',
             'gpt-5.6-terra',
             'gpt-5.6-luna',
         ]);
-        expect(models[0].name).toBe('GPT-5.6 Sol');
-        expect(models.every((model) => model.serviceTiers?.includes('fast'))).toBe(true);
+        expect(models[0].name).toBe('GPT-6 Astra');
+        expect(models.slice(1).every((model) => model.serviceTiers?.includes('fast'))).toBe(true);
     });
 
     it('offers Fast only when both the CLI and selected model advertise it', () => {
-        const fastModel = getCodexModelModes()[0];
+        const fastModel = getCodexModelModes()[1];
 
         expect(supportsCodexFastMode({ serviceTiers: ['default', 'fast'] }, fastModel)).toBe(true);
         expect(supportsCodexFastMode({}, fastModel)).toBe(false);
@@ -123,7 +142,7 @@ describe('modelModeOptions', () => {
     });
 
     it('turns Fast off when switching to a model that does not support it', () => {
-        const fastModel = getCodexModelModes()[0];
+        const fastModel = getCodexModelModes()[1];
 
         expect(resolveCodexServiceTierForModel('fast', fastModel)).toBe('fast');
         expect(resolveCodexServiceTierForModel('fast', { ...fastModel, serviceTiers: [] })).toBe('default');
@@ -135,24 +154,27 @@ describe('modelModeOptions', () => {
         const withCustom = includeConfiguredModel('codex', models, 'my-workspace-model');
 
         expect(withCustom.map((model) => model.key)).toEqual([
+            'gpt-6-astra',
             'gpt-5.6-sol',
             'gpt-5.6-terra',
             'gpt-5.6-luna',
             'my-workspace-model',
         ]);
-        expect(models).toHaveLength(3);
+        expect(models).toHaveLength(4);
         expect(includeConfiguredModel('claude', models, 'my-workspace-model')).toBe(models);
     });
 
     it('only offers the current-generation claude models', () => {
         const models = getClaudeModelModes();
         expect(models.map((model) => model.key)).toEqual([
+            'claude-fable-5-1',
             'claude-fable-5',
             'claude-opus-5',
             'claude-opus-5[1m]',
             'claude-sonnet-5',
         ]);
         expect(models.map((model) => model.name)).toEqual([
+            'Fable 5.1',
             'Fable 5',
             'Opus 5',
             'Opus 5 [1M]',
@@ -165,9 +187,11 @@ describe('modelModeOptions', () => {
     });
 
     it('offers every codex model the levels its own registry publishes', () => {
-        // Straight from codex-rs/models-manager/models.json: sol and terra
-        // publish ultra, luna does not. The difference is the whole point of
-        // asking per model rather than per flavor.
+        // Straight from Codex's model registry: astra, sol, and terra publish
+        // ultra, luna does not. The difference is the whole point of asking
+        // per model rather than per flavor.
+        expect(getEffortLevelsForModel('codex', 'gpt-6-astra').map((level) => level.key))
+            .toEqual(['low', 'medium', 'high', 'xhigh', 'max', 'ultra']);
         expect(getEffortLevelsForModel('codex', 'gpt-5.6-sol').map((level) => level.key))
             .toEqual(['low', 'medium', 'high', 'xhigh', 'max', 'ultra']);
         expect(getEffortLevelsForModel('codex', 'gpt-5.6-terra').map((level) => level.key))
@@ -183,8 +207,8 @@ describe('modelModeOptions', () => {
 
     it('offers claude the SDK effort union for every model', () => {
         // Claude's scale belongs to the SDK, not the model: an unreachable level
-        // is silently downgraded, so all three models get the same list.
-        for (const model of ['claude-fable-5', 'claude-opus-5', 'claude-sonnet-5']) {
+        // is silently downgraded, so every model gets the same list.
+        for (const model of ['claude-fable-5-1', 'claude-fable-5', 'claude-opus-5', 'claude-sonnet-5']) {
             const keys = getEffortLevelsForModel('claude', model).map((level) => level.key);
             expect(keys).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
             // Claude's floor is `low`; there is no off.
@@ -199,6 +223,9 @@ describe('modelModeOptions', () => {
         expect(getDefaultPermissionModeKey('codex')).toBe('auto');
         expect(getDefaultModelKey('codex')).toBe('gpt-5.6-sol');
         expect(getDefaultEffortKey('codex')).toBe('medium');
+        expect(getDefaultPermissionModeKey('agy')).toBe('default');
+        expect(getDefaultModelKey('agy')).toBe('Gemini 3.8 Flash');
+        expect(getDefaultEffortKey('agy')).toBe('medium');
     });
 
     it('prefers metadata models over hardcoded fallbacks', () => {
@@ -261,13 +288,26 @@ describe('modelModeOptions', () => {
         expect(models).toEqual(getAgyModelModes());
         const keys = models.map((m) => m.key);
         // the agentDefaults agy default must be selectable
-        expect(keys).toContain('Gemini 3.1 Pro (High)');
-        expect(getDefaultModelKey('agy')).toBe('Gemini 3.1 Pro (High)');
+        expect(keys).toContain('Gemini 3.8 Flash');
+        expect(getDefaultModelKey('agy')).toBe('Gemini 3.8 Flash');
+        expect(keys.filter((key) => key.startsWith('Gemini '))).toEqual(['Gemini 3.8 Flash']);
+        expect(getEffortLevelsForModel('agy', 'Gemini 3.8 Flash').map((level) => level.key))
+            .toEqual(['low', 'medium', 'high']);
         // no 'default' entry — agy would receive the literal string "default" as --model
         expect(keys).not.toContain('default');
         // not the claude list
         expect(keys).not.toContain('opus');
         expect(keys).not.toContain('sonnet');
+    });
+
+    it('keeps a saved legacy agy model selectable without restoring it to the catalog', () => {
+        const models = getAvailableModels('agy', null, translate, 'Gemini 3.6 Flash (High)');
+
+        expect(models.map((model) => model.key)).toEqual([
+            ...getAgyModelModes().map((model) => model.key),
+            'Gemini 3.6 Flash (High)',
+        ]);
+        expect(models.at(-1)?.description).toBe('saved model');
     });
 
     it('resolves the first matching preferred key', () => {
@@ -306,7 +346,7 @@ describe('modelModeOptions', () => {
             currentModelCode: 'temporarily-missing',
         };
         const models = getAvailableModels('codex', metadata, translate);
-        expect(models[0]).toMatchObject({
+        expect(models.at(-1)).toMatchObject({
             key: 'custom-provider:temporarily-missing',
             unavailable: true,
             disabled: true,

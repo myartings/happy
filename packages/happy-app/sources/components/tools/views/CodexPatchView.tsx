@@ -7,7 +7,7 @@ import { ToolSectionView } from '../ToolSectionView';
 import { Metadata } from '@/sync/storageTypes';
 import { resolvePath } from '@/utils/pathUtils';
 import { ToolDiffView } from '@/components/tools/ToolDiffView';
-import { getDiffStats, getPatchDiffStats } from '@/components/diff/calculateDiff';
+import { countContentStats, countPatchStats } from '@/components/diff/engine/stats';
 import { materializeUnifiedDiffPatch } from '@/utils/codexUnifiedDiff';
 import { t } from '@/text';
 import { useStudioToolPresentation } from '@/features/studio-tool-presentation/useStudioToolPresentation';
@@ -15,6 +15,9 @@ import { useStudioToolPresentation } from '@/features/studio-tool-presentation/u
 interface CodexPatchViewProps {
     tool: ToolCall;
     metadata: Metadata | null;
+    sessionId?: string;
+    messageId?: string;
+    focusFile?: string;
     permissionFooter?: React.ReactNode;
 }
 
@@ -230,6 +233,70 @@ export const CodexPatchView = React.memo<CodexPatchViewProps>(({ tool, metadata,
     );
 });
 
+export const CodexPatchViewFull = React.memo<CodexPatchViewProps>(({ tool, metadata, focusFile }) => {
+    const changes = getPatchChanges(tool.input);
+    const allEntries = changes ? Object.entries(changes) : [];
+    const focused = focusFile ? allEntries.filter(([file]) => file === focusFile) : [];
+    const entries = focused.length > 0 ? focused : allEntries;
+
+    if (entries.length === 0) return null;
+
+    return (
+        <View style={styles.fullViewContainer}>
+            {entries.map(([file, change]) => (
+                <CodexPatchFileContent key={file} file={file} change={change} metadata={metadata} />
+            ))}
+        </View>
+    );
+});
+
+const CodexPatchFileContent = React.memo(function CodexPatchFileContent(props: {
+    file: string;
+    change: CodexPatchEntry;
+    metadata: Metadata | null;
+}) {
+    const { file, change, metadata } = props;
+    const { theme } = useUnistyles();
+    const filePath = resolvePath(file, metadata);
+    const diffInput = getPatchInput(change);
+    const kindLabel = getPatchKindLabel(change);
+    const rawMovePath = getPatchMovePath(change);
+    const movePath = rawMovePath ? resolvePath(rawMovePath, metadata) : null;
+    const fileName = file.split('/').pop() ?? file;
+    const displayPatch = diffInput?.kind === 'patch'
+        ? materializeUnifiedDiffPatch(diffInput.patch, file, getPatchKindType(change))
+        : null;
+    const stats = !diffInput
+        ? null
+        : diffInput.kind === 'patch'
+            ? countPatchStats(displayPatch ?? diffInput.patch)
+            : countContentStats(diffInput.oldText, diffInput.newText);
+
+    return (
+        <View style={styles.fullViewFile}>
+            <View style={styles.fileHeader}>
+                <View style={styles.fileHeaderMain}>
+                    <Octicons name="file-diff" size={16} color={theme.colors.textSecondary} />
+                    <Text style={styles.filePath}>{filePath}</Text>
+                    {kindLabel ? <Text style={styles.kindLabel}>{kindLabel}</Text> : null}
+                    {stats && (stats.additions > 0 || stats.deletions > 0) ? (
+                        <View style={styles.stats}>
+                            {stats.additions > 0 ? <Text style={styles.added}>+{stats.additions}</Text> : null}
+                            {stats.deletions > 0 ? <Text style={styles.removed}>-{stats.deletions}</Text> : null}
+                        </View>
+                    ) : null}
+                </View>
+                {movePath ? <Text style={styles.movePath}>{movePath}</Text> : null}
+            </View>
+            {displayPatch ? (
+                <ToolDiffView patch={displayPatch} fileName={fileName} />
+            ) : diffInput?.kind === 'pair' && (diffInput.oldText.length > 0 || diffInput.newText.length > 0) ? (
+                <ToolDiffView oldText={diffInput.oldText} newText={diffInput.newText} fileName={fileName} />
+            ) : null}
+        </View>
+    );
+});
+
 const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
     file: string;
     change: CodexPatchEntry;
@@ -253,8 +320,8 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
     const stats = !diffInput
         ? null
         : diffInput.kind === 'patch'
-            ? getPatchDiffStats(displayPatch ?? diffInput.patch)
-            : getDiffStats(diffInput.oldText, diffInput.newText);
+            ? countPatchStats(displayPatch ?? diffInput.patch)
+            : countContentStats(diffInput.oldText, diffInput.newText);
 
     return (
         <ToolSectionView fullWidth>
@@ -290,11 +357,11 @@ const CodexPatchFileView = React.memo(function CodexPatchFileView(props: {
                         </View>
                     ) : (
                         <Text style={styles.editToggleText} numberOfLines={1}>
-                            {t('toolGroup.editedFile')}
+                            {t('toolGroup.edited')}
                         </Text>
                     )}
                     <Ionicons
-                        name={expanded ? 'chevron-down' : 'chevron-forward'}
+                        name={studioPresentation && expanded ? 'chevron-down' : 'chevron-forward'}
                         size={14}
                         color={theme.colors.textSecondary}
                     />
@@ -419,6 +486,18 @@ const styles = StyleSheet.create((theme) => ({
     stats: {
         flexDirection: 'row',
         gap: 8,
+    },
+    fullViewContainer: {
+        gap: 16,
+        paddingHorizontal: 12,
+        marginBottom: 28,
+    },
+    fullViewFile: {
+        backgroundColor: theme.colors.surface,
+        overflow: 'hidden',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: theme.colors.divider,
     },
     added: {
         fontSize: 12,

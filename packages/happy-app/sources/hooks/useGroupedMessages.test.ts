@@ -10,7 +10,7 @@ vi.mock('@/components/tools/knownTools', () => ({
 }));
 
 vi.mock('@/text', () => ({
-    t: (key: string, params?: { count?: number }) => `${key}:${params?.count ?? ''}`,
+    t: (key: string, params?: { count?: number }) => params?.count === undefined ? key : `${key}:${params.count}`,
 }));
 
 function toolMessage(id: string, createdAt: number, options: { pendingPermission?: boolean; state?: ToolCallMessage['tool']['state'] } = {}): ToolCallMessage {
@@ -82,11 +82,11 @@ describe('useGroupedMessages', () => {
         ];
 
         expect(generateGroupSummary(messages)).toBe([
-            'toolGroup.editedFiles:1',
-            'toolGroup.readFiles:1',
-            'toolGroup.ranCommands:1',
-            'toolGroup.searched:1',
-            'toolGroup.ranTasks:1',
+            'toolGroup.edited',
+            'toolGroup.read',
+            'toolGroup.ran',
+            'toolGroup.searched',
+            'toolGroup.ranTask',
         ].join(', '));
     });
 

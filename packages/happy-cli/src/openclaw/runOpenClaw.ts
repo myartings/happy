@@ -201,6 +201,7 @@ export async function runOpenClaw(opts: RunOpenClawOptions): Promise<void> {
   let pendingTurn: PendingTurn | null = null;
   let thinking = false;
   let inTurn = false;
+  let errorReportedForCurrentTurn = false;
 
   const clearPendingTurn = (error?: Error) => {
     if (!pendingTurn) return;
@@ -279,7 +280,17 @@ export async function runOpenClaw(opts: RunOpenClawOptions): Promise<void> {
       log(`Device pairing required. Approve device via: openclaw devices list`);
     }
 
-    sendEnvelopes(sessionManager.mapMessage(msg));
+    const envelopes = sessionManager.mapMessage(msg);
+    sendEnvelopes(envelopes);
+    if (msg.type === 'status' && msg.status === 'error' && envelopes.length === 0) {
+      session.sendSessionEvent({
+        type: 'message',
+        message: `OpenClaw error: ${msg.detail?.trim() || 'The agent stopped because of an unknown error.'}`,
+      });
+    }
+    if (msg.type === 'status' && msg.status === 'error') {
+      errorReportedForCurrentTurn = true;
+    }
   };
 
   backend.onMessage(onBackendMessage);
@@ -339,6 +350,7 @@ export async function runOpenClaw(opts: RunOpenClawOptions): Promise<void> {
 
       log(`Incoming prompt: ${batch.message.slice(0, 200)}`);
       inTurn = true;
+      errorReportedForCurrentTurn = false;
       sendEnvelopes(sessionManager.startTurn());
       const turnEnded = waitForTurnEnd();
       try {
@@ -348,6 +360,10 @@ export async function runOpenClaw(opts: RunOpenClawOptions): Promise<void> {
         await sendReadyNotification();
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
+        if (!errorReportedForCurrentTurn) {
+          session.sendSessionEvent({ type: 'message', message: `OpenClaw error: ${msg}` });
+          errorReportedForCurrentTurn = true;
+        }
         log(`Turn ended: ${msg}`);
         sendEnvelopes(sessionManager.endTurn('failed'));
       }

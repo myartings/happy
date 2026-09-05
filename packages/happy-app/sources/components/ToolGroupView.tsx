@@ -22,6 +22,7 @@ import { useStudioToolPresentation } from '@/features/studio-tool-presentation/u
 import { resolveStudioActivityColor } from '@/features/studio-tool-presentation/studioToolPresentation';
 import { resolveStudioToolOutputDisclosure } from '@/features/studio-tool-output-disclosure/studioToolOutputDisclosure';
 import { resolveStudioToolGroupMetrics } from '@/features/studio-tool-output-disclosure/studioToolGroupDisclosure';
+import { getMessageTargetNativeId } from '@/utils/messageTarget';
 
 interface ToolGroupViewProps {
     group: ToolGroupItem;
@@ -33,6 +34,7 @@ interface ToolGroupViewProps {
     nested?: boolean;
     hideSingleToolChildren?: boolean;
     forceCompleted?: boolean;
+    highlightedMessageId?: string | null;
 }
 
 export type ToolGroupLayoutAnchor = {
@@ -51,6 +53,7 @@ export const ToolGroupView = React.memo<ToolGroupViewProps>((props) => {
         nested,
         hideSingleToolChildren,
         forceCompleted,
+        highlightedMessageId,
     } = props;
     const router = useRouter();
     const studioPresentation = useStudioToolPresentation();
@@ -98,8 +101,9 @@ export const ToolGroupView = React.memo<ToolGroupViewProps>((props) => {
             message={msg}
             metadata={metadata}
             sessionId={sessionId}
+            highlighted={msg.id === highlightedMessageId}
         />
-    ), [metadata, sessionId]);
+    ), [highlightedMessageId, metadata, sessionId]);
 
     const body = (
         <View style={nested ? styles.nestedInnerContainer : styles.innerContainer}>
@@ -372,6 +376,7 @@ function ToolGroupMessageRow(props: {
     message: Message;
     metadata: Metadata | null;
     sessionId: string;
+    highlighted?: boolean;
 }) {
     const studioPresentation = useStudioToolPresentation();
     if (props.message.kind !== 'tool-call') {
@@ -380,6 +385,7 @@ function ToolGroupMessageRow(props: {
                 message={props.message}
                 metadata={props.metadata}
                 sessionId={props.sessionId}
+                highlighted={props.highlighted}
             />
         );
     }
@@ -396,6 +402,7 @@ function ToolGroupMessageRow(props: {
                 message={props.message}
                 metadata={props.metadata}
                 sessionId={props.sessionId}
+                highlighted={props.highlighted}
             />
         );
     }
@@ -404,6 +411,7 @@ function ToolGroupMessageRow(props: {
         <ToolSummaryRow
             message={props.message}
             sessionId={props.sessionId}
+            highlighted={props.highlighted}
         />
     );
 }
@@ -411,6 +419,7 @@ function ToolGroupMessageRow(props: {
 function ToolSummaryRow(props: {
     message: ToolCallMessage;
     sessionId: string;
+    highlighted?: boolean;
 }) {
     const { theme } = useUnistyles();
     const studioPresentation = useStudioToolPresentation();
@@ -451,7 +460,10 @@ function ToolSummaryRow(props: {
 
     if (!isPressable) {
         return (
-            <View style={styles.toolSummaryRow}>
+            <View
+                nativeID={getMessageTargetNativeId(props.message.id)}
+                style={[styles.toolSummaryRow, props.highlighted && styles.toolSummaryRowHighlighted]}
+            >
                 {content}
             </View>
         );
@@ -459,9 +471,11 @@ function ToolSummaryRow(props: {
 
     return (
         <Pressable
+            nativeID={getMessageTargetNativeId(props.message.id)}
             onPress={handlePress}
             style={({ pressed }) => [
                 styles.toolSummaryRow,
+                props.highlighted && styles.toolSummaryRowHighlighted,
                 pressed && styles.toolSummaryRowPressed,
             ]}
         >
@@ -581,6 +595,9 @@ const styles = StyleSheet.create((theme) => ({
     },
     toolSummaryRowPressed: {
         opacity: 0.65,
+    },
+    toolSummaryRowHighlighted: {
+        backgroundColor: 'rgba(139, 124, 255, 0.16)',
     },
     toolSummaryIcon: {
         width: 20,
