@@ -27,7 +27,7 @@ import { useStudioToolPresentation } from '@/features/studio-tool-presentation/u
 import { resolveStudioExecutionTranscript } from '@/features/studio-execution-transcript/studioExecutionTranscript';
 import { StudioExecutionTranscriptView } from '@/features/studio-execution-transcript/StudioExecutionTranscriptView';
 import { StudioToolOutputActions } from '@/features/studio-tool-output-disclosure/StudioToolOutputActions';
-import { hasRenderableCodexPatchInput } from './views/CodexPatchView';
+import { hasRenderableCodexPatchInput } from '@/utils/codexPatchEntry';
 
 interface ToolViewProps {
     metadata: Metadata | null;

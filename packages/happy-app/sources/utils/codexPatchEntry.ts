@@ -41,13 +41,13 @@ export function getPatchChanges(input: any): Record<string, CodexPatchEntry> | n
         return normalizePatchChangeList(input.changes);
     }
     if (input?.changes && typeof input.changes === 'object') {
-        return input.changes as Record<string, CodexPatchEntry>;
+        return normalizePatchChangeRecord(input.changes as Record<string, unknown>);
     }
     if (Array.isArray(input?.fileChanges)) {
         return normalizePatchChangeList(input.fileChanges);
     }
     if (input?.fileChanges && typeof input.fileChanges === 'object') {
-        return input.fileChanges as Record<string, CodexPatchEntry>;
+        return normalizePatchChangeRecord(input.fileChanges as Record<string, unknown>);
     }
     return null;
 }
@@ -97,7 +97,7 @@ export function normalizePatchChangeList(changes: unknown[]): Record<string, Cod
             entry.delete = { content: changeRecord.content };
         }
 
-        normalized[path] = entry;
+        if (hasRenderablePatchEntry(entry)) normalized[path] = entry;
     }
 
     return Object.keys(normalized).length > 0 ? normalized : null;
@@ -134,27 +134,63 @@ export function getPatchInput(change: CodexPatchEntry): PatchInput | null {
             : wholeFileInput(kindType, change.unified_diff);
     }
     if (change.modify) {
-        return { kind: 'pair', oldText: change.modify.old_content || '', newText: change.modify.new_content || '' };
+        if (typeof change.modify !== 'object' || Array.isArray(change.modify)) return null;
+        const oldText = change.modify.old_content;
+        const newText = change.modify.new_content;
+        if ((oldText !== undefined && typeof oldText !== 'string')
+            || (newText !== undefined && typeof newText !== 'string')) return null;
+        return { kind: 'pair', oldText: oldText ?? '', newText: newText ?? '' };
     }
-    if (typeof change.oldContent === 'string' || typeof change.newContent === 'string') {
-        return { kind: 'pair', oldText: change.oldContent || '', newText: change.newContent || '' };
+    if (change.oldContent !== undefined || change.newContent !== undefined) {
+        if ((change.oldContent !== undefined && typeof change.oldContent !== 'string')
+            || (change.newContent !== undefined && typeof change.newContent !== 'string')) return null;
+        return { kind: 'pair', oldText: change.oldContent ?? '', newText: change.newContent ?? '' };
     }
-    if (typeof change.old_content === 'string' || typeof change.new_content === 'string') {
-        return { kind: 'pair', oldText: change.old_content || '', newText: change.new_content || '' };
+    if (change.old_content !== undefined || change.new_content !== undefined) {
+        if ((change.old_content !== undefined && typeof change.old_content !== 'string')
+            || (change.new_content !== undefined && typeof change.new_content !== 'string')) return null;
+        return { kind: 'pair', oldText: change.old_content ?? '', newText: change.new_content ?? '' };
     }
     if (change.add) {
-        return { kind: 'pair', oldText: '', newText: change.add.content || '' };
+        if (typeof change.add !== 'object' || Array.isArray(change.add)) return null;
+        if (change.add.content !== undefined && typeof change.add.content !== 'string') return null;
+        return { kind: 'pair', oldText: '', newText: change.add.content ?? '' };
     }
     if (kindType === 'add' && typeof change.content === 'string') {
         return { kind: 'pair', oldText: '', newText: change.content };
     }
     if (change.delete) {
-        return { kind: 'pair', oldText: change.delete.content || '', newText: '' };
+        if (typeof change.delete !== 'object' || Array.isArray(change.delete)) return null;
+        if (change.delete.content !== undefined && typeof change.delete.content !== 'string') return null;
+        return { kind: 'pair', oldText: change.delete.content ?? '', newText: '' };
     }
     if (kindType === 'delete' && typeof change.content === 'string') {
         return { kind: 'pair', oldText: change.content, newText: '' };
     }
     return null;
+}
+
+function normalizePatchChangeRecord(changes: Record<string, unknown>): Record<string, CodexPatchEntry> | null {
+    const normalized: Record<string, CodexPatchEntry> = {};
+    for (const [path, value] of Object.entries(changes)) {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+        const entry = value as CodexPatchEntry;
+        if (hasRenderablePatchEntry(entry)) normalized[path] = entry;
+    }
+    return Object.keys(normalized).length > 0 ? normalized : null;
+}
+
+function hasRenderablePatchEntry(change: CodexPatchEntry): boolean {
+    const patchInput = getPatchInput(change);
+    if (!patchInput) return false;
+    if (patchInput.kind === 'patch') return patchInput.patch.trim().length > 0;
+    return patchInput.oldText.length > 0 || patchInput.newText.length > 0;
+}
+
+export function hasRenderableCodexPatchInput(input: unknown): boolean {
+    const changes = getPatchChanges(input);
+    if (!changes) return false;
+    return Object.values(changes).some(hasRenderablePatchEntry);
 }
 
 export function getPatchKindType(change: CodexPatchEntry): string | null {
@@ -175,5 +211,7 @@ export function getPatchKindLabel(change: CodexPatchEntry): string | null {
 }
 
 export function getPatchMovePath(change: CodexPatchEntry): string | null {
-    return change.kind?.move_path ?? change.move_path ?? null;
+    if (typeof change.kind?.move_path === 'string') return change.kind.move_path;
+    if (typeof change.move_path === 'string') return change.move_path;
+    return null;
 }
