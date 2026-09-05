@@ -146,6 +146,14 @@ export default function RootLayout() {
                 }}
             />
             <Stack.Screen
+                name="session/[id]/changes"
+                options={{
+                    headerShown: true,
+                    headerTitle: t('sessionInfo.viewChanges'),
+                    headerBackTitle: t('common.back'),
+                }}
+            />
+            <Stack.Screen
                 name="settings/account"
                 options={{
                     headerTitle: t('settings.account'),
@@ -332,6 +340,12 @@ export default function RootLayout() {
                 name="dev/masked-progress"
                 options={{
                     headerTitle: 'Masked Progress',
+                }}
+            />
+            <Stack.Screen
+                name="dev/diff-bench"
+                options={{
+                    headerTitle: 'Diff Benchmark',
                 }}
             />
             <Stack.Screen

@@ -65,7 +65,10 @@ vi.mock('@/text', () => ({
     t: (key: string, params?: Record<string, unknown>) => params ? `${key}:${JSON.stringify(params)}` : key,
 }));
 vi.mock('@/utils/toolErrorParser', () => ({ parseToolUseError: () => ({ isToolUseError: false }) }));
-vi.mock('@/components/tools/knownTools', () => ({ knownTools: {} }));
+vi.mock('@/components/tools/knownTools', () => ({
+    getToolCategoryIcon: () => null,
+    knownTools: {},
+}));
 vi.mock('@/components/CodeView', async () => {
     const ReactModule = await import('react');
     return { CodeView: (props: any) => ReactModule.createElement('CodeView', props) };

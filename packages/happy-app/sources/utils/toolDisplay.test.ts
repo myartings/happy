@@ -11,7 +11,7 @@ import {
 } from './toolDisplay';
 
 vi.mock('@/text', () => ({
-    t: (key: string, params?: { count?: number }) => `${key}:${params?.count ?? ''}`,
+    t: (key: string) => key,
 }));
 
 function tool(name: string, input: unknown): ToolCall {
@@ -54,11 +54,14 @@ describe('terminal tool display helpers', () => {
         ))).toBe('rm tmp.txt');
     });
 
-    it('hides Codex patch card headers on web only', () => {
-        expect(shouldRenderToolCardHeader('CodexPatch', 'web')).toBe(false);
-        expect(shouldRenderToolCardHeader('CodexPatch', 'ios')).toBe(true);
-        expect(shouldRenderToolCardHeader('CodexPatch', 'android')).toBe(true);
+    it('hides card headers for tools that already name each changed file', () => {
+        for (const platform of ['web', 'ios', 'android']) {
+            expect(shouldRenderToolCardHeader('CodexPatch', platform)).toBe(false);
+            expect(shouldRenderToolCardHeader('GeminiPatch', platform)).toBe(false);
+        }
+        // Everything else still needs a header to say what it was.
         expect(shouldRenderToolCardHeader('CodexBash', 'web')).toBe(true);
+        expect(shouldRenderToolCardHeader('CodexDiff', 'ios')).toBe(true);
     });
 
     it('classifies tools for compact transcript rows', () => {
@@ -103,11 +106,11 @@ describe('terminal tool display helpers', () => {
         expect(getToolActivityLabel(tool('CodexBash', {
             command: ['/usr/bin/zsh', '-lc', 'git status --short'],
             parsed_cmd: [{ type: 'bash', cmd: 'git status --short' }],
-        }))).toBe('toolGroup.ranCommands:1: git status --short');
+        }))).toBe('toolGroup.ran: git status --short');
 
         expect(getToolActivityLabel(tool('Read', {
             file_path: '/repo/src/app.tsx',
-        }))).toBe('toolGroup.readFiles:1: /repo/src/app.tsx');
+        }))).toBe('toolGroup.read: /repo/src/app.tsx');
 
         const describedTool = tool('CodexPatch', {
             changes: { 'README.md': { kind: { type: 'update' } } },
@@ -121,7 +124,7 @@ describe('terminal tool display helpers', () => {
         const rigCommand = tool('exec_command', { cmd: 'git status --short' });
         rigCommand.description = 'Running Exec Command';
         expect(getToolActivityLabel(rigCommand))
-            .toBe('toolGroup.ranCommands:1: git status --short');
+            .toBe('toolGroup.ran: git status --short');
 
         const rigCoordination = tool('spawn_agent', {});
         rigCoordination.description = 'Running Spawn Agent';

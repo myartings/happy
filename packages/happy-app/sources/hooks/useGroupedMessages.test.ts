@@ -85,7 +85,7 @@ describe('useGroupedMessages', () => {
             'toolGroup.editedFiles:1',
             'toolGroup.readFiles:1',
             'toolGroup.ranCommands:1',
-            'toolGroup.searched:1',
+            'toolGroup.searchedTimes:1',
             'toolGroup.ranTasks:1',
         ].join(', '));
     });

@@ -82,6 +82,7 @@ happy-workspaces/
 .supervibe/
 
 .context/
+.happy-tmp/
 
 # Happy personal devtools local configuration
 /devtools/config.env

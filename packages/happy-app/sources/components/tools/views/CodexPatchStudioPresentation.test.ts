@@ -29,6 +29,7 @@ vi.mock('@expo/vector-icons', async () => {
     const icon = (props: any) => ReactModule.createElement('Icon', props);
     return { Ionicons: icon, Octicons: icon };
 });
+vi.mock('expo-router', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/text', () => ({ t: (key: string) => key }));
 vi.mock('../ToolSectionView', async () => {
     const ReactModule = await import('react');

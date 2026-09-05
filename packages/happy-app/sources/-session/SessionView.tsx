@@ -52,7 +52,6 @@ import { FilesSidebar, SidebarMode } from '@/components/FilesSidebar';
 import { SideChatQuickPanelControls } from '@/components/SideChatQuickPanelControls';
 import { AllFilesDiffView } from '@/components/AllFilesDiffView';
 import { FileViewPanel } from '@/components/FileViewPanel';
-import { prefetchPierreDiff } from '@/components/diff/PierreDiffView';
 import { GitFileStatus } from '@/sync/gitStatusFiles';
 import { useOverlayNav } from '@/-session/sessionOverlayNav';
 import { formatPathRelativeToHome, getResumeCommandBlock, getSessionAvatarId, getSessionName, useSessionStatus } from '@/utils/sessionUtils';
@@ -506,11 +505,6 @@ export const SessionView = React.memo((props: {
         });
         return () => useOverlayNav.getState().reset();
     }, [canOverlayBack, canOverlayForward]);
-
-    // Warm Pierre's lazy web chunks while the user is still reading chat.
-    React.useEffect(() => {
-        prefetchPierreDiff();
-    }, []);
 
     // Compute header props based on session state
     const headerProps = useMemo(() => {

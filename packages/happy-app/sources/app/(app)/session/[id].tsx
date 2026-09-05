@@ -5,6 +5,7 @@ import {
     parseCurrentRequestAttentionRouteVersion,
     type CurrentRequestAttentionFocusHint,
 } from '@/features/needs-attention/currentRequestAttentionFocus';
+import { perfMark } from '@/utils/perfLog';
 
 
 export default React.memo(() => {
@@ -36,6 +37,7 @@ export default React.memo(() => {
             attentionAgentStateVersion,
         ),
     } : undefined;
+    React.useMemo(() => perfMark(`session-open:${sessionId}`), [sessionId]);
     return <SessionView
         id={sessionId}
         targetMessageId={messageId}

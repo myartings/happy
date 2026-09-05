@@ -93,20 +93,19 @@ export function resolveMessageModeMeta(
         return mode;
     };
 
-    // Codex app-server turns always run with a concrete permission, model, and
-    // effort. Reassert the displayed permission because the CLI resets it to
-    // launch mode during an abort safety window. For model and effort, a
-    // complete App Server-confirmed route proves the existing Session already
-    // owns concrete values: omit unselected fields so a client/global default
-    // cannot replace a launch-pinned route. Legacy or partial metadata keeps
-    // receiving the displayed defaults for compatibility. Keep this
-    // Codex-only so other harnesses retain their established semantics.
-    if (flavor === 'codex') {
+    // Codex and Agy turns always run with a concrete permission, model, and
+    // effort. Send the same effective defaults the composer displays instead
+    // of omitting them: Codex can reset to its launch mode during an abort, and
+    // Agy maps its model + effort pair independently at the provider boundary.
+    // In either case an omitted fallback could execute differently from the UI.
+    if (flavor === 'codex' || flavor === 'agy') {
         const defaults = resolveAgentDefaultConfig(settings?.agentDefaultOverrides, flavor, cliVersion);
         meta.permissionMode = supported(retirePermissionMode(session.permissionMode ?? defaults.permissionMode));
 
-        const suppressRouteDefaults = getCodexEffectiveRoute(session.metadata) !== null
-            || session.metadata?.codexLaunchRoutePending === true;
+        const suppressRouteDefaults = flavor === 'codex' && (
+            getCodexEffectiveRoute(session.metadata) !== null
+            || session.metadata?.codexLaunchRoutePending === true
+        );
 
         const modelMode = session.modelMode ?? (suppressRouteDefaults ? undefined : defaults.modelMode);
         if (modelMode !== undefined) {
@@ -117,7 +116,9 @@ export function resolveMessageModeMeta(
         if (effort !== undefined) {
             meta.effort = effort;
         }
-        meta.serviceTier = session.serviceTier === 'fast' ? 'fast' : 'default';
+        if (flavor === 'codex') {
+            meta.serviceTier = session.serviceTier === 'fast' ? 'fast' : 'default';
+        }
         return meta;
     }
 

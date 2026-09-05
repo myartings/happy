@@ -397,7 +397,7 @@ export function generateGroupSummary(messages: Message[]): string {
     if (counts.edit) parts.push(t('toolGroup.editedFiles', { count: counts.edit }));
     if (counts.read) parts.push(t('toolGroup.readFiles', { count: counts.read }));
     if (counts.terminal) parts.push(t('toolGroup.ranCommands', { count: counts.terminal }));
-    if (counts.search) parts.push(t('toolGroup.searched', { count: counts.search }));
+    if (counts.search) parts.push(t('toolGroup.searchedTimes', { count: counts.search }));
     if (counts.web) parts.push(t('toolGroup.fetchedUrls', { count: counts.web }));
     if (counts.task) parts.push(t('toolGroup.ranTasks', { count: counts.task }));
     if (counts.other) parts.push(t('toolGroup.usedTools', { count: counts.other }));
