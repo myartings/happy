@@ -1,4 +1,4 @@
 interface:
   display_name: "Generate Tasks"
-  short_description: "Create linked Task and Issue pairs"
-  default_prompt: "Use $generate-tasks to propose fresh-Session slices and, after approval, create linked Task File and GitHub Issue pairs."
+  short_description: "Create local fresh-Session Task plans"
+  default_prompt: "Use $generate-tasks to propose and create self-contained local Task plans for accepted fresh-Session slices."

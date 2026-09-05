@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the workflow-2026.09.3 cutover leaves Workspaces passive."""
+"""Verify the workflow-2026.09.4 adoption leaves Workspaces passive."""
 
 from __future__ import annotations
 

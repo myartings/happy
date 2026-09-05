@@ -1,177 +1,189 @@
 # AI Coding Workflow
 
-## Planning documents
+## Planning route
 
-The Guide owns three optional layers:
+The Guide owns three optional local documents:
 
-- `docs/PRD.md` records product commitments when needed.
-- `docs/specs/<feature>.md` is a detailed technical Feature Spec when needed.
-- `docs/tasks/<task>.md` is the stable implementation plan for one slice that
-  must move to a fresh Session.
+- `docs/PRD.md` records durable product commitments.
+- `docs/specs/<feature>.md` records a detailed technical contract.
+- `docs/tasks/<task>.md` is a self-contained implementation and resume plan for
+  one accepted slice moving to a fresh Session.
 
-Matt owns research, clarification, slicing, triage, implementation, TDD,
-diagnosis, architecture improvement, code review, and handoff. Trellis supplies
-only the principles Plan before code, Specs injected not remembered, Persist
-important information, Incremental development, and Capture learnings. No
-Trellis Task System, Workspace, Plan/Execute/Finish runtime, or copied spec tree
-is used.
+An idea-to-build request starts with the explicit Matt `grill-with-docs` entry.
+After the user confirms shared understanding, the coordinator states whether
+PRD, Feature Spec, and Task are needed, gives one short reason for each skip,
+and enters the first applicable step. Inapplicable documents are omitted rather
+than created empty.
+
+Matt owns research, clarification, triage, implementation, TDD, diagnosis,
+architecture improvement, code review, and handoff. Trellis contributes only
+Plan before code, Specs injected not remembered, Persist important information,
+Incremental development, and Capture learnings. No Trellis runtime, Workspace,
+or copied spec tree is used.
+
+## Two GitHub Issue origins
+
+Issues enter the workflow through two intentionally distinct paths:
+
+1. The user creates an Issue on the tracker. Its first workflow Session uses
+   `triage`; until shaped, it may remain Task-less in the configured Project's
+   Inbox.
+2. `publish-tasks` externalizes already accepted local Tasks. It creates or
+   reuses one Issue per Task, links the Issue to the Task, mirrors hard Task
+   dependencies as native blocked-by relationships, and adds the Issue to the
+   configured Project as Ready or Blocked. It does not edit Tasks or launch
+   Sessions.
+
+A conversational request to record an idea or create a Task-less Issue receives
+routing advice rather than an external write. Work moving toward implementation
+starts with `grill-with-docs`; a tracker-only note is created by the user.
+
+An existing broad Issue refined to one slice is reused. If it is refined to
+multiple independent slices, it may remain as their native aggregate Issue;
+the workflow never manufactures an aggregate merely because several Tasks
+share a PRD or Feature Spec. Hierarchy groups work. Dependencies order work.
 
 ## Current-Session work
 
-A bounded request that can be finished now goes directly to Matt `implement`.
-Use TDD where a stable seam exists, run useful focused feedback during work,
-then run the configured applicable full suite once and `code-review` the
+A bounded request that can be finished now needs no Task, Issue, or worktree.
+When the user reports a Bug directly in the Session, `diagnosing-bugs` starts
+the investigation without creating an Issue. Diagnosis alone stops before
+implementation edits; a request to fix supplies that additional authority.
+Before implementation edits, create or switch to an ordinary feature branch
+when the checkout is on the repository's default branch. Matt `implement`
+remains explicit-only: recommend it and wait when it has not been invoked. Once
+invoked, use TDD where a stable seam exists, run useful focused feedback during
+work, then run the configured applicable full suite once and `code-review` the
 complete engineering diff once. The explicit implementation request authorizes
 the scoped local commit; external writes remain separately authorized.
 
+An incoming Issue without a Task makes the receiving Session a coordinator and
+uses pinned Matt `triage`. It stays in that Session for implementation only
+when the shaped work is singular, needs no PRD, Feature Spec, resumable
+multi-step plan, material cross-module change, risk decision, or architecture
+decision, fits the current model, and can be implemented and verified there.
+Otherwise the coordinator must create and publish the Task, judge the model,
+and launch a new execution Session.
+
 ## Fresh-Session Task work
 
-When an accepted slice should leave the planning context:
+When an accepted slice should leave its planning context:
 
-1. `generate-tasks` reuses a bounded incoming implementation Issue, or invokes
-   Matt `to-tickets` when new tracer-bullet implementation Issues are needed.
-2. One user approval creates the proposed Task linkage: a reused Issue receives
-   only its Task, while a real split creates child Issue + Task pairs and leaves
-   the broad coordination parent Task-less.
+1. `generate-tasks` proposes independently deliverable local Tasks, their hard
+   dependencies, and the exact Issues that the following step will reuse or
+   create. Acceptance authorizes that previewed publication as well as writing
+   the self-contained Task files.
+2. `publish-tasks` creates or reuses exactly one Issue per accepted Task. A
+   changed publication plan requires renewed approval. Publication alone
+   creates no execution environment, and no Task launches without its Issue.
 3. Planning documents are committed before launch and pushed when cross-device
-   access is required.
-4. The proposal may include a distinct `Launch now` list. For each explicitly
-   listed Task, the coordinating Session performs the Task-launch sequence:
-   it makes the launch-time model judgment, creates or reuses the dedicated
-   branch/worktree with ordinary Git, and only then invokes the current Happy
-   launcher with only the prepared directory, selected model, and reasoning
-   effort. A Session that is ready and waiting for messages is a successful
-   launch; implementation has not started. A full Issue URL uses the GitHub
-   form `https://github.com/<owner>/<repository>/issues/<number>`. The
-   coordinator then sends the full Issue URL as that Session's first user
-   request and stops before implementation. Publication alone leaves every
-   unlisted Task ready and creates no execution environment.
-5. `start` reads the live Issue first. With a unique Task link, it follows
-   `Issue -> Task -> optional Feature Spec/Research` inside the caller-prepared
-   directory, verifies the supplied Git context, and waits for explicit
-   implementation authority. It does not choose the initial model or create
-   the worktree. Without a Task link, it enters intake and the current-Session
-   versus fresh-Session choice before any Task-specific read or execution-
-   environment check.
-6. Matt `implement` performs the slice. After the one final suite and one
+   access requires it.
+4. Under explicit launch authority, the coordinator makes the transient model
+   judgment and creates or reuses one dedicated branch/worktree per Task with
+   ordinary Git. It invokes the current Session launcher with only the prepared
+   absolute directory, selected model, and reasoning effort.
+5. Once the Session is ready and waiting for messages, the coordinator sends
+   that Task's full Issue URL returned by `publish-tasks`, in GitHub form
+   `https://github.com/<owner>/<repository>/issues/<number>` as its first user
+   request. A one-slice incoming Issue may reuse its original URL; a split uses
+   the corresponding sub-issue URL. The launcher does not receive or interpret
+   Issue data.
+6. `start` reads the live Issue, follows its unique Task link and optional
+   document links, verifies the supplied Git context and configured Project
+   claim, then reports the loaded goal and next action.
+7. Matt `implement` performs the slice. After the one final suite and one
    complete-diff `code-review`, `finish-work` marks the Task complete and adds
    only genuinely reusable guidance before the same local commit.
 
-The same Task-launch sequence is used when a previously published ready Task is
-selected later for its first launch: the coordinator starts the Session, waits
-until it is ready and waiting for messages, then sends the full Issue URL as
-the first user request. Publication is not repeated. Before every initial
-fresh Task Session, the coordinating Session makes one transient model
-judgment: Luna Max is used only when every accepted sufficiency condition is
-clearly satisfied, otherwise Sol Medium is used. These are the repository's
-accepted operational choices, not replaceable examples or a runtime lookup.
-During execution, `start` owns the Model escalation request; changing the model
-or requesting a replacement remains a user/client action. Current-Session work,
-ordinary resume, and replacement Sessions do not repeat the initial judgment.
+Use Luna Max for the initial Task Session only when every accepted sufficiency
+condition is clearly satisfied; otherwise use Sol Medium. Current-Session work,
+ordinary resume, and replacement Sessions do not repeat that judgment. A
+replacement Session reuses the same Issue, Task, branch, and worktree, becomes
+ready and waiting for messages, then receives the same full Issue URL as its
+first user request. Neither route republishes the Task.
 
-The Happy launcher is a caller-supplied-directory seam. It receives only the
-prepared absolute directory, selected model, and reasoning effort. Once it has
-started a ready Session, including one showing `Waiting for messages`, the
-coordinator sends the full Issue URL through that Session's user-message
-channel as its first user request. The launcher does not receive or interpret
-Issue data, create or reuse the Task branch/worktree, choose the model, or own
-Task/Issue routing. Happy remains the current default Session mechanism; its
-native worktree option stays available for ad hoc Sessions outside this
-workflow.
+## Personal Project coordination
 
-A launched Task has one Git isolation unit, not one fixed Session. An ordinary
-resume reuses the existing Session and does not repeat the launch or create a
-new Issue-routing request. A replacement Session reuses the Task's Issue, Task
-File, branch, and worktree and repeats only the same native two-step sequence:
-start the Session, wait until it is ready and waiting for messages, then send
-the full Issue URL as the first user request. Neither path introduces a second
-Issue-routing mechanism.
-Different parallel writers use different launched Task pairs and worktrees;
-shared contracts land serially first.
+Personal global guidance may configure one cross-repository GitHub Project.
+Generated projects carry the behavior but never the personal Project number,
+repository inventory, or personal field options.
+
+The active board uses Inbox, Ready, In Progress, Blocked, Review, and Done.
+Priority plus optional Agent and Device selects are the only allocation
+metadata. Session IDs, resume locators, concrete models, branches, and
+worktrees remain outside the Project.
+
+For an executable Issue, changing an eligible item to In Progress is the
+cooperative claim. An existing In Progress claim requires explicit takeover;
+failure to establish the initial claim blocks a new implementation start.
+Later status update failures are reported without undoing local work and are
+corrected on the next touch. No heartbeat, lease, lock service, or background
+synchronizer is used.
+
+User-created Issues are added on their first triage touch and remain in Inbox
+while unshaped or waiting for information. A simple shaped Issue or a
+Task-backed unblocked Issue enters Ready; a Task-backed blocked Issue enters
+Blocked. A non-simple Task-less Issue may carry `ready-for-agent` after triage,
+but remains in Inbox until its Task is linked. Opening an Issue-backed PR moves
+its Issue to Review and uses a closing keyword; merging closes the Issue, and
+native Project automation moves it to Done and archives it. The
+`ready-for-agent` label remains after claim because it describes specification
+suitability rather than execution progress or, by itself, execution eligibility.
+
+An aggregate Issue can remain In Progress while its native sub-issues are being
+delivered. It has no Task, claim, Agent, Device, branch, worktree, or Session;
+its status describes aggregate delivery only.
 
 ## Ownership
 
+- PRD: durable product commitments.
 - Feature Spec: feature-level behavior and applicable technical design.
-- Issue: independently deliverable behavior, acceptance, parent, blockers,
-  priority, and external queue/delivery state.
-- Task File: local Steps, Status, resumable Notes, and document links.
-- Git: code, branch/worktree live state, and history.
-- Task-launch coordinator: the initial model judgment, ordinary Git
-  preparation/reuse, the bounded inputs passed to the Session launcher, and
-  delivery of the first user request after Session readiness.
-- Session launcher: starts or resumes a Session in the supplied directory; it
-  does not receive or interpret Issue data and does not own Task, Issue, model,
-  branch, or worktree state.
+- Task: executable local Goal, completion conditions, Steps, Status,
+  dependencies, resumable Notes, and document links.
+- Issue: an external projection of scope and acceptance plus blockers,
+  priority, labels, and queue state.
+- Project: shared delivery and cooperative claim state.
+- Git: code, local branch/worktree state, and history.
+- Task-launch coordinator: model judgment, ordinary Git preparation, bounded
+  launcher inputs, and delivery of the first Issue request after readiness.
+- Session launcher: starts or resumes an Agent in a caller-supplied directory.
 
-Links bridge owners but do not create mirrored state. A Step is ordinary
-Markdown content and has no ID, Issue, Session, owner, or independent status.
-
-## Incoming Issues
-
-Pinned Matt `triage` reads the complete request, comments, labels, prior
-decisions, and relevant code. It keeps the upstream AI disclaimer, Agent Brief,
-bug/enhancement categories, five state roles, and lazy `.out-of-scope/` behavior.
-After an Issue becomes a bounded slice, the user chooses either current-Session
-implementation without a Task or fresh-Session handoff through
-`generate-tasks`. The latter reuses the Issue and adds one Task, not a duplicate
-Issue. When a broad coordination parent is actually split, accepted child
-implementation Issues receive Tasks and the parent remains Task-less. Intake
-Issues and unsplit coordination parents may remain Task-less.
+Task publication is a one-way projection, not live Task/Issue synchronization.
+A Step is Markdown content and has no independent Issue, owner, or status.
 
 ## Verification and review
 
 Project commands live in `.ai/project.json`. `workflow-check.py <group>` runs
-only the selected group, expands `{python}` to the current interpreter, and
-does not classify paths or persist evidence.
+only the selected group and expands `{python}` to the current interpreter.
 
-Matt `code-review` pins the pre-implementation fixed point and assembles an
-ephemeral complete diff from committed, staged, unstaged, and accepted-scope
-untracked files. Separate parallel Spec and Standards reviewers inspect that
-same input. Both are explicitly spawned as Sol Medium rather than inheriting
-the execution Session; `code-review` owns the exact spawn settings and stops if
-they are unavailable. No review package, hash, tier, ledger, or second review
-pass is stored.
+Matt `code-review` pins the pre-implementation fixed point and supplies the
+complete committed, staged, unstaged, and accepted-scope untracked diff to
+separate parallel Spec and Standards reviewers. Both use Sol Medium. No review
+package, ledger, or second review pass is stored.
 
 `workflow-ci.py --staged` and `workflow-ci.py --base <ref>` are submission
-safety adapters only. They scan the submitted paths/content for secrets,
-protected paths, repository schema, and retained template structure. They do
-not run the project test suite, review, historical records, or lifecycle proof.
+safety adapters. They scan submitted paths and content for secrets, protected
+paths, repository schema, and retained template structure; they do not rerun
+the project suite or semantic review.
 
-## Host boundary
+This redesign is accepted only after one fresh Codex Session performs a
+read-only smoke of Skill discovery and the representative routes for a
+conversation Bug, a user-created Task-less Issue, and a Task-linked Issue. The
+smoke is reported once; it is not a permanent workflow phase or proof artifact.
 
-Repository command configuration uses `{python}` wherever a committed Python
-entry point is needed. Runtime expansion uses `sys.executable`; nested Python
-calls do the same. Git identities stay repository-relative POSIX paths, while
-filesystem access uses native `pathlib` paths. Retained executable shell files
-use LF.
+## Host and maintenance boundaries
 
-Linux is the complete hosted source lane. Native Windows has one bounded hosted
-scenario using the documented PowerShell project-creation entry and a real
-configured command inside the generated project. It adds no second workflow,
-full matrix, fixed test count, command allowlist, or per-delivery rehearsal.
+Repository command configuration uses `{python}` for committed Python entry
+points. Runtime expansion uses `sys.executable`; Git identities remain
+repository-relative POSIX paths while filesystem access uses native `pathlib`.
+Linux is the complete hosted source lane; native Windows retains one bounded
+hosted scenario.
 
-## Historical and source-only material
+The retired `docs/workspace/` path remains absent from the upstream template
+and generated projects. Happy's two preserved historical indexes are passive
+downstream evidence governed by `AGENTS.md`.
 
-Historical schema-v1 through schema-v3 files under `docs/workspace/` remain
-byte-unchanged and passive. Current Skills, scripts, CI, validators, and
-generated projects do not read, execute, copy, or append them.
-
-The template source may retain `sync-template.py`, Change Memory, and four
-source-maintenance Skills. They are explicit opt-in maintenance tools, not part
-of generated projects, ordinary routing, default checks, Linux CI, or the
-Windows lane.
-
-## Downstream template adoption
-
-The upstream publishes immutable template versions. Each adoption selects one
-exact tag or commit and one downstream repository. That downstream owns its
-upgrade timing, compatibility decisions, verification, and delivery. When the
-downstream has `.ai/template-adoption.json`, it owns the local mapping and
-exceptions; otherwise the selected upstream version's `.ai/template-sync.json`
-applies. The source-side tool provides dry-run and apply for that single target.
-No central operational downstream registry, batch apply, recursive propagation,
-release planner, or cross-repository adoption state participates.
-
-The [downstream project inventory](workflow/downstream-projects.md) is a
-non-operational catalog for counting known direct downstreams. It supplies
-neither sync targets nor adoption state.
+The source publishes immutable template versions. Each downstream independently
+chooses one exact tag or commit, performs its own dry-run and verification, and
+lands its own adoption. The downstream inventory is a non-operational catalog,
+not a central propagation mechanism.

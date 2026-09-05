@@ -1,8 +1,8 @@
 # Workflow Source Mapping
 
 This static map records Happy's selective adoption of
-`ai-coding-template` `workflow-2026.09.3` at
-`9755588c041287acb4fd4b295528116de6a62d7b`. It is provenance for the
+`ai-coding-template` `workflow-2026.09.4` at
+`9243174707d21e7325c2877b37c54fd7a2e24045`. It is provenance for the
 cutover, not a runtime registry, receipt, or recurring audit.
 
 ## Capability ownership
@@ -11,7 +11,7 @@ cutover, not a runtime registry, receipt, or recurring audit.
 | --- | --- | --- |
 | PRD, Feature Spec, Task File, Status, Steps, Notes | iOS Guide-derived workflow | `create-prd`, `generate-spec`, `generate-tasks`, `docs/specs/`, `docs/tasks/` |
 | Research and clarification | Matt | `research`, `grill-with-docs`, `grilling`, `domain-modeling` |
-| Slice proposal and tracker intake | Matt | `to-tickets`, `triage`, `docs/agents/issue-tracker.md` |
+| Task publication and tracker intake | Matt | `publish-tasks`, `triage`, `docs/agents/issue-tracker.md` |
 | Implementation, TDD, diagnosis, architecture | Matt | `implement`, `tdd`, `diagnosing-bugs`, `codebase-design`, `improve-codebase-architecture` |
 | Two-axis semantic review | Matt | `code-review`, with Spec and Standards dispatched independently on Sol Medium |
 | Task launch and resume | Repository integration | `generate-tasks`, ordinary Git isolation, Happy launcher, `start` |

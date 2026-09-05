@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Happy's selective workflow-2026.09.3 adoption boundary."""
+"""Validate Happy's selective workflow-2026.09.4 adoption boundary."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "workflow-2026.09.3"
-COMMIT = "9755588c041287acb4fd4b295528116de6a62d7b"
+RELEASE = "workflow-2026.09.4"
+COMMIT = "9243174707d21e7325c2877b37c54fd7a2e24045"
 
 DISTRIBUTED = {
     ".gitattributes",
@@ -21,7 +21,7 @@ DISTRIBUTED = {
     ".agents/skills/grill-with-docs",
     ".agents/skills/grilling",
     ".agents/skills/domain-modeling",
-    ".agents/skills/to-tickets",
+    ".agents/skills/publish-tasks",
     ".agents/skills/triage",
     ".agents/skills/implement",
     ".agents/skills/tdd",
@@ -135,7 +135,8 @@ RETIRED = {
     "scripts/happy-workflow-state-upgrade.py",
 }
 
-LEGACY_ABSENT = {
+ADOPTION_RETIRED = {
+    ".agents/skills/to-tickets",
     "scripts/test-workflow.py",
     "scripts/test-workflow-ci.py",
     "scripts/test-workflow-core.py",
@@ -270,8 +271,8 @@ def validate(root: Path = ROOT) -> list[str]:
     retired_paths = {
         entry.get("path") for entry in retired_entries if isinstance(entry, dict)
     }
-    if retired_paths != LEGACY_ABSENT:
-        errors.append("template adoption legacy absent-path records drifted")
+    if retired_paths != ADOPTION_RETIRED:
+        errors.append("template adoption retired-path records drifted")
     if manifest.get("requiredProjectChecks") != REQUIRED_CHECKS:
         errors.append("template adoption requiredProjectChecks drifted")
 
@@ -295,7 +296,7 @@ def validate(root: Path = ROOT) -> list[str]:
                 f"missing={sorted(expected_files - actual_files)} "
                 f"extra={sorted(actual_files - expected_files)}"
             )
-    for relative in sorted(RETIRED | LEGACY_ABSENT):
+    for relative in sorted(RETIRED | ADOPTION_RETIRED):
         if (root / relative).exists():
             errors.append(f"retired workflow path still exists: {relative}")
 
@@ -337,8 +338,8 @@ def validate(root: Path = ROOT) -> list[str]:
         "Task/Issue", "historical `docs/workspace/`", "frozen and unmanaged",
     ), errors)
     require_markers(root, "docs/workflow.md", (
-        "Historical", "`docs/workspace/`", "passive",
-        "code-review", "Downstream template adoption",
+        "`grill-with-docs`", "`publish-tasks`", "`diagnosing-bugs`",
+        "code-review", "The source publishes immutable template versions",
     ), errors)
     require_markers(root, ".agents/skills/code-review/SKILL.md", (
         'model: "gpt-5.6-sol"', 'reasoning_effort: "medium"',

@@ -9,7 +9,6 @@ assignees: ""
 ## Local documents
 
 - Task: [docs/tasks/<task>.md](<stable repository link>)
-- Feature Spec: [docs/specs/<feature>.md](<stable repository link>)
 
 ## Parent
 
@@ -27,4 +26,4 @@ assignees: ""
 
 - None / #<blocking Issue>
 
-Omit Parent and Feature Spec when they do not apply.
+Omit Parent when the source was not an existing broad Issue.

@@ -4,7 +4,7 @@
 | --- | --- | --- |
 | `needs-triage` | `needs-triage` | Maintainer evaluation required |
 | `needs-info` | `needs-info` | Waiting for reporter information |
-| `ready-for-agent` | `ready-for-agent` | Bounded and ready for a fresh Agent Session |
+| `ready-for-agent` | `ready-for-agent` | Bounded and suitable for Agent implementation; Project status separately records readiness and progress |
 | `ready-for-human` | `ready-for-human` | Requires human implementation |
 | `wontfix` | `wontfix` | Will not be actioned |
 
