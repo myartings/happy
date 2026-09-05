@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Tasks"
+  short_description: "Publish local Tasks to the configured tracker"
+  default_prompt: "Use $publish-tasks to publish selected local Tasks to their tracker Issues."

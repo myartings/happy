@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Focused tests for Happy's workflow-2026.09.3 command and submission seams."""
+"""Focused tests for Happy's workflow-2026.09.4 command and submission seams."""
 
 from __future__ import annotations
 

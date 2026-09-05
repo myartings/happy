@@ -1,9 +1,11 @@
 # Task: `<title>`
 
+Goal: `<independently verifiable outcome>`
+Completion conditions: `<observable conditions that make the Task complete>`
 Feature Spec: `<optional local link>`
-Issue: `<required full GitHub Issue URL>`
 Research: `<optional local links>`
 Status: `<Not Started | In Progress | Complete>`
+Dependencies: `<local Task links or None>`
 
 ## Steps
 

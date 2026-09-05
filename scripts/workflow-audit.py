@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compatibility entrypoint for Happy's post-adoption workflow validation.
 
-The workflow-2026.09.3 model has no active Workspace audit. This command keeps
+The workflow-2026.09.4 model has no active Workspace audit. This command keeps
 Issue #111's declared validation seam while delegating only to the current
 selective-adoption validator; it never reads docs/workspace lifecycle records.
 """

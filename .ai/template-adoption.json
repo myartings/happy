@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "policy": "selective-workflow-core",
   "sourceRepository": "https://github.com/myartings/ai-coding-template.git",
-  "sourceRelease": "workflow-2026.09.3",
-  "sourceCommit": "9755588c041287acb4fd4b295528116de6a62d7b",
+  "sourceRelease": "workflow-2026.09.4",
+  "sourceCommit": "9243174707d21e7325c2877b37c54fd7a2e24045",
   "include": [
     ".gitattributes",
     ".agents/skills/create-prd",
@@ -13,7 +13,7 @@
     ".agents/skills/grill-with-docs",
     ".agents/skills/grilling",
     ".agents/skills/domain-modeling",
-    ".agents/skills/to-tickets",
+    ".agents/skills/publish-tasks",
     ".agents/skills/triage",
     ".agents/skills/implement",
     ".agents/skills/tdd",
@@ -69,6 +69,13 @@
     "scripts/test-validate-happy-workflow.py"
   ],
   "retiredPaths": [
+    {
+      "path": ".agents/skills/to-tickets",
+      "reason": "The Task-first workflow replaces the parallel ticket-publication path with publish-tasks",
+      "ownedFingerprints": [
+        "sha256:f38cc3edbb46893598416f154f6a221a43c3f42d9b2545907e0de69267b9ee01"
+      ]
+    },
     {
       "path": "scripts/test-workflow.py",
       "reason": "The released downstream contract no longer distributes source-maintainer workflow tests",
