@@ -1,73 +1,38 @@
 ---
 name: tdd
-description: Develop observable behavior through focused, public-interface RED-to-GREEN tracer bullets. Use for features or bug fixes with a stable automated test seam, especially core logic, state transitions, parsers, data transformations, and regressions.
+description: Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green-refactor", or wants integration tests.
 ---
 
 # Test-Driven Development
 
-## Contract
+TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle — consult them before and during the loop, not after.
 
-Test behavior through the narrowest public interface that matters to a caller.
-Prefer integration-style coverage of real code paths. Tests must describe what
-the system does and survive internal refactoring; do not couple them to private
-methods, owned collaborators, call order, or internal data shape.
+When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.
 
-## Before RED
+## What a good test is
 
-1. Select one prioritized acceptance behavior from the active contract.
-2. Establish an agreed public seam and the exact targeted command that can prove
-   it. An accepted contract or tracker item that explicitly names the seam is
-   already agreement; otherwise propose the seam and wait only for that
-   unresolved choice.
-3. Name an independent expectation source: an accepted contract, known fixture,
-   reference implementation, or calculation performed outside production
-   logic. Reject tautologies and expected values derived from the implementation
-   under test.
-4. Confirm the test can fail meaningfully before production behavior changes.
-5. If no stable automated seam exists, name another deterministic feedback
-   signal instead of fabricating a test or RED result. Persist it in
-   `validation.md` only for an active Trellis task.
-6. Read [testing guidelines](references/testing-guidelines.md) only when a seam,
-   boundary-double, or refactor tradeoff needs more detail than these core
-   guardrails provide.
+Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification — "user can checkout with valid cart" tells you exactly what capability exists — and survives refactors because it doesn't care about internal structure.
 
-## Tracer-Bullet RED-to-GREEN Loop
+See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
 
-For one tracer bullet at a time:
+## Seams — where tests go
 
-1. **RED** — Write one focused behavior test, run the targeted command, and
-   confirm it fails for the intended missing behavior rather than setup drift.
-2. **GREEN** — Implement only enough production behavior to pass that test.
-3. Run the targeted test, then the nearest relevant suite.
-4. Repeat RED → GREEN for the next acceptance behavior; work vertically and keep
-   to one test at a time instead of writing a horizontal batch of imagined tests.
-5. Record exact RED, GREEN, and suite outcomes; persist them in task
-   `validation.md` only when a Trellis task is active.
+A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
 
-## Local refinement boundary
+**Test only at pre-agreed seams.** Before writing any test, write down the seams under test and confirm them with the user. No test is written at an unconfirmed seam. You can't test everything — agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
 
-Pinned Matt places refactoring in its code-review stage, outside TDD. This
-repository's independent formal review is read-only, so moving code changes into
-that gate would violate review independence. As a documented local conflict,
-any necessary design refinement is a separate accepted implementation action
-after GREEN and before formal review. Keep tests green, rerun the targeted test
-after every meaningful change, and record the result separately from behavioral
-RED/GREEN evidence.
+Ask: "What's the public interface, and which seams should we test?"
 
-## Guardrails
+When the shape of that interface is itself in question — how deep the module is, where the seam belongs, what the interface should expose — use the `/codebase-design` skill for the vocabulary. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
 
-- Mock only at system boundaries such as external services, time, randomness,
-  or an impractical real data store. Do not mock the unit under test or internal
-  modules that the repository owns.
-- Never refactor while RED or inside the RED-to-GREEN loop.
-- Do not add speculative behavior for future tests.
-- If RED fails for an unexpected reason or repeated GREEN attempts fail, stop
-  and route to `diagnose` with the observed evidence.
+## Anti-patterns
 
-## Completion
+- **Implementation-coupled** — mocks internal collaborators, tests private methods, or verifies through a side channel (querying the database instead of using the interface). The tell: the test breaks when you refactor but behavior hasn't changed.
+- **Tautological** — the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`, a snapshot derived by hand the same way, a constant asserted equal to itself), so it passes by construction and can never disagree with the code. Expected values must come from an independent source of truth — a known-good literal, a worked example, the spec.
+- **Horizontal slicing** — writing all tests first, then all implementation. Bulk tests verify _imagined_ behavior: you test the _shape_ of things rather than user-facing behavior, the tests go insensitive to real changes, and you commit to test structure before understanding the implementation. Work in **vertical slices** instead — one test → one implementation → repeat, each test a **tracer bullet** that responds to what the last cycle taught you.
 
-- Every in-scope behavior is covered or has an explicit alternative signal.
-- Targeted tests and the nearest complete applicable suite pass.
-- Tests use public behavior and remain insensitive to internal refactoring.
-- Commands and results are reported exactly; active tasks also persist them in
-  workflow evidence.
+## Rules of the loop
+
+- **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
+- **One slice at a time.** One seam, one test, one minimal implementation per cycle.
+- **Refactoring is not part of the loop.** It belongs to the review stage (see the `code-review` skill), not the red → green implementation cycle.

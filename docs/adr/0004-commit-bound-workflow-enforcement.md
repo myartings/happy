@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted on 2026-08-06; amended by ADR 0006 on 2026-08-19 so no-task delivery
+Superseded for current work by ADR 0007 on 2026-09-05. Historical delivery
+evidence remains passive. Previously accepted on 2026-08-06 and amended by ADR 0006 on 2026-08-19 so no-task delivery
 needs no lifecycle receipt, amended on 2026-08-24 by Issue #50 for the historical
 two-commit protocol, and prospectively amended on 2026-08-29 by Issue #88 for
 one atomic archived delivery commit. Issue #116 prospectively extends that

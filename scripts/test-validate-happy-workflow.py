@@ -1,199 +1,130 @@
 #!/usr/bin/env python3
-"""Behavior tests for Happy's selective workflow-adoption validator."""
+"""Tests for Happy's selective workflow adoption validator."""
 
 from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
-
+from types import ModuleType
 
 ROOT = Path(__file__).resolve().parents[1]
-VALIDATOR = ROOT / "scripts" / "validate-happy-workflow.py"
-WORKFLOW_CHECK = ROOT / "scripts" / "workflow-check.py"
 
 
-def load_validator():
-    spec = importlib.util.spec_from_file_location("happy_workflow_validator", VALIDATOR)
+def load_validator() -> ModuleType:
+    path = ROOT / "scripts/validate-happy-workflow.py"
+    spec = importlib.util.spec_from_file_location("validate_happy_workflow", path)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load Happy workflow validator")
+        raise RuntimeError("cannot load validate-happy-workflow.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-def load_workflow_check():
-    spec = importlib.util.spec_from_file_location("happy_workflow_check", WORKFLOW_CHECK)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load workflow check runtime")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+validator = load_validator()
 
 
-class HappyWorkflowValidatorTest(unittest.TestCase):
+def copy_validation_surface(destination: Path) -> None:
+    paths = validator.DISTRIBUTED | validator.HAPPY_PRESERVES
+    for relative in sorted(paths):
+        source = ROOT / relative
+        target = destination / relative
+        if source.is_dir():
+            if relative in validator.EXPECTED_DIRECTORY_FILES:
+                shutil.copytree(source, target)
+            else:
+                target.mkdir(parents=True, exist_ok=True)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    marker_files = (
+        ".agents/skills/code-review/SKILL.md",
+        "scripts/workflow-ci.py",
+    )
+    for relative in marker_files:
+        source = ROOT / relative
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+
+
+class ValidatorTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.validator = load_validator()
+        self.directory = tempfile.TemporaryDirectory(prefix="happy-workflow-validator-")
+        self.root = Path(self.directory.name)
+        copy_validation_surface(self.root)
 
-    def test_repository_adoption_manifest_is_valid(self) -> None:
-        self.assertEqual([], self.validator.adoption_errors(ROOT))
+    def tearDown(self) -> None:
+        self.directory.cleanup()
 
-    def test_adoption_rejects_relative_source_and_broad_sync_paths(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="happy-adoption-invalid-") as raw:
-            root = Path(raw)
-            (root / ".ai").mkdir()
-            (root / ".ai" / "template-adoption.json").write_text(
-                json.dumps(
-                    {
-                        "schemaVersion": 1,
-                        "source": "../ai-coding-template",
-                        "policy": "selective-workflow-core",
-                        "include": ["AGENTS.md", ".agents/skills", ".claude/skills"],
-                        "preserve": [],
-                        "requiredProjectChecks": [],
-                    }
-                ),
-                encoding="utf-8",
-            )
+    def read_json(self, relative: str) -> dict:
+        return json.loads((self.root / relative).read_text(encoding="utf-8"))
 
-            errors = self.validator.adoption_errors(root)
-
-        self.assertTrue(any("schemaVersion must be 2" in error for error in errors))
-        self.assertTrue(any("immutable source" in error for error in errors))
-        self.assertTrue(any("forbidden or broad include" in error for error in errors))
-
-    def test_adoption_rejects_mismatched_immutable_source(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="happy-adoption-source-") as raw:
-            root = Path(raw)
-            (root / ".ai").mkdir()
-            adoption = json.loads(
-                (ROOT / ".ai" / "template-adoption.json").read_text()
-            )
-            adoption["sourceCommit"] = "0" * 40
-            (root / ".ai" / "template-adoption.json").write_text(
-                json.dumps(adoption), encoding="utf-8"
-            )
-
-            errors = self.validator.adoption_errors(root)
-
-        self.assertTrue(any("immutable source" in error for error in errors))
-
-    def test_repository_project_configuration_is_valid(self) -> None:
-        self.assertEqual([], self.validator.project_config_errors(ROOT))
-
-    def test_project_configuration_rejects_nonportable_python_commands(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="happy-project-invalid-") as raw:
-            root = Path(raw)
-            (root / ".ai").mkdir()
-            config = json.loads((ROOT / ".ai" / "project.json").read_text())
-            config["commands"]["check"] = ["python3 scripts/workflow-audit.py --strict"]
-            (root / ".ai" / "project.json").write_text(
-                json.dumps(config), encoding="utf-8"
-            )
-
-            errors = self.validator.project_config_errors(root)
-
-        self.assertTrue(any("must use {python}" in error for error in errors))
-
-    def test_project_configuration_rejects_malformed_command_groups(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="happy-project-malformed-") as raw:
-            root = Path(raw)
-            (root / ".ai").mkdir()
-            config = json.loads((ROOT / ".ai" / "project.json").read_text())
-            config["commands"]["check"] = 42
-            (root / ".ai" / "project.json").write_text(
-                json.dumps(config), encoding="utf-8"
-            )
-
-            errors = self.validator.project_config_errors(root)
-
-        self.assertTrue(any("command group check must be a list" in error for error in errors))
-        self.assertTrue(any("project check omits required" in error for error in errors))
-
-    def test_project_configuration_rejects_preserved_authority_drift(self) -> None:
-        cases = (
-            (
-                "tracker provider",
-                lambda config: config["tracker"].__setitem__("provider", "not-github"),
-                "Happy tracker configuration drifted",
-            ),
-            (
-                "tracker target",
-                lambda config: config["tracker"].__setitem__("target", "other/repo"),
-                "Happy tracker configuration drifted",
-            ),
-            (
-                "tracker categories",
-                lambda config: config["tracker"].__setitem__("categories", {}),
-                "Happy tracker configuration drifted",
-            ),
-            (
-                "tracker states",
-                lambda config: config["tracker"].__setitem__("states", {}),
-                "Happy tracker configuration drifted",
-            ),
-            (
-                "protected paths",
-                lambda config: config["protectedPaths"].append("unexpected/**"),
-                "Happy protected paths drifted",
-            ),
-            (
-                "generated paths",
-                lambda config: config.__setitem__("generatedPaths", []),
-                "Happy generated paths drifted",
-            ),
-            (
-                "risk triggers",
-                lambda config: config.__setitem__("riskTriggers", []),
-                "Happy risk triggers drifted",
-            ),
-        )
-        for label, mutate, expected in cases:
-            with self.subTest(label=label):
-                with tempfile.TemporaryDirectory(
-                    prefix="happy-project-authority-"
-                ) as raw:
-                    root = Path(raw)
-                    (root / ".ai").mkdir()
-                    config = json.loads(
-                        (ROOT / ".ai" / "project.json").read_text()
-                    )
-                    mutate(config)
-                    (root / ".ai" / "project.json").write_text(
-                        json.dumps(config), encoding="utf-8"
-                    )
-
-                    errors = self.validator.project_config_errors(root)
-
-                self.assertIn(expected, errors)
-
-    def test_authority_rejects_missing_runtime_and_preserved_rules(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="happy-authority-missing-") as raw:
-            errors = self.validator.authority_errors(Path(raw))
-
-        self.assertIn(
-            "missing adopted workflow surface: scripts/workflow-run.py", errors
-        )
-        self.assertTrue(any("missing Happy workflow authority" in error for error in errors))
-
-    def test_retired_and_happy_runtime_tests_select_the_workflow_profile(self) -> None:
-        workflow_check = load_workflow_check()
-        config = json.loads((ROOT / ".ai" / "project.json").read_text())
-
-        selected = workflow_check.select_applicable_profiles(
-            config,
-            [
-                ".ai/project.json",
-                ".codex/README.md",
-                "docs/workflow.md",
-                "scripts/test-workflow.py",
-                "scripts/test-happy-workflow-runtime.py",
-            ],
+    def write_json(self, relative: str, value: dict) -> None:
+        (self.root / relative).write_text(
+            json.dumps(value, indent=2) + "\n", encoding="utf-8"
         )
 
-        self.assertEqual(("workflow",), selected)
+    def test_current_adoption_surface_is_valid(self) -> None:
+        self.assertEqual(validator.validate(self.root), [])
+
+    def test_source_pin_drift_fails(self) -> None:
+        manifest = self.read_json(".ai/template-adoption.json")
+        manifest["sourceCommit"] = "0" * 40
+        self.write_json(".ai/template-adoption.json", manifest)
+        self.assertTrue(
+            any("must pin" in error for error in validator.validate(self.root))
+        )
+
+    def test_frozen_claude_surface_cannot_enter_projection(self) -> None:
+        manifest = self.read_json(".ai/template-adoption.json")
+        manifest["include"].append(".claude")
+        self.write_json(".ai/template-adoption.json", manifest)
+        errors = validator.validate(self.root)
+        self.assertTrue(any("frozen Claude" in error for error in errors))
+
+    def test_retired_runtime_reintroduction_fails(self) -> None:
+        path = self.root / "scripts/workflow-state.py"
+        path.write_text("# retired\n", encoding="utf-8")
+        self.assertTrue(
+            any("retired workflow path" in error for error in validator.validate(self.root))
+        )
+
+    def test_hollow_distributed_skill_fails(self) -> None:
+        (self.root / ".agents/skills/start/SKILL.md").unlink()
+        self.assertTrue(
+            any(
+                "distributed directory tree drifted: .agents/skills/start" in error
+                for error in validator.validate(self.root)
+            )
+        )
+
+    def test_retired_project_schema_key_fails(self) -> None:
+        project = self.read_json(".ai/project.json")
+        project["checkProfiles"] = {}
+        self.write_json(".ai/project.json", project)
+        self.assertTrue(
+            any("retired key: checkProfiles" in error for error in validator.validate(self.root))
+        )
+
+    def test_missing_happy_preserve_fails(self) -> None:
+        manifest = self.read_json(".ai/template-adoption.json")
+        manifest["preserve"].remove("devtools")
+        self.write_json(".ai/template-adoption.json", manifest)
+        self.assertTrue(
+            any("omits Happy preserves" in error for error in validator.validate(self.root))
+        )
+
+    def test_project_protection_weakening_fails(self) -> None:
+        project = self.read_json(".ai/project.json")
+        project["protectedPaths"].remove(".env")
+        self.write_json(".ai/project.json", project)
+        self.assertTrue(
+            any("protectedPaths drifted" in error for error in validator.validate(self.root))
+        )
 
 
 if __name__ == "__main__":

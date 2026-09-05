@@ -2,8 +2,9 @@
 
 ## Status
 
-Accepted on 2026-08-19. Supersedes ADR 0003 and ADR 0005 for new work and
-amends ADR 0004's submission routes.
+Superseded for current work by ADR 0007 on 2026-09-05. Historical Workspaces
+remain passive evidence. Previously accepted on 2026-08-19, superseding ADR
+0003 and ADR 0005 and amending ADR 0004's submission routes.
 
 ## Context
 

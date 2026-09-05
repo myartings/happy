@@ -1,5 +1,0 @@
-name = "worker"
-description = "Implement one accepted ordinary slice in an assigned isolated worktree."
-model = "gpt-5.6-luna"
-model_reasoning_effort = "max"
-developer_instructions = "Work only in the assigned isolated worktree and allowed files. Stop on scope ambiguity, run the named validation, do not delegate, and return the exact diff and evidence."

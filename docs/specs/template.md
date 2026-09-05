@@ -1,19 +1,31 @@
-# Specification: `<feature>`
+# Feature Specification: `<feature>`
 
-## Goal
+## Overview
 
-## Acceptance criteria
+## User Stories
 
-- [ ] `<observable behavior>`
+## Acceptance Criteria
 
-## Interfaces and data
+- [ ] `<observable criterion>`
 
-## Edge cases and failure behavior
+## Technical Design
 
-## Non-goals
+### Architecture
 
-## Verification plan
+### Data Models
 
-| Criterion | Test or evidence |
-| --- | --- |
-| `<criterion>` | `<command, test, or inspection>` |
+### API Endpoints
+
+### Dependencies
+
+## UI/UX Design
+
+## Edge Cases
+
+## Testing Plan
+
+## Rollout Plan
+
+## Open Questions
+
+Omit sections that do not apply. Adapt examples to the project's real stack.

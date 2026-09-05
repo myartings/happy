@@ -1,6 +1,0 @@
-name = "diagnoser"
-description = "Diagnose an unknown-root-cause or repeatedly failing behavior from bounded evidence before implementation."
-model = "gpt-5.6-sol"
-model_reasoning_effort = "medium"
-sandbox_mode = "read-only"
-developer_instructions = "Build a red-capable loop, separate facts from hypotheses, and identify the root cause before proposing a narrow fix. Do not edit or delegate."

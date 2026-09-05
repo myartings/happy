@@ -1,23 +1,16 @@
 ---
 name: create-prd
-description: Turn clarified project intent into durable, testable requirements. Use for new projects, substantial features, changed user outcomes, high-risk behavior, or requests to create or update `docs/PRD.md`.
+description: Create or update docs/PRD.md when product commitments need a durable product requirements document.
 ---
 
-# Create PRD
+# Create Product Requirements Document
 
-## Workflow
+Use this after `grill-with-docs` has resolved the product decisions that matter.
 
-1. Inspect existing project context, code, feedback, and related specs.
-2. Route material unresolved choices through Matt-owned `grilling`: inspect
-   discoverable facts first, then ask the whole currently unblocked design-tree
-   frontier in a numbered round with recommendations and trade-offs.
-3. Define the problem, users, desired outcomes, observable success, scope,
-   non-goals, constraints, and unresolved decisions.
-4. Separate project commitments from implementation details.
-5. Make acceptance language observable and falsifiable.
-6. Update `docs/PRD.md` incrementally; preserve unrelated commitments.
-7. Record unresolved choices in `decision-map`, resolve user-owned choices
-   through `grilling`, then route accepted scope to `generate-spec`.
+1. Read the existing PRD, applicable context, ADRs, research, and accepted discussion.
+2. Describe the executive summary, problem, target users, success metrics, core features, user stories, acceptance criteria, non-functional requirements, technical constraints, scope, and explicit non-goals that apply.
+3. Ask `grilling` only for unresolved user decisions; discover repository facts yourself.
+4. Preserve unrelated commitments and write the smallest coherent update to `docs/PRD.md`.
+5. Route a feature needing a detailed technical contract to `generate-spec`.
 
-Do not use a PRD as a task list or architecture document. Low-risk maintenance work
-does not require a new PRD when an existing contract already covers it.
+Do not turn the PRD into an implementation checklist or duplicate a Feature Spec.

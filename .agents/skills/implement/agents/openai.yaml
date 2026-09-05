@@ -1,4 +1,5 @@
 interface:
-  display_name: "Implement Work"
-  short_description: "Build the smallest accepted slice and validate incrementally"
-  default_prompt: "Use $implement to implement the current accepted task slice."
+  display_name: "Implement"
+  short_description: "Build work from a spec or tickets"
+policy:
+  allow_implicit_invocation: false

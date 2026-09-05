@@ -1,33 +1,22 @@
 ---
 name: grilling
-description: Resolve material product, architecture, or plan uncertainty through Matt-style design-tree frontier rounds before committing to implementation.
+description: Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.
 ---
 
-# Frontier Grilling
+Interview the user relentlessly until you reach a shared understanding. Map this as a **design tree**: every decision branches into the decisions that hang off it.
 
-## Protocol
+Work the tree in **rounds**. The **frontier** is every decision whose prerequisites are already settled — the questions you can ask _now_ without guessing at answers you haven't heard yet. Ask the whole frontier in one round: number each question and give your recommended answer. Then wait for the user's answers before the next round.
 
-1. Inspect the repository, project docs, tools, and available evidence first.
-   Do not ask the user for facts that can be discovered safely.
-2. Build a design tree: every unresolved decision branches into the decisions
-   that depend on it.
-3. Compute the frontier: every user-owned decision whose prerequisites are
-   already settled and can therefore be answered without guessing.
-   Independent factual research for other already-unlocked frontier nodes may
-   run in parallel; it must not answer or bypass a user-owned choice.
-4. Ask the whole frontier in one numbered round. For every question, present a
-   recommended answer, its main trade-off, and only materially different
-   alternatives. A question that depends on another answer in the same round
-   belongs to a later round.
-5. Wait for the user's answers, update the durable decision record, recompute
-   the frontier, and repeat until it is empty.
-6. For an active Trellis task, record accepted decisions in `decisions.md`.
-   Otherwise keep the result in the current thread and propagate only genuinely
-   durable product, architecture, domain, spec, or ADR decisions.
-7. State the resulting shared understanding and do not act on it until the user
-   confirms that the frontier is complete.
+Each question should be formatted like so:
 
-Finding facts is the Agent's job; use repository inspection or read-only
-research rather than asking the user. Decisions belong to the user. Do not
-implement while a material choice remains unresolved or before the final shared
-understanding is confirmed.
+```
+❓ **Q1** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
+
+➡️ <your recommended answer>
+```
+
+Each round the user answers reshapes the tree — settled decisions push the frontier outward and unblock questions that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round, not this one.
+
+Finding _facts_ is your job, never the user's. When a frontier question needs a fact from the environment (filesystem, tools, etc.), dispatch a sub-agent to find it — don't ask the user for anything you could look up yourself. Don't block on it: a running exploration is an unsettled prerequisite, so only the questions downstream of it wait for the sub-agent to report — ask the rest of the frontier now. The _decisions_ are the user's — put each to them and wait.
+
+The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Do not act on it until the user confirms you have reached a shared understanding.
