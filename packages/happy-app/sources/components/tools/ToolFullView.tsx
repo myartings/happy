@@ -3,7 +3,9 @@ import { Text, View, ScrollView, Platform, useWindowDimensions } from 'react-nat
 import { Ionicons } from '@expo/vector-icons';
 import { ToolCall, Message } from '@/sync/typesMessage';
 import { CodeView } from '../CodeView';
+import { CommandView } from '../CommandView';
 import { Metadata } from '@/sync/storageTypes';
+import { getTerminalToolCommand } from '@/utils/toolDisplay';
 import { getToolFullViewComponent } from './views/_all';
 import { layout } from '../layout';
 import { useLocalSetting } from '@/sync/storage';
@@ -14,21 +16,37 @@ interface ToolFullViewProps {
     tool: ToolCall;
     metadata?: Metadata | null;
     messages?: Message[];
+    /** Show only this file, for when the user tapped one diff out of many. */
+    focusFile?: string;
 }
 
-export function ToolFullView({ tool, metadata, messages = [] }: ToolFullViewProps) {
+export function ToolFullView({ tool, metadata, messages = [], focusFile }: ToolFullViewProps) {
     // Check if there's a specialized content view for this tool
     const SpecializedFullView = getToolFullViewComponent(tool.name);
     const screenWidth = useWindowDimensions().width;
     const devModeEnabled = (useLocalSetting('devModeEnabled') || __DEV__);
-    console.log('ToolFullView', devModeEnabled);
+
+    // Terminal tools without a dedicated view (provider/rig shells) still get
+    // a terminal rendering rather than raw input/output JSON.
+    const terminalCommand = SpecializedFullView ? null : getTerminalToolCommand(tool);
 
     return (
         <ScrollView style={[styles.container, { paddingHorizontal: screenWidth > 700 ? 16 : 0 }]}>
             <View style={styles.contentWrapper}>
                 {/* Tool-specific content or generic fallback */}
                 {SpecializedFullView ? (
-                    <SpecializedFullView tool={tool} metadata={metadata || null} messages={messages} />
+                    <SpecializedFullView tool={tool} metadata={metadata || null} messages={messages} focusFile={focusFile} />
+                ) : terminalCommand ? (
+                    <View style={styles.sectionFullWidth}>
+                        <CommandView
+                            command={terminalCommand}
+                            stdout={tool.state === 'completed' && tool.result
+                                ? (typeof tool.result === 'string' ? tool.result : JSON.stringify(tool.result, null, 2))
+                                : null}
+                            error={tool.state === 'error' && tool.result ? String(tool.result) : null}
+                            fullWidth
+                        />
+                    </View>
                 ) : (
                     <>
                     {/* Generic fallback for tools without specialized views */}

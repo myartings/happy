@@ -79,6 +79,9 @@ happy-workspaces/
 
 .context/
 
+# Official Happy temporary files
+.happy-tmp/
+
 # Happy personal devtools local configuration
 /devtools/config.env
 /devtools/config.windows.ps1
