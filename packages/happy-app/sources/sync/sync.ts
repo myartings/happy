@@ -35,6 +35,7 @@ import { didSessionBecomeUnread, markSessionAttentionRead, markSessionAttentionU
 import { Profile, profileParse } from './profile';
 import { loadPendingSettings, savePendingSettings } from './persistence';
 import { reconcileGithubIssueBindingsAfterReconnect } from '@/features/github-issues/githubIssueBindingReconnect';
+import { getNativeUpdateUrl } from '@/features/updates/updateChannel';
 import {
     initializeTracking,
     trackGitHubConnected,
@@ -2620,10 +2621,11 @@ export class Sync {
             console.log('[fetchNativeUpdate] Data:', data);
 
             // Apply update status to storage
-            if (data.update_required && data.update_url) {
+            const updateUrl = getNativeUpdateUrl(data, appId);
+            if (updateUrl) {
                 storage.getState().applyNativeUpdateStatus({
                     available: true,
-                    updateUrl: data.update_url
+                    updateUrl
                 });
             } else {
                 storage.getState().applyNativeUpdateStatus({
