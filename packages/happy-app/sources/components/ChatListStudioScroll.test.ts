@@ -20,6 +20,14 @@ const state = vi.hoisted(() => ({
     })),
     visualStyle: 'studio',
     promptHistoryEnabled: false,
+    wheelHandler: null as ((event: any) => void) | null,
+    scrollNode: {
+        scrollTop: 0,
+        addEventListener: vi.fn((type: string, handler: (event: any) => void) => {
+            if (type === 'wheel') state.wheelHandler = handler;
+        }),
+        removeEventListener: vi.fn(),
+    },
 }));
 
 vi.mock('react-native', async () => {
@@ -39,7 +47,7 @@ vi.mock('@shopify/flash-list', async () => {
         ReactModule.useImperativeHandle(ref, () => ({
             scrollToIndex: state.scrollToIndex,
             scrollToOffset: state.scrollToOffset,
-            getScrollableNode: () => undefined,
+            getScrollableNode: () => state.scrollNode,
         }));
         return ReactModule.createElement(
             'FlashList',
@@ -162,6 +170,10 @@ beforeEach(() => {
     state.resolveMessageTargetAction.mockReturnValue({ type: 'none' });
     state.updateVisibleSessionTailState.mockClear();
     state.removeVisibleSessionTailState.mockClear();
+    state.wheelHandler = null;
+    state.scrollNode.scrollTop = 0;
+    state.scrollNode.addEventListener.mockClear();
+    state.scrollNode.removeEventListener.mockClear();
 });
 
 function render(element: React.ReactElement): ReactTestRenderer {
@@ -171,6 +183,54 @@ function render(element: React.ReactElement): ReactTestRenderer {
 }
 
 describe('ChatList Studio disclosure scroll wiring', () => {
+    it('keeps macOS trackpad vertical wheel movement in the native direction', () => {
+        state.messages = [];
+        state.displayItems = [];
+        render(React.createElement(ChatList, {
+            session: { id: 'session-wheel-direction', metadata: null } as any,
+        }));
+        const preventDefault = vi.fn();
+
+        act(() => state.wheelHandler?.({
+            deltaX: 0,
+            deltaY: 40,
+            shiftKey: false,
+            preventDefault,
+        }));
+
+        expect(state.scrollNode.scrollTop).toBe(40);
+        expect(preventDefault).toHaveBeenCalledOnce();
+
+        act(() => state.wheelHandler?.({
+            deltaX: 0,
+            deltaY: -15,
+            shiftKey: false,
+            preventDefault,
+        }));
+
+        expect(state.scrollNode.scrollTop).toBe(25);
+        expect(preventDefault).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps the macOS shifted-wheel fallback after normalizing vertical wheel movement', () => {
+        state.messages = [];
+        state.displayItems = [];
+        render(React.createElement(ChatList, {
+            session: { id: 'session-shifted-wheel-direction', metadata: null } as any,
+        }));
+        const preventDefault = vi.fn();
+
+        act(() => state.wheelHandler?.({
+            deltaX: 20,
+            deltaY: 0,
+            shiftKey: true,
+            preventDefault,
+        }));
+
+        expect(state.scrollNode.scrollTop).toBe(20);
+        expect(preventDefault).toHaveBeenCalledOnce();
+    });
+
     it('lets a new route target replace a prompt-history target in the same session', () => {
         state.promptHistoryEnabled = true;
         state.messages = [
