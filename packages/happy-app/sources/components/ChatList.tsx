@@ -897,8 +897,9 @@ const ChatListInternal = React.memo((props: {
     // On web a wheel is the drag gesture: it marks the reader taking over,
     // since there is no onScrollBeginDrag for wheels. Inverted FlashLists use
     // a scaleY transform but, unlike RN Web's FlatList, do not correct the
-    // browser's resulting wheel direction. Apply the delta ourselves and
-    // prevent the transformed node from scrolling it a second time. Shift+
+    // browser's resulting wheel direction. Apply the inverse delta ourselves,
+    // because the transformed wrapper reverses the visual effect of scrollTop,
+    // then prevent the transformed node from scrolling it a second time. Shift+
     // wheel can report the intended vertical delta on deltaX on macOS.
     React.useEffect(() => {
         if (Platform.OS !== 'web') return;
@@ -909,7 +910,7 @@ const ChatListInternal = React.memo((props: {
             const delta = e.shiftKey && Math.abs(e.deltaX) > 0 && Math.abs(e.deltaY) < 1
                 ? e.deltaX
                 : e.deltaY;
-            node.scrollTop += delta;
+            node.scrollTop -= delta;
             e.preventDefault();
         };
         node.addEventListener('wheel', handler, { passive: false });

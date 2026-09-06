@@ -186,6 +186,7 @@ describe('ChatList Studio disclosure scroll wiring', () => {
     it('keeps macOS trackpad vertical wheel movement in the native direction', () => {
         state.messages = [];
         state.displayItems = [];
+        state.scrollNode.scrollTop = 100;
         render(React.createElement(ChatList, {
             session: { id: 'session-wheel-direction', metadata: null } as any,
         }));
@@ -198,7 +199,9 @@ describe('ChatList Studio disclosure scroll wiring', () => {
             preventDefault,
         }));
 
-        expect(state.scrollNode.scrollTop).toBe(40);
+        // FlashList's scaleY(-1) reverses the visual effect of scrollTop, so a
+        // positive native wheel delta must reduce the underlying offset.
+        expect(state.scrollNode.scrollTop).toBe(60);
         expect(preventDefault).toHaveBeenCalledOnce();
 
         act(() => state.wheelHandler?.({
@@ -208,13 +211,14 @@ describe('ChatList Studio disclosure scroll wiring', () => {
             preventDefault,
         }));
 
-        expect(state.scrollNode.scrollTop).toBe(25);
+        expect(state.scrollNode.scrollTop).toBe(75);
         expect(preventDefault).toHaveBeenCalledTimes(2);
     });
 
     it('keeps the macOS shifted-wheel fallback after normalizing vertical wheel movement', () => {
         state.messages = [];
         state.displayItems = [];
+        state.scrollNode.scrollTop = 100;
         render(React.createElement(ChatList, {
             session: { id: 'session-shifted-wheel-direction', metadata: null } as any,
         }));
@@ -227,7 +231,7 @@ describe('ChatList Studio disclosure scroll wiring', () => {
             preventDefault,
         }));
 
-        expect(state.scrollNode.scrollTop).toBe(20);
+        expect(state.scrollNode.scrollTop).toBe(80);
         expect(preventDefault).toHaveBeenCalledOnce();
     });
 
