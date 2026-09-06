@@ -39,6 +39,14 @@ vi.mock('@/components/tools/ToolDiffView', async () => {
     const ReactModule = await import('react');
     return { ToolDiffView: (props: any) => ReactModule.createElement('ToolDiffView', props) };
 });
+vi.mock('@/components/CodeView', async () => {
+    const ReactModule = await import('react');
+    return { CodeView: (props: any) => ReactModule.createElement('CodeView', props) };
+});
+vi.mock('../ToolError', async () => {
+    const ReactModule = await import('react');
+    return { ToolError: (props: any) => ReactModule.createElement('ToolError', props) };
+});
 vi.mock('@/features/studio-tool-presentation/useStudioToolPresentation', () => ({
     useStudioToolPresentation: () => presentation.current,
 }));

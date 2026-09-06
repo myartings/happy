@@ -17,6 +17,7 @@ import { t } from '@/text';
 import {
     formatMCPTitle,
     getToolActivityLabel,
+    getToolDisplayTitle,
     getToolSummaryCategory,
     getTerminalToolCommand,
     shouldRenderToolCardHeader,
@@ -96,7 +97,7 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     }
 
     // Handle optional title and function type
-    let toolTitle = tool.name;
+    let toolTitle = getToolDisplayTitle(tool);
     
     // Special handling for MCP tools
     if (tool.name.startsWith('mcp__')) {
@@ -180,19 +181,21 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
     }
 
     const terminalCommand = getTerminalToolCommand(tool);
+    const SpecificToolView = getToolViewComponent(tool.name);
+    const needsApprovalInput = tool.permission?.status === 'pending' && SpecificToolView === null;
     const studioExecutionTranscript = studioPresentation
         ? resolveStudioExecutionTranscript(tool)
         : null;
     const isStudioInlinePatch = studioPresentation !== null
-        && tool.name === 'CodexPatch'
+        && (tool.name === 'CodexPatch' || tool.name === 'apply_patch')
         && hasRenderableCodexPatchInput(tool.input);
     const isStudioCompactTranscript = studioExecutionTranscript !== null && compactToolCalls;
     const isCompactTerminalTool = terminalCommand !== null && !studioExecutionTranscript;
-    const isCompactActivityTool = !studioExecutionTranscript && !isStudioInlinePatch && (shouldUseCompactToolRow(tool, compactToolCalls)
+    const isCompactActivityTool = !needsApprovalInput && !studioExecutionTranscript && !isStudioInlinePatch && (shouldUseCompactToolRow(tool, compactToolCalls, SpecificToolView !== null)
         || minimal
         || isCompactTerminalTool);
     const activityLabel = getToolActivityLabel(tool);
-    const isInlineCodexPatch = Platform.OS === 'web' && tool.name === 'CodexPatch';
+    const isInlineCodexPatch = Platform.OS === 'web' && (tool.name === 'CodexPatch' || tool.name === 'apply_patch');
     const renderCardHeader = !isStudioCompactTranscript
         && (isCompactActivityTool || shouldRenderToolCardHeader(tool.name, Platform.OS));
     const renderPermissionFooter = () => (
@@ -305,8 +308,6 @@ export const ToolView = React.memo<ToolViewProps>((props) => {
                         </View>
                     );
                 }
-
-                const SpecificToolView = getToolViewComponent(tool.name);
                 if (SpecificToolView) {
                     return (
                         <View style={styles.content}>

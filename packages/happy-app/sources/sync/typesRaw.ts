@@ -64,6 +64,7 @@ const failedToolStatuses = new Set(['failed', 'error', 'cancelled', 'canceled', 
 const sessionToolCallEndEventSchema = z.object({
     t: z.literal('tool-call-end'),
     call: z.string(),
+    result: z.string().optional(),
     output: z.string().max(sessionToolOutputWireLimit).optional(),
     exitCode: z.number().int().nullable().optional(),
     durationMs: z.number().nonnegative().nullable().optional(),
@@ -516,6 +517,7 @@ type NormalizedAgentContent =
         type: 'tool-call';
         id: string;
         name: string;
+        title?: string;
         input: any;
         description: string | null;
         uuid: string;
@@ -701,6 +703,7 @@ function normalizeSessionEnvelope(
                 type: 'tool-call',
                 id: envelope.ev.call,
                 name: envelope.ev.name || 'unknown',
+                title: envelope.ev.title,
                 input: envelope.ev.args,
                 description: envelope.ev.description,
                 uuid: contentUUID,
@@ -737,7 +740,7 @@ function normalizeSessionEnvelope(
                     ...(envelope.ev.durationMs !== undefined ? { durationMs: envelope.ev.durationMs } : {}),
                     ...(envelope.ev.status !== undefined ? { status: envelope.ev.status } : {}),
                     ...(envelope.ev.truncated !== undefined ? { truncated: envelope.ev.truncated } : {}),
-                } : null,
+                } : (envelope.ev.result ?? null),
                 is_error: exitFailure ?? (statusFailure || envelope.ev.isError === true),
                 uuid: contentUUID,
                 parentUUID
