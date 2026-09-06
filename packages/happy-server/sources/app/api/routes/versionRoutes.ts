@@ -3,6 +3,8 @@ import { type Fastify } from "../types";
 import * as semver from 'semver';
 import { ANDROID_UP_TO_DATE, IOS_UP_TO_DATE } from "@/versions";
 
+const OFFICIAL_APP_ID = 'com.ex3ndr.happy';
+
 export function versionRoutes(app: Fastify) {
     app.post('/v1/version', {
         schema: {
@@ -19,6 +21,13 @@ export function versionRoutes(app: Fastify) {
         }
     }, async (request, reply) => {
         const { platform, version, app_id } = request.body;
+
+        // Store releases belong to the official bundle only. Personal, preview,
+        // and development clients use separate distribution and OTA channels.
+        if (app_id !== OFFICIAL_APP_ID) {
+            reply.send({ updateUrl: null });
+            return;
+        }
 
         // Check ios
         if (platform.toLowerCase() === 'ios') {

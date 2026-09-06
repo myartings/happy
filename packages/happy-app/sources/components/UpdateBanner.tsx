@@ -10,6 +10,8 @@ import { useRouter } from 'expo-router';
 import { Platform, type StyleProp, type ViewStyle } from 'react-native';
 import { openExternalUrl } from '@/utils/openExternalUrl';
 import { t } from '@/text';
+import Constants from 'expo-constants';
+import { getAppUpdateChannel, getOtaSourceLabel } from '@/features/updates/updateChannel';
 
 export const UpdateBanner = React.memo(({
     style,
@@ -23,6 +25,10 @@ export const UpdateBanner = React.memo(({
     const { hasUnread, markAsRead } = useChangelog();
     const updateUrl = useNativeUpdate();
     const router = useRouter();
+    const appId = Platform.OS === 'android'
+        ? Constants.expoConfig?.android?.package
+        : Constants.expoConfig?.ios?.bundleIdentifier;
+    const otaSourceLabel = getOtaSourceLabel(getAppUpdateChannel(appId));
 
     // Show native app update banner (highest priority)
     if (updateUrl) {
@@ -31,7 +37,7 @@ export const UpdateBanner = React.memo(({
         return (
             <ItemGroup style={style} headerStyle={headerStyle}>
                 <Item
-                    title={t('updateBanner.nativeUpdateAvailable')}
+                    title={`Happy Official · ${t('updateBanner.nativeUpdateAvailable')}`}
                     subtitle={Platform.OS === 'ios' ? t('updateBanner.tapToUpdateAppStore') : t('updateBanner.tapToUpdatePlayStore')}
                     icon={<Ionicons name="download-outline" size={28} color={theme.colors.success} />}
                     showChevron={true}
@@ -46,7 +52,7 @@ export const UpdateBanner = React.memo(({
         return (
             <ItemGroup style={style} headerStyle={headerStyle}>
                 <Item
-                    title={t('updateBanner.updateAvailable')}
+                    title={`${otaSourceLabel} · ${t('updateBanner.updateAvailable')}`}
                     subtitle={t('updateBanner.pressToApply')}
                     icon={<Ionicons name="download-outline" size={28} color={theme.colors.success} />}
                     showChevron={false}
