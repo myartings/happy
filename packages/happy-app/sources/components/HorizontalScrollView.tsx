@@ -6,12 +6,10 @@ import { Platform, ScrollView, ScrollViewProps } from 'react-native';
 // Two things conspire to kill horizontal trackpad swipes here, so this handler
 // both claims the event and applies the scroll itself:
 //
-// 1. The chat is an inverted FlatList, and react-native-web's inverted-wheel
-//    patch (react-native-web#995, still unfixed upstream — see #2418) attaches
-//    a wheel listener on the list's scroll node that calls preventDefault() on
-//    every event while only ever applying deltaY. That listener is on an
-//    ancestor in the bubble phase, so stopPropagation() here keeps the event
-//    away from it.
+// 1. The chat's inverted list attaches a wheel listener that calls
+//    preventDefault() on every event while applying deltaY itself. That
+//    listener is on an ancestor in the bubble phase, so stopPropagation()
+//    here keeps the event away from it.
 // 2. Chromium does not natively scroll a nested horizontal scroller when an
 //    ancestor is transformed with scaleY(-1) — which is exactly how the
 //    inverted list is built. Verified with a standalone repro: identical
