@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { addProjectTodo, collectProjectTodoContexts, createProjectTodoDraft, deleteProjectTodo, prepareProjectTodoSessionDraft, resolveProjectTodoKey, selectProjectTodoContext, setProjectTodoCompleted, updateProjectTodo } from './projectTodos';
+import {
+    addProjectTodo,
+    collectProjectTodoContexts,
+    collectProjectTodoItems,
+    createProjectTodoDraft,
+    deleteProjectTodo,
+    deleteProjectTodoForContext,
+    prepareProjectTodoSessionDraft,
+    resolveProjectTodoKey,
+    selectProjectTodoContext,
+    setProjectTodoCompleted,
+    updateProjectTodo,
+    updateProjectTodoForContext,
+} from './projectTodos';
 
 describe('resolveProjectTodoKey', () => {
     it('uses a stable project id when one is available', () => {
@@ -101,6 +114,238 @@ describe('project todo commands', () => {
 });
 
 describe('collectProjectTodoContexts', () => {
+    it('groups managed worktrees from one repository into one todo project', () => {
+        const contexts = collectProjectTodoContexts([
+            {
+                sessionId: 'feature-session',
+                sessionTitle: 'Feature session',
+                projectId: 'worktree-project-feature',
+                projectName: 'feature-branch',
+                machineId: 'machine-a',
+                path: '/projects/happy/.dev/worktree/feature-branch',
+                updatedAt: 20,
+            },
+            {
+                sessionId: 'bugfix-session',
+                sessionTitle: 'Bugfix session',
+                projectId: 'worktree-project-bugfix',
+                projectName: 'bugfix-branch',
+                machineId: 'machine-a',
+                path: '/projects/happy/.dev/worktree/bugfix-branch',
+                updatedAt: 10,
+            },
+        ], {});
+
+        expect(contexts).toHaveLength(1);
+        expect(contexts[0]).toMatchObject({
+            name: 'happy',
+            sessions: [
+                { id: 'feature-session' },
+                { id: 'bugfix-session' },
+            ],
+        });
+    });
+
+    it('keeps todos stored under prior worktree keys visible in the grouped project', () => {
+        const featureTodo = {
+            id: 'feature-todo', content: 'Feature task', completed: false, createdAt: 10, updatedAt: 10,
+        };
+        const bugfixTodo = {
+            id: 'bugfix-todo', content: 'Bugfix task', completed: false, createdAt: 20, updatedAt: 20,
+        };
+        const projectTodos = {
+            'project:worktree-project-feature': [featureTodo],
+            'project:worktree-project-bugfix': [bugfixTodo],
+        };
+        const contexts = collectProjectTodoContexts([
+            {
+                projectId: 'worktree-project-feature', projectName: 'feature-branch', machineId: 'machine-a',
+                path: '/projects/happy/.dev/worktree/feature-branch', updatedAt: 20,
+            },
+            {
+                projectId: 'worktree-project-bugfix', projectName: 'bugfix-branch', machineId: 'machine-a',
+                path: '/projects/happy/.dev/worktree/bugfix-branch', updatedAt: 10,
+            },
+        ], projectTodos);
+
+        expect(contexts).toHaveLength(1);
+        expect(collectProjectTodoItems(projectTodos, contexts[0]).map((todo) => todo.id))
+            .toEqual(['bugfix-todo', 'feature-todo']);
+        const next = updateProjectTodoForContext(projectTodos, contexts[0], 'feature-todo', 'Updated task');
+        expect(next['project:worktree-project-feature'][0].content).toBe('Updated task');
+    });
+
+    it('groups a managed worktree with the primary checkout identity', () => {
+        const contexts = collectProjectTodoContexts([
+            {
+                projectId: 'primary-project', projectName: 'happy', machineId: 'machine-a',
+                path: '/projects/happy', updatedAt: 10,
+            },
+            {
+                projectId: 'worktree-project', projectName: 'feature', machineId: 'machine-a',
+                path: '/projects/happy/.dev/worktree/feature', updatedAt: 20,
+            },
+        ], {});
+
+        expect(contexts).toHaveLength(1);
+        expect(contexts[0]).toMatchObject({ key: 'project:primary-project', name: 'happy' });
+    });
+
+    it('groups Windows managed worktree paths by repository', () => {
+        const contexts = collectProjectTodoContexts([
+            {
+                projectId: 'feature', projectName: 'feature', machineId: 'machine-a',
+                path: 'C:\\projects\\happy\\.dev\\worktree\\feature', updatedAt: 20,
+            },
+            {
+                projectId: 'bugfix', projectName: 'bugfix', machineId: 'machine-a',
+                path: 'C:\\projects\\happy\\.dev\\worktree\\bugfix', updatedAt: 10,
+            },
+        ], {});
+
+        expect(contexts).toHaveLength(1);
+        expect(contexts[0].name).toBe('happy');
+    });
+
+    it('does not merge worktrees from distinct repositories with the same basename', () => {
+        const contexts = collectProjectTodoContexts([
+            {
+                projectId: 'client-a', projectName: 'feature', machineId: 'machine-a',
+                path: '/clients/a/happy/.dev/worktree/feature', updatedAt: 20,
+            },
+            {
+                projectId: 'client-b', projectName: 'bugfix', machineId: 'machine-a',
+                path: '/clients/b/happy/.dev/worktree/bugfix', updatedAt: 10,
+            },
+        ], {});
+
+        expect(contexts).toHaveLength(2);
+        expect(new Set(contexts.map((context) => context.key)).size).toBe(2);
+    });
+
+    it('does not merge distinct primary checkouts with the same basename on one machine', () => {
+        const contexts = collectProjectTodoContexts([
+            { machineId: 'machine-a', path: '/clients/a/happy', updatedAt: 20 },
+            { machineId: 'machine-a', path: '/clients/b/happy', updatedAt: 10 },
+        ], {});
+
+        expect(contexts).toHaveLength(2);
+        expect(new Set(contexts.map((context) => context.key)).size).toBe(2);
+    });
+
+    it('prefers stable primary identity regardless of session input order', () => {
+        const stable = {
+            projectId: 'stable-project', projectName: 'happy', machineId: 'machine-a',
+            path: '/projects/happy', updatedAt: 10,
+        };
+        const legacy = {
+            projectId: null, projectName: 'happy', machineId: 'machine-a',
+            path: '/projects/happy', updatedAt: 20,
+        };
+        const worktree = {
+            projectId: 'worktree-project', projectName: 'feature', machineId: 'machine-a',
+            path: '/projects/happy/.dev/worktree/feature', updatedAt: 30,
+        };
+
+        const forward = collectProjectTodoContexts([stable, legacy, worktree], {});
+        const reversed = collectProjectTodoContexts([worktree, legacy, stable], {});
+        expect(forward.map((context) => context.key)).toEqual(['project:stable-project']);
+        expect(reversed.map((context) => context.key)).toEqual(['project:stable-project']);
+    });
+
+    it('retains every worktree as a new-session target', () => {
+        const contexts = collectProjectTodoContexts([
+            {
+                machineId: 'machine-a', path: '/projects/happy/.dev/worktree/feature', updatedAt: 20,
+            },
+            {
+                machineId: 'machine-a', path: '/projects/happy/.dev/worktree/bugfix', updatedAt: 10,
+            },
+        ], {});
+
+        expect(contexts[0].targets.map((target) => target.name)).toEqual(['feature', 'bugfix']);
+    });
+
+    it('deduplicates normalized target paths and retains the newest target regardless of input order', () => {
+        const newer = {
+            machineId: 'machine-a',
+            path: 'C:/projects/happy/.dev/worktree/feature/',
+            homeDir: 'C:/projects',
+            updatedAt: 20,
+        };
+        const older = {
+            sessionId: 'older-session',
+            sessionTitle: 'Older session',
+            machineId: 'machine-a',
+            path: 'C:\\projects\\happy\\.dev\\worktree\\feature',
+            homeDir: 'C:\\Users\\me',
+            updatedAt: 10,
+        };
+
+        const forward = collectProjectTodoContexts([newer, older], {});
+        const reversed = collectProjectTodoContexts([older, newer], {});
+
+        for (const contexts of [forward, reversed]) {
+            expect(contexts).toHaveLength(1);
+            expect(contexts[0].targets).toEqual([{
+                id: '["machine-a","C:/projects/happy/.dev/worktree/feature"]',
+                name: 'feature',
+                machineId: 'machine-a',
+                path: '~/happy',
+                sessionType: 'worktree',
+                worktreeKey: 'C:/projects/happy/.dev/worktree/feature',
+                updatedAt: 20,
+            }]);
+            expect(contexts[0].sessions.map((session) => session.id)).toEqual(['older-session']);
+        }
+    });
+
+    it('updates and deletes every stored copy of an aliased todo', () => {
+        const duplicate = { id: 'same', content: 'Old', completed: false, createdAt: 1, updatedAt: 1 };
+        const state = {
+            'path:machine-a:/projects/happy': [{ ...duplicate, content: 'New', updatedAt: 2 }],
+            'project:old-worktree': [duplicate],
+        };
+        const [context] = collectProjectTodoContexts([{
+            projectId: 'old-worktree', projectName: 'feature', machineId: 'machine-a',
+            path: '/projects/happy/.dev/worktree/feature', updatedAt: 10,
+        }], state);
+
+        const updated = updateProjectTodoForContext(state, context, 'same', 'Edited');
+        expect(context.aliasKeys).toContain('project:old-worktree');
+        expect(updated['path:machine-a:/projects/happy'][0].content).toBe('Edited');
+        expect(updated['project:old-worktree'][0].content).toBe('Edited');
+        expect(deleteProjectTodoForContext(updated, context, 'same')).toEqual({});
+    });
+
+    it('claims prior name and path todo keys after receiving a stable project id', () => {
+        const projectTodos = {
+            'name:happy': [{ id: 'name', content: 'Name todo', completed: false, createdAt: 1, updatedAt: 1 }],
+            'path:machine-a:/projects/happy': [{ id: 'path', content: 'Path todo', completed: false, createdAt: 2, updatedAt: 2 }],
+        };
+        const contexts = collectProjectTodoContexts([{
+            projectId: 'stable-project', projectName: 'happy', machineId: 'machine-a',
+            path: '/projects/happy', updatedAt: 10,
+        }], projectTodos);
+
+        expect(contexts).toHaveLength(1);
+        expect(contexts[0].key).toBe('project:stable-project');
+        expect(collectProjectTodoItems(projectTodos, contexts[0]).map((todo) => todo.id)).toEqual(['path', 'name']);
+    });
+
+    it('preserves stored ordering for a single todo key', () => {
+        const projectTodos = {
+            'name:happy': [
+                { id: 'first', content: 'First', completed: false, createdAt: 1, updatedAt: 1 },
+                { id: 'second', content: 'Second', completed: false, createdAt: 2, updatedAt: 2 },
+            ],
+        };
+        const [context] = collectProjectTodoContexts([], projectTodos);
+
+        expect(collectProjectTodoItems(projectTodos, context).map((todo) => todo.id))
+            .toEqual(['first', 'second']);
+    });
+
     it('builds one cross-device project choice from multiple sessions', () => {
         const contexts = collectProjectTodoContexts([
             {
@@ -124,12 +369,30 @@ describe('collectProjectTodoContexts', () => {
         expect(contexts).toEqual([{
             key: 'name:happy',
             name: 'happy',
-            target: {
-                machineId: 'machine-b',
-                path: '~/happy',
-                sessionType: 'simple',
-                worktreeKey: null,
-            },
+            aliasKeys: [
+                'path:machine-a:C:/workspace/happy',
+                'path:machine-b:/home/me/happy',
+            ],
+            targets: [
+                {
+                    id: '["machine-b","/home/me/happy"]',
+                    name: 'happy',
+                    machineId: 'machine-b',
+                    path: '~/happy',
+                    sessionType: 'simple',
+                    worktreeKey: null,
+                    updatedAt: 20,
+                },
+                {
+                    id: '["machine-a","C:/workspace/happy"]',
+                    name: 'happy',
+                    machineId: 'machine-a',
+                    path: 'C:/workspace/happy',
+                    sessionType: 'simple',
+                    worktreeKey: null,
+                    updatedAt: 10,
+                },
+            ],
             sessions: [],
             updatedAt: 20,
         }]);
@@ -137,8 +400,8 @@ describe('collectProjectTodoContexts', () => {
 
     it('honors a requested project and otherwise selects the most recent project', () => {
         const contexts = [
-            { key: 'name:happy', name: 'happy', target: null, sessions: [], updatedAt: 20 },
-            { key: 'name:manager', name: 'manager', target: null, sessions: [], updatedAt: 10 },
+            { key: 'name:happy', name: 'happy', aliasKeys: [], targets: [], sessions: [], updatedAt: 20 },
+            { key: 'name:manager', name: 'manager', aliasKeys: [], targets: [], sessions: [], updatedAt: 10 },
         ];
 
         expect(selectProjectTodoContext(contexts, 'name:manager')?.key).toBe('name:manager');
