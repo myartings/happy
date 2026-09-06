@@ -12,14 +12,16 @@ import { storage, useAllSessions, useSettingMutable } from '@/sync/storage';
 import {
     addProjectTodo,
     collectProjectTodoContexts,
+    collectProjectTodoItems,
     createProjectTodoDraft,
-    deleteProjectTodo,
+    deleteProjectTodoForContext,
     prepareProjectTodoSessionDraft,
     PROJECT_TODO_CONTENT_LIMIT,
     selectProjectTodoContext,
-    setProjectTodoCompleted,
-    updateProjectTodo,
+    setProjectTodoCompletedForContext,
+    updateProjectTodoForContext,
     type ProjectTodoItem,
+    type ProjectTodoTarget,
 } from '@/sync/projectTodos';
 import { t } from '@/text';
 import { getSessionName, getSessionSubtitle } from '@/utils/sessionUtils';
@@ -66,12 +68,12 @@ export default function ProjectTodosScreen() {
         if (selectedContext?.key !== selectedKey) setSelectedKey(selectedContext?.key ?? null);
     }, [selectedContext?.key, selectedKey]);
 
-    const todos = selectedContext ? projectTodos[selectedContext.key] ?? [] : [];
+    const todos = selectedContext ? collectProjectTodoItems(projectTodos, selectedContext) : [];
     const filteredTodos = todos.filter((todo) => (
         filter === 'all' || (filter === 'completed' ? todo.completed : !todo.completed)
     ));
     const pendingCount = todos.filter((todo) => !todo.completed).length;
-    const hasProcessTarget = !!selectedContext?.target
+    const hasProcessTarget = !!selectedContext?.targets.length
         || !!selectedContext?.sessions.some((session) => session.active);
 
     const updateTodos = React.useCallback((next: typeof projectTodos) => {
@@ -87,12 +89,12 @@ export default function ProjectTodosScreen() {
 
     const handleToggle = React.useCallback((todo: ProjectTodoItem) => {
         if (!selectedContext) return;
-        updateTodos(setProjectTodoCompleted(projectTodos, selectedContext.key, todo.id, !todo.completed));
+        updateTodos(setProjectTodoCompletedForContext(projectTodos, selectedContext, todo.id, !todo.completed));
     }, [projectTodos, selectedContext, updateTodos]);
 
     const handleDelete = React.useCallback((todoId: string) => {
         if (!selectedContext) return;
-        updateTodos(deleteProjectTodo(projectTodos, selectedContext.key, todoId));
+        updateTodos(deleteProjectTodoForContext(projectTodos, selectedContext, todoId));
         if (editingId === todoId) setEditingId(null);
     }, [editingId, projectTodos, selectedContext, updateTodos]);
 
@@ -103,14 +105,14 @@ export default function ProjectTodosScreen() {
 
     const handleSaveEdit = React.useCallback(() => {
         if (!selectedContext || !editingId) return;
-        const next = updateProjectTodo(projectTodos, selectedContext.key, editingId, editingContent);
+        const next = updateProjectTodoForContext(projectTodos, selectedContext, editingId, editingContent);
         updateTodos(next);
         if (editingContent.trim()) setEditingId(null);
     }, [editingContent, editingId, projectTodos, selectedContext, updateTodos]);
 
-    const handleNewSessionTarget = React.useCallback(() => {
-        if (!selectedContext?.target || !processingTodo) return;
-        const values = createProjectTodoDraft(selectedContext.target, processingTodo);
+    const handleNewSessionTarget = React.useCallback((target: ProjectTodoTarget) => {
+        if (!processingTodo) return;
+        const values = createProjectTodoDraft(target, processingTodo);
         draft.setMachineId(values.selectedMachineId);
         draft.setPath(values.selectedPath);
         draft.setSessionType(values.sessionType);
@@ -118,7 +120,7 @@ export default function ProjectTodosScreen() {
         draft.setInput(values.input);
         setProcessingTodo(null);
         router.navigate('/new');
-    }, [draft, processingTodo, router, selectedContext]);
+    }, [draft, processingTodo, router]);
 
     const handleExistingSessionTarget = React.useCallback((sessionId: string) => {
         if (!processingTodo) return;
@@ -149,7 +151,8 @@ export default function ProjectTodosScreen() {
                         <View style={styles.projectPicker}>
                             {contexts.map((context) => {
                                 const selected = context.key === selectedContext?.key;
-                                const count = (projectTodos[context.key] ?? []).filter((todo) => !todo.completed).length;
+                                const count = collectProjectTodoItems(projectTodos, context)
+                                    .filter((todo) => !todo.completed).length;
                                 return (
                                     <Pressable
                                         key={context.key}
@@ -264,7 +267,7 @@ export default function ProjectTodosScreen() {
                                                 <Text style={styles.deleteText}>{t('common.delete')}</Text>
                                             </Pressable>
                                         </View>
-                                        {!selectedContext?.target && (
+                                        {!selectedContext?.targets.length && (
                                             <Text style={styles.unavailableText}>{t('projectTodos.projectUnavailable')}</Text>
                                         )}
                                     </View>
@@ -299,20 +302,24 @@ export default function ProjectTodosScreen() {
                         </View>
 
                         <ScrollView style={styles.targetList} contentContainerStyle={styles.targetListContent}>
-                            <Pressable
-                                onPress={handleNewSessionTarget}
-                                disabled={!selectedContext?.target}
-                                style={[styles.targetRow, !selectedContext?.target && styles.disabled]}
-                            >
-                                <View style={styles.targetIcon}>
-                                    <Ionicons name="add" size={20} color={theme.colors.textLink} />
-                                </View>
-                                <View style={styles.targetBody}>
-                                    <Text style={styles.targetName}>{t('projectTodos.newSessionTarget')}</Text>
-                                    <Text style={styles.targetSubtitle}>{t('projectTodos.newSessionDescription')}</Text>
-                                </View>
-                                <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
-                            </Pressable>
+                            {selectedContext?.targets.map((target) => (
+                                <Pressable
+                                    key={target.id}
+                                    onPress={() => handleNewSessionTarget(target)}
+                                    style={styles.targetRow}
+                                >
+                                    <View style={styles.targetIcon}>
+                                        <Ionicons name="add" size={20} color={theme.colors.textLink} />
+                                    </View>
+                                    <View style={styles.targetBody}>
+                                        <Text style={styles.targetName}>
+                                            {t('projectTodos.newSessionTarget')} · {target.name}
+                                        </Text>
+                                        <Text style={styles.targetSubtitle}>{target.path}</Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
+                                </Pressable>
+                            ))}
 
                             {selectedContext?.sessions.some((session) => session.active) && (
                                 <Text style={styles.targetSectionTitle}>{t('projectTodos.existingSessions')}</Text>

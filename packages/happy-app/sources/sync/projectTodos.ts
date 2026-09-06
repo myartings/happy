@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { createId } from '@paralleldrive/cuid2';
+import { getRepoPath, isWorktreePath } from '@/utils/worktreePaths';
 
 export const PROJECT_TODO_CONTENT_LIMIT = 500;
 export const PROJECT_TODO_ITEM_LIMIT = 100;
@@ -34,6 +35,12 @@ export interface ProjectTodoDraftTarget {
     worktreeKey: string | null;
 }
 
+export interface ProjectTodoTarget extends ProjectTodoDraftTarget {
+    id: string;
+    name: string;
+    updatedAt: number;
+}
+
 export interface ProjectTodoSessionContext {
     sessionId?: string;
     sessionTitle?: string;
@@ -60,7 +67,8 @@ export interface ProjectTodoSessionChoice {
 export interface ProjectTodoContext {
     key: string;
     name: string;
-    target: ProjectTodoDraftTarget | null;
+    aliasKeys: string[];
+    targets: ProjectTodoTarget[];
     sessions: ProjectTodoSessionChoice[];
     updatedAt: number;
 }
@@ -109,16 +117,61 @@ function fallbackProjectName(projectKey: string): string {
 }
 
 function projectPathContext(path: string, homeDir?: string | null) {
-    const marker = '/.dev/worktree/';
-    const markerIndex = path.indexOf(marker);
-    const worktree = markerIndex >= 0;
-    const repoPath = worktree ? path.slice(0, markerIndex) : path;
-    if (!homeDir) return { repoPath, draftPath: repoPath, worktree };
-    const normalizedHome = homeDir.replace(/[\\/]$/, '');
+    const normalizedPath = path.trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    const worktree = isWorktreePath(normalizedPath);
+    const repoPath = getRepoPath(normalizedPath).replace(/\/+$/, '');
+    if (!homeDir) return { normalizedPath, repoPath, draftPath: repoPath, worktree };
+    const normalizedHome = homeDir.replace(/\\/g, '/').replace(/\/+$/, '');
     const draftPath = repoPath.startsWith(normalizedHome)
-        ? `~${repoPath.slice(normalizedHome.length).replace(/^\\/, '/')}`
+        ? `~${repoPath.slice(normalizedHome.length).replace(/^\//, '/')}`
         : repoPath;
-    return { repoPath, draftPath, worktree };
+    return { normalizedPath, repoPath, draftPath, worktree };
+}
+
+function repositoryIdentityKey(machineId: string | null, repoPath: string): string {
+    return JSON.stringify([machineId, repoPath]);
+}
+
+function repositoryNameIdentityKey(machineId: string | null, projectName: string): string {
+    return JSON.stringify([machineId, projectName.toLocaleLowerCase()]);
+}
+
+function projectNameFromPath(repoPath: string): string {
+    return repoPath.split('/').filter(Boolean).pop() || repoPath;
+}
+
+function targetTieBreakKey(target: ProjectTodoTarget): string {
+    return JSON.stringify([
+        target.path,
+        target.worktreeKey,
+        target.name,
+        target.sessionType,
+    ]);
+}
+
+function preferProjectTodoTarget(
+    existing: ProjectTodoTarget | undefined,
+    candidate: ProjectTodoTarget,
+): ProjectTodoTarget {
+    if (!existing || candidate.updatedAt > existing.updatedAt) return candidate;
+    if (candidate.updatedAt < existing.updatedAt) return existing;
+    return targetTieBreakKey(candidate).localeCompare(targetTieBreakKey(existing)) < 0 ? candidate : existing;
+}
+
+function possibleProjectTodoKeys(identity: ProjectTodoIdentity): string[] {
+    const keys: string[] = [];
+    const projectId = identity.projectId?.trim();
+    const projectName = identity.projectName?.trim().toLocaleLowerCase();
+    const machineId = identity.machineId?.trim();
+    const path = identity.path?.trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    if (projectId) keys.push(`project:${projectId}`);
+    if (projectName) keys.push(`name:${projectName}`);
+    if (machineId && path) keys.push(`path:${machineId}:${path}`);
+    return keys;
+}
+
+function contextTodoKeys(context: ProjectTodoContext): string[] {
+    return [context.key, ...context.aliasKeys];
 }
 
 export function collectProjectTodoContexts(
@@ -126,22 +179,99 @@ export function collectProjectTodoContexts(
     projectTodos: ProjectTodos,
 ): ProjectTodoContext[] {
     const contexts = new Map<string, ProjectTodoContext>();
+    const repositoryPathsByName = new Map<string, Set<string>>();
 
     for (const session of sessions) {
         if (!session.path) continue;
-        const { repoPath, draftPath, worktree } = projectPathContext(session.path, session.homeDir);
-        const name = session.projectName?.trim()
-            || repoPath.split(/[/\\]/).filter(Boolean).pop()
-            || repoPath;
-        const key = resolveProjectTodoKey({
+        const { repoPath, worktree } = projectPathContext(session.path, session.homeDir);
+        if (worktree) continue;
+        const projectName = session.projectName?.trim() || projectNameFromPath(repoPath);
+        const nameKey = repositoryNameIdentityKey(session.machineId, projectName);
+        const paths = repositoryPathsByName.get(nameKey) ?? new Set<string>();
+        paths.add(repoPath);
+        repositoryPathsByName.set(nameKey, paths);
+    }
+
+    const primaryIdentities = new Map<string, ProjectTodoIdentity & { updatedAt: number }>();
+
+    for (const session of sessions) {
+        if (!session.path) continue;
+        const { repoPath, worktree } = projectPathContext(session.path, session.homeDir);
+        if (worktree) continue;
+        const projectName = session.projectName?.trim() || projectNameFromPath(repoPath);
+        const candidate = {
             projectId: session.projectId,
-            projectName: name,
+            projectName: repositoryPathsByName.get(repositoryNameIdentityKey(session.machineId, projectName))!.size > 1
+                ? null
+                : projectName,
+            machineId: session.machineId,
+            path: repoPath,
+            updatedAt: session.updatedAt,
+        };
+        const identityKey = repositoryIdentityKey(session.machineId, repoPath);
+        const existing = primaryIdentities.get(identityKey);
+        const candidateHasProjectId = !!candidate.projectId?.trim();
+        const existingHasProjectId = !!existing?.projectId?.trim();
+        const shouldReplace = !existing
+            || (candidateHasProjectId && !existingHasProjectId)
+            || (candidateHasProjectId === existingHasProjectId && (
+                candidate.updatedAt > existing.updatedAt
+                || (candidate.updatedAt === existing.updatedAt
+                    && (candidate.projectId ?? '').localeCompare(existing.projectId ?? '') < 0)
+            ));
+        if (shouldReplace) primaryIdentities.set(identityKey, candidate);
+    }
+
+    for (const session of sessions) {
+        if (!session.path) continue;
+        const { normalizedPath, repoPath, draftPath, worktree } = projectPathContext(session.path, session.homeDir);
+        const repoName = projectNameFromPath(repoPath);
+        const reportedName = session.projectName?.trim() || repoName;
+        const primaryIdentity = primaryIdentities.get(repositoryIdentityKey(session.machineId, repoPath));
+        const name = primaryIdentity?.projectName?.trim() || (worktree ? repoName : reportedName);
+        const ambiguousPrimaryName = !session.projectId?.trim()
+            && !worktree
+            && repositoryPathsByName.get(repositoryNameIdentityKey(session.machineId, reportedName))!.size > 1;
+        const canonicalIdentity = {
+            projectId: primaryIdentity?.projectId ?? (worktree ? null : session.projectId),
+            projectName: primaryIdentity
+                ? primaryIdentity.projectName
+                : (worktree || ambiguousPrimaryName ? null : name),
+            machineId: session.machineId,
+            path: repoPath,
+        };
+        const key = resolveProjectTodoKey(canonicalIdentity);
+        if (!key) continue;
+        const priorKeys = possibleProjectTodoKeys({
+            projectId: session.projectId,
+            projectName: reportedName,
             machineId: session.machineId,
             path: repoPath,
         });
-        if (!key) continue;
 
         const existing = contexts.get(key);
+        const aliasKeys = [...new Set([
+            ...(existing?.aliasKeys ?? []),
+            ...possibleProjectTodoKeys(canonicalIdentity),
+            ...priorKeys,
+        ])].filter((candidate) => candidate !== key);
+        const target: ProjectTodoTarget = {
+            id: repositoryIdentityKey(session.machineId, normalizedPath),
+            name: worktree
+                ? normalizedPath.split('/').filter(Boolean).pop() || repoName
+                : repoName,
+            machineId: session.machineId,
+            path: draftPath,
+            sessionType: worktree ? 'worktree' : 'simple',
+            worktreeKey: worktree ? normalizedPath : null,
+            updatedAt: session.updatedAt,
+        };
+        const priorTarget = existing?.targets.find((candidate) => candidate.id === target.id);
+        const selectedTarget = preferProjectTodoTarget(priorTarget, target);
+        const targets = [
+            ...(existing?.targets.filter((candidate) => candidate.id !== target.id) ?? []),
+            selectedTarget,
+        ].sort((a, b) => b.updatedAt - a.updatedAt || a.id.localeCompare(b.id));
         const sessionChoice = session.sessionId && session.sessionTitle ? {
             id: session.sessionId,
             title: session.sessionTitle,
@@ -158,26 +288,47 @@ export function collectProjectTodoContexts(
             contexts.set(key, {
                 key,
                 name,
-                target: {
-                    machineId: session.machineId,
-                    path: draftPath,
-                    sessionType: worktree ? 'worktree' : 'simple',
-                    worktreeKey: worktree ? session.path : null,
-                },
+                aliasKeys,
+                targets,
                 sessions,
                 updatedAt: session.updatedAt,
             });
-        } else if (sessions !== existing.sessions) {
-            contexts.set(key, { ...existing, sessions });
+        } else if (
+            sessions !== existing.sessions
+            || targets.length !== existing.targets.length
+            || aliasKeys.length !== existing.aliasKeys.length
+        ) {
+            contexts.set(key, { ...existing, aliasKeys, targets, sessions });
         }
     }
 
+    const aliasOwners = new Map<string, Set<string>>();
+    for (const context of contexts.values()) {
+        for (const aliasKey of context.aliasKeys) {
+            const owners = aliasOwners.get(aliasKey) ?? new Set<string>();
+            owners.add(context.key);
+            aliasOwners.set(aliasKey, owners);
+        }
+    }
+    for (const [key, context] of contexts) {
+        contexts.set(key, {
+            ...context,
+            aliasKeys: context.aliasKeys.filter((aliasKey) => (
+                aliasOwners.get(aliasKey)?.size === 1 && !contexts.has(aliasKey)
+            )),
+        });
+    }
+
+    const claimedTodoKeys = new Set(
+        [...contexts.values()].flatMap(contextTodoKeys),
+    );
     for (const [key, todos] of Object.entries(projectTodos)) {
-        if (contexts.has(key)) continue;
+        if (claimedTodoKeys.has(key)) continue;
         contexts.set(key, {
             key,
             name: fallbackProjectName(key),
-            target: null,
+            aliasKeys: [],
+            targets: [],
             sessions: [],
             updatedAt: todos.reduce((latest, todo) => Math.max(latest, todo.updatedAt), 0),
         });
@@ -190,7 +341,70 @@ export function selectProjectTodoContext(
     contexts: ProjectTodoContext[],
     requestedKey: string | null | undefined,
 ): ProjectTodoContext | null {
-    return contexts.find((context) => context.key === requestedKey) ?? contexts[0] ?? null;
+    return contexts.find((context) => context.key === requestedKey || context.aliasKeys.includes(requestedKey ?? ''))
+        ?? contexts[0]
+        ?? null;
+}
+
+export function collectProjectTodoItems(
+    projectTodos: ProjectTodos,
+    context: ProjectTodoContext,
+): ProjectTodoItem[] {
+    const todoKeys = contextTodoKeys(context);
+    if (todoKeys.length === 1) return projectTodos[todoKeys[0]] ?? [];
+
+    const items = new Map<string, ProjectTodoItem>();
+    for (const key of todoKeys) {
+        for (const todo of projectTodos[key] ?? []) {
+            const existing = items.get(todo.id);
+            if (!existing || todo.updatedAt > existing.updatedAt) items.set(todo.id, todo);
+        }
+    }
+    return [...items.values()].sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt);
+}
+
+export function setProjectTodoCompletedForContext(
+    state: ProjectTodos,
+    context: ProjectTodoContext,
+    todoId: string,
+    completed: boolean,
+): ProjectTodos {
+    return mutateProjectTodoContext(state, context, (next, key) => (
+        setProjectTodoCompleted(next, key, todoId, completed)
+    ));
+}
+
+export function updateProjectTodoForContext(
+    state: ProjectTodos,
+    context: ProjectTodoContext,
+    todoId: string,
+    content: string,
+): ProjectTodos {
+    return mutateProjectTodoContext(state, context, (next, key) => (
+        updateProjectTodo(next, key, todoId, content)
+    ));
+}
+
+export function deleteProjectTodoForContext(
+    state: ProjectTodos,
+    context: ProjectTodoContext,
+    todoId: string,
+): ProjectTodos {
+    return mutateProjectTodoContext(state, context, (next, key) => (
+        deleteProjectTodo(next, key, todoId)
+    ));
+}
+
+function mutateProjectTodoContext(
+    state: ProjectTodos,
+    context: ProjectTodoContext,
+    mutate: (state: ProjectTodos, key: string) => ProjectTodos,
+): ProjectTodos {
+    let next = state;
+    for (const key of contextTodoKeys(context)) {
+        next = mutate(next, key);
+    }
+    return next;
 }
 
 export function addProjectTodo(state: ProjectTodos, projectKey: string, content: string): ProjectTodos {
